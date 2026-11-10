@@ -1,0 +1,18 @@
+aetheris:
+  ui:
+    title: Aetheris
+  vault:
+    mode: disk
+    path: ${user.home}/.aetheris/${user}/vault
+    pool-max: 4
+  # Explicit true refuses a cloud target. False opens that door.
+  network:
+    air-gap: true
+  amwp:
+    enabled: true
+  # notebook.mood-shape holds the shaper id. Empty means the Ollama model in use.
+  # notebook.burner-key allows a burner to hop to a cloud target. Missing or false denies.
+  # burner-key is not an API key. The server gate reads ~/.aetheris.yaml, not this file.
+  notebook:
+    mood-shape: ""
+    burner-key: false

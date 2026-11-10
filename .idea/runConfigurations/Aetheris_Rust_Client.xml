@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Aetheris Rust Client" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="command" value="run --bin aetheris-client" />
+    <option name="workingDirectory" value="file://$PROJECT_DIR$/aetheris/rust" />
+    <option name="channel" value="DEFAULT" />
+    <option name="requiredFeatures" value="true" />
+    <option name="allFeatures" value="false" />
+    <option name="emulateTerminal" value="false" />
+    <option name="backtrace" value="SHORT" />
+    <option name="isRedirectInput" value="false" />
+    <method v="2" />
+  </configuration>
+</component>
