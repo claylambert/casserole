@@ -1,0 +1,22 @@
+[package]
+name = "aetheris-client"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+aetheris-term = { version = "0.1.0", path = "../aetheris-term" }
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+crc32c = "0.6.8"
+egui = { version = "0.37.0", features = ["default_fonts", "experimental"] }
+egui-wgpu = { version = "0.37.0", features = ["winit"] }
+egui-winit = "0.37.0"
+image = { version = "0.25.10", default-features = false, features = ["jpeg"] }
+russh = { version = "0.64.1", default-features = false, features = ["flate2", "ring", "rsa"] }
+serde_yaml = "0.9.34"
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "time", "net", "sync", "io-util"] }
+turso = "=0.8.3"
+wgpu = "30.0.1"
+winit = "0.30.13"
+
+[build-dependencies]
+image = { version = "0.25.10", default-features = false, features = ["jpeg"] }

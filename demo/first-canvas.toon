@@ -1,0 +1,42 @@
+version: 1
+canvas: First hour
+cells:
+- id: cell-welcome
+  turn_index: 1
+  parent_cell_id: 
+  branch_id: main
+  column_position: 0
+  group_id: 
+  execution_target: ollama/qwen2.5-coder:7b
+  context_state: INCLUDED
+  ephemeral: false
+  collapsed: false
+  execution_status: DONE
+  user_clob: Say hello in one sentence.
+  assistant_clob: Hello. The local model is on, and this cell is part of the demo canvas.
+- id: cell-air
+  turn_index: 2
+  parent_cell_id: cell-welcome
+  branch_id: main
+  column_position: 0
+  group_id: 
+  execution_target: ollama/qwen2.5-coder:7b
+  context_state: INCLUDED
+  ephemeral: false
+  collapsed: false
+  execution_status: DONE
+  user_clob: Is a cloud target allowed while the air gap is on?
+  assistant_clob: No. An air gap of true refuses a cloud target. The local model still runs.
+- id: cell-next
+  turn_index: 3
+  parent_cell_id: cell-air
+  branch_id: main
+  column_position: 0
+  group_id: 
+  execution_target: ollama/qwen2.5-coder:7b
+  context_state: INCLUDED
+  ephemeral: false
+  collapsed: false
+  execution_status: IDLE
+  user_clob: What should I try next?
+  assistant_clob: 
