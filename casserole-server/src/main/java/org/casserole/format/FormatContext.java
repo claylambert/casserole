@@ -1,0 +1,165 @@
+/*
+ * Copyright (c) 2026 Clay Lambert <the.sovereign.systems.architect@gmail.com>
+ * All rights reserved.
+ *
+ * Author: Clay Lambert
+ *
+ * Licensed under the MIT License.
+ * If you use or modify this source, you must include this copyright notice
+ * and the MIT License permission notice in all copies or substantial portions
+ * of the software, including modifications.
+ */
+
+package org.casserole.format;
+
+// @aa-sdd PK-0073 PK-0079 PK-0085 PK-0104 PK-0108 PK-0113 PK-0121 PK-0126 PK-0127 PK-0260 PK-0274 PK-0283 PK-3817 PK-4114 PK-4115 PK-4116 PK-4117 PK-4118 PK-4119 PK-4122 PK-4124 PK-4154 PK-4166 PK-4240 PK-4413 PK-4414 PK-4415 PK-4419 PK-4422 PK-4432 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-0461 docs/specs/java/org/casserole/ssh/ssh.spec.md
+// @aa-sdd PK-0462 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+// @aa-sdd PK-0466 docs/specs/java/org/aetheris/wire/wire.spec.md
+// @aa-sdd PK-0487 PK-0510 PK-0530 PK-0533 PK-0534 PK-0535 PK-0537 PK-0538 PK-0539 PK-0540 PK-0541 PK-0542 PK-0544 PK-0546 PK-0547 PK-0548 PK-0550 PK-0551 PK-0552 PK-0553 PK-0554 PK-0555 PK-0556 PK-0557 docs/specs/java/org/casserole/casserole.spec.md
+// @aa-sdd PK-0558 PK-0559 PK-0560 docs/specs/java/org/casserole/format/format.spec.md
+// @aa-sdd PK-0562 PK-0730 PK-0732 docs/specs/java/org/casserole/llm/llm.spec.md
+// @aa-sdd PK-0734 PK-0735 PK-0758 PK-0759 PK-0780 PK-0793 PK-0794 PK-0814 PK-0815 PK-0816 PK-1569 PK-2040 PK-2277 PK-2325 PK-2467 PK-2751 PK-3175 PK-3317 PK-3459 PK-3460 PK-3464 PK-3465 PK-3466 PK-3467 PK-3468 PK-3479 PK-3480 PK-3481 PK-3482 PK-3483 PK-3489 PK-3490 docs/specs/java/org/roux/roux.spec.md
+// @aa-sdd PK-3514 PK-3522 PK-3546 PK-3547 PK-3548 PK-3552 PK-3576 PK-3582 PK-3617 PK-3636 PK-3687 PK-3689 PK-3690 PK-3692 PK-3695 PK-3696 PK-3697 PK-3698 PK-3710 PK-3717 PK-3729 PK-3730 PK-3739 PK-3754 PK-3787 PK-3790 PK-3792 PK-3793 PK-3794 PK-3796 PK-3799 PK-3800 PK-3802 PK-3803 PK-3804 PK-3806 PK-3807 PK-7815 PK-7864 docs/specs/java/org/aetheris/ssh/ssh.spec.md
+// @aa-sdd PK-4436 PK-4437 docs/specs/rust/aetheris/aetheris-term/aetheris-term.spec.md
+// @aa-sdd PK-4441 docs/specs/rust/aetheris/aetheris-client/aetheris-client.spec.md
+// @aa-sdd PK-4448 PK-4481 PK-4485 PK-4500 PK-4572 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/**
+ * The {@code FormatContext} type holds the settings for one format pass.
+ * The type stores the column width, the table style, and the optional SGR sequences.
+ * SGR is the select-graphic-rendition sequence that sets terminal color.
+ * The type does not refer to SSH or to Spring.
+ * SSH is the secure-shell protocol, and Spring is the application framework.
+ * The column width starts at {@code 80}.
+ * The table style starts at {@code ascii}.
+ * Each SGR string starts empty.
+ *
+ * @author clayl (2026-08-25)
+ */
+public class FormatContext {
+
+    private int columns = 80;
+    private String tableStyle = "ascii";
+    private String sgrBorder = "";
+    private String sgrHeader = "";
+    private String sgrCell = "";
+    private String sgrReset = "";
+
+    /**
+     * The {@code getColumns} method returns the wrap and table width.
+     *
+     * @return The column count stored for this pass.
+     */
+    public int getColumns() {
+        return columns;
+    }
+
+    /**
+     * The {@code setColumns} method stores the wrap and table width.
+     * If {@code columns} is below {@code 20}, the stored width is {@code 80}.
+     *
+     * @param columns The requested wrap and table width.
+     */
+    public void setColumns(int columns) {
+        this.columns = columns < 20 ? 80 : columns;
+    }
+
+    /**
+     * The {@code getTableStyle} method returns the table drawing style.
+     * The expected values are {@code ascii} and {@code box}.
+     *
+     * @return The stored table style.
+     */
+    public String getTableStyle() {
+        return tableStyle;
+    }
+
+    /**
+     * The {@code setTableStyle} method stores the table drawing style.
+     * If {@code tableStyle} is {@code null}, the stored style is {@code ascii}.
+     *
+     * @param tableStyle The style {@code ascii} or {@code box}, or {@code null} to store {@code ascii}.
+     */
+    public void setTableStyle(String tableStyle) {
+        this.tableStyle = tableStyle == null ? "ascii" : tableStyle;
+    }
+
+    /**
+     * The {@code getSgrBorder} method returns the SGR sequence for table borders.
+     * A {@code null} stored value is returned as the empty string.
+     *
+     * @return The border sequence, or the empty string.
+     */
+    public String getSgrBorder() {
+        return sgrBorder == null ? "" : sgrBorder;
+    }
+
+    /**
+     * The {@code setSgrBorder} method stores the SGR sequence for table borders.
+     *
+     * @param sgrBorder The border sequence to store.
+     */
+    public void setSgrBorder(String sgrBorder) {
+        this.sgrBorder = sgrBorder;
+    }
+
+    /**
+     * The {@code getSgrHeader} method returns the SGR sequence for table header cells.
+     * A {@code null} stored value is returned as the empty string.
+     *
+     * @return The header sequence, or the empty string.
+     */
+    public String getSgrHeader() {
+        return sgrHeader == null ? "" : sgrHeader;
+    }
+
+    /**
+     * The {@code setSgrHeader} method stores the SGR sequence for table header cells.
+     *
+     * @param sgrHeader The header sequence to store.
+     */
+    public void setSgrHeader(String sgrHeader) {
+        this.sgrHeader = sgrHeader;
+    }
+
+    /**
+     * The {@code getSgrCell} method returns the SGR sequence for table body cells.
+     * A {@code null} stored value is returned as the empty string.
+     *
+     * @return The body-cell sequence, or the empty string.
+     */
+    public String getSgrCell() {
+        return sgrCell == null ? "" : sgrCell;
+    }
+
+    /**
+     * The {@code setSgrCell} method stores the SGR sequence for table body cells.
+     *
+     * @param sgrCell The body-cell sequence to store.
+     */
+    public void setSgrCell(String sgrCell) {
+        this.sgrCell = sgrCell;
+    }
+
+    /**
+     * The {@code getSgrReset} method returns the SGR sequence that clears color.
+     * A {@code null} stored value is returned as the empty string.
+     *
+     * @return The reset sequence, or the empty string.
+     */
+    public String getSgrReset() {
+        return sgrReset == null ? "" : sgrReset;
+    }
+
+    /**
+     * The {@code setSgrReset} method stores the SGR sequence that clears color.
+     *
+     * @param sgrReset The reset sequence to store.
+     */
+    public void setSgrReset(String sgrReset) {
+        this.sgrReset = sgrReset;
+    }
+}
+/*****************************************************************************************
+ * End of Class: FormatContext.java 082526
+ ****************************************************************************************/

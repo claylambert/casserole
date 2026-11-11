@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.16</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>org.casserole</groupId>
+    <artifactId>casserole</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>casserole</name>
+
+    <modules>
+        <module>casserole-server</module>
+        <module>aetheris/java</module>
+    </modules>
+
+    <properties>
+        <java.version>26</java.version>
+        <spring-ai.version>1.1.8</spring-ai.version>
+        <jediterm.version>3.74</jediterm.version>
+        <pty4j.version>0.12.25</pty4j.version>
+        <sshd.version>2.19.0</sshd.version>
+        <commonmark.version>0.24.0</commonmark.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.jediterm</groupId>
+                <artifactId>jediterm-core</artifactId>
+                <version>${jediterm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.jediterm</groupId>
+                <artifactId>jediterm-ui</artifactId>
+                <version>${jediterm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.pty4j</groupId>
+                <artifactId>pty4j</artifactId>
+                <version>${pty4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.sshd</groupId>
+                <artifactId>sshd-core</artifactId>
+                <version>${sshd.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.sshd</groupId>
+                <artifactId>sshd-sftp</artifactId>
+                <version>${sshd.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.commonmark</groupId>
+                <artifactId>commonmark</artifactId>
+                <version>${commonmark.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <repositories>
+        <repository>
+            <id>intellij-dependencies</id>
+            <url>https://packages.jetbrains.team/maven/p/ij/intellij-dependencies</url>
+        </repository>
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2</url>
+        </repository>
+    </repositories>
+</project>
