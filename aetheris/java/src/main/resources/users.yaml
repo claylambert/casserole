@@ -1,0 +1,11 @@
+# Starter accounts for the Casserole server.
+# The root README explains how to add and remove a user.
+users:
+  - name: admin
+    password: demo-admin
+  - name: user
+    password: demo-user
+  - name: guest
+    password: demo-guest
+  - name: dev
+    password: demo-dev
