@@ -1,0 +1,8 @@
+# aetheris-term::keys
+
+Component file. It carries how this package is built.
+
+**Depends:** [rust/aetheris/aetheris-term/aetheris-term](../aetheris-term.spec.md), [java/org/aetheris/swing/swing](../../../../java/org/aetheris/swing/swing.spec.md)
+
+This page is the placement header for this package. The placement header holds the package's place in the spec tree. This page lists no further requirement. No further content is needed here.
+
