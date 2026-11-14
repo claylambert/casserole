@@ -1,0 +1,76 @@
+spring:
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      init:
+        pull-model-strategy: never
+      chat:
+        # cwc-mistral-nemo-12b:latest
+        model: qwen2.5-coder:7b
+        options:
+          model: qwen2.5-coder:7b
+          num-ctx: 8192
+  datasource:
+    url: jdbc:h2:mem:casserole
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+casserole:
+  ssh:
+    port: 2222
+    username: admin
+    password: ""
+    host-key: hostkey.ser
+    idle-timeout-ms: 0
+  chat:
+    system-prompt: ""
+    max-messages: 40
+    max-tokens: 0
+    managed-tokens: 0
+    head-count: 3
+    escape-timeout-ms: 100
+    max-paste-chars: 65536
+    spinner: ascii
+    spinner-ms: 100
+    smart-format: true
+    table-style: ascii
+    history-size: 500
+    list-preview-chars: 120
+  grok:
+    api-key: "your-grok-api-key"
+    context-windows:
+      grok-4.7: 500000
+      grok-4.6: 500000
+      grok-4.5: 500000
+      grok-4.3: 1000000
+      grok-4.20-0309-reasoning: 1000000
+      grok-4.20-0309-non-reasoning: 1000000
+      grok-build-0.1: 256000
+      grok-4.20-multi-agent-0309: 1000000
+  pool:
+    host: ""
+    port: 0
+    secret: ""
+    context-window: 256000
+  lamina:
+    metrics: false
+
+roux:
+  page-bytes: 1048576
+  max-frame-bytes: 0
+  resident-pages: 2
+  durability: commit
+  spill:
+    enabled: true
+    dir: ${user.home}/.casserole/roux
+    align-bytes: 4096
+  crypto:
+    enabled: false
+  session:
+    persist: true
+    restore: true
+    exclusive: true

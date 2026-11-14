@@ -1,0 +1,8 @@
+[package]
+name = "aetheris-term"
+version = "1.0.0"
+edition = "2024"
+
+[dependencies]
+unicode-width = "0.2.2"
+vte = "0.15.0"
