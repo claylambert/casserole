@@ -1,0 +1,9 @@
+users:
+  - name: clay
+    password: butter
+  - name: alice
+    password: scone
+  - name: joe
+    password: bread
+  - name: bob
+    password: ice
