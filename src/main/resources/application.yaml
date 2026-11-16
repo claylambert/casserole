@@ -1,0 +1,83 @@
+casserole:
+  lamina:
+    metrics: false
+  ssh:
+    port: 2222
+    username: clay
+    password: ""
+    host-key: hostkey.ser
+    idle-timeout-ms: 0
+  chat:
+    system-prompt: ""
+    max-messages: 200
+    max-tokens: 0
+    managed-tokens: 0
+    head-count: 1
+    escape-timeout-ms: 100
+    max-paste-chars: 65536
+    spinner: ascii
+    spinner-ms: 100
+    smart-format: true
+    table-style: ascii
+    history-size: 500
+    list-preview-chars: 120
+  grok:
+    api-key: "your-grok-api-key"
+    context-windows:
+      grok-4.7: 500000
+      grok-4.6: 500000
+      grok-4.5: 500000
+      grok-4.3: 1000000
+      grok-4.20-0309-reasoning: 1000000
+      grok-4.20-0309-non-reasoning: 1000000
+      grok-build-0.1: 256000
+      grok-4.20-multi-agent-0309: 1000000
+  pool:
+    host: ""
+    port: 0
+    secret: ""
+    context-window: 256000
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:casserole
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  ai:
+    ollama:
+#      base-url: http://localhost:11434
+      base-url: http://localhost:11434
+      init:
+        pull-model-strategy: never
+      chat:
+#       model: qwen2.5-coder:7b
+#       model: cwc-mistral-nemo-12b:latest
+        model: deepseek-r1:7b
+        options:
+#         model: qwen2.5-coder:7b
+          model: deepseek-r1:7b
+          num-ctx: 131072
+          # num-ctx: 8192
+
+roux:
+  page-bytes: 1048576
+  max-frame-bytes: 0
+  resident-pages: 2
+  durability: commit
+  spill:
+    enabled: true
+    dir: ${user.home}/.casserole/roux
+    align-bytes: 4096
+  crypto:
+    enabled: false
+  session:
+    persist: true
+    restore: true
+    exclusive: true

@@ -1,0 +1,21 @@
+Casserole
+Copyright (c) 2026 Clay Lambert
+
+This product is licensed under the MIT License. The terms are in LICENSE.
+
+The following libraries are used by the build. Each keeps its own license.
+
+Java
+- Spring Boot 3.5.16, Apache License 2.0
+- Spring AI 1.1.8, Apache License 2.0
+- Log4j 2, Apache License 2.0
+- Hibernate and Jakarta Persistence, Apache License 2.0 or EPL, as shipped by Spring Boot
+- H2 Database, MPL 2.0 or EPL 1.0
+- HikariCP, Apache License 2.0
+- Apache SSHD 2.19.0, Apache License 2.0
+- JediTerm 3.74, Apache License 2.0
+- pty4j 0.12.25, Apache License 2.0
+- commonmark 0.24.0, BSD 2-Clause
+
+Rust
+- The crates pinned in aetheris/rust/Cargo.lock. Their licenses are the licenses of those crates.

@@ -1,0 +1,28 @@
+# org.roux.toon
+
+## 12. Rust row
+
+Side move. `ToonCodec.parseMessageTable`, `ToonCodec.conversationTable`, and `ToonCodec.pairConversation` read and write the same table `exportToon` writes. The requirement is one codec for both directions. The sibling is `appendTableRow`.
+**semantic-key:** PK-567
+
+## 3. Side move
+
+`ToonCodec.parseMessageTable`, `ToonCodec.conversationTable`, and `ToonCodec.pairConversation` use the table `exportToon` already writes. The sibling is `appendTableRow`.
+**semantic-key:** PK-568
+
+## Seat
+
+Every public type under org.roux carries type-level Knuth prose and one type-level tag. A method that realizes a seated requirement carries the prose and the tag. A private getter stays. ToonCodec encode carries for the one MSG. Comments and JavaDoc only. No behavior change.
+**semantic-key:** PK-984
+
+## 8. Engine APIs (no I-prefix)
+
+- `void writeFrame(...)` // not raw `byte[]` from callers; encode via `ToonCodec` into the hot page
+**semantic-key:** PK-569
+
+The ToonCodec writes and reads the text payload of one message. One encoded payload starts with the line m[1]{r,ts,tok,x:}. The next line is the role word, the time, the token count, and the text, separated by commas. #decode keeps the role, the time, and the token count from the frame header. The text comes from the payload. The type refuses construction.
+**semantic-key:** PK-1270
+
+ToonCodec. 2. Gaps from the Stage 0 code scan — **locked** `[PUFF]` 002 → `[LOCK]` 003. The code tag is the next pass.
+**semantic-key:** PK-1397
+

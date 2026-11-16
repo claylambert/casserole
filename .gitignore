@@ -1,0 +1,16 @@
+target/
+*.jar
+*.class
+rust/aetheris/app/aetheris-client
+rust/aetheris/app/aetheris-client.exe
+.idea/
+*.iws
+*.iml
+*.ipr
+hostkey.ser
+*.vpj
+*.vpw
+*.vtg
+*.vpwhist
+*.vpwhistxml
+*.vpwwildcardcache
