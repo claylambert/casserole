@@ -186,7 +186,7 @@ The specification settles how the server behaves. It settles how both clients be
 
 > **Where the pages live**
 
-> The specifications are the pages in [docs/specs/](http://docs/specs/). Those spec pages are the source from which these programs were written, and the source for a later enhancement of these programs. [SPEC.md](docs/specs/semantic-key-index.md) is the index of every page in that directory. [docs/specs/README.md](http://docs/specs/README.md) is the entry page for that directory. A comment in the source cites the page by its unique public id, the identifier that page carries. The comment also cites the path under `docs/specs/`.
+> The specifications are the pages in [docs/specs/](docs/specs/). Those spec pages are the source from which these programs were written, and the source for a later enhancement of these programs. [SPEC.md](docs/specs/semantic-key-index.md) is the index of every page in that directory. [docs/specs/README.md](docs/specs/README.md) is the entry page for that directory. A comment in the source cites the page by its unique public id, the identifier that page carries. The comment also cites the path under `docs/specs/`.
 
 A later enhancement changes these programs from the same specs. If the specs cannot drive the change, the programs themselves become the only accurate description to reconcile against. The specs are how you avoid that outcome. The spec pages sit together in one directory, and they are written in English. They are read before these programs are generated. They are read again before the programs are changed. That second reading is how a later build remains the same system.
 
