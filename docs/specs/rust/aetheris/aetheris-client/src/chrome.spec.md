@@ -323,3 +323,18 @@ The folded unfold button matches the open mark. That button sets the row. The ro
 
 The folded strip sits above the heatbar. The canvas and the inspector sit above the button bar. The unfold button keeps its height. The heat strip is the next band. The status text sits under that strip. The open bar keeps the v button. A folded bar keeps that span. The heat strip is 9 pixels. The functions are `frame_bands` and `seat_footer_band`. The file is [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs).
 **semantic-key:** PK-1445
+
+## The member bar sits on the group pane
+
+Each merge cell group has its own horizontal bar. The bar sits on the bottom of that group's member pane. The pane is as wide as the column. The pane is as tall as the member cards. When the cards are wider than the pane, the bar thickness is added under the cards. The merge card stays under that pane. The member row does not take the wheel. The canvas keeps the wheel. The function is `member_pane_height`. The file is [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs).
+**semantic-key:** PK-1453
+
+## An open modal sits above the pin strip
+
+An open modal sits above the pin strip. The pin strip stays on the foreground. A drag of the modal keeps that seat. The pointer on the strip hits the modal. The function is `seat_modal`. The file is [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs).
+**semantic-key:** PK-1454
+
+## The Rust client keeps one thinking pane for the canvas and one for the SSH pane
+
+One manager holds the thinking panes. One canvas keeps one pane. Every cell on that canvas writes that pane. One SSH pane keeps one pane. Close hides the pane. The next thought opens that same pane. A fold stays folded. The manager drops a pane when that session ends. Closing an SSH pane is that end. A reply leaves the pane in place. The methods are `acquire_canvas`, `release`, and `close_focused_pane`. The file is [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs).
+**semantic-key:** PK-1457

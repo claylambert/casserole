@@ -15,6 +15,10 @@ The enum `ImportRead` is why reading an import file failed.
 The size is checked on the file metadata and again on the bytes that were read.
 [`ImportRead::Failed`](#member-failed) holds the error text from the metadata read or the byte read.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

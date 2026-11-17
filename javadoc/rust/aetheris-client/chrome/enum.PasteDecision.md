@@ -10,6 +10,10 @@ enum PasteDecision
 
 What OK does with the editor body.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

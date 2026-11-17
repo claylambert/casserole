@@ -13,6 +13,10 @@ The field `deck` is the gap the pin strip and the thinking pane leave. The field
 
 A closed neighbor leaves `think` empty. The deck then takes that space back.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

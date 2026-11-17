@@ -10,7 +10,7 @@ struct ParkedDeck
 
 One user's canvas while another user is on the glass.
 The run stays on that user's SSH session. Switching the glass does not cancel it.
-// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
 
 ## Field Summary
 
@@ -21,7 +21,6 @@ The run stays on that user's SSH session. Switching the glass does not cancel it
 | usize | [`focus`](#member-focus) |  |
 | Option<CanvasFacts> | [`facts`](#member-facts) |  |
 | String | [`scope_text`](#member-scope_text) |  |
-| ThinkLog | [`think`](#member-think) |  |
 | Option<crate::vault::Vault> | [`vault`](#member-vault) |  |
 | String | [`vault_canvas`](#member-vault_canvas) |  |
 | Vec<String> | [`vault_hold`](#member-vault_hold) |  |
@@ -79,14 +78,6 @@ facts: Option<CanvasFacts>
 
 ```rust
 scope_text: String
-```
-
-### think
-
-<a id="member-think"></a>
-
-```rust
-think: ThinkLog
 ```
 
 ### vault

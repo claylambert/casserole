@@ -11,9 +11,13 @@ struct ConsoleFocus
 Keyboard focus for the console. The host still owns the line.
 
 [`ConsoleFocus::at_open`](#method-at_open) arms the first paint. [`ConsoleFocus::session_opened`](#method-session_opened)
-arms the paint after a session opens. [`ConsoleFocus::take`](#method-take) is that paint. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+arms the paint after a session opens. [`ConsoleFocus::take`](#method-take) is that paint.
 A click or a drag also takes focus. After the arm fires, a quiet paint
 leaves focus where the person put it.
+
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
 
 ## Field Summary
 

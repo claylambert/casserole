@@ -15,6 +15,10 @@ The enum `PipeWake` is what the window should do after a chain card finishes.
 [`PipeWake::Send`](#member-send) carries the next cell id and the next frame bytes.
 [`PipeWake::Status`](#member-status) carries a status word and stops the chain.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

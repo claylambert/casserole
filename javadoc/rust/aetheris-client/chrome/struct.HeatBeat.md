@@ -10,7 +10,7 @@ struct HeatBeat
 
 One heatbar beat. The queue keeps the newest pending beat only.
 The field `seq` is the sequence number of this beat. The field `kind` is [`HeatKind::Canvas`](enum.HeatKind.md#member-canvas) or [`HeatKind::Vt`](enum.HeatKind.md#member-vt).
-// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 
 ## Field Summary
 

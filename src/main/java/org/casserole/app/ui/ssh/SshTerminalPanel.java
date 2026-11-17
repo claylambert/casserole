@@ -28,10 +28,12 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import org.aetheris.swing.ThinkStream;
 import org.aetheris.swing.ThinkStrip;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -40,12 +42,12 @@ import com.jediterm.core.util.TermSize;
 import com.jediterm.terminal.TtyConnector;
 import com.jediterm.terminal.ui.TerminalPanel;
 
-// @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1013 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
+// @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md FINESSE:f-176
+// @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
+// @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
+// @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md FINESSE:f-74
+// @aa-sdd PK-1013 docs/specs/common/formal-plan.spec.md FINESSE:f-82
 // @aa-sdd PK-1242 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-1242 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 /**
@@ -54,6 +56,7 @@ import com.jediterm.terminal.ui.TerminalPanel;
  * A new SSH session builds a new widget.
  * Disconnect leaves that widget so the last buffer stays on the screen.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#SshTerminalPanel
  *
  * @author clayl (2026-08-24)
  */
@@ -68,19 +71,19 @@ import com.jediterm.terminal.ui.TerminalPanel;
 // @aa-sdd PK-225 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-679 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-680 docs/specs/common/formal-plan.spec.md
-public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
+public class SshTerminalPanel extends JPanel {
 
     private final DarkJediTermSettings settings;
     private final SshClientTheme theme;
     private final ThinkStrip thinkStrip;
+    /** Stable id for this pane. The manager binds one thinking pane to this id. */
+    private final String surfaceId = UUID.randomUUID().toString();
+    /** The stream that writes {@link #thinkStrip}. Set when a chunk is offered. */
+    private ThinkStream thoughtStream;
     private DarkJediTermWidget widget;
     private Runnable importRequest;
     private Runnable selectModelRequest;
     private Runnable transferRequest;
-    /**
-     * The flag is true while a console thought block is still receiving chunks.
-     */
-    private boolean consoleThinkLive;
     /**
      * The flag is true after the shared VT100 chrome file has been read once.
      * That file is used by every VT100 strip.
@@ -109,8 +112,8 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
      * The string is the text typed on this pane and not yet submitted.
      */
     private String liveLine = "";
-    /** // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-     * The integer is the last token estimate stored for this pane. // @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md
+    /**
+     * The integer is the last token estimate stored for this pane.
      * The heat bar reads this integer.
      * The key handler does not write it.
      */
@@ -146,7 +149,7 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
                  * The host answers the thinking strip for this pane.
                  * {@code maxHeight} returns the strip's natural height when the pane is shorter than that height plus 160 pixels.
                  * A pane with no height yet returns {@code 480}.
-                 * {@code relayout} revalidates this pane.
+                 * {@code relayout} revalidates and repaints this pane.
                  * {@code saveLog} does nothing.
                  * {@code loadLog} returns an empty string.
                  * {@code noteChrome} stores the closed flag and the height for every VT100 strip.
@@ -154,8 +157,8 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
                  * {@code cleared} marks the console thought block as finished.
                  */
                 new ThinkStrip.Host() {
-                    // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-                    // @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
+                    // @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md FINESSE:f-74
             @Override
             public int maxHeight() {
                 int natural = thinkStrip == null ? 48 : thinkStrip.naturalHeight();
@@ -173,6 +176,7 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
             @Override
             public void relayout() {
                 panel.revalidate();
+                panel.repaint();
             }
 
             @Override
@@ -197,7 +201,14 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
 
             @Override
             public void cleared() {
-                consoleThinkLive = false;
+                if (thoughtStream != null) {
+                    thoughtStream.finish(thinkStrip);
+                }
+            }
+
+            @Override
+            public void noteSeat(boolean shut, boolean folded) {
+                // This strip keeps the shut flag and the fold. A neighbor pane is not written.
             }
         });
         this.widget = newWidget();
@@ -214,6 +225,7 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
      * The caller passes true only for the focused leaf among several panes.
      * A single pane stays bare.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-155 FINESSE:f-161
      *
      * @param on The flag is true when this pane is the focused leaf among several panes.
      */
@@ -240,6 +252,7 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
      * The side edges are painted when the width is greater than {@code 1}.
      * A later child paint cannot cover that ring.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-161
      *
      * @param g The graphics object is the border drawing surface.
      */
@@ -266,53 +279,80 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
     }
 
     /**
+     * The method returns this pane's stable id.
+     * The manager uses the id as the SSH context.
+     *
+     * @return the surface id
+     */
+    public String surfaceId() {
+        return surfaceId;
+    }
+
+    /**
+     * The method returns this pane's thinking strip.
+     * The manager binds that strip, and the stream writes it by reference.
+     *
+     * @return the strip
+     */
+    public ThinkStrip thoughtPane() {
+        return thinkStrip;
+    }
+
+    /**
      * The method offers a pool thought on this session.
-     * The tag passed to the strip is {@code pool}.
+     * The tag passed to the stream is {@code pool}.
      * The terminal bytes stay the reply.
      *
+     * @param stream The stream writes this pane.
      * @param text The text is the thought chunk.
      */
-    public void offerConsoleThought(String text) {
-        offerConsoleThought(text, "pool");
+    public void offerConsoleThought(ThinkStream stream, String text) {
+        offerConsoleThought(stream, text, "pool");
     }
 
     /**
      * The method offers a console thought on this session.
+     * {@code stream} receives this pane by reference.
+     * This strip is the thinking pane for this SSH pane.
+     * A later reply writes this same strip.
+     * A different model word starts a header on this strip.
+     * A null stream returns without writing.
      * A missing strip, a null chunk, or an empty chunk returns without a change.
-     * A live block appends the chunk.
-     * A new block starts with the tag and the chunk.
      * A null or blank tag is sent as {@code ollama}.
      * The terminal bytes stay the reply.
      *
+     * @param stream The stream writes this pane.
      * @param text The text is the thought chunk.
      * @param tag The tag is the model word for the turn.
      */
-    public void offerConsoleThought(String text, String tag) {
-        if (thinkStrip == null || text == null || text.length() == 0) {
+    public void offerConsoleThought(ThinkStream stream, String text, String tag) {
+        if (stream == null || thinkStrip == null || text == null || text.length() == 0) {
             return;
         }
-        if (consoleThinkLive) {
-            thinkStrip.append(text);
-        } else {
-            consoleThinkLive = true;
-            String word = tag == null ? "" : tag.trim();
-            if (word.length() == 0) {
-                word = "ollama";
-            }
-            thinkStrip.begin(word, text);
+        thoughtStream = stream;
+        String word = tag == null ? "" : tag.trim();
+        if (word.length() == 0) {
+            word = "ollama";
         }
+        stream.offer(thinkStrip, surfaceId, word, text);
     }
 
     /**
-     * The method closes the console thought block.
+     * The method closes the console thought block on this pane.
      * The strip stays on screen.
-     * A missing strip only clears the live flag.
+     * A fold stays folded.
+     * A closed strip stays closed until a later thought opens it.
+     * A null stream returns without a call.
+     * Another pane is not written.
+     *
+     * @param stream The stream that owns this pane's block.
      */
-    public void finishConsoleThought() {
-        consoleThinkLive = false;
-        if (thinkStrip != null) {
-            thinkStrip.finish();
-        } // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+    public void finishConsoleThought(ThinkStream stream) {
+        if (stream == null) {
+            return;
+        }
+        thoughtStream = stream;
+        stream.finish(thinkStrip);
     }
 
     /**
@@ -322,7 +362,7 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
      */
     public void revealThinking() {
         if (thinkStrip != null) {
-            thinkStrip.revealFromMenu(); // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+            thinkStrip.revealFromMenu();
         }
     }
 
@@ -341,9 +381,9 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
     }
 
     /**
-     * The method stores the console Select Model action. // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-     * A live widget receives the same action. // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-     * A later widget receives it too. // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
+     * The method stores the console Select Model action.
+     * A live widget receives the same action.
+     * A later widget receives it too.
      *
      * @param request The request runs from the console Select Model menu.
      */
@@ -383,6 +423,7 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
      * The line is empty after Enter.
      * A null store returns an empty string.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-177
      *
      * @return The return value is the unsent line.
      */
@@ -393,7 +434,7 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
     /**
      * The method returns the token estimate last stored for this pane.
      *
-     // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
      *
      * @return The return value is that stored estimate.
      */
@@ -405,7 +446,7 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
      * The method stores the token estimate for this pane.
      * The key handler does not call this method.
      *
-     // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
      *
      * @param count The count is the estimate to store.
      */
@@ -437,9 +478,9 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
          * Enter without Shift clears the line.
          */
         term.getTerminalPanel().addKeyListener(new KeyAdapter() {
-            // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
+            // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md FINESSE:f-176
+            // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md FINESSE:f-177
             @Override
             public void keyTyped(KeyEvent event) {
                 char ch = event.getKeyChar();
@@ -641,6 +682,7 @@ public class SshTerminalPanel extends JPanel { // @aa-sdd PK-1088 PK-1166 docs/s
      * A missing widget returns an empty string.
      * An empty pane is an empty string.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-160
      *
      * @return The return value is the session text the token window counts.
      */

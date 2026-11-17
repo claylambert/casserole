@@ -18,6 +18,10 @@ The field `place` is true when a saved rectangle should be applied on the next p
 The field `saved` is that saved [`ViewRect`](struct.ViewRect.md), or `None` when there is none.
 The field `last` is the rectangle after the latest paint, or `None` before the window has been shown.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

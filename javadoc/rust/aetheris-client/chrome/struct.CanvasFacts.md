@@ -14,7 +14,7 @@ A missing `managed-tokens` line is zero. A missing `head-count` line is zero. Th
 
 | | |
 | --- | --- |
-| **Specification** | PK-1174 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1174 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-222 |
 
 ## Field Summary
 

@@ -185,229 +185,229 @@ import org.casserole.edit.EditMemory;
 import org.casserole.mood.MoodDesk;
 import org.casserole.app.ui.ssh.SshTtyConnector;
 import org.casserole.app.ui.ssh.Vt100StatusLine;
- // @aa-sdd PK-1154 PK-1187 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1187 PK-1152 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1154 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1152 PK-1146 PK-1188 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1188 PK-1142 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1146 PK-1139 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1139 PK-1136 PK-1189 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1189 PK-1135 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1136 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1135 PK-1129 PK-1190 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1190 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1129 PK-1118 PK-1191 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1191 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1118 PK-1115 PK-1192 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1192 PK-1158 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-1115 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1158 PK-1107 PK-1193 docs/specs/common/stages.spec.md docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1193 PK-1102 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1107 PK-1094 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1102 PK-1083 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1094 PK-1080 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1083 PK-1072 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1184 PK-53 PK-1065 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-53 PK-1064 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1065 PK-1063 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1064 PK-1062 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1063 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1062 PK-1061 PK-1194 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1194 PK-1060 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1061 PK-1059 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1060 PK-1058 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1059 PK-1057 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1058 PK-1056 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1057 PK-1054 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1054 PK-1049 PK-1195 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1195 PK-1048 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1049 PK-1047 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1048 PK-1046 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1047 PK-1045 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1046 PK-1044 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1045 PK-1043 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1044 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1043 PK-1042 PK-1196 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1196 PK-1041 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1042 PK-1040 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1041 PK-1039 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1040 PK-1038 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1039 PK-1037 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1038 PK-1036 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1037 PK-1035 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1036 PK-1034 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1035 PK-1033 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1034 PK-1032 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1033 PK-1031 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1032 PK-1162 docs/specs/common/formal-plan.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-1031 PK-1030 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1162 PK-1161 docs/specs/common/stages.spec.md
-// @aa-sdd PK-1030 PK-1029 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1161 PK-1028 docs/specs/common/stages.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1029 PK-1027 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1028 PK-1026 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1027 PK-1025 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1026 PK-1024 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1025 PK-1023 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1024 PK-1022 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1023 PK-1018 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1022 PK-1016 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1016 PK-1007 PK-1197 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1197 PK-1006 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1006 PK-1004 PK-1198 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1198 PK-1001 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1004 PK-1000 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1000 PK-1399 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1399 PK-1199 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1199 PK-1066 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
+
+// @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-10
+// @aa-sdd PK-1154 docs/specs/common/formal-plan.spec.md FINESSE:f-102
+// @aa-sdd PK-1152 docs/specs/common/formal-plan.spec.md FINESSE:f-104
+// @aa-sdd PK-1188 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-11
+// @aa-sdd PK-1146 docs/specs/common/formal-plan.spec.md FINESSE:f-111
+// @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md FINESSE:f-115
+// @aa-sdd PK-1139 docs/specs/common/formal-plan.spec.md FINESSE:f-118
+// @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-12
+// @aa-sdd PK-1136 docs/specs/common/formal-plan.spec.md FINESSE:f-123
+// @aa-sdd PK-1135 docs/specs/common/formal-plan.spec.md FINESSE:f-124
+// @aa-sdd PK-1190 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-13
+// @aa-sdd PK-1129 docs/specs/common/formal-plan.spec.md FINESSE:f-138
+// @aa-sdd PK-1191 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-14
+// @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md FINESSE:f-149
+// @aa-sdd PK-1192 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-15
+// @aa-sdd PK-1115 docs/specs/common/formal-plan.spec.md FINESSE:f-154
+// @aa-sdd PK-1158 docs/specs/common/stages.spec.md FINESSE:f-158
+// @aa-sdd PK-1193 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-16
+// @aa-sdd PK-1107 docs/specs/common/formal-plan.spec.md FINESSE:f-171
+// @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md FINESSE:f-177
+// @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md FINESSE:f-185
+// @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md FINESSE:f-198
+// @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md FINESSE:f-203
+// @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+// @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
+// @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
+// @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
+// @aa-sdd PK-1064 docs/specs/common/formal-plan.spec.md FINESSE:f-26
+// @aa-sdd PK-1063 docs/specs/common/formal-plan.spec.md FINESSE:f-27
+// @aa-sdd PK-1062 docs/specs/common/formal-plan.spec.md FINESSE:f-28
+// @aa-sdd PK-1194 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-3
+// @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
+// @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md FINESSE:f-32
+// @aa-sdd PK-1059 docs/specs/common/formal-plan.spec.md FINESSE:f-33
+// @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md FINESSE:f-34
+// @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md FINESSE:f-35
+// @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
+// @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+// @aa-sdd PK-1195 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-4
+// @aa-sdd PK-1049 docs/specs/common/formal-plan.spec.md FINESSE:f-43
+// @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md FINESSE:f-44
+// @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md FINESSE:f-45
+// @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
+// @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
+// @aa-sdd PK-1044 docs/specs/common/formal-plan.spec.md FINESSE:f-48
+// @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md FINESSE:f-49
+// @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-5
+// @aa-sdd PK-1042 docs/specs/common/formal-plan.spec.md FINESSE:f-50
+// @aa-sdd PK-1041 docs/specs/common/formal-plan.spec.md FINESSE:f-51
+// @aa-sdd PK-1040 docs/specs/common/formal-plan.spec.md FINESSE:f-52
+// @aa-sdd PK-1039 docs/specs/common/formal-plan.spec.md FINESSE:f-53
+// @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md FINESSE:f-54
+// @aa-sdd PK-1037 docs/specs/common/formal-plan.spec.md FINESSE:f-55
+// @aa-sdd PK-1036 docs/specs/common/formal-plan.spec.md FINESSE:f-56
+// @aa-sdd PK-1035 docs/specs/common/formal-plan.spec.md FINESSE:f-57
+// @aa-sdd PK-1034 docs/specs/common/formal-plan.spec.md FINESSE:f-58
+// @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md FINESSE:f-59
+// @aa-sdd PK-1032 docs/specs/common/formal-plan.spec.md FINESSE:f-60
+// @aa-sdd PK-1031 docs/specs/common/formal-plan.spec.md FINESSE:f-61
+// @aa-sdd PK-1162 docs/specs/common/stages.spec.md FINESSE:f-62
+// @aa-sdd PK-1030 docs/specs/common/formal-plan.spec.md FINESSE:f-63
+// @aa-sdd PK-1161 docs/specs/common/stages.spec.md FINESSE:f-64
+// @aa-sdd PK-1029 docs/specs/common/formal-plan.spec.md FINESSE:f-66
+// @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
+// @aa-sdd PK-1027 docs/specs/common/formal-plan.spec.md FINESSE:f-68
+// @aa-sdd PK-1026 docs/specs/common/formal-plan.spec.md FINESSE:f-69
+// @aa-sdd PK-1025 docs/specs/common/formal-plan.spec.md FINESSE:f-70
+// @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
+// @aa-sdd PK-1023 docs/specs/common/formal-plan.spec.md FINESSE:f-72
+// @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
+// @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md FINESSE:f-77
+// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
+// @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-8
+// @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md FINESSE:f-88
+// @aa-sdd PK-1006 docs/specs/common/formal-plan.spec.md FINESSE:f-89
+// @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-9
+// @aa-sdd PK-1004 docs/specs/common/formal-plan.spec.md FINESSE:f-91
+// @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md FINESSE:f-94
+// @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
+// @aa-sdd PK-1399 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-1199 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1199 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md FINESSE:f-226
 /**
  * The {@code AetherisNotebookPanel} is the notebook surface on tab B.
  * The panel is a {@link JPanel}.
  * The panel paints three regions on that tab.
  * The canvas is the row of conversation cards.
- * The inspector is the text pane beside the canvas. // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
- * The footer is the control bar under the canvas. // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
- * The panel implements {@link AmwpClientListener} so an AMWP frame can arrive on this surface. // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
- * AMWP is the frame type {@link AmwpFrame} that a session sends to this client. // @aa-sdd PK-1162 docs/specs/common/stages.spec.md
+ * The inspector is the text pane beside the canvas.
+ * The footer is the control bar under the canvas.
+ * The panel implements {@link AmwpClientListener} so an AMWP frame can arrive on this surface.
+ * AMWP is the frame type {@link AmwpFrame} that a session sends to this client.
  * The canvas record lives in the client vault, the store named {@code CLIENT-SOT}.
  * {@code CLIENT-SOT} means the client vault is the source of truth for the canvas conversation.
  * The panel does not draw a graph of that conversation.
  * A caller builds the panel with a theme, a worker, a yaml file, a {@link Host}, and a point size.
  * The {@link Host} is the application side that owns the focused session and the saved shell numbers.
+ * // @aa-sdd S1-09 G-12 G-17 aetheris-stages-1-3.finalize.md
  *
  * @author clayl (2026-09-02)
- */ // @aa-sdd PK-685 docs/specs/common/grok.spec.md
-// @aa-sdd PK-685 PK-791 docs/specs/common/grok.spec.md
-// @aa-sdd PK-791 PK-28 docs/specs/common/grok.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-28 PK-33 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-33 PK-738 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-738 PK-42 docs/specs/common/stages.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-42 PK-743 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-743 PK-751 docs/specs/common/stages.spec.md
-// @aa-sdd PK-751 PK-754 docs/specs/common/stages.spec.md
+ */
+// @aa-sdd PK-685 docs/specs/common/grok.spec.md
+// @aa-sdd PK-791 docs/specs/common/grok.spec.md
+// @aa-sdd PK-28 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-33 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-738 docs/specs/common/stages.spec.md
+// @aa-sdd PK-42 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-743 docs/specs/common/stages.spec.md
+// @aa-sdd PK-751 docs/specs/common/stages.spec.md
 // @aa-sdd PK-754 docs/specs/common/stages.spec.md
-// @aa-sdd PK-754 PK-755 docs/specs/common/stages.spec.md
-// @aa-sdd PK-755 PK-756 docs/specs/common/stages.spec.md
-// @aa-sdd PK-756 PK-757 docs/specs/common/stages.spec.md
-// @aa-sdd PK-757 PK-59 docs/specs/common/stages.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-59 PK-65 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-754 docs/specs/common/stages.spec.md
+// @aa-sdd PK-755 docs/specs/common/stages.spec.md
+// @aa-sdd PK-756 docs/specs/common/stages.spec.md
+// @aa-sdd PK-757 docs/specs/common/stages.spec.md
+// @aa-sdd PK-59 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-65 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-1127 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-1125 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-1122 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1116 PK-921 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-921 PK-77 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-77 PK-916 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-916 PK-924 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-924 PK-668 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-668 PK-669 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-669 PK-95 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-95 PK-98 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-98 PK-101 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-101 PK-689 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-689 PK-691 docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-691 PK-692 docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-692 PK-927 docs/specs/common/pre-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-927 PK-693 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-693 PK-105 docs/specs/common/pre-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-105 PK-910 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-910 PK-911 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-911 PK-699 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-699 PK-700 docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-700 PK-665 docs/specs/common/pre-plan.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-665 PK-923 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-923 PK-924 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-924 PK-775 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-775 PK-794 docs/specs/common/stages.spec.md docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-794 PK-795 docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-795 PK-108 docs/specs/common/pre-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1116 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-921 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-77 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-916 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-924 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-668 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-669 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-95 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-98 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-101 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-689 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-691 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-692 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-927 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-693 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-105 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-910 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-911 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-699 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-700 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-665 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-923 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-924 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-775 docs/specs/common/stages.spec.md
+// @aa-sdd PK-794 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-795 docs/specs/common/pre-plan.spec.md
 // @aa-sdd PK-108 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-108 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-108 PK-716 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/server.spec.md
-// @aa-sdd PK-716 PK-109 docs/specs/common/server.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-109 PK-1385 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/java/org/aetheris/ssh/ssh.spec.md
-// @aa-sdd PK-1385 PK-121 docs/specs/java/org/aetheris/ssh/ssh.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-121 PK-839 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/server.spec.md
-// @aa-sdd PK-839 PK-764 docs/specs/common/server.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-764 PK-55 docs/specs/common/stages.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-55 PK-56 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-56 PK-766 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-766 PK-910 docs/specs/common/stages.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-910 PK-911 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-911 PK-912 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-912 PK-913 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-913 PK-1389 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1389 PK-1390 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1390 PK-1391 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1391 PK-775 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-775 PK-634 docs/specs/common/stages.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-634 PK-66 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-108 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-716 docs/specs/common/server.spec.md
+// @aa-sdd PK-109 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1385 docs/specs/java/org/aetheris/ssh/ssh.spec.md
+// @aa-sdd PK-121 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-839 docs/specs/common/server.spec.md
+// @aa-sdd PK-764 docs/specs/common/stages.spec.md
+// @aa-sdd PK-55 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-56 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-766 docs/specs/common/stages.spec.md
+// @aa-sdd PK-910 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-911 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-912 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-913 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1389 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1390 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1391 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-775 docs/specs/common/stages.spec.md
+// @aa-sdd PK-634 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-66 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-1129 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1126 PK-68 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-68 PK-71 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-71 PK-73 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-73 PK-74 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-74 PK-75 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-75 PK-76 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-76 PK-643 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-643 PK-792 docs/specs/common/formal-plan.spec.md docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-792 PK-793 docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-793 PK-872 docs/specs/common/pre-plan.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-872 PK-874 docs/specs/common/stages.spec.md
+// @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-68 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-71 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-73 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-74 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-75 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-76 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-643 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-792 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-793 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-872 docs/specs/common/stages.spec.md
 // @aa-sdd PK-874 docs/specs/common/stages.spec.md
-// @aa-sdd PK-1087 PK-875 docs/specs/common/formal-plan.spec.md docs/specs/common/stages.spec.md
+// @aa-sdd PK-1087 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-875 docs/specs/common/stages.spec.md
 // @aa-sdd PK-1086 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1084 PK-649 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-649 PK-876 docs/specs/common/formal-plan.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-876 PK-650 docs/specs/common/stages.spec.md docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-649 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-876 docs/specs/common/stages.spec.md
 // @aa-sdd PK-650 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1083 PK-652 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-652 PK-878 docs/specs/common/formal-plan.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-878 PK-653 docs/specs/common/stages.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-653 PK-879 docs/specs/common/formal-plan.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-879 PK-80 docs/specs/common/stages.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-80 PK-880 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-880 PK-881 docs/specs/common/stages.spec.md
-// @aa-sdd PK-881 PK-909 docs/specs/common/stages.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-652 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-878 docs/specs/common/stages.spec.md
+// @aa-sdd PK-653 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-879 docs/specs/common/stages.spec.md
+// @aa-sdd PK-80 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-880 docs/specs/common/stages.spec.md
+// @aa-sdd PK-881 docs/specs/common/stages.spec.md
 // @aa-sdd PK-909 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1165 PK-883 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-883 PK-884 docs/specs/common/stages.spec.md
+// @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-883 docs/specs/common/stages.spec.md
 // @aa-sdd PK-884 docs/specs/common/stages.spec.md
-// @aa-sdd PK-1168 PK-81 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-81 PK-656 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-656 PK-657 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-657 PK-83 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-83 PK-910 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-81 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-656 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-657 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-83 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-910 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-910 PK-911 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-911 PK-922 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-922 PK-660 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-660 PK-661 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-661 PK-662 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-662 PK-663 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-663 PK-664 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-664 PK-665 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-665 PK-666 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-666 PK-923 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-923 PK-85 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-85 PK-86 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-86 PK-926 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-926 PK-87 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-87 PK-671 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-671 PK-854 docs/specs/common/formal-plan.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-854 PK-90 docs/specs/common/stages.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-910 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-911 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-922 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-660 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-661 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-662 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-663 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-664 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-665 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-666 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-923 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-85 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-86 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-926 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-87 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-671 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-854 docs/specs/common/stages.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
@@ -415,18 +415,18 @@ import org.casserole.app.ui.ssh.Vt100StatusLine;
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-90 PK-92 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-92 PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-92 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-90 PK-93 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-93 PK-94 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-94 PK-677 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-677 PK-94 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-90 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-93 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-94 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-677 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-94 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-94 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-94 docs/specs/java/org/aetheris/swing/swing.spec.md
@@ -434,24 +434,24 @@ import org.casserole.app.ui.ssh.Vt100StatusLine;
 // @aa-sdd PK-94 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-94 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-94 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-94 PK-678 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-678 PK-679 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-679 PK-680 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-680 PK-96 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-96 PK-97 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-97 PK-99 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-99 PK-100 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-100 PK-681 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-681 PK-102 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-102 PK-103 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-103 PK-725 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/server.spec.md
-// @aa-sdd PK-725 PK-1083 PK-1084 PK-1086 PK-1087 PK-1116 PK-1122 PK-1125 PK-1126 PK-1127 PK-1129 PK-1165 PK-1168 docs/specs/common/server.spec.md docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-94 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-678 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-679 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-680 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-96 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-97 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-99 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-100 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-681 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-102 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-103 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-725 docs/specs/common/server.spec.md
 public class AetherisNotebookPanel extends JPanel implements AmwpClientListener {
 
-    // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1162 PK-1200 docs/specs/common/stages.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
+    // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
+    // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md FINESSE:f-176
+    // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md FINESSE:f-177
+    // @aa-sdd PK-1162 docs/specs/common/stages.spec.md FINESSE:f-62
     // @aa-sdd PK-1200 docs/specs/java/org/aetheris/swing/swing.spec.md
     /**
      * The {@code Host} is the application side this panel calls.
@@ -682,23 +682,23 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
         /**
          * The method clears the saved-model ask on the pane that owns {@code connector}.
-         * A failed quiet ask can run again the next time that pane is selected. // @aa-sdd PK-842 docs/specs/common/stages.spec.md
-         * A null connector does nothing. // @aa-sdd PK-40 docs/specs/java/org/aetheris/swing/swing.spec.md
-         * // @aa-sdd PK-41 docs/specs/java/org/aetheris/swing/swing.spec.md
-         * @param connector the pane whose ask failed // @aa-sdd PK-48 docs/specs/java/org/aetheris/swing/swing.spec.md
-         */ // @aa-sdd PK-844 docs/specs/common/stages.spec.md
-        void clearPaneEngineAsk(SshTtyConnector connector); // @aa-sdd PK-917 docs/specs/java/org/aetheris/swing/swing.spec.md
-    } // @aa-sdd PK-887 docs/specs/common/stages.spec.md
- // @aa-sdd PK-895 docs/specs/common/stages.spec.md
-    // @aa-sdd PK-919 docs/specs/java/org/aetheris/swing/swing.spec.md
-    /** // @aa-sdd PK-88 docs/specs/java/org/aetheris/swing/swing.spec.md
+         * A failed quiet ask can run again the next time that pane is selected.
+         * A null connector does nothing.
+         *
+         * @param connector the pane whose ask failed
+         */
+        void clearPaneEngineAsk(SshTtyConnector connector);
+    }
+
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
+    /**
      * The {@code CellRun} is one cell inside the one {@link UserRun} for a user.
      * The cell keeps an id, the time the run started, and a phase.
      * The phase is {@code RUNNING} or {@code STOPPED}.
      * The type has no methods of its own.
      * {@link UserRun} reads the phase when it asks whether any cell is still running.
      */
-    // @aa-sdd PK-842 PK-1201 docs/specs/common/stages.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
+    // @aa-sdd PK-842 docs/specs/common/stages.spec.md
     // @aa-sdd PK-40 docs/specs/java/org/aetheris/swing/swing.spec.md
     // @aa-sdd PK-41 docs/specs/java/org/aetheris/swing/swing.spec.md
     // @aa-sdd PK-48 docs/specs/java/org/aetheris/swing/swing.spec.md
@@ -707,18 +707,18 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     // @aa-sdd PK-887 docs/specs/common/stages.spec.md
     // @aa-sdd PK-895 docs/specs/common/stages.spec.md
     // @aa-sdd PK-919 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-88 PK-1309 docs/specs/java/org/aetheris/swing/swing.spec.md
-    private static final class CellRun { // @aa-sdd PK-41 docs/specs/java/org/aetheris/swing/swing.spec.md
-        private String cellId; // @aa-sdd PK-48 docs/specs/java/org/aetheris/swing/swing.spec.md
-        private long startedAtMs; // @aa-sdd PK-1319 docs/specs/java/org/aetheris/swing/swing.spec.md
-        private String phase; // @aa-sdd PK-1334 docs/specs/java/org/aetheris/swing/swing.spec.md
-    } // @aa-sdd PK-1336 docs/specs/java/org/aetheris/swing/swing.spec.md
- // @aa-sdd PK-892 docs/specs/common/stages.spec.md
-    // @aa-sdd PK-1201 PK-1338 docs/specs/java/org/aetheris/swing/swing.spec.md
-    /** // @aa-sdd PK-1340 docs/specs/java/org/aetheris/swing/swing.spec.md
-     * The {@code UserRun} is one user's session binding, the sibling cell runs, and the answers waiting to paint. // @aa-sdd PK-110 docs/specs/java/org/aetheris/swing/swing.spec.md
-     * The binding is the {@link SshTtyConnector} for that user. // @aa-sdd PK-112 docs/specs/java/org/aetheris/swing/swing.spec.md
-     * The sibling runs are the {@link CellRun} map keyed by cell id. // @aa-sdd PK-113 docs/specs/java/org/aetheris/swing/swing.spec.md
+    // @aa-sdd PK-88 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private static final class CellRun {
+        private String cellId;
+        private long startedAtMs;
+        private String phase;
+    }
+
+    // @aa-sdd PK-1201 docs/specs/java/org/aetheris/swing/swing.spec.md
+    /**
+     * The {@code UserRun} is one user's session binding, the sibling cell runs, and the answers waiting to paint.
+     * The binding is the {@link SshTtyConnector} for that user.
+     * The sibling runs are the {@link CellRun} map keyed by cell id.
      * The answers are text waiting for the canvas to paint.
      * The spinner stays on the pane.
      * This type is not a second run object beside that spinner.
@@ -759,7 +759,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
             return false;
         }
-    } // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+    }
 
     private final SshClientTheme theme;
     private final AetherisWorker worker;
@@ -768,7 +768,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private final JTabbedPane canvasTabs;
     private final SoftWrapArea inspector;
     /** Second footer bar. Closed until the v on the first bar opens it. */
-    private boolean footerToolsOpen; // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+    private boolean footerToolsOpen;
     /** BB1 and BB2 showing. Open until the left mark folds them. The choice is not saved. */
     private boolean footerBarsOpen;
     /** The parent mark. v folds the bars. ^ restores them. */
@@ -859,10 +859,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * Roux token tally by sanitized user. Absent until {@code session_tokens_result:} arrives.
      * The three numbers are used, characters, and blocks.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
      */
     private final HashMap<String, int[]> rouxTally = new HashMap<String, int[]>();
     /**
      * Usernames already asked for the Roux count. A close drops the name.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
      */
     private final HashSet<String> rouxAsked = new HashSet<String>();
     private int uiFontSize;
@@ -913,7 +915,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private String focusedCellId;
     /**
      * RAM undo for each cell prompt. A restart drops it. A deleted cell drops it.
-     // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+     * // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
      */
     private final HashMap<String, EditMemory> editMemories = new HashMap<String, EditMemory>();
     private String moodLine = "";
@@ -922,7 +924,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * A define or an update waits for the next Run.
      * A transcript of more than one turn then splices that turn.
-     // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
      */
     private boolean moodPending;
     /** Canvas id to the cell that wears the splice. Absent, or head, means the first turn. */
@@ -935,6 +937,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private final LinkedHashMap<String, MoodKeep> moodBank = new LinkedHashMap<String, MoodKeep>();
     /**
      * SSH mood armed by canvas user. The shared mood file does not carry this map.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-175 FINESSE:f-176
      */
     private final LinkedHashMap<String, Boolean> sshMoodUsers = new LinkedHashMap<String, Boolean>();
     /** An SSH mood file whose version is not 1. Left unread and not overwritten. */
@@ -943,7 +946,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private int moodDialogWidth;
     private int moodDialogHeight;
     /** True after the open size is set and the dialog is showing. A resize before that is ignored. */
-    private boolean moodSizeArmed; // @aa-sdd PK-1437 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private boolean moodSizeArmed;
     /** Air-gap and num-ctx. One line on its own panel. The font fits the column. */
     private FactsLine factsNote;
     /** T stays on the inspector. The estimate sits on the frame heatbar. */
@@ -1033,7 +1036,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private final GrokSettingsDocument grokDoc = GrokSettingsDocument.open();
     /** Session think for each cell. Not a vault column. A missing key means off and no level. */
     private final HashMap<String, CellThink> ollamaThink = new HashMap<String, CellThink>();
-    /** One id for this desktop window. A later pool Run on the same boot may send only the tail. F-33. */ // @aa-sdd PK-1027 docs/specs/common/formal-plan.spec.md
+    /** One id for this desktop window. A later pool Run on the same boot may send only the tail. F-33. */
     private final String poolBootId = UUID.randomUUID().toString();
     /** Model Config modal. {@code grokDialogOpen} stays the one flag. */
     private String dialogCellId = "";
@@ -1058,16 +1061,25 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private boolean dialogAdjusting;
     /** Model id of the show ask now in flight. A reply for another id is dropped. */
     private String dialogShowId = "";
-    private ThinkStrip thinkStrip;
+    /** The slot above the footer. It shows the pane for the armed scope. */
+    private JPanel thinkSlot;
+    /** The pane currently in {@link #thinkSlot}. */
+    private ThinkStrip seatedThink;
+    /** Key of {@link #seatedThink}. Empty when the slot is clear. */
+    private String seatedKey = "";
+    /** Sanitized user whose pane is in the slot. */
+    private String seatedUser = "";
     /**
-     * Per-user thinking panes. A merge group shares one pane.
+     * Per-user thinking logs. A merge group shares one log.
      * A single prompt does not share, even with another cell of the same user.
+     * {@link #thinkPanes} owns the strip for each scope.
      */
     private final ThinkSeats thinkSeats = new ThinkSeats(new File(thinkHome(), "aetheris-thinking"));
-    /** Scope key now on the glass. Null when the open user has no armed cell. */
-    private String glassThinkKey;
-    /** Sanitized user whose pane is on the glass. */
-    private String glassThinkUser = "";
+    /**
+     * The gateway that returns the thinking pane for one user and one scope.
+     * A merge group shares one pane. A single cell keeps its own pane.
+     */
+    private final ThinkPaneManager thinkPanes = new ThinkPaneManager();
     /** Last armed cell per sanitized user. The glass returns to that pane. */
     private final HashMap<String, String> thinkFocus = new HashMap<String, String>();
     /** Dragged height of the thinking pane. {@code 0} uses the three-line height. */
@@ -1087,7 +1099,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private String consoleProvider = "ollama";
     /** Ollama id last read for this console. */
     private String consoleOllamaModel = "";
-    /** // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
+    /**
      * Ollama think string for this console. Empty and {@code false} keep the pane shut.
      * The dialog checkbox does not survive a closed modal, so the gate reads this field.
      */
@@ -1104,6 +1116,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private String dialogConsoleThink = "";
     /** Close wrote the pane shut. The next open keeps it shut until a thought opens it. */
     private boolean thinkClosed;
+    /**
+     * The closed mark from the think file at open.
+     * A scope that has not been seated starts shut when this flag is true.
+     * A later close does not change this flag.
+     */
+    private boolean thinkBirthShut;
     /** F-19 group clocks. 1800 seconds from the first stored reply. */
     private final HashMap<String, Timer> f19Clocks = new HashMap<String, Timer>();
     private static final int F19_WAIT_MS = 1800 * 1000;
@@ -1190,11 +1208,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         JPanel canvasSide = new JPanel(new BorderLayout(0, 0));
         theme.applyPanel(canvasSide);
         canvasSide.add(buildPinBar(), BorderLayout.NORTH);
-        canvasSide.add(buildCanvasDeck(), BorderLayout.CENTER); // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
-        canvasSplit = new InspectorFold(canvasSide, inspectorSide); // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+        canvasSide.add(buildCanvasDeck(), BorderLayout.CENTER);
+        canvasSplit = new InspectorFold(canvasSide, inspectorSide);
         canvasSplit.seatPin(pinShow);
         add(canvasSplit, BorderLayout.CENTER);
         loadThinkStore();
+        thinkBirthShut = thinkClosed;
         loadSshMoodStore();
         noteMoodRelay();
         JPanel southStack = new JPanel(new BorderLayout());
@@ -1208,8 +1227,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The only call is {@link AetherisNotebookPanel#refreshDeleteButton()}.
          */
         canvasTabs.addChangeListener(new ChangeListener() {
-            // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-10
+            // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-9
             /**
              * The method calls {@link AetherisNotebookPanel#refreshDeleteButton()} after the tab selection changes.
              *
@@ -1240,7 +1259,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener repaints the focused-cell caption on each timer tick.
          */
         captionTimer = new Timer(1000, new ActionListener() {
-            // @aa-sdd PK-1027 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1027 docs/specs/common/formal-plan.spec.md FINESSE:f-68
             /**
              * The method calls {@link AetherisNotebookPanel#repaintCellCaption()}.
              *
@@ -1312,8 +1331,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param sink the merge output cell
      * @return the names, or an empty string when {@code sink} is absent, the group id is empty, the canvas is absent, or the group has no named input
-     */ // @aa-sdd PK-1135 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
+     */
+    // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-211
     private String mergeInputModels(CellRecord sink) {
         if (sink == null || sink.groupId == null || sink.groupId.length() == 0) {
             return "";
@@ -1438,7 +1457,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (textH < 1 || textW < 1) {
             return null;
         }
-        int right = width - CAPTION_PAD; // @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md
+        int right = width - CAPTION_PAD;
         int origin = right - textW;
         int left = origin;
         if (left < CAPTION_PAD) {
@@ -1566,25 +1585,25 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         button.setMargin(new Insets(0, 0, 0, 0));
         button.setBorder(new EmptyBorder(0, 0, 0, 0));
         String label = button.getText();
-        if (label == null) { // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
+        if (label == null) {
             label = "";
         }
         FontMetrics metrics = button.getFontMetrics(button.getFont());
         int width = metrics.stringWidth(label) + 24;
         int height = metrics.getHeight() + 8;
         if (width < 22) {
-            width = 22; // @aa-sdd PK-58 docs/specs/java/org/aetheris/swing/swing.spec.md
-        } // @aa-sdd PK-104 docs/specs/java/org/aetheris/swing/swing.spec.md
+            width = 22;
+        }
         if (height < 22) {
-            height = 22; // @aa-sdd PK-67 docs/specs/java/org/aetheris/swing/swing.spec.md
-        } // @aa-sdd PK-1135 docs/specs/common/formal-plan.spec.md
+            height = 22;
+        }
         Dimension box = new Dimension(width, height);
         button.setPreferredSize(box);
         button.setMinimumSize(box);
         button.setMaximumSize(box);
     }
 
-    // @aa-sdd PK-1135 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1135 docs/specs/common/formal-plan.spec.md FINESSE:f-124
     /**
      * The {@code RustLetterFace} paints a one-letter mark.
      * The paint order is the fill, then the white stroke, then the letter.
@@ -1762,7 +1781,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The border paints the parent plate, the rounded fill, and the inside stroke.
          */
         return new Border() {
-            // @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md FINESSE:f-88
             /**
              * The method paints the round edge into {@code g}.
              * A width under 1 or a height under 1 returns before any paint.
@@ -1899,8 +1918,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private void installDividerPersistence() {
         /**
          * The listener writes the divider ratio when the one-shot timer fires.
-         */ // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md
+         */
         dividerSaveTimer = new Timer(400, new ActionListener() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             /**
              * The method calls {@link AetherisNotebookPanel#saveDividerRatio()}.
              *
@@ -1916,12 +1936,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener queues a divider restore when the split is shown or resized.
          */
         canvasSplit.addComponentListener(new ComponentAdapter() {
-            // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-8
             /**
              * The method calls {@link AetherisNotebookPanel#queueDividerRestore()} when the split is shown.
              *
              * @param e the component event Swing sent for the show
-             */ // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
+             */
             @Override
             public void componentShown(ComponentEvent e) {
                 queueDividerRestore();
@@ -1957,7 +1977,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The runnable clears the queued flag and applies the saved divider.
          */
         SwingUtilities.invokeLater(new Runnable() {
-            // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md FINESSE:f-34
             /**
              * The method clears {@code dividerRestoreQueued} and then calls {@link AetherisNotebookPanel#applySavedDivider()}.
              */
@@ -2098,9 +2118,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         refitShortButtons(this);
         lockFoldMark();
         mirrorUserComboFont();
-        if (thinkStrip != null) {
-            thinkStrip.setBodyFont(mono);
-        }
+        thinkPanes.applyBodyFont(mono);
         if (factsNote != null) {
             factsNote.fit(mono);
         }
@@ -2252,11 +2270,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         int height = target;
         if (bar) {
             // Bar height is the preferred height minus 4.
+            // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-145
             height = pref.height - 4;
         }
         if (height < 1) {
-            height = 1; // @aa-sdd PK-1049 docs/specs/common/formal-plan.spec.md
-        } // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+            height = 1;
+        }
         button.setPreferredSize(new Dimension(pref.width, height));
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, height));
         holdShortLabel(button);
@@ -2294,10 +2313,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         button.setPreferredSize(null);
         button.setMinimumSize(null);
-        button.setMaximumSize(null); // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
-        String label = button.getText(); // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
-        if (label == null) { // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
-            label = ""; // @aa-sdd PK-1068 docs/specs/common/formal-plan.spec.md
+        button.setMaximumSize(null);
+        String label = button.getText();
+        if (label == null) {
+            label = "";
         }
         Font font = button.getFont();
         FontMetrics metrics;
@@ -2329,8 +2348,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         if (Boolean.TRUE.equals(button.getClientProperty("aetheris.bar"))) {
             // Five pixels under the settled bar height. The font still sets that height.
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            height = height - 5; // @aa-sdd PK-1065 PK-1448 docs/specs/common/formal-plan.spec.md docs/specs/common/stages.spec.md
+            // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-162
+            height = height - 5;
         }
         if (width < 1) {
             width = 1;
@@ -2351,16 +2370,16 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The margin and the border are empty.
      * A missing label is measured as an empty string.
      * A missing font is measured as sans serif at 12 points.
-     * The open width is that glyph width, and a width under 1 becomes 1. // @aa-sdd PK-1068 docs/specs/common/formal-plan.spec.md
+     * The open width is that glyph width, and a width under 1 becomes 1.
      * The open height stays the bar height taken from the delete button.
      * A missing bar height uses the font height, and a height under 1 becomes 1.
      * Folded, the button and the line are the glyph height.
      * The preferred size, the minimum size, the maximum size, and the current size are that box.
      */
     private void lockFoldMark() {
-        // @aa-sdd PK-1068 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1068 docs/specs/common/formal-plan.spec.md FINESSE:f-224
         if (footerFoldButton == null) {
-            return; // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+            return;
         }
         footerFoldButton.setMargin(new Insets(0, 0, 0, 0));
         footerFoldButton.setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -2412,7 +2431,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The later call locks the mark, revalidates the panel, and repaints it.
      */
     private void queueFoldMark() {
-        // @aa-sdd PK-1068 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1068 docs/specs/common/formal-plan.spec.md FINESSE:f-224
         /**
          * The runnable locks the fold mark after the button has joined its container.
          */
@@ -2434,7 +2453,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * BB1 is the first footer bar.
      * The font control refits the buttons first, so this method reads the delete button's font.
      * A missing combo or a missing delete button returns immediately.
-     * A missing fitted font returns immediately. // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+     * A missing fitted font returns immediately.
      * A combo that already has a font keeps that family and takes the fitted size.
      * The preferred width is 160 and the maximum width is 180.
      * The height is the combo's preferred height, or 24 when that height is under 1.
@@ -2487,7 +2506,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The icon draws two overlapping rounded sheets in the button colors.
          */
         return new Icon() {
-            // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md FINESSE:f-34
             /**
              * The method returns the icon width.
              *
@@ -2500,7 +2519,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
             /**
              * The method returns the icon height.
-             * // @aa-sdd PK-1112 docs/specs/common/formal-plan.spec.md
+             *
              * @return {@code 10}
              */
             @Override
@@ -2600,7 +2619,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * Vault text uses a bare newline.
      * A Windows paste keeps the breaks when a carriage return is already paired with the newline.
      * A newline that is not already preceded by a carriage return gains one.
-     * Every other character is copied unchanged. // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
+     * Every other character is copied unchanged.
      *
      * @param body the reply text
      * @return the same characters with a carriage return before a lone newline
@@ -2608,14 +2627,14 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private static String clipboardLines(String body) {
         StringBuilder out = new StringBuilder(body.length() + 16);
         for (int i = 0; i < body.length(); i++) {
-            char ch = body.charAt(i); // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+            char ch = body.charAt(i);
             if (ch == '\n' && (i == 0 || body.charAt(i - 1) != '\r')) {
                 out.append('\r');
             }
             out.append(ch);
         }
         return out.toString();
-    } // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md
+    }
 
     /**
      * The method builds the visible break between groups on BB1.
@@ -2625,21 +2644,21 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The component name is {@code bb1-group-divider}.
      * The line color is the panel foreground captured when the mark is built.
      *
-     * @return a narrow vertical mark // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
-     */ // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+     * @return a narrow vertical mark
+     */
     private JComponent footerGroupDivider() {
         final Color color = theme.getPanelForeground();
         /**
          * The mark paints one vertical line and reports a fixed size of 9 by 22.
          */
         JPanel mark = new JPanel() {
-            // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-8
             /**
              * The method returns the preferred size of the group break.
              *
              * @return a size of 9 by 22
              */
-            @Override // @aa-sdd PK-1112 docs/specs/common/formal-plan.spec.md
+            @Override
             public Dimension getPreferredSize() {
                 return new Dimension(9, 22);
             }
@@ -2686,8 +2705,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
     /**
      * The method builds the hover text for the connected-user pull-down.
-     * A null name or an empty name uses the sentence {@code No user is selected.} // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
-     * Any other name uses {@code Selected user: } plus the name passed through {@link #htmlPlain(String)}. // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+     * A null name or an empty name uses the sentence {@code No user is selected.}
+     * Any other name uses {@code Selected user: } plus the name passed through {@link #htmlPlain(String)}.
      * The next sentence says that choosing a name switches the vault on screen to that connected user.
      * The sentence after that says that the thinking spinner follows the vault that is running.
      * The sentences are joined with a {@code br} tag and wrapped by {@link #buttonTip(String)}.
@@ -2796,7 +2815,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @return {@code true} when the open vault is already that user, and {@code false} otherwise
      */
     public boolean isOpenUser(String username) {
-        if (vault == null || username == null) { // @aa-sdd PK-1063 docs/specs/common/formal-plan.spec.md
+        if (vault == null || username == null) {
             return false;
         }
         return vault.getUsername().equals(sanitizeUser(username));
@@ -2892,6 +2911,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The runnable calls {@link AetherisNotebookPanel#showRunFor(String)} on the event thread.
              */
             SwingUtilities.invokeLater(new Runnable() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method calls {@link AetherisNotebookPanel#showRunFor(String)} with the same user.
                  */
@@ -2958,8 +2978,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A newer epoch abandons the task.
          */
         worker.submit(new Runnable() {
-            // @aa-sdd PK-1049 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1049 docs/specs/common/formal-plan.spec.md FINESSE:f-43
+            // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
             /**
              * The method persists the previous vault when one is open, opens the new vault, and posts the paint.
              * Each generation check returns when {@code epoch} is no longer {@code bindEpoch}.
@@ -3007,9 +3027,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * A newer epoch leaves the screen as it is.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
-                        // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
-                        // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md FINESSE:f-141
+                        // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md FINESSE:f-206
+                        // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md FINESSE:f-220
                         /**
                          * The method reloads the expanded-view record, clears the concealed ids, and rebuilds the tabs.
                          * A stale {@code epoch} returns before that work.
@@ -3059,8 +3079,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The runnable shows the vault failure on the status line.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-                        // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+                        // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
                         /**
                          * The method sets the status to {@code vault error: } plus the exception message.
                          */
@@ -3088,8 +3108,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         } catch (IllegalArgumentException ex) {
             return "anon";
         }
-    } // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
- // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
+    }
+
     /**
      * The method closes the open vault.
      * A live divider timer is stopped, and {@link #saveDividerRatio()} runs first.
@@ -3106,9 +3126,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The worker task closes the open vault and clears the field.
          */
         worker.submit(new Runnable() {
-            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
+            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
+            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
             /**
              * The method closes {@code vault} when it is present and then sets the field to null.
              */
@@ -3156,7 +3176,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         return word;
     }
- // @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md
+
     /**
      * The method returns the console model last stored on this notebook.
      * The thin SSH strip does not call this method. That strip reads the focused pane.
@@ -3164,7 +3184,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A blank Ollama id returns {@code ollama}. A canvas cell is not this word.
      *
      * @return the console engine word
-     */ // @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md
+     */
     public String shellEngineWord() {
         String grok = "";
         if (consoleGrok != null && consoleGrok.model != null) {
@@ -3185,16 +3205,27 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * The method shows Thinking on the canvas pane.
-     * A missing thinking strip is left alone.
-     * A present strip calls {@code revealFromMenu}.
+     * The method shows Thinking on the armed canvas pane.
+     * A user with no armed cell is left alone.
+     * The armed scope's pane calls {@code revealFromMenu}.
      * The VT100 strips stay as they are.
      * The closed mark on the file stays.
      */
     public void revealThinking() {
-        if (thinkStrip != null) {
-            thinkStrip.revealFromMenu();
+        seatArmedThink(openUsername());
+        if (seatedThink != null) {
+            seatedThink.revealFromMenu();
         }
+    }
+
+    /**
+     * The method returns the gateway for thinking panes.
+     * An SSH pane binds its strip through this gateway.
+     *
+     * @return the manager
+     */
+    public ThinkPaneManager thinkPanes() {
+        return thinkPanes;
     }
 
     /**
@@ -3226,7 +3257,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The runnable calls {@link AetherisNotebookPanel#onConsoleModel(String, String)} on the event thread.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
                 /**
                  * The method calls {@link AetherisNotebookPanel#onConsoleModel(String, String)} with the same two words.
                  */
@@ -3238,7 +3269,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return;
         }
         consoleDialogDismissed = false;
-        requestConsoleModel(); // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+        requestConsoleModel();
     }
 
     /**
@@ -3249,7 +3280,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A raw session stays closed.
      * That path sets the status through {@code raw console has no modal}.
      * Any other path starts a daemon thread named {@code aetheris-shell-model}.
-     * The thread writes {@code shell_model:} on channel A as a scope A data frame. // @aa-sdd PK-1202 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * The thread writes {@code shell_model:} on channel A as a scope A data frame.
      * The menu stays quiet when the mux is gone.
      */
     public void requestConsoleModel() {
@@ -3259,7 +3290,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         final SshTtyConnector connector = host.focusedAmwpConnector();
         if (connector == null || !connector.isAmwp()) {
-            host.aetherisStatus(statusLine("raw console has no modal")); // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+            host.aetherisStatus(statusLine("raw console has no modal"));
             return;
         }
         host.armConsoleOpen(connector);
@@ -3293,16 +3324,16 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The ask does not open Model Config. The reply paints that pane's engine word.
      * A null connector returns. A connector that is not AMWP returns.
      * The thread writes {@code shell_model:} on channel A. A failed write stays quiet.
-     * // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
-     * @param connector the pane that just connected, or the pane that is now focused // @aa-sdd PK-1062 docs/specs/common/formal-plan.spec.md
+     *
+     * @param connector the pane that just connected, or the pane that is now focused
      */
     public void requestPaneEngine(final SshTtyConnector connector) {
         if (connector == null || !connector.isAmwp()) {
             return;
         }
         /**
-         * The thread writes the quiet shell-model ask and swallows a failure. // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
-         */ // @aa-sdd PK-1062 docs/specs/common/formal-plan.spec.md
+         * The thread writes the quiet shell-model ask and swallows a failure.
+         */
         Thread worker = new Thread(new Runnable() {
             /**
              * The method writes {@code shell_model:} as UTF-8 inside a scope A payload.
@@ -3336,23 +3367,24 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * Roux is the session tally of used tokens, characters, and blocks.
      * The reply does not paint the VT100.
      * A null or empty focused user returns before any ask.
-     * A username already asked stays quiet until that session closes. // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+     * A username already asked stays quiet until that session closes.
      * A missing connector, or a connector that is not AMWP, removes the name and returns.
      * Any other path starts a daemon thread named {@code aetheris-session-tokens}.
      * The thread writes {@code session_tokens:} on channel A as a scope A data frame.
      * A failed write removes the name so a later call can ask again.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
      */
     public void requestSessionTokens() {
         final String username = host.focusedVaultUser();
         if (username == null || username.length() == 0) {
             return;
         }
-        synchronized (runLock) { // @aa-sdd PK-1203 docs/specs/java/org/aetheris/swing/swing.spec.md
+        synchronized (runLock) {
             if (rouxAsked.contains(username)) {
                 return;
             }
             rouxAsked.add(username);
-        } // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md
+        }
         final SshTtyConnector connector = host.focusedAmwpConnector();
         if (connector == null || !connector.isAmwp()) {
             synchronized (runLock) {
@@ -3364,15 +3396,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The thread writes the session-token ask and drops the name if the write fails.
          */
         Thread worker = new Thread(new Runnable() {
-            // @aa-sdd PK-1112 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1112 docs/specs/common/formal-plan.spec.md FINESSE:f-163
             // @aa-sdd PK-1203 docs/specs/java/org/aetheris/swing/swing.spec.md
             /**
              * The method writes {@code session_tokens:} as UTF-8 inside a scope A payload.
              * The write uses channel A and the data type.
              * An exception removes {@code username} from the asked set.
              */
-            @Override // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md
-            public void run() { // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+            @Override
+            public void run() {
                 try {
                     byte[] utf = "session_tokens:\n".getBytes(StandardCharsets.UTF_8);
                     byte[] payload = AmwpCodec.scopeAPayload(0, 1, null, utf);
@@ -3439,8 +3471,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     public int rouxSessionChars(String username) {
         if (username == null || username.length() == 0) {
             return 0;
-        } // @aa-sdd PK-1064 docs/specs/common/formal-plan.spec.md
-        synchronized (runLock) { // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
+        }
+        synchronized (runLock) {
             int[] row = rouxTally.get(username);
             if (row == null) {
                 return 0;
@@ -3464,10 +3496,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         synchronized (runLock) {
             int[] row = rouxTally.get(username);
-            if (row == null) { // @aa-sdd PK-1064 docs/specs/common/formal-plan.spec.md
-                return 0; // @aa-sdd PK-1063 docs/specs/common/formal-plan.spec.md
-            } // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
-            return row[2]; // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+            if (row == null) {
+                return 0;
+            }
+            return row[2];
         }
     }
 
@@ -3495,9 +3527,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A stop on that frame marks the cell cancelled and clears the run.
      * Any other stream answer is remembered, the think is finished, the run is cleared, and pending paint is applied.
      * An error on the mood wire fails the mood when the cell id matches.
-     * A stop on an error marks the cell cancelled. // @aa-sdd PK-1062 docs/specs/common/formal-plan.spec.md
-     * A structured reason {@code cell-busy} sets that status for the open user and returns. // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
-     * Any other error marks the cell failed, clears the chain queue, and may show the error slide. // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+     * A stop on an error marks the cell cancelled.
+     * A structured reason {@code cell-busy} sets that status for the open user and returns.
+     * Any other error marks the cell failed, clears the chain queue, and may show the error slide.
      * The slide shows when the cell is grouped or the notice is not graceful.
      * The slide is yellow when the miss is soft and not hard.
      * A structured error status uses the reason.
@@ -3513,7 +3545,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * The method keeps a Scope A frame for {@code username} and handles the other frame kinds that arrive here. // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+     * The method keeps a Scope A frame for {@code username} and handles the other frame kinds that arrive here.
      * {@code shellResultOpens} is true only for the {@code shell_model_result:} that Select model armed.
      * A quiet result leaves the dialog closed. The pane strip is seated by the frame host.
      *
@@ -3522,7 +3554,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param shellResultOpens true when this shell-model result should open Model Config
      */
     public void acceptFrame(final String username, final AmwpFrame frame, final boolean shellResultOpens) {
-        if (frame.getType() == AmwpConstants.TYPE_DATA // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+        if (frame.getType() == AmwpConstants.TYPE_DATA
                 && frame.getChannel() == AmwpConstants.CHANNEL_A) {
             final String text = new String(AmwpCodec.stripFragPrefix(frame.getPayload()),
                     StandardCharsets.UTF_8);
@@ -3532,24 +3564,24 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
             if (text.startsWith("effort_off:")) {
                 /**
-                 * The runnable marks effort off for the cell named in the frame. // @aa-sdd PK-1204 docs/specs/java/org/aetheris/swing/swing.spec.md
+                 * The runnable marks effort off for the cell named in the frame.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
-                    // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
                     /**
                      * The method calls {@link AetherisNotebookPanel#markEffortOff(String)} with the frame's cell id.
                      */
                     @Override
                     public void run() {
                         markEffortOff(cellId);
-                    } // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md
+                    }
                 });
             } else if (text.startsWith("show_result:")) {
                 /**
-                 * The runnable applies the show result for the cell named in the frame. // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
+                 * The runnable applies the show result for the cell named in the frame.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
-                    // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
                     // @aa-sdd PK-1204 docs/specs/java/org/aetheris/swing/swing.spec.md
                     /**
                      * The method calls {@code applyShowResult} with the frame's cell id and text.
@@ -3560,23 +3592,23 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     }
                 });
             } else if (text.startsWith("tags_result:")) {
-                /** // @aa-sdd PK-1279 docs/specs/java/org/aetheris/swing/swing.spec.md
+                /**
                  * The runnable applies the tag result for the cell named in the frame.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
-                    // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
+                    // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
                     /**
                      * The method calls {@code applyTagsResult} with the frame's cell id and text.
                      */
                     @Override
                     public void run() {
                         applyTagsResult(cellId, text);
-                    } // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
+                    }
                 });
             } else if (text.startsWith("grok_models_result:")) {
                 /**
                  * The runnable applies the Grok model list for the cell named in the frame.
-                 */ // @aa-sdd PK-1205 docs/specs/java/org/aetheris/swing/swing.spec.md
+                 */
                 SwingUtilities.invokeLater(new Runnable() {
                     // @aa-sdd PK-1279 docs/specs/java/org/aetheris/swing/swing.spec.md
                     /**
@@ -3592,26 +3624,27 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The runnable applies the shell-model result for the cell named in the frame.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
-                    // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
-                    // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md FINESSE:f-44
+                    // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
                     // @aa-sdd PK-1205 docs/specs/java/org/aetheris/swing/swing.spec.md
-                    /** // @aa-sdd PK-1206 docs/specs/java/org/aetheris/swing/swing.spec.md
+                    /**
                      * The method calls {@code applyShellModelResult} with the frame's cell id, text, and open flag.
                      */
-                    @Override // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+                    @Override
                     public void run() {
                         applyShellModelResult(cellId, text, shellResultOpens);
                     }
                 });
             } else if (text.startsWith("session_tokens_result:")) {
                 // The Roux count is held for this username. The canvas transfer flag stays.
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
                 final String body = text;
                 final String user = username;
                 /**
                  * The runnable stores the Roux tally when the reply has all three counts.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
-                    // @aa-sdd PK-1112 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1112 docs/specs/common/formal-plan.spec.md FINESSE:f-163
                     // @aa-sdd PK-1206 docs/specs/java/org/aetheris/swing/swing.spec.md
                     /**
                      * The method parses {@code used: }, {@code chars: }, and {@code blocks: }.
@@ -3666,14 +3699,14 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 if (mine) {
                     /**
                      * The runnable applies a transfer export that this panel asked for.
-                     */ // @aa-sdd PK-1207 docs/specs/java/org/aetheris/swing/swing.spec.md
+                     */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
-                        // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md FINESSE:f-44
+                        // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
                         /**
                          * The method calls {@code applyTransferExport} with the frame text.
                          */
-                        @Override // @aa-sdd PK-1087 docs/specs/common/formal-plan.spec.md
+                        @Override
                         public void run() {
                             applyTransferExport(text);
                         }
@@ -3690,30 +3723,31 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      */
                     @Override
                     public void run() {
-                        applyTransferReplace(text); // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
+                        applyTransferReplace(text);
                     }
                 });
             }
             return;
         }
         if (frame.getType() == AmwpConstants.TYPE_DELTA
-                && frame.getChannel() == AmwpConstants.CHANNEL_STREAM) { // @aa-sdd PK-1087 docs/specs/common/formal-plan.spec.md
+                && frame.getChannel() == AmwpConstants.CHANNEL_STREAM) {
             final byte[] raw = AmwpCodec.stripFragPrefix(frame.getPayload());
             final String cellId = uuidFrom(AmwpCodec.cellIdOf(frame.getPayload()));
             if (moodWire(cellId)) {
                 return;
             }
             if (raw == null || raw.length == 0) {
-                return; // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
-            } // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+                return;
+            }
             final char kind = (char) raw[0];
             final String text = new String(raw, 1, raw.length - 1, StandardCharsets.UTF_8);
             /**
              * The runnable seats a think chunk for the frame's user.
-             * The glass changes only when that scope is the armed pane of the open vault.
+             * The manager returns that scope's pane, and the stream writes it.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
+                // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md FINESSE:f-225
                 /**
                  * The method seats the think chunk for {@code username} even when another vault is open.
                  * A kind of {@code c} paints a pool chunk only when that user is the open vault.
@@ -3739,6 +3773,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The runnable appends a mood reply when the cell is the mood cell.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
+                    // @aa-sdd L40 aetheris-plan-stage-1.001.md
                     /**
                      * The method calls {@code appendMoodReply} when {@code cellId} equals {@code moodCellId}.
                      * Any other cell id is left alone.
@@ -3768,6 +3803,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The runnable paints a held answer for the stream frame's user.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
+                    // @aa-sdd L40 aetheris-plan-stage-1.001.md
                     /**
                      * The method calls {@link AetherisNotebookPanel#applyPendingNow(String)} for the frame's user.
                      */
@@ -3788,6 +3824,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The runnable fails the mood dialog when the error belongs to the mood cell.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
+                    // @aa-sdd L40 aetheris-plan-stage-1.001.md
                     /**
                      * The method calls {@code moodFailed} when {@code cellId} equals {@code moodCellId}.
                      * Any other cell id is left alone.
@@ -3812,7 +3849,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The runnable shows {@code cell-busy} when that user is the open vault.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
-                    // @aa-sdd PK-1063 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1063 docs/specs/common/formal-plan.spec.md FINESSE:f-27
                     /**
                      * The method sets the status to the line for {@code cell-busy} when the user is open.
                      * Any other user is left alone.
@@ -3841,6 +3878,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The runnable shows the error status and, when asked, the error slide.
              */
             SwingUtilities.invokeLater(new Runnable() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method returns when {@code username} is not the open vault.
                  * A structured error uses the reason as the status.
@@ -3848,7 +3886,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * {@code slide} shows the error slide with {@code detail} and the yellow flag.
                  */
                 @Override
-                public void run() { // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+                public void run() {
                     if (!username.equals(openUsername())) {
                         return;
                     }
@@ -3857,7 +3895,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     } else {
                         host.aetherisStatus(statusLine("failed"));
                     }
-                    if (slide) { // @aa-sdd PK-1414 docs/specs/java/org/aetheris/swing/swing.spec.md
+                    if (slide) {
                         String shown = detail;
                         if (engineDown) {
                             shown = configurationCheck(AetherisStage2.shownTarget(findCell(cellId)), false);
@@ -3896,17 +3934,18 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     public void applyPending(final String username) {
         if (SwingUtilities.isEventDispatchThread()) {
             applyPendingNow(username);
-            return; // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+            return;
         }
         /**
          * The runnable paints the held answer on the event thread.
          */
         SwingUtilities.invokeLater(new Runnable() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             /**
              * The method calls {@link AetherisNotebookPanel#applyPendingNow(String)} for the same user.
              */
-            @Override // @aa-sdd PK-1195 docs/specs/java/org/aetheris/swing/swing.spec.md
-            public void run() { // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md
+            @Override
+            public void run() {
                 applyPendingNow(username);
             }
         });
@@ -3925,12 +3964,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             clearRunNow(cellId);
             return;
         }
-        /** // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+        /**
          * The runnable clears the run on the event thread.
          */
         SwingUtilities.invokeLater(new Runnable() {
-            // @aa-sdd PK-1195 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1195 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-4
+            // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-5
             /**
              * The method calls {@link AetherisNotebookPanel#clearRunNow(String)} for the same cell.
              */
@@ -3947,7 +3986,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The spinner stops only when that user is the open vault and no sibling cell is still running.
      * The search stops after the first matching run.
      *
-     * @param cellId the run cell to remove // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+     * @param cellId the run cell to remove
      */
     private void clearRunNow(String cellId) {
         if (cellId == null || cellId.length() == 0) {
@@ -3962,7 +4001,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 CellRun one = run.runs.get(cellId);
                 if (one == null) {
                     continue;
-                } // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+                }
                 run.runs.remove(cellId);
                 stop = entry.getKey().equals(openUsername()) && !run.anyRunning();
                 break;
@@ -4014,10 +4053,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      */
     @Override
     public void onAmwpClosed(String reason) {
-        // The aimed listener calls sessionClosed with the user and the connector. // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
+        // The aimed listener calls sessionClosed with the user and the connector.
     }
- // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md
-    /** // @aa-sdd PK-1208 docs/specs/java/org/aetheris/swing/swing.spec.md
+
+    /**
      * The method handles a connector that closed.
      * A call off the event thread posts itself and returns.
      * A null or empty user, or a null connector, returns.
@@ -4040,7 +4079,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The runnable calls {@link AetherisNotebookPanel#sessionClosed(String, SshTtyConnector, String)} on the event thread.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md
+                // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-5
                 // @aa-sdd PK-1208 docs/specs/java/org/aetheris/swing/swing.spec.md
                 /**
                  * The method calls {@link AetherisNotebookPanel#sessionClosed(String, SshTtyConnector, String)} with the same three arguments.
@@ -4058,8 +4097,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         boolean showing = false;
         synchronized (runLock) {
             UserRun run = userRuns.get(username);
-            if (run == null || run.connector == connector) { // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            if (run == null || run.connector == connector) {
                 // This pane's Roux count drops with the session.
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
                 rouxTally.remove(username);
                 rouxAsked.remove(username);
             }
@@ -4086,7 +4126,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * The method stops the open vault's in-flight run. // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md
+     * The method stops the open vault's in-flight run.
      * A missing run, a missing connector, or a missing focused id sets the status to {@code Nothing is running.} and returns.
      * A focused cell that is missing or not phase {@code RUNNING} does the same.
      * The focused cell's phase becomes {@code STOPPED}.
@@ -4099,7 +4139,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private void stopRequest() {
         final String username = openUsername();
         final SshTtyConnector connector;
-        final String cellId; // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md
+        final String cellId;
         synchronized (runLock) {
             UserRun run = userRuns.get(username);
             if (run == null || run.connector == null || run.focusedId == null) {
@@ -4116,14 +4156,14 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             one.phase = "STOPPED";
             if (!run.anyRunning()) {
                 stopThinking();
-            } // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md
+            }
         }
         host.aetherisStatus("Stopped.");
         /**
          * The worker task writes the cancel and reports a failure on the event thread.
          */
         worker.submit(new Runnable() {
-            // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-8
             /**
              * The method writes an empty scope A cancel for the stopped cell.
              * The write uses the cancel type.
@@ -4133,21 +4173,21 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             public void run() {
                 try {
                     byte[] payload = AmwpCodec.scopeAPayload(0, 1, uuidBytes(cellId), new byte[0]);
-                    connector.writeAmwp(AmwpConstants.TYPE_CANCEL, payload); // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-                } catch (Exception ex) { // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
-                    final String msg = ex.getMessage(); // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+                    connector.writeAmwp(AmwpConstants.TYPE_CANCEL, payload);
+                } catch (Exception ex) {
+                    final String msg = ex.getMessage();
                     /**
                      * The runnable shows the stop failure when the user is still open.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md
+                        // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-8
                         /**
                          * The method sets the status to {@code Stop failed: } plus the message when the user is open.
                          * Any other user is left alone.
                          */
                         @Override
                         public void run() {
-                            if (username.equals(openUsername())) { // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
+                            if (username.equals(openUsername())) {
                                 host.aetherisStatus("Stop failed: " + msg);
                             }
                         }
@@ -4211,7 +4251,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * BB2 holds search, Export, Import, Pull, To terminal, the mood switch, Mood, Hide Collapsed, and Show Collapsed.
      * BB2 starts hidden, and that choice is not saved.
      * The user combo sits on the east of the open footer body.
-     * The folded line starts hidden and paints a gray rule beside the unfold mark. // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+     * The folded line starts hidden and paints a gray rule beside the unfold mark.
      * The method locks the fold mark and returns the footer.
      *
      * @return the footer panel
@@ -4236,7 +4276,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener folds or opens BB1 and BB2.
          */
         footerFoldButton.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md FINESSE:f-223
             /**
              * The method flips {@code footerBarsOpen} and then calls {@link AetherisNotebookPanel#seatFooterBars()}.
              *
@@ -4269,7 +4309,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                         + "<br>Other turns in a group keep running."
                         + " The reply already stored on the cell stays."
                         + "<br>If the focused turn is not running, the status line says nothing is running."));
-        neu.setToolTipText(buttonTip( // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+        neu.setToolTipText(buttonTip(
                 "New turn adds an empty card at the end of this canvas and puts the cursor in its prompt."
                         + "<br>The new turn keeps the prior turn's model."
                         + "<br>The new turn starts Included, so a later Run can send it."));
@@ -4281,8 +4321,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                         + "<br>It lists the host line, the mood line, and the earlier turns this call would keep,"
                         + " newest first. The estimated token count sits on the status heatbar."
                         + "<br>It does not send anything."));
-        seatBarButton(run); // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
-        seatBarButton(stop); // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+        seatBarButton(run);
+        seatBarButton(stop);
         seatBarButton(neu);
         seatBarButton(clear);
         seatBarButton(preview);
@@ -4290,6 +4330,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener sends the focused turn.
          */
         run.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             /**
              * The method calls {@link AetherisNotebookPanel#runTarget()}.
              *
@@ -4304,8 +4345,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener cancels the focused turn when that turn is running.
          */
         stop.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-10
+            // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-9
             /**
              * The method calls {@link AetherisNotebookPanel#stopRequest()}.
              *
@@ -4320,6 +4361,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener adds an empty turn at the end of this canvas.
          */
         neu.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             /**
              * The method calls {@link AetherisNotebookPanel#newTurn(boolean)} with {@code false}.
              *
@@ -4334,21 +4376,22 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener deletes every turn on this canvas and leaves one empty turn.
          */
         clear.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             /**
              * The method calls {@link AetherisNotebookPanel#clearTurns()}.
              *
              * @param e the click Swing sent for Clear turns
              */
-            @Override // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
+            @Override
             public void actionPerformed(ActionEvent e) {
-                clearTurns(); // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+                clearTurns();
             }
         });
         /**
          * The listener rebuilds the inspector for the focused turn and does not send anything.
          */
         preview.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md FINESSE:f-144
             /**
              * The method calls {@link AetherisNotebookPanel#refreshInspector()}.
              *
@@ -4362,10 +4405,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         /**
          * The listener stores the open-card row count and rebuilds the canvas.
          */
-        incrementor = new Incrementor(viewRows, new Incrementor.Listener() { // @aa-sdd PK-1027 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+        incrementor = new Incrementor(viewRows, new Incrementor.Listener() {
+            // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-10
+            // @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md FINESSE:f-144
+            // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-9
             /**
              * The method stores the row count, raises a count under 1 to 1, and tells the host.
              * The canvas tabs are rebuilt.
@@ -4447,14 +4490,14 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener applies the search field to this canvas.
          */
         ActionListener searchAction = new ActionListener() {
-            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
             /**
              * The method stores the field text as the search needle, rebuilds the tabs, and runs the search.
              * A null field text is stored as an empty string.
-             * // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
-             * @param e the event from the field or the Search button // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+             *
+             * @param e the event from the field or the Search button
              */
-            @Override // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+            @Override
             public void actionPerformed(ActionEvent e) {
                 String text = search.getText();
                 searchNeedle = text == null ? "" : text;
@@ -4475,12 +4518,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener clears the search field and the find filter.
          */
         searchClear.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1045 PK-1187 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1198 PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
-            /** // @aa-sdd PK-1193 docs/specs/java/org/aetheris/swing/swing.spec.md
-             * The method empties the field and the needle, rebuilds the tabs, and sets the status to {@code search cleared}. // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-10
+            // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-12
+            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
+            // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-9
+            /**
+             * The method empties the field and the needle, rebuilds the tabs, and sets the status to {@code search cleared}.
              *
              * @param e the click Swing sent for the red x
              */
@@ -4495,22 +4538,22 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         paintSearchClear(searchClear);
         JPanel searchSeat = new JPanel(new BorderLayout(0, 0));
         theme.applyPanel(searchSeat);
-        searchSeat.add(search, BorderLayout.CENTER); // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+        searchSeat.add(search, BorderLayout.CENTER);
         searchSeat.add(searchClear, BorderLayout.EAST);
         /**
          * The listener writes this canvas to a file.
          */
         export.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1193 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-10
+            // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-12
+            // @aa-sdd PK-1193 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-16
+            // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-9
             /**
              * The method calls {@link AetherisNotebookPanel#exportCanvas()}.
              *
              * @param e the click Swing sent for Export
              */
-            @Override // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+            @Override
             public void actionPerformed(ActionEvent e) {
                 exportCanvas();
             }
@@ -4519,7 +4562,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener reads a file and adds its turns to this canvas.
          */
         imp.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-12
             /**
              * The method calls {@link AetherisNotebookPanel#importCanvas()}.
              *
@@ -4534,9 +4577,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener copies the terminal into a new turn.
          */
         pull.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1062 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-12
+            // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md FINESSE:f-141
+            // @aa-sdd PK-1062 docs/specs/common/formal-plan.spec.md FINESSE:f-28
             /**
              * The method calls {@link AetherisNotebookPanel#pullCrosstalk()}.
              *
@@ -4551,8 +4594,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener writes the focused turn into the terminal session.
          */
         toTerm.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1062 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md FINESSE:f-141
+            // @aa-sdd PK-1062 docs/specs/common/formal-plan.spec.md FINESSE:f-28
             /**
              * The method calls {@link AetherisNotebookPanel#pushPty()}.
              *
@@ -4594,7 +4637,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener opens the mood chat for the selected card.
          */
         moodButton.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
             /**
              * The method calls {@link AetherisNotebookPanel#openMood()}.
              *
@@ -4619,7 +4662,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener takes every folded card off this canvas.
          */
         hideCollapsedButton.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md FINESSE:f-204
             /**
              * The method remembers the focused cell, turns hide-collapsed on, refills the concealed ids, stores the choice, and rebuilds the tabs.
              *
@@ -4646,15 +4689,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener puts the folded cards back on this canvas.
          */
         showCollapsedButton.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md FINESSE:f-204
+            // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
             /**
              * The method remembers the focused cell, turns hide-collapsed off, clears the concealed ids, stores the choice, and rebuilds the tabs.
              *
              * @param e the click Swing sent for Show Collapsed
              */
             @Override
-            public void actionPerformed(ActionEvent e) { // @aa-sdd PK-1195 docs/specs/java/org/aetheris/swing/swing.spec.md
+            public void actionPerformed(ActionEvent e) {
                 seatCollapsedFocus();
                 hideCollapsed = false;
                 concealedIds.clear();
@@ -4678,7 +4721,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener shows or hides BB2.
          */
         toolsButton.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1195 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1195 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-4
             /**
              * The method flips {@code footerToolsOpen}.
              * An open bar shows {@code ^} and the hide tip.
@@ -4697,18 +4740,18 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                                     + "<br>Search, Export, Import, Pull, To terminal, the mood switch, and Mood fold away."
                                     + " Hide Collapsed and Show Collapsed fold away."
                                     + " The choice is not saved."));
-                } else { // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md
+                } else {
                     toolsButton.setToolTipText(buttonTip(
                             "Show the tool bar."
                                     + "<br>Search, Export, Import, Pull, To terminal, the mood switch, and Mood sit under this row."
                                     + " Hide Collapsed and Show Collapsed sit after Mood."
-                                    + " The bar starts hidden. The choice is not saved.")); // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md
+                                    + " The bar starts hidden. The choice is not saved."));
                 }
                 tools.setVisible(footerToolsOpen);
                 revalidate();
                 repaint();
             }
-        }); // @aa-sdd PK-1068 docs/specs/common/formal-plan.spec.md
+        });
         JButton collapseAll = new JButton("Collapse All");
         JButton expandAll = new JButton("Expand All");
         collapseAll.setToolTipText(buttonTip(
@@ -4726,7 +4769,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener folds every turn on this canvas.
          */
         collapseAll.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1197 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-8
             /**
              * The method calls {@link AetherisNotebookPanel#setCanvasCollapsed(boolean)} with {@code true}.
              *
@@ -4741,8 +4784,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener opens every turn on this canvas.
          */
         expandAll.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1064 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1064 docs/specs/common/formal-plan.spec.md FINESSE:f-26
+            // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md FINESSE:f-35
             /**
              * The method calls {@link AetherisNotebookPanel#setCanvasCollapsed(boolean)} with {@code false}.
              *
@@ -4774,10 +4817,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener removes the armed card, or the whole group when that card is in a group.
          */
         deleteTurnButton.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1064 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1063 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1064 docs/specs/common/formal-plan.spec.md FINESSE:f-26
+            // @aa-sdd PK-1063 docs/specs/common/formal-plan.spec.md FINESSE:f-27
+            // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md FINESSE:f-35
+            // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
             /**
              * The method calls {@link AetherisNotebookPanel#deleteFocusedTurn()}.
              *
@@ -4788,7 +4831,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 deleteFocusedTurn();
             }
         });
-        JComponent toolsDivider = footerGroupDivider(); // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md
+        JComponent toolsDivider = footerGroupDivider();
         toolsDivider.setName("bb1-tools-divider");
         left.add(deleteTurnButton);
         left.add(footerGroupDivider());
@@ -4813,9 +4856,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener focuses the connected user chosen in the combo.
          */
         userCombo.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1062 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1062 docs/specs/common/formal-plan.spec.md FINESSE:f-28
+            // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md FINESSE:f-35
+            // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
             /**
              * The method returns while the combo is being filled.
              * A null selection returns.
@@ -4838,7 +4881,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
         });
         // The spinner and its clock sit on the control bar. BB1 keeps the combo.
-        // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md FINESSE:f-180
         footerOpenBody = new JPanel(new BorderLayout());
         theme.applyPanel(footerOpenBody);
         footerOpenBody.add(stack, BorderLayout.WEST);
@@ -4847,7 +4890,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The folded line sizes itself to the unfold glyph and paints a gray rule beside that glyph.
          */
         footerFoldLine = new JPanel(new BorderLayout()) {
-            // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md FINESSE:f-223
             /**
              * The method returns a width of 120 and a height of the fold mark.
              * The height is at least 1.
@@ -4858,7 +4901,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             @Override
             public Dimension getPreferredSize() {
                 // The folded line is the unfold glyph.
-                // @aa-sdd PK-1068 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1068 docs/specs/common/formal-plan.spec.md FINESSE:f-224
                 int height = 1;
                 if (footerFoldButton != null) {
                     Dimension mark = footerFoldButton.getPreferredSize();
@@ -4870,7 +4913,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
 
             /**
-             * The method returns the same size as {@link #getPreferredSize()}. // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
+             * The method returns the same size as {@link #getPreferredSize()}.
              *
              * @return the preferred size
              */
@@ -4938,7 +4981,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The fold mark is locked, the panel is revalidated, and the panel is repainted.
      */
     private void seatFooterBars() {
-        // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md FINESSE:f-223
         if (footerBarsOpen) {
             footerFoldButton.setText("v");
             footerFoldButton.setToolTipText(buttonTip(
@@ -4981,7 +5024,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The control bar seats it.
      * A quiet deck hides it.
      * BB1 keeps the user combo.
-     // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md FINESSE:f-180
      *
      * @return the spinner and its clock
      */
@@ -5007,7 +5050,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A cell that left the deck waits until Show.
      * A null focused id returns without storing a pending focus.
      * The pending focus is not aimed at the assistant text, and it does not land on the input.
-     // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md FINESSE:f-204
      */
     private void seatCollapsedFocus() {
         if (focusedCellId == null) {
@@ -5024,7 +5067,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * An empty list adds one tab named {@code Canvas} with an empty panel.
      * The font is applied and the delete button is refreshed.
      * A held card id is cleared and then restored on the event thread after validate.
-     * No held card scrolls the pending focus instead. // @aa-sdd PK-1209 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * No held card scrolls the pending focus instead.
      */
     private void rebuildTabs() {
         canvasTabs.removeAll();
@@ -5047,7 +5090,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The runnable puts the held card back after the tabs have been validated.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md FINESSE:f-35
                 // @aa-sdd PK-1209 docs/specs/java/org/aetheris/swing/swing.spec.md
                 /**
                  * The method validates the panel and then calls {@link AetherisNotebookPanel#restoreHold(String, int, int)}.
@@ -5113,8 +5156,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * The method walks parents until it finds a scroll pane.
      *
-     * @param component the descendant to start from // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
-     * @return the enclosing canvas scroll, or {@code null} when none is found // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+     * @param component the descendant to start from
+     * @return the enclosing canvas scroll, or {@code null} when none is found
      */
     private JScrollPane scrollOf(Component component) {
         Component node = component;
@@ -5138,7 +5181,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A card that is not mounted keeps the flag for the next time the deck builds it.
      * A fold also turns hide-collapsed off, clears the concealed ids, marks the conceal set armed, and stores that choice.
      * The tabs stay.
-     * // @aa-sdd PK-1420 docs/specs/java/org/aetheris/swing/swing.spec.md
+     *
      * @param collapsed {@code true} folds the cards, and {@code false} opens them
      */
     private void setCanvasCollapsed(boolean collapsed) {
@@ -5164,7 +5207,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
         }
         if (collapsed) {
-            // The saved seat must not take these cards off on the next open. // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+            // The saved seat must not take these cards off on the next open.
             hideCollapsed = false;
             concealedIds.clear();
             concealArmed = true;
@@ -5173,7 +5216,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * The method wipes the active canvas turns. // @aa-sdd PK-1210 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * The method wipes the active canvas turns.
      * The VT100 session is not touched.
      * A missing canvas or a missing vault returns.
      * The new first turn keeps the armed cell's model word.
@@ -5181,13 +5224,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The worker clears the canvas, saves that model word, and saves an order of one cell.
      * The event thread then replaces the canvas cells, forgets the removed ids, pins the mood at {@code head}, rebuilds the tabs, and sets the status to {@code cleared turns on } plus the canvas name.
      * A database failure sets the status to {@code clear turns failed: } plus the message.
-     // @aa-sdd PK-1087 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1087 docs/specs/common/formal-plan.spec.md FINESSE:f-193
      */
     private void clearTurns() {
         final CanvasRecord canvas = currentCanvas();
         if (canvas == null || vault == null) {
-            return; // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
-        } // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+            return;
+        }
         final CellRecord armed = focusedTurn();
         final String keptTarget = armed == null || armed.executionTarget == null
                 ? ""
@@ -5195,13 +5238,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         final String name = canvas.name;
         final ArrayList<String> removedIds = new ArrayList<String>();
         for (int i = 0; i < canvas.cells.size(); i++) {
-            removedIds.add(canvas.cells.get(i).id); // @aa-sdd PK-1211 docs/specs/java/org/aetheris/swing/swing.spec.md
+            removedIds.add(canvas.cells.get(i).id);
         }
         /**
          * The worker task wipes the vault canvas and posts the paint.
          */
-        worker.submit(new Runnable() { // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
+        worker.submit(new Runnable() {
+            // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md FINESSE:f-35
             // @aa-sdd PK-1210 docs/specs/java/org/aetheris/swing/swing.spec.md
             /**
              * The method clears the canvas, stores the kept model word, and saves a one-cell order.
@@ -5212,9 +5255,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 try {
                     final CellRecord cell = vault.clearCanvas(canvas.id);
                     // The armed cell's model word. Captured before the wipe.
-                    // @aa-sdd PK-1087 docs/specs/common/formal-plan.spec.md
-                    cell.executionTarget = keptTarget; // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
-                    vault.saveCell(cell); // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1087 docs/specs/common/formal-plan.spec.md FINESSE:f-193
+                    cell.executionTarget = keptTarget;
+                    vault.saveCell(cell);
                     java.util.ArrayList<String> order = new java.util.ArrayList<String>();
                     order.add(cell.id);
                     vault.saveOrder(canvas.id, order);
@@ -5222,20 +5265,20 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The runnable seats the one remaining cell and forgets the wiped ids.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
-                        // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
+                        // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
                         // @aa-sdd PK-1211 docs/specs/java/org/aetheris/swing/swing.spec.md
                         /**
-                         * The method replaces the canvas with the new cell and focuses it. // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
+                         * The method replaces the canvas with the new cell and focuses it.
                          * Removed ids other than the new cell are forgotten.
                          * A canvas id pins the mood at {@code head}, clears the pending mood, and saves the mood store.
                          * The new cell's expanded flag is cleared.
                          * The status is {@code cleared turns on } plus the canvas name.
                          */
                         @Override
-                        public void run() { // @aa-sdd PK-1031 docs/specs/common/formal-plan.spec.md
-                            canvas.cells.clear(); // @aa-sdd PK-1162 docs/specs/common/stages.spec.md
-                            canvas.cells.add(cell); // @aa-sdd PK-1030 docs/specs/common/formal-plan.spec.md
+                        public void run() {
+                            canvas.cells.clear();
+                            canvas.cells.add(cell);
                             canvas.cellOrder.clear();
                             canvas.cellOrder.add(cell.id);
                             pendingFocusId = cell.id;
@@ -5413,7 +5456,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param roles {@code user} or {@code assistant}, one per row
      * @param texts the row text
      */
-    // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+    // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-213
     static void transferRows(List<CellRecord> ordered, List<String> roles, List<String> texts) {
         if (ordered == null || roles == null || texts == null) {
             return;
@@ -5465,7 +5508,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param groupId the group
      * @return the joined prompts, or an empty string
      */
-    // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+    // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-213
     static String transferInputs(List<CellRecord> ordered, String groupId) {
         StringBuilder out = new StringBuilder();
         if (ordered == null || groupId == null || groupId.length() == 0) {
@@ -5499,9 +5542,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param groupId the group
      * @return the reply, or an empty string when the group has no merge cell
      */
-    // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+    // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-213
     static String transferReply(List<CellRecord> ordered, String groupId) {
-        if (ordered == null || groupId == null || groupId.length() == 0) { // @aa-sdd PK-1212 docs/specs/java/org/aetheris/swing/swing.spec.md
+        if (ordered == null || groupId == null || groupId.length() == 0) {
             return "";
         }
         for (int i = 0; i < ordered.size(); i++) {
@@ -5529,7 +5572,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The thread writes the transfer body and reports a failed connection.
          */
         Thread worker = new Thread(new Runnable() {
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             // @aa-sdd PK-1212 docs/specs/java/org/aetheris/swing/swing.spec.md
             /**
              * The method writes {@code body} as UTF-8 inside a scope A payload.
@@ -5553,7 +5596,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The runnable shows that the transfer write did not connect.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
                         /**
                          * The method sets the status to {@code Not connected.}
                          */
@@ -5617,11 +5660,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         String rest = text.substring(prefix.length());
         if (rest.startsWith("ok")) {
             // The replaced Roux region takes the switch and the checkbox.
-            // @aa-sdd PK-1092 PK-1163 docs/specs/common/formal-plan.spec.md docs/specs/java/org/casserole/edit/edit.spec.md
-            noteMoodRelay(); // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
-            host.aetherisStatus("conversation transferred"); // @aa-sdd PK-1031 docs/specs/common/formal-plan.spec.md
-            host.noteTransferredSession(); // @aa-sdd PK-1162 docs/specs/common/stages.spec.md
-            return; // @aa-sdd PK-1030 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md FINESSE:f-187
+            noteMoodRelay();
+            host.aetherisStatus("conversation transferred");
+            host.noteTransferredSession();
+            return;
         }
         int nl = rest.indexOf('\n');
         host.aetherisStatus(nl < 0 ? rest : rest.substring(0, nl));
@@ -5631,12 +5674,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The method wipes the active canvas and seats these cells.
      * An empty list leaves one empty cell.
      * A missing canvas or a missing vault sets the status to {@code replace failed: no canvas} and returns.
-     * A null pair array adds no rows. // @aa-sdd PK-1213 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * A null pair array adds no rows.
      * Each pair is one prompt and one reply, and a null side becomes an empty string.
      * The worker replaces the canvas and saves the new order.
      * The event thread focuses the first new cell, forgets removed ids, rebuilds the tabs, and sets the status to {@code conversation transferred}.
      * A database failure sets the status to {@code replace failed: } plus the message.
-     * // @aa-sdd PK-1416 docs/specs/java/org/aetheris/swing/swing.spec.md
+     *
      * @param pairs prompt, reply, prompt, reply
      */
     private void seatTransferred(final String[] pairs) {
@@ -5680,7 +5723,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The runnable seats the transferred cells and focuses the first one.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
                         /**
                          * The method replaces the canvas cells with the born cells.
                          * Removed ids that are not in the new order are forgotten.
@@ -5777,9 +5820,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The runnable scrolls the pending card after the panel has been validated.
          */
         SwingUtilities.invokeLater(new Runnable() {
-            // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
+            // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md FINESSE:f-35
+            // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
             /**
              * The method validates the panel and then focuses the pending card.
              * A missing card returns.
@@ -5800,7 +5843,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The runnable pins the viewport at the end after the first land.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md FINESSE:f-35
                         /**
                          * The method validates the panel and scrolls the same card to the end.
                          * A missing card returns.
@@ -5820,8 +5863,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     if (asst) {
                         card.focusAssistant();
                     } else {
-                        card.focusPrompt(); // @aa-sdd PK-1031 docs/specs/common/formal-plan.spec.md
-                    } // @aa-sdd PK-1030 docs/specs/common/formal-plan.spec.md
+                        card.focusPrompt();
+                    }
                 }
             }
         });
@@ -5831,8 +5874,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The method finds the canvas scroller that encloses {@code component}.
      * A member row scrolls sideways only.
      * A scroll pane whose vertical bar policy is never-show is skipped.
-     * The walk continues through parents until a vertical canvas scroll is found. // @aa-sdd PK-1162 docs/specs/common/stages.spec.md
-     * // @aa-sdd PK-1029 docs/specs/common/formal-plan.spec.md
+     * The walk continues through parents until a vertical canvas scroll is found.
+     *
      * @param component the descendant to start from
      * @return the canvas scroll pane, or {@code null} when none is found
      */
@@ -5877,7 +5920,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener returns scroll focus to the canvas on a press.
          */
         host.addMouseListener(new MouseAdapter() {
-            // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
             /**
              * The method calls {@link AetherisNotebookPanel#focusCanvas(Component)} for this component.
              *
@@ -5952,7 +5995,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener owns the wheel for this text pane.
          */
         pane.addMouseWheelListener(new MouseWheelListener() {
-            // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
             /**
              * The method calls {@link AetherisNotebookPanel#routeTextWheel(JScrollPane, JTextArea, MouseWheelEvent)}.
              *
@@ -5960,14 +6003,14 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              */
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
-                routeTextWheel(pane, area, e); // @aa-sdd PK-1162 docs/specs/common/stages.spec.md
+                routeTextWheel(pane, area, e);
             }
         });
     }
 
     /**
-     * The method seats the wheel for a member row. // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
-     * The member row scrolls sideways on the bar. // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+     * The method seats the wheel for a member row.
+     * The member row scrolls sideways on the bar.
      * It does not take the wheel.
      * It does not take focus.
      * A wheel that is not on a focused text pane moves the canvas.
@@ -5977,6 +6020,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param row the member scroller
      */
+    // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-166
     private void seatGroupWheel(JScrollPane row) {
         if (row == null) {
             return;
@@ -6007,7 +6051,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         int extent = scroll.getViewport().getExtentSize().height;
         int y = viewH - extent;
         if (y < 0) {
-            y = 0; // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
+            y = 0;
         }
         scroll.getViewport().setViewPosition(new Point(0, y));
     }
@@ -6036,7 +6080,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             for (int i = 0; i < kids.length; i++) {
                 repaintPinIn(kids[i]);
             }
-        } // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
+        }
     }
 
     /**
@@ -6064,7 +6108,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @return the live card, or {@code null}
      */
     private CellCard findCardIn(Component node, String cellId) {
-        if (node instanceof CellCard) { // @aa-sdd PK-1193 docs/specs/java/org/aetheris/swing/swing.spec.md
+        if (node instanceof CellCard) {
             CellCard card = (CellCard) node;
             if (cellId.equals(card.cell.id)) {
                 return card;
@@ -6096,8 +6140,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @return the canvas scroll pane
      */
     private JScrollPane buildCanvas(CanvasRecord canvas) {
-        // @aa-sdd PK-1193 docs/specs/java/org/aetheris/swing/swing.spec.md
-        // @aa-sdd PK-1027 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1193 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-16
+        // @aa-sdd PK-1027 docs/specs/common/formal-plan.spec.md FINESSE:f-68
         // The column takes the canvas width. A wider member row scrolls
         // inside the group, and the merge stays with the column.
         /**
@@ -6205,12 +6249,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * @return the caption tip, or {@code null}
              */
             @Override
-            public String getToolTipText(MouseEvent event) { // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+            public String getToolTipText(MouseEvent event) {
                 if (event != null && captionContains(this, event.getPoint())) {
                     return buttonTip(CAPTION_TIP);
                 }
                 return null;
-            } // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+            }
         }
         CanvasColumn column = new CanvasColumn();
         ToolTipManager.sharedInstance().registerComponent(column);
@@ -6237,7 +6281,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The block stretches to the column width and keeps its preferred height.
              */
             JPanel block = new JPanel() {
-                // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+                // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-12
                 /**
                  * The method returns the largest integer width and the preferred height.
                  * A missing preferred size uses a height of 1.
@@ -6249,7 +6293,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 public Dimension getMaximumSize() {
                     Dimension pref = getPreferredSize();
                     int h = pref == null ? 1 : pref.height;
-                    if (h < 1) { // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+                    if (h < 1) {
                         h = 1;
                     }
                     return new Dimension(Integer.MAX_VALUE, h);
@@ -6281,7 +6325,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The member row stays column-wide and scrolls the member cards sideways.
                  */
                 final JScrollPane rowScroll = new JScrollPane(row) {
-                    // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+                    // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-12
                     /**
                      * The method returns a stored maximum size when one was set.
                      * Otherwise the width is the largest integer and the height is the member-row height.
@@ -6295,7 +6339,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                         }
                         return new Dimension(Integer.MAX_VALUE, memberRowHeight(this));
                     }
- // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+
                     /**
                      * The method returns a narrow preferred width so the card sum does not become the column width.
                      * The pane stays column-wide and scrolls the members.
@@ -6321,12 +6365,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 pressCanvas(rowScroll.getHorizontalScrollBar());
                 theme.applyScrollPane(rowScroll);
                 // The row does not take the wheel. A click on a cell does.
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-166
                 seatGroupWheel(rowScroll);
-                /** // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
+                /**
                  * The listener pins the member row when the scroll pane is resized.
                  */
                 rowScroll.addComponentListener(new ComponentAdapter() {
-                    // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+                    // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-12
                     /**
                      * The method calls {@code pinMemberRow} for this member scroll.
                      *
@@ -6350,7 +6395,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             column.add(block);
             i = end;
         }
-        JScrollPane scroll = new JScrollPane(column); // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+        JScrollPane scroll = new JScrollPane(column);
         scroll.setFocusable(true);
         scroll.getViewport().setBackground(theme.getPanelBackground());
         theme.applyCanvasScroll(scroll);
@@ -6370,6 +6415,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @return {@code true}, so the fold paints the one-line card
      */
+    // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-141
     static boolean collapseKeepsTheCard() {
         return true;
     }
@@ -6414,7 +6460,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         for (int c = 0; c < canvases.size(); c++) {
             CanvasRecord canvas = canvases.get(c);
             if (canvas == null || canvas.cells == null) {
-                continue; // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+                continue;
             }
             for (int i = 0; i < canvas.cells.size(); i++) {
                 CellRecord cell = canvas.cells.get(i);
@@ -6489,6 +6535,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A percent sign stays an ordinary character.
      * An underscore stays an ordinary character.
      * The cell state is not part of the match.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-144
      *
      * @param cell one turn, or {@code null}
      * @param needle the committed search text, or {@code null}
@@ -6567,7 +6614,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         return out;
     }
 
-    /** // @aa-sdd PK-1082 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
+    /**
      * The class {@code HideSeat} is one reading of version 1 of {@code aetheris-hide.yaml}.
      * The record holds the Hide Collapsed flag in {@code hide}.
      * The record holds any extra lines the parser kept in {@code extras}.
@@ -6587,7 +6635,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A null {@code extras} value is stored as an empty string.
          *
          * @param blocked {@code true} when the file must not be overwritten
-         * @param hide {@code true} when Hide Collapsed is on // @aa-sdd PK-1082 docs/specs/common/formal-plan.spec.md
+         * @param hide {@code true} when Hide Collapsed is on
          * @param extras the lines the parser kept, or {@code null}
          */
         private HideSeat(boolean blocked, boolean hide, String extras) {
@@ -6847,9 +6895,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     static boolean writeHideYaml(File path, HideSeat seat) {
         if (path == null || seat == null || seat.blocked) {
             return false;
-        } // @aa-sdd PK-909 docs/specs/java/org/aetheris/swing/swing.spec.md
-        File dir = path.getParentFile(); // @aa-sdd PK-910 docs/specs/java/org/aetheris/swing/swing.spec.md
-        if (dir != null && !dir.isDirectory() && !dir.mkdirs()) { // @aa-sdd PK-909 docs/specs/java/org/aetheris/swing/swing.spec.md
+        }
+        File dir = path.getParentFile();
+        if (dir != null && !dir.isDirectory() && !dir.mkdirs()) {
             return false;
         }
         try {
@@ -6867,7 +6915,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
-    // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md FINESSE:f-206
     /**
      * The class {@code ExpandedSeat} is one reading of version 1 of {@code aetheris-expanded.yaml}.
      * The record holds the checked cell ids in {@code cells}.
@@ -6924,7 +6972,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
 
         /**
-         * The method {@code withCells} copies this record with a new cell list. // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+         * The method {@code withCells} copies this record with a new cell list.
          * The copy is not blocked.
          * The extra lines stay.
          *
@@ -6934,7 +6982,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         ExpandedSeat withCells(ArrayList<String> next) {
             return new ExpandedSeat(false, next, extras);
         }
-    } // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+    }
 
     /**
      * The method {@code expandedYamlFile} builds the path of {@code aetheris-expanded.yaml}.
@@ -6958,8 +7006,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         String home = System.getProperty("user.home", "");
         if (home.length() == 0) {
             return ExpandedSeat.fresh();
-        } // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
-        return readExpandedYaml(expandedYamlFile(new File(home))); // @aa-sdd PK-1082 docs/specs/common/formal-plan.spec.md
+        }
+        return readExpandedYaml(expandedYamlFile(new File(home)));
     }
 
     /**
@@ -7003,7 +7051,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A nested line needs a colon and a name that {@link #yamlKey(String)} accepts.
      * A nested value that {@link #hideFlag(String)} reads as true is passed to {@link #pushExpandedId(ArrayList, String)}.
      * A nested value that is not true is ignored.
-     * A bad nested line returns a blocked record. // @aa-sdd PK-1081 docs/specs/common/formal-plan.spec.md
+     * A bad nested line returns a blocked record.
      * A line under an unknown top-level key is kept in {@code extras}.
      * A non-blank line before the first key returns a blocked record.
      * A missing {@code version} key returns a blocked record.
@@ -7020,7 +7068,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             text = text.substring(1);
         }
         if (text.trim().length() == 0) {
-            return ExpandedSeat.blocked(); // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+            return ExpandedSeat.blocked();
         }
         boolean sawVersion = false;
         boolean sawKey = false;
@@ -7252,8 +7300,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return false;
         }
         File dir = path.getParentFile();
-        if (dir != null && !dir.isDirectory() && !dir.mkdirs()) { // @aa-sdd PK-772 docs/specs/common/stages.spec.md
-            return false; // @aa-sdd PK-772 docs/specs/common/stages.spec.md
+        if (dir != null && !dir.isDirectory() && !dir.mkdirs()) {
+            return false;
         }
         try {
             FileOutputStream out = new FileOutputStream(path);
@@ -7266,12 +7314,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
             return true;
         } catch (IOException ex) {
-            return false; // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+            return false;
         }
     }
 
-    // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-197
+    // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md FINESSE:f-221
     /**
      * The class {@code SettingsSeat} is one reading of version 1 of {@code aetheris-settings.yaml}.
      * The record holds the debug-mood flag, the hover-tip flag, and the painted-border flag.
@@ -7295,7 +7343,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          */
         final boolean tooltips;
         /**
-         * The field {@code borders} is the painted cell-frame switch. // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+         * The field {@code borders} is the painted cell-frame switch.
          * A missing key stays off.
          */
         final boolean borders;
@@ -7303,7 +7351,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
         /**
          * The constructor stores the blocked flag, the three switches, and the extra lines.
-         * A null {@code extras} value is stored as an empty string. // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+         * A null {@code extras} value is stored as an empty string.
          *
          * @param blocked {@code true} when the file must not be overwritten
          * @param debug {@code true} when debug mood is on
@@ -7314,7 +7362,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         private SettingsSeat(boolean blocked, boolean debug, boolean tooltips, boolean borders, String extras) {
             this.blocked = blocked;
             this.debug = debug;
-            this.tooltips = tooltips; // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+            this.tooltips = tooltips;
             this.borders = borders;
             this.extras = extras == null ? "" : extras;
         }
@@ -7325,7 +7373,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * Hover tips are on.
          * Painted borders are off.
          * The extra lines are empty.
-         * // @aa-sdd PK-1105 docs/specs/common/formal-plan.spec.md
+         *
          * @return a record that is not blocked
          */
         static SettingsSeat fresh() {
@@ -7343,8 +7391,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          */
         static SettingsSeat blocked() {
             return new SettingsSeat(true, false, true, false, "");
-        } // @aa-sdd PK-1105 docs/specs/common/formal-plan.spec.md
- // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+        }
+
         /**
          * The method {@code withDebug} copies this record with a new debug-mood flag.
          * The copy is not blocked.
@@ -7414,7 +7462,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * This is the one gate for every hover tip.
      */
     private void applyTooltipGate() {
-        // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md FINESSE:f-221
         ToolTipManager.sharedInstance().setEnabled(tooltipsOn);
     }
 
@@ -7463,8 +7511,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The dialog is shown centered on the owner.
      */
     public void openSettings() {
-        // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
-        // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-197
+        // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md FINESSE:f-221
         Window owner = SwingUtilities.getWindowAncestor(this);
         final JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Settings", true);
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -7503,7 +7551,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener stores the debug-mood switch and refreshes the inspector.
          */
         box.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-197
             /**
              * The method copies the checkbox into {@code debugMood}.
              * The method calls {@link #storeSettings()}.
@@ -7526,8 +7574,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener stores the hover-tip switch.
          */
         tips.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-197
+            // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md FINESSE:f-221
             /**
              * The method copies the checkbox into {@code tooltipsOn}.
              * The method calls {@link #applyTooltipGate()}.
@@ -7549,7 +7597,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener closes the Settings dialog.
          */
         ok.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-197
             /**
              * The method disposes the Settings dialog.
              *
@@ -7564,11 +7612,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener closes the Settings dialog when Escape is pressed.
          */
         dialog.getRootPane().registerKeyboardAction(new ActionListener() {
-            // @aa-sdd PK-1031 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1162 docs/specs/common/stages.spec.md
-            // @aa-sdd PK-1030 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1031 docs/specs/common/formal-plan.spec.md FINESSE:f-61
+            // @aa-sdd PK-1162 docs/specs/common/stages.spec.md FINESSE:f-62
+            // @aa-sdd PK-1030 docs/specs/common/formal-plan.spec.md FINESSE:f-63
             /**
-             * The method disposes the Settings dialog. // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+             * The method disposes the Settings dialog.
              *
              * @param e the key event
              */
@@ -7830,7 +7878,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * An empty name returns {@code false}.
      * Each character must be a letter, a digit, {@code _}, or {@code -}.
      * Any other character returns {@code false}.
-     * A name that passes every character returns {@code true}. // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
+     * A name that passes every character returns {@code true}.
      *
      * @param name the key text, or {@code null}
      * @return {@code true} when every character is allowed
@@ -7851,7 +7899,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * The method {@code yamlScalar} reads the value after a YAML colon. // @aa-sdd PK-1146 docs/specs/common/formal-plan.spec.md
+     * The method {@code yamlScalar} reads the value after a YAML colon.
      * A null {@code rest} returns an empty string.
      * The text is trimmed.
      * An empty remainder returns an empty string.
@@ -7877,7 +7925,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             if (end > 0) {
                 return trimmed.substring(1, end);
             }
-        } // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
+        }
         int cut = trimmed.length();
         for (int i = 0; i < trimmed.length(); i++) {
             char c = trimmed.charAt(i);
@@ -8020,18 +8068,18 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (pane == null) {
             return;
         }
-        int full = memberRowHeight(pane); // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
+        int full = memberRowHeight(pane);
         if (pane.isMaximumSizeSet() && pane.getMaximumSize().height == full
                 && pane.isMinimumSizeSet() && pane.getMinimumSize().height == full) {
             return;
         }
         pane.setMinimumSize(new Dimension(20, full));
         pane.setMaximumSize(new Dimension(Integer.MAX_VALUE, full));
-        pane.revalidate(); // @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md
-    } // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
- // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-    /** // @aa-sdd PK-1039 docs/specs/common/formal-plan.spec.md
-     * The method {@code snapGroup} places one group as a single run in canvas order. // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+        pane.revalidate();
+    }
+
+    /**
+     * The method {@code snapGroup} places one group as a single run in canvas order.
      * The run is every member, then the merge cell.
      * A null canvas returns without a change.
      * A null or empty {@code groupId} returns without a change.
@@ -8084,9 +8132,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             CellRecord one = findCell(id);
             if (one != null && groupId.equals(one.groupId)) {
                 if (!placed) {
-                    for (int m = 0; m < members.size(); m++) { // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
-                        next.add(members.get(m)); // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-                    } // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+                    for (int m = 0; m < members.size(); m++) {
+                        next.add(members.get(m));
+                    }
                     if (mergeId != null) {
                         next.add(mergeId);
                     }
@@ -8129,12 +8177,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         /**
          * The task writes the copied canvas order and ignores a database failure.
          */
-        worker.submit(new Runnable() { // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1163 PK-1048 docs/specs/java/org/casserole/edit/edit.spec.md docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1084 PK-1045 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1031 PK-1034 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1162 PK-1033 docs/specs/common/stages.spec.md docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1030 docs/specs/common/formal-plan.spec.md
+        worker.submit(new Runnable() {
+            // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
+            // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
+            // @aa-sdd PK-1031 docs/specs/common/formal-plan.spec.md FINESSE:f-61
+            // @aa-sdd PK-1162 docs/specs/common/stages.spec.md FINESSE:f-62
+            // @aa-sdd PK-1030 docs/specs/common/formal-plan.spec.md FINESSE:f-63
             /**
              * The method calls {@link VaultStore#saveOrder(String, java.util.List)}.
              * An {@link java.sql.SQLException} is ignored.
@@ -8146,11 +8194,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 } catch (SQLException ignored) {
                 }
             }
-        }); // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+        });
     }
 
-    /** // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
-     * The method {@code currentCanvas} returns the canvas for the selected tab. // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+    /**
+     * The method {@code currentCanvas} returns the canvas for the selected tab.
      * An index below {@code 0} is out of range.
      * An index at or past {@code canvases.size()} is out of range.
      * An out-of-range index returns {@code null} when the canvas list is empty.
@@ -8160,21 +8208,21 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @return the canvas on the selected tab, the first canvas, or {@code null}
      */
     private CanvasRecord currentCanvas() {
-        int idx = canvasTabs.getSelectedIndex(); // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-        if (idx < 0 || idx >= canvases.size()) { // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-            if (canvases.size() == 0) { // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-                return null; // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+        int idx = canvasTabs.getSelectedIndex();
+        if (idx < 0 || idx >= canvases.size()) {
+            if (canvases.size() == 0) {
+                return null;
             }
             return canvases.get(0);
         }
         return canvases.get(idx);
     }
 
-    /** // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-     * The method {@code targetCell} returns the cell a run should use. // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
-     * A missing canvas returns {@code null}. // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-     * A canvas with no cells returns {@code null}. // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-     * A {@code focusedCellId} that matches a cell on that canvas returns that cell. // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+    /**
+     * The method {@code targetCell} returns the cell a run should use.
+     * A missing canvas returns {@code null}.
+     * A canvas with no cells returns {@code null}.
+     * A {@code focusedCellId} that matches a cell on that canvas returns that cell.
      * Any other focus returns the last cell on the canvas.
      *
      * @return the focused cell, the last cell, or {@code null}
@@ -8236,9 +8284,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A null cell returns {@code false}.
      * A null or empty {@code groupId} returns {@code false}.
      * The method returns {@code true} only when {@code columnPosition} is {@code 0}.
-     * That merge cell stays open. // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-     * // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
-     * @param cell the turn, or {@code null} // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
+     * That merge cell stays open.
+     *
+     * @param cell the turn, or {@code null}
      * @return {@code true} for a merge sink
      */
     private static boolean mergeSink(CellRecord cell) {
@@ -8316,9 +8364,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A null id is skipped.
      * An empty id is skipped.
      * An id already in {@code buriedIds} is skipped.
-     * The adds run under the {@code buriedIds} lock. // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-     * // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
-     * @param ids the cell ids a late save must leave alone, or {@code null} // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+     * The adds run under the {@code buriedIds} lock.
+     *
+     * @param ids the cell ids a late save must leave alone, or {@code null}
      */
     private void bury(List<String> ids) {
         if (ids == null) {
@@ -8329,8 +8377,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 String id = ids.get(i);
                 if (id != null && id.length() > 0 && !buriedIds.contains(id)) {
                     buriedIds.add(id);
-                } // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            } // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+                }
+            }
         }
     }
 
@@ -8341,8 +8389,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param ids the cell ids a failed delete puts back into play, or {@code null}
      */
-    private void unbury(List<String> ids) { // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-        if (ids == null) { // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+    private void unbury(List<String> ids) {
+        if (ids == null) {
             return;
         }
         synchronized (buriedIds) {
@@ -8354,7 +8402,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
     /**
      * The method {@code cancelBuriedRuns} marks a running member stopped and sends the cancel frame Stop already sends.
-     * A null list returns without a change. // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+     * A null list returns without a change.
      * An empty list returns without a change.
      * The open user comes from {@link #openUsername()}.
      * A null user finds no {@link UserRun}.
@@ -8366,8 +8414,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * An empty running list returns before any frame is written.
      * Each remaining id is sent on the worker as {@code TYPE_CANCEL} with an empty scope-A body.
      * A write failure shows {@code Stop failed:} plus the exception message when that user is still open.
-     * // @aa-sdd PK-1113 docs/specs/common/formal-plan.spec.md
-     * @param ids the cell ids that are leaving, or {@code null} // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+     *
+     * @param ids the cell ids that are leaving, or {@code null}
      */
     private void cancelBuriedRuns(final ArrayList<String> ids) {
         if (ids == null || ids.size() == 0) {
@@ -8381,10 +8429,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             UserRun run = username == null ? null : userRuns.get(username);
             connector = run == null ? null : run.connector;
             if (run != null) {
-                for (int i = 0; i < ids.size(); i++) { // @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md
-                    String id = ids.get(i); // @aa-sdd PK-1160 docs/specs/common/stages.spec.md
-                    run.answers.remove(id); // @aa-sdd PK-1113 docs/specs/common/formal-plan.spec.md
-                    CellRun one = run.runs.get(id); // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+                for (int i = 0; i < ids.size(); i++) {
+                    String id = ids.get(i);
+                    run.answers.remove(id);
+                    CellRun one = run.runs.get(id);
                     if (one != null && "RUNNING".equals(one.phase)) {
                         one.phase = "STOPPED";
                         running.add(id);
@@ -8396,7 +8444,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 }
                 stop = !run.anyRunning();
             }
-        } // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+        }
         if (stop) {
             stopThinking();
         }
@@ -8407,8 +8455,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The task sends one cancel frame for each run that was {@code RUNNING}.
          */
         worker.submit(new Runnable() {
-            // @aa-sdd PK-1031 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1030 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1031 docs/specs/common/formal-plan.spec.md FINESSE:f-61
+            // @aa-sdd PK-1030 docs/specs/common/formal-plan.spec.md FINESSE:f-63
             /**
              * The method writes {@code TYPE_CANCEL} for each remembered id.
              * A write failure is posted back to the event thread.
@@ -8425,8 +8473,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                          * The task reports a failed cancel when the same user is still open.
                          */
                         SwingUtilities.invokeLater(new Runnable() {
-                            // @aa-sdd PK-1162 docs/specs/common/stages.spec.md
-                            // @aa-sdd PK-1029 docs/specs/common/formal-plan.spec.md
+                            // @aa-sdd PK-1162 docs/specs/common/stages.spec.md FINESSE:f-62
+                            // @aa-sdd PK-1029 docs/specs/common/formal-plan.spec.md FINESSE:f-66
                             /**
                              * The method shows {@code Stop failed:} plus the exception message.
                              * A null user is skipped.
@@ -8455,19 +8503,19 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      */
     private void dropChain(ArrayList<String> ids) {
         if (ids == null) {
-            return; // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            return;
         }
         for (int i = 0; i < chainQueue.size(); i++) {
-            if (ids.contains(chainQueue.get(i))) { // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            if (ids.contains(chainQueue.get(i))) {
                 chainQueue.clear();
                 return;
             }
         }
     }
 
-    /** // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-     * The method {@code stopGroupClock} stops the group-wait timer so it does not write the members back. // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md
-     * A null {@code groupId} returns without a change. // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+    /**
+     * The method {@code stopGroupClock} stops the group-wait timer so it does not write the members back.
+     * A null {@code groupId} returns without a change.
      * An empty {@code groupId} returns without a change.
      * The timer is removed from {@code f19Clocks}.
      * A timer that was present is stopped.
@@ -8475,7 +8523,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param groupId the group that is leaving, or empty
      */
     private void stopGroupClock(String groupId) {
-        if (groupId == null || groupId.length() == 0) { // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md
+        if (groupId == null || groupId.length() == 0) {
             return;
         }
         Timer timer = f19Clocks.remove(groupId);
@@ -8506,9 +8554,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A null {@code deleteTurnButton} returns without a change.
      * The enabled flag is {@link #deleteArmed()}.
      */
-    private void refreshDeleteButton() { // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-        if (deleteTurnButton == null) { // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-            return; // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md
+    private void refreshDeleteButton() {
+        if (deleteTurnButton == null) {
+            return;
         }
         deleteTurnButton.setEnabled(deleteArmed());
     }
@@ -8549,23 +8597,23 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         final CellRecord cell = focusedTurn();
         final ArrayList<CellRecord> removing = removalSet(canvas, cell);
         if (removing.size() == 0 || removing.size() >= canvas.cells.size()) {
-            refreshDeleteButton(); // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-            return; // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            refreshDeleteButton();
+            return;
         }
         List<CellRecord> ordered = orderedCells(canvas);
         final ArrayList<String> removedIds = new ArrayList<String>();
         for (int i = 0; i < removing.size(); i++) {
             removedIds.add(removing.get(i).id);
         }
-        final ArrayList<CellRecord> remaining = new ArrayList<CellRecord>(); // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md
-        int first = -1; // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+        final ArrayList<CellRecord> remaining = new ArrayList<CellRecord>();
+        int first = -1;
         for (int i = 0; i < ordered.size(); i++) {
             CellRecord one = ordered.get(i);
             if (one == null || removedIds.contains(one.id)) {
                 if (one != null && first < 0) {
                     first = remaining.size();
                 }
-                continue; // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+                continue;
             }
             remaining.add(one);
         }
@@ -8591,7 +8639,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         final String moodWalk = walkedPin;
         bury(removedIds);
         cancelBuriedRuns(removedIds);
-        dropChain(removedIds); // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+        dropChain(removedIds);
         stopGroupClock(groupId);
         if (armedGroupSource != null && removedIds.contains(armedGroupSource)) {
             armedGroupSource = null;
@@ -8600,7 +8648,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The task deletes the turns in the vault and then updates the canvas.
          */
         worker.submit(new Runnable() {
-            // @aa-sdd PK-1162 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-1162 docs/specs/common/stages.spec.md FINESSE:f-62
             /**
              * The method calls {@link VaultStore#deleteTurns(String, java.util.List, java.util.List)}.
              * A success posts the canvas update to the event thread.
@@ -8614,8 +8662,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The task removes the deleted cells from the open canvas.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
-                        // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md FINESSE:f-34
+                        // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
                         /**
                          * The method drops the removed cells and rewrites {@code cellOrder}.
                          * Focus and the pending focus become {@code focusId}.
@@ -8673,7 +8721,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The task puts the ids back into play after a failed vault delete.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md FINESSE:f-35
                         /**
                          * The method unburies the ids and refreshes Delete.
                          * A group delete shows {@code delete group failed:} plus the exception message.
@@ -8720,7 +8768,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * Turning the id off removes it when the file list holds it.
      * Turning the id off returns when the file list does not hold it.
      * A list that changed is sorted, stored with {@link ExpandedSeat#withCells(ArrayList)}, and written by {@link #storeExpanded()}.
-     // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md FINESSE:f-206
      *
      * @param cellId the card id
      * @param on {@code true} when the cell is checked
@@ -8912,7 +8960,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A missing vault returns without a turn.
      * The last cell's target, Grok entry, think holder, and Expanded View flag are copied when the canvas already has a cell.
      * An empty canvas copies an empty target, a null Grok entry, a null think holder, and Expanded View off.
-     * The vault insert runs on the worker. // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * The vault insert runs on the worker.
      * A database failure shows {@code new turn failed:} plus the exception message.
      *
      * @param armAppended {@code true} moves the selected card onto the new turn
@@ -8944,7 +8992,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The task inserts the new turn and copies the prior cell's target.
          */
         worker.submit(new Runnable() {
-            // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-12
             /**
              * The method adds the turn at {@code cells.size() + 1}.
              * A canvas that already had a cell copies {@code executionTarget} and saves that cell.
@@ -8968,12 +9016,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The task arms the new card and scrolls the caret into its prompt.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
                         /**
                          * The method copies the prior Grok entry when that copy exists.
                          * The method stores the prior think holder and saves the think file when that holder exists.
                          * Expanded View is copied through {@link #setExpanded(String, boolean)}.
                          * {@code armAppended} sets {@code focusedCellId} to the new cell.
+                         * The thinking glass stays on the scope that was showing.
                          * The pending focus is the new cell and does not aim at the assistant text.
                          * {@code pendingLandOnInput} is set, so the caret lands in the new prompt.
                          * The tabs are rebuilt and the canvas tab is selected again.
@@ -8991,7 +9040,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                             }
                             setExpanded(cell.id, priorExpanded);
                             if (armAppended) {
-                                armFocusedCell(cell.id);
+                                focusedCellId = cell.id;
+                                String bornUser = openUsername();
+                                if (bornUser != null && bornUser.length() > 0) {
+                                    thinkFocus.put(bornUser, cell.id);
+                                }
                             }
                             pendingFocusId = cell.id;
                             pendingFocusAssistant = false;
@@ -9120,7 +9173,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         byte[] toon = AmwpToon.encodeExecute(body);
         // A long canvas keeps the mood triple. The send does not drop it to fit.
-        // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md FINESSE:f-187
         if (!AmwpCodec.fits(toon)) {
             target.executionStatus = "FAILED";
             persistQuiet(target);
@@ -9131,11 +9184,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         thinkSeats.rememberFace(vaultUser, target.id,
                 target.groupId == null ? "" : target.groupId,
                 target.executionTarget == null ? "" : target.executionTarget);
+        thinkSeats.rememberCanvas(vaultUser, target.id, canvasIdOnOpen(target.id));
         armRun(vaultUser, target.id, connector);
         /**
          * The task persists the canvas and writes the armed payload.
          */
         worker.submit(new Runnable() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             /**
              * The method calls {@link #persistAll()} and then writes channel A data.
              * A success shows {@code running} plus the cell id when the same user is still open.
@@ -9150,6 +9205,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The task shows the running line for the cell that was sent.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
+                        // @aa-sdd L40 aetheris-plan-stage-1.001.md
                         /**
                          * The method shows {@code running} plus the cell id when the vault user is still open.
                          */
@@ -9166,7 +9222,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The task marks the cell failed after the write throws.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+                        // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
                         /**
                          * The method sets {@code executionStatus} to {@code FAILED}.
                          * The run is cleared and the cell is saved quietly.
@@ -9212,8 +9268,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The mood splice is the head of one later turn, not a system row.
      * A grouped member is skipped when {@link #mergePresent(List, String)} already sees that group.
      * A merge cell is appended by {@link #appendMergedTurn(AmwpToon.ExecuteBody, CellRecord, List, String)}.
-     * Any other kept source is appended by {@link #appendCell(AmwpToon.ExecuteBody, CellRecord, List, String)}. // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-     * Either append returns {@code null} from this method when that append returns false. // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+     * Any other kept source is appended by {@link #appendCell(AmwpToon.ExecuteBody, CellRecord, List, String)}.
+     * Either append returns {@code null} from this method when that append returns false.
      * The target itself is added as a user turn when it is readable and not excluded.
      * A null user text is sent as an empty string.
      * A resolved prompt that starts with {@code pipe:} returns {@code null}.
@@ -9230,7 +9286,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         boolean cloud = AetherisStage2.cloudTarget(outboundTarget(target));
         List<CellRecord> sources = AetherisStage2.sourcesBefore(ordered, target, cloud);
         AmwpToon.ExecuteBody body = new AmwpToon.ExecuteBody();
-        body.cellId = target.id; // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
+        body.cellId = target.id;
         body.executionTarget = outboundTarget(target);
         body.ephemeral = target.ephemeral;
         String bodyProvider = AetherisStage2.providerId(body.executionTarget);
@@ -9269,7 +9325,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         hostLine.text = "";
         body.workingSet.add(hostLine);
         // The mood triple is the head of one turn message. It is not a system row.
-        // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
         String spliceId = moodSpliceCell(canvas, ordered, sources, target, withMood);
         for (int i = 0; i < sources.size(); i++) {
             CellRecord source = sources.get(i);
@@ -9333,7 +9389,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * Debug mood off returns {@code null}.
      * A pending move is computed and not saved, because the resolve call does not commit.
      *
-     * @param canvas the showing canvas // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+     * @param canvas the showing canvas
      * @param ordered the canvas order
      * @param sources the cells before the target
      * @param target the armed turn
@@ -9435,34 +9491,34 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 return cell.id;
             }
             int at = ordered.indexOf(cell);
-            if (at >= pinAt) { // @aa-sdd PK-1148 docs/specs/common/formal-plan.spec.md
+            if (at >= pinAt) {
                 return cell.id;
             }
-        } // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
-        return null; // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+        }
+        return null;
     }
- // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
-    /** // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
-     * The method {@code withMoodHead} places the mood invitation ahead of the user line. // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+
+    /**
+     * The method {@code withMoodHead} places the mood invitation ahead of the user line.
      * A null block, a null splice id, or a null cell id returns the block unchanged.
      * A cell id that is not the splice id returns the block unchanged.
-     * A block that does not open with {@code user} and two spaces is left as it is. // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-     * Any other block is {@link #inspectorMoodHead()} followed by the original block. // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
-     // @aa-sdd PK-1082 docs/specs/common/formal-plan.spec.md
+     * A block that does not open with {@code user} and two spaces is left as it is.
+     * Any other block is {@link #inspectorMoodHead()} followed by the original block.
+     * // @aa-sdd PK-1082 docs/specs/common/formal-plan.spec.md FINESSE:f-199
      *
      * @param block the role lines, oldest first inside the card, or {@code null}
-     * @param cellId the cell that owns the block, or {@code null} // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
-     * @param spliceId the splice cell, or {@code null} // @aa-sdd PK-1027 docs/specs/common/formal-plan.spec.md
-     * @return the block the inspector paints // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
-     */ // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
-    private String withMoodHead(String block, String cellId, String spliceId) { // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
-        if (block == null || spliceId == null || cellId == null || !cellId.equals(spliceId)) { // @aa-sdd PK-1015 docs/specs/common/formal-plan.spec.md
-            return block; // @aa-sdd PK-1013 docs/specs/common/formal-plan.spec.md
-        } // @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md
-        if (!block.startsWith("user  ")) { // @aa-sdd PK-1006 docs/specs/common/formal-plan.spec.md
+     * @param cellId the cell that owns the block, or {@code null}
+     * @param spliceId the splice cell, or {@code null}
+     * @return the block the inspector paints
+     */
+    private String withMoodHead(String block, String cellId, String spliceId) {
+        if (block == null || spliceId == null || cellId == null || !cellId.equals(spliceId)) {
             return block;
-        } // @aa-sdd PK-1005 docs/specs/common/formal-plan.spec.md
-        return inspectorMoodHead() + block; // @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md
+        }
+        if (!block.startsWith("user  ")) {
+            return block;
+        }
+        return inspectorMoodHead() + block;
     }
 
     /**
@@ -9473,7 +9529,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The head text is {@link MoodDesk#spliceTurn(String, String)} with an empty prompt.
      * Each non-empty physical line is prefixed with {@code MOOD_DEBUG_MARK} and a newline.
      * An empty physical line is skipped.
-     // @aa-sdd PK-1082 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1082 docs/specs/common/formal-plan.spec.md FINESSE:f-199
      *
      * @return the marked lines, or an empty string when the line is blank
      */
@@ -9552,7 +9608,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 if (resolved.startsWith("pipe:")) {
                     return false;
                 }
-                AmwpToon.Turn t = new AmwpToon.Turn(); // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
+                AmwpToon.Turn t = new AmwpToon.Turn();
                 t.role = "user";
                 if (cell.id != null && cell.id.equals(spliceCellId)) {
                     resolved = MoodDesk.spliceTurn(resolved, moodLine);
@@ -9576,7 +9632,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
         }
         return true;
-    } // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+    }
 
     /**
      * The method {@code appendMergedTurn} turns one prior group into one user message and one assistant message.
@@ -9612,8 +9668,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 resolved = MoodDesk.spliceTurn(resolved, moodLine);
             }
             prompt.text = resolved;
-            prompt.head = merge.headLock; // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            body.workingSet.add(prompt); // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
+            prompt.head = merge.headLock;
+            body.workingSet.add(prompt);
         }
         if (merge.state == CellState.OUTPUT_ONLY || merge.state == CellState.INCLUDED) {
             String stripped = AetherisStage2.stripJoinBanners(merge.assistantText, groupMembers(merge.groupId));
@@ -9626,7 +9682,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 reply.role = "assistant";
                 reply.text = resolved;
                 reply.head = merge.headLock;
-                body.workingSet.add(reply); // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
+                body.workingSet.add(reply);
             }
         }
         return true;
@@ -9649,8 +9705,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         for (int i = 0; i < sources.size(); i++) {
             CellRecord one = sources.get(i);
-            if (mergeSink(one) && groupId.equals(one.groupId)) { // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
-                return true; // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            if (mergeSink(one) && groupId.equals(one.groupId)) {
+                return true;
             }
         }
         return false;
@@ -9666,8 +9722,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A cell in another group is skipped.
      * A cell whose {@code columnPosition} is {@code 0} or less is skipped.
      * A cell that is not {@code INPUT_ONLY} or {@code INCLUDED} is skipped.
-     * A null or empty {@code userText} is skipped. // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-     * // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
+     * A null or empty {@code userText} is skipped.
+     *
      * @param sources the kept cells before the target, or {@code null}
      * @param groupId the group id, or empty
      * @return the concatenated prompts, or an empty string
@@ -9772,6 +9828,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * An input-only cell stays out.
      * An output-only cell stays out.
      * The inspector list counts a different set of cells.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-142
      *
      * @param cell the card, or {@code null}
      * @return {@code true} when the token ring factors this cell
@@ -9858,11 +9915,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A null or empty member prompt is skipped.
      * Each kept prompt is appended with a newline and is not shortened.
      * The merge reply is appended only when {@link #tokenActive(CellRecord)} accepts the merge.
-     * A null assistant text is treated as empty and adds nothing. // @aa-sdd PK-1107 docs/specs/common/formal-plan.spec.md
-     * // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
-     * @param counted the ring text // @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md
-     * @param merge the focused merge, or {@code null} // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-     */ // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+     * A null assistant text is treated as empty and adds nothing.
+     *
+     * @param counted the ring text
+     * @param merge the focused merge, or {@code null}
+     */
     private void appendActiveGroupTokens(StringBuilder counted, CellRecord merge) {
         if (merge == null || merge.groupId == null || merge.groupId.length() == 0) {
             return;
@@ -9901,7 +9958,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * {@link #paintInspectorView()} runs first.
      * {@link #measureTokensNow()} runs second.
      * A cell key paints the text on a later beat and posts the walk.
-     // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
      */
     private void refreshInspector() {
         paintInspectorView();
@@ -9927,7 +9984,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The next line is {@code working set →} plus the target id.
      * A line of dashes separates blocks after the first.
      * Each block is numbered by {@link #appendNumbered(StringBuilder, String, int[])}.
-     // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
      */
     private void paintInspectorView() {
         harvestCards();
@@ -9951,8 +10008,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         boolean cloud = AetherisStage2.cloudTarget(outboundTarget(target));
         List<CellRecord> sources = AetherisStage2.sourcesBefore(ordered, target, cloud);
         // The paint does not move the pin. The head sits ahead of that user line.
-        // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
-        // @aa-sdd PK-1082 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-197
+        // @aa-sdd PK-1082 docs/specs/common/formal-plan.spec.md FINESSE:f-199
         String spliceId = debugSpliceId(canvas, ordered, sources, target);
         ArrayList<String> sunk = sinkInspectorBlocks(sources, target, spliceId, shown);
         if (sunk != null) {
@@ -9996,7 +10053,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             sb.append("mood: off ").append(preview(moodLine, 80)).append('\n');
         }
         // The yellow card is the mood string while the switch is on.
-        // @aa-sdd PK-1081 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1081 docs/specs/common/formal-plan.spec.md FINESSE:f-202
         sb.append("working set → ").append(target.id).append("\n");
         int[] seq = new int[] { 1 };
         for (int i = 0; i < blocks.size(); i++) {
@@ -10009,13 +10066,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         paintFacts();
         paintMoodStatus();
     }
- // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+
     /**
      * The method {@code paintInspectorText} replaces the inspector text and leaves the scroll where it was.
      * The mood card and the turn text share that scroll.
      * A paint must not snap the scroll back to the top.
      * A missing inspector pane still sets the text.
-     * A null {@code text} is stored as an empty string. // @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md
+     * A null {@code text} is stored as an empty string.
      * The viewport position is restored when both the viewport and the old position exist.
      *
      * @param text the next document, or {@code null}
@@ -10027,12 +10084,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (port != null && hold != null) {
             port.setViewPosition(hold);
         }
-    } // @aa-sdd PK-1214 docs/specs/java/org/aetheris/swing/swing.spec.md
+    }
 
     /**
      * Claim the next sequence, walk the armed transcript, and paint that integer
      * when the sequence is still current. The EDT runs this for a click.
-     // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
      */
     /**
      * The method {@code measureTokensNow} measures the token integer for the armed cell.
@@ -10059,7 +10116,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         acceptTokenPaint(sequence, estimate, rendered.length(), transcript.turnCount(), rendered);
     }
 
-    // @aa-sdd PK-1214 docs/specs/java/org/aetheris/swing/swing.spec.md
+    // @aa-sdd PK-1214 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-222
     /**
      * The class {@code GlassPiece} is one inspector line the sink can keep or drop.
      * {@code text} is the full body.
@@ -10070,7 +10127,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * {@code stay} is true when a mood line sits at the head of the text.
      * {@code seq} starts at {@code 0} and is assigned while the sink walks the pieces.
      * {@code live} starts false and marks the open user line.
-     */ // @aa-sdd PK-1215 docs/specs/java/org/aetheris/swing/swing.spec.md
+     */
     private static final class GlassPiece {
 
         final byte role;
@@ -10102,7 +10159,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
-    // @aa-sdd PK-1215 docs/specs/java/org/aetheris/swing/swing.spec.md
+    // @aa-sdd PK-1215 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-222
     /**
      * The class {@code SinkGlass} holds the chronological preview lines and the sink sum.
      * {@code blocks} are those lines.
@@ -10284,8 +10341,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 line = withMoodHead(line, piece.cellId, spliceId);
             }
             blocks.add(line);
-        } // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-        return new SinkGlass(blocks, cut.tokenSum); // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+        }
+        return new SinkGlass(blocks, cut.tokenSum);
     }
 
     /**
@@ -10302,7 +10359,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param cell the card
      */
     private static void addKeptGlass(ArrayList<GlassPiece> pieces, CellRecord cell) {
-        if (!AetherisStage2.kept(cell)) { // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+        if (!AetherisStage2.kept(cell)) {
             return;
         }
         if (cell.state == CellState.INPUT_ONLY || cell.state == CellState.INCLUDED) {
@@ -10319,7 +10376,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * The method {@code addMergedGlass} appends a merge as full member prompts and then the stripped reply. // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+     * The method {@code addMergedGlass} appends a merge as full member prompts and then the stripped reply.
      * A null merge adds nothing.
      * A non-empty prompt from {@link #memberPrompts(List, String)} becomes a user piece.
      * That user piece stays when {@link MoodDesk#lineAtTurnHead(String)} finds a line.
@@ -10355,7 +10412,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A waiting cell-input edit is dropped through {@link TokenEditQueue#dropPending()}.
      * The in-flight walk still finishes.
      * That walk paints only when its stamp is still current.
-     // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
      *
      * @return the sequence this measure owns
      */
@@ -10374,7 +10431,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param sequence the edit stamp
      * @param estimate the heuristic or the sink sum
-     * @param chars the rendered length // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+     * @param chars the rendered length
      * @param blocks the turn count
      * @param rendered the rendered transcript text
      */
@@ -10392,7 +10449,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * {@code inspectorViewQueued} already true returns without a second post.
      * The flag is set before the post.
      * The posted task clears the flag and calls {@link #paintInspectorView()}.
-     // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
      */
     private void scheduleInspectorView() {
         if (inspectorViewQueued) {
@@ -10403,7 +10460,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The task paints the inspector once the key has returned.
          */
         SwingUtilities.invokeLater(new Runnable() {
-            // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+            // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
             /**
              * The method clears {@code inspectorViewQueued}.
              * The method then calls {@link #paintInspectorView()}.
@@ -10450,7 +10507,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The method {@code offerTokenEdit} posts one cell-input beat.
      * The call is {@link TokenEditQueue#offer(String)}.
      * The queue keeps the newest beat only.
-     // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
      *
      * @param cellId the card that edited
      */
@@ -10462,9 +10519,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The method {@code scheduleUndoFold} folds one cell's undo queue after the key returns.
      * Later keys share that beat.
      * A null {@code cellId} returns without a post.
-     * An id already in {@code undoFolds} returns without a second post. // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
+     * An id already in {@code undoFolds} returns without a second post.
      * The posted task removes the id and folds the edit memory when {@link EditMemory#foldDue()} is true.
-     * // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+     *
      * @param cellId the card, or {@code null}
      */
     private void scheduleUndoFold(final String cellId) {
@@ -10489,7 +10546,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     memory.fold();
                 }
             }
-        }); // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+        });
     }
 
     /**
@@ -10500,7 +10557,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The mood head is attached only when that cell exists.
      * The cloud flag comes from the armed cell's outbound target.
      * The list is {@link #orderedCells(CanvasRecord)} and the head is {@link #moodHead()}.
-     // @aa-sdd PK-1105 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1105 docs/specs/common/formal-plan.spec.md FINESSE:f-174
      *
      * @return the rendered source for the token estimator
      */
@@ -10525,8 +10582,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * Each group id is emitted once, through {@link #addGroupTurn}.
      * A cell with no group id is emitted through {@link #addOrdinaryTurn}.
      * A null cell is skipped.
-     // @aa-sdd PK-1105 docs/specs/common/formal-plan.spec.md
-     // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1105 docs/specs/common/formal-plan.spec.md FINESSE:f-174
+     * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
      *
      * @param ordered the canvas order, live or copied
      * @param selected the armed card, or {@code null}
@@ -10572,7 +10629,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A line that does not normalize returns {@code null}.
      * A present head is the opener, the trimmed line, and the closer.
      * Each of those three pieces is followed by a newline.
-     * // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+     *
      * @return the stored head, or {@code null}
      */
     private String moodHead() {
@@ -10586,9 +10643,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A selected card with no group id stops on that card.
      * A selected card that is not in the list stops on the last index.
      * A selected card with a group id stops on the last cell of that group.
-     * A group id that is not in the list stops on the last index. // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
-     * // @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md
-     * @param ordered the canvas order, or {@code null} // @aa-sdd PK-1006 docs/specs/common/formal-plan.spec.md
+     * A group id that is not in the list stops on the last index.
+     *
+     * @param ordered the canvas order, or {@code null}
      * @param selected the clicked card, or {@code null}
      * @return the index in {@code ordered}, or {@code -1} when the list is empty
      */
@@ -10612,7 +10669,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             if (one != null && group.equals(one.groupId)) {
                 last = i;
             }
-        } // @aa-sdd PK-1006 docs/specs/common/formal-plan.spec.md
+        }
         if (last < 0) {
             return ordered.size() - 1;
         }
@@ -10632,9 +10689,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param stop the last index the walk reads
      * @return the card the source walk stops on
      */
-    private static CellRecord pipeStopCard(List<CellRecord> ordered, CellRecord selected, int stop) { // @aa-sdd PK-1148 docs/specs/common/formal-plan.spec.md
-        String group = selected == null ? null : selected.groupId; // @aa-sdd PK-1110 docs/specs/common/formal-plan.spec.md
-        if (group == null || group.length() == 0) { // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
+    private static CellRecord pipeStopCard(List<CellRecord> ordered, CellRecord selected, int stop) {
+        String group = selected == null ? null : selected.groupId;
+        if (group == null || group.length() == 0) {
             return selected;
         }
         CellRecord sink = null;
@@ -10727,8 +10784,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * {@code OUTPUT_ONLY} returns an {@link OutputOnlyModifier}.
      * Any other state returns an {@link IncludedModifier}.
      *
-     * @param state the card mark, or {@code null} // @aa-sdd PK-1127 docs/specs/common/formal-plan.spec.md
-     * @return the modifier for that mark // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+     * @param state the card mark, or {@code null}
+     * @return the modifier for that mark
      */
     private static StateModifier markModifier(CellState state) {
         if (state == null || state == CellState.INCLUDED) {
@@ -10765,7 +10822,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (resolved == null) {
             return "";
         }
-        return resolved; // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+        return resolved;
     }
 
     /**
@@ -10800,7 +10857,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A null cell is skipped.
      * A cell in another group is skipped.
      * A cell whose {@code columnPosition} is {@code 0} or less is skipped.
-     // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
      *
      * @param ordered the canvas order, live or copied, or {@code null}
      * @param groupId the group id, or empty
@@ -11147,7 +11204,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The task saves each cell and keeps a failed assistant text for a later paint.
          */
         worker.submit(new Runnable() {
-            // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md FINESSE:f-186
             /**
              * The method saves each cell that is not null and not buried.
              * An {@link java.sql.SQLException} calls {@link #rememberAnswer(String, String, String)} with the assistant text.
@@ -11167,7 +11224,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 }
             }
         });
-    } // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+    }
 
     /**
      * The method {@code persistQuiet} saves one cell on the worker and ignores a database failure.
@@ -11185,7 +11242,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The task saves the cell and swallows a database failure.
          */
         worker.submit(new Runnable() {
-            // @aa-sdd PK-1146 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1146 docs/specs/common/formal-plan.spec.md FINESSE:f-111
             /**
              * The method returns when the vault is null, the cell is null, or the cell is buried.
              * {@link VaultStore#saveCell(CellRecord)} runs for every other cell.
@@ -11204,7 +11261,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         });
     }
 
-    /** // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+    /**
      * The method {@code seatMark} writes one mark onto a cell.
      * The marks are the included, excluded, input-only, and output-only states.
      * A null cell returns without a write.
@@ -11216,7 +11273,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A missing card still saves the cell.
      * The cell is saved quietly and the inspector is refreshed.
      * The deck is not rebuilt.
-     * // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+     *
      * @param cell the turn, or {@code null}
      * @param state the mark, or {@code null}
      */
@@ -11226,7 +11283,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         cell.state = state;
         // The press seats the letter. Focus and release do not.
-        // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md FINESSE:f-186
         repairCanvasLocks();
         CellCard card = findCard(cell.id);
         if (card != null) {
@@ -11234,7 +11291,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         persistQuiet(cell);
         refreshInspector();
-    } // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+    }
 
     /**
      * The method {@code repairCanvasLocks} keeps the canvas locks a packed prefix after a mark press.
@@ -11261,14 +11318,14 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         for (int i = 0; i < ordered.size(); i++) {
             CellRecord cell = ordered.get(i);
             if (cell == null || cell.headLock == next[i]) {
-                continue; // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+                continue;
             }
             cell.headLock = next[i];
             persistQuiet(cell);
         }
     }
 
-    /** // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+    /**
      * The method {@code showsCanvasLock} reports whether this card shows the head lock.
      * The lock is the padlock at the far left of the button bar.
      * A missing canvas returns {@code false}.
@@ -11403,7 +11460,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The action undoes the prompt for this cell.
          */
         actions.put("aetheris-undo", new AbstractAction() {
-            // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md FINESSE:f-44
             /**
              * The method calls {@link #undoCellText(String)} for this cell.
              *
@@ -11418,11 +11475,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The action redoes the prompt for this cell.
          */
         actions.put("aetheris-redo", new AbstractAction() {
-            // @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1039 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md FINESSE:f-203
+            // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md FINESSE:f-44
+            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
+            // @aa-sdd PK-1039 docs/specs/common/formal-plan.spec.md FINESSE:f-53
+            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md FINESSE:f-54
             /**
              * The method calls {@link #redoCellText(String)} for this cell.
              *
@@ -11468,7 +11525,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         applyCellText(cellId, memory);
     }
- // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+
     /**
      * The method {@code applyCellText} writes the undo record into the card that is on screen.
      * A rebuilt card is found by id.
@@ -11478,7 +11535,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The caret is placed with {@link #seatCellCaret(JTextArea, int)}.
      * A second placement runs on the event thread after Swing's own caret step, and that task ends the apply.
      * A {@link RuntimeException} ends the apply and is thrown again.
-     * // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
+     *
      * @param cellId the card id
      * @param memory the undo record that just stepped
      */
@@ -11498,18 +11555,18 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The task places the caret again after Swing moves it.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md FINESSE:f-44
+                // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
+                // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md FINESSE:f-54
                 /**
                  * The method places the caret and then ends the apply.
                  * {@link EditMemory#endApply()} runs even when the placement throws.
-                 */ // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-                @Override // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-                public void run() { // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
-                    try { // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-                        seatCellCaret(area, cursor); // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-                    } finally { // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+                 */
+                @Override
+                public void run() {
+                    try {
+                        seatCellCaret(area, cursor);
+                    } finally {
                         memory.endApply();
                     }
                 }
@@ -11563,13 +11620,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         /**
          * The action is the Ctrl+Enter binding named {@code aetheris-run}.
          * The binding runs the focused cell when the main view is showing.
-         */ // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-        getActionMap().put("aetheris-run", new AbstractAction() { // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1034 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+         */
+        getActionMap().put("aetheris-run", new AbstractAction() {
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md FINESSE:f-44
+            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
+            // @aa-sdd PK-1034 docs/specs/common/formal-plan.spec.md FINESSE:f-58
+            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md FINESSE:f-59
             /**
              * The method runs the focused cell, or the last cell when nothing is focused.
              * A complex filter that is on returns without a send.
@@ -11594,11 +11651,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The binding starts a chain run.
          */
         getActionMap().put("aetheris-chain", new AbstractAction() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
+            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
+            // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md FINESSE:f-44
+            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
             /**
              * The method starts the chain run.
              * The call is {@link #runChain()}.
@@ -11618,10 +11675,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The binding copies the armed group.
          */
         getActionMap().put("aetheris-duplicate-group", new AbstractAction() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
+            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
+            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md FINESSE:f-54
             /**
              * The method copies the armed group.
              * The call is {@link #duplicateGroup()}.
@@ -11638,11 +11695,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * Ctrl+Shift plus I, E, P, or O writes one cell mark.
          */
         addKeyListener(new KeyAdapter() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
+            // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
+            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
+            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md FINESSE:f-54
             /**
              * The method writes one mark when Ctrl and Shift are both down.
              * A press without Ctrl returns without a write.
@@ -11741,9 +11798,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The deck sizes itself from {@code canvasTabs} and fills itself with that component.
          */
         final JPanel deck = new JPanel(null) {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
+            // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
             /**
              * The method returns the preferred size of {@code canvasTabs}.
              *
@@ -11865,9 +11922,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener folds the pin bar when v is pressed.
          */
         fold.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md FINESSE:f-54
+            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md FINESSE:f-59
             /**
              * The method hides the pin bar and shows P.
              * {@link Host#shellPinBarOpenChanged(boolean)} stores false.
@@ -11888,8 +11945,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener shows the pin bar when P is pressed.
          */
         pinShow.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md FINESSE:f-59
             /**
              * The method shows the pin bar and hides P.
              * {@link Host#shellPinBarOpenChanged(boolean)} stores true.
@@ -11911,8 +11968,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The click does not write cell states.
          */
         pinBox.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md FINESSE:f-59
             /**
              * The method stores the checkbox in {@code pinOn}.
              * The field and OK are enabled when the box is selected.
@@ -11930,14 +11987,14 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 paintRustPin(pinShow);
                 repaintPin();
                 refreshInspector();
-            } // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-        }); // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
+            }
+        });
         /**
          * The listener keeps {@code pinNeedle} equal to the field while the pin is on.
          * A key does not write cell states.
          */
         pinField.addKeyListener(new KeyAdapter() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             /**
              * The method returns when {@code pinOn} is false.
              * Otherwise {@code pinNeedle} becomes the field text.
@@ -11959,11 +12016,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         /**
          * The listener treats Enter in the pin field as OK.
          */
-        pinField.addActionListener(new ActionListener() { // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1113 PK-53 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
+        pinField.addActionListener(new ActionListener() {
+            // @aa-sdd PK-1113 docs/specs/common/formal-plan.spec.md FINESSE:f-160
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
+            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
             /**
              * The method returns when {@code pinOn} is false.
              * Otherwise {@code pinNeedle} becomes the field text.
@@ -11981,18 +12038,18 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 pinNeedle = text == null ? "" : text;
                 commitPin();
             }
-        }); // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-        /** // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
+        });
+        /**
          * The listener clears the pin words and leaves the checkbox as it is.
          * Cell states stay until OK.
          */
         pinClear.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1160 docs/specs/common/stages.spec.md
-            // @aa-sdd PK-1113 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md FINESSE:f-149
+            // @aa-sdd PK-1160 docs/specs/common/stages.spec.md FINESSE:f-152
+            // @aa-sdd PK-1113 docs/specs/common/formal-plan.spec.md FINESSE:f-160
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
+            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
             /**
              * The method stores an empty {@code pinNeedle} and clears the field.
              * {@link #repaintPin()} and {@link #refreshInspector()} run after the clear.
@@ -12012,9 +12069,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener applies the pin words when OK is pressed.
          */
         pinOk.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
+            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
             /**
              * The method returns when {@code pinOn} is false.
              * Otherwise {@code pinNeedle} becomes the field text.
@@ -12088,13 +12145,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The line-length tips say preview cuts each kept line to the count, and the count is saved with the shell.
      * A typed count applies after a short pause.
      * The T tip says the ring compares this estimate with the selected model's context window.
-     * The T tip says the estimate stays, and this open does not ask the host and does not send. // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-     * // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * The T tip says the estimate stays, and this open does not ask the host and does not send.
+     *
      * @param title The title is the label at the start of the control row.
      * @param area The area is the inspector body placed in the deck.
      * @return The return value is the column panel.
      */
-    private JComponent wrap(String title, final SoftWrapArea area) { // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+    private JComponent wrap(String title, final SoftWrapArea area) {
         JPanel p = new JPanel(new BorderLayout());
         theme.applyPanel(p);
         final JCheckBox wrapBox = new JCheckBox("soft wrap");
@@ -12108,7 +12165,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (savedColumns < 1) {
             savedColumns = 80;
         }
-        area.setWrapColumns(savedColumns); // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+        area.setWrapColumns(savedColumns);
         area.setSoftWrap(inspectorSoftWrap);
         final JScrollPane inner = new JScrollPane();
         inner.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -12119,10 +12176,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener gives the inspector scroll the focus when the body is pressed.
          */
         area.addMouseListener(new MouseAdapter() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
+            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             /**
              * The method asks the inspector scroll pane for focus.
              * The body itself does not take the caret.
@@ -12136,11 +12193,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         });
         /**
          * The listener turns inspector soft wrap on or off.
-         */ // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+         */
         wrapBox.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+            // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md FINESSE:f-45
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             /**
              * The method stores the checkbox in {@code inspectorSoftWrap}.
              * {@code area} then uses that same wrap flag.
@@ -12157,7 +12214,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener stores the soft-wrap column count.
          */
         final Incrementor wrapWidth = new Incrementor(savedColumns, new Incrementor.Listener() {
-            // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md FINESSE:f-45
             /**
              * The method keeps at least {@code 1} column.
              * A {@code rows} value below {@code 1} is stored as {@code 1}.
@@ -12165,8 +12222,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * {@link Host#shellWrapColumnsChanged(int)} saves the count.
              *
              * @param rows The count is the number the control just applied.
-             */ // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-            @Override // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
+             */
+            @Override
             public void rowsChanged(int rows) {
                 int columns = rows < 1 ? 1 : rows;
                 area.setWrapColumns(columns);
@@ -12197,11 +12254,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener stores how many characters preview keeps on one inspector line.
          */
         final Incrementor lineChars = new Incrementor(inspectorLineChars, new Incrementor.Listener() {
-            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
+            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
+            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
+            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+            // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md FINESSE:f-45
             /**
              * The method keeps at least {@code 1} character.
              * A {@code rows} value below {@code 1} is stored as {@code 1}.
@@ -12233,7 +12290,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         lineChars.getField().setToolTipText(buttonTip(
                 "Inspector line length."
                         + "<br>Type a number. It applies after a short pause."
-                        + " Preview cuts each kept line to this count." // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+                        + " Preview cuts each kept line to this count."
                         + " The count is saved with the shell."));
         SnappedFlow controls = new SnappedFlow();
         theme.applyPanel(controls);
@@ -12248,15 +12305,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         group.add(factsNote);
         group.add(controls);
         final InspectorDeck deck = new InspectorDeck(moodStatus, area, inner);
-        inspectorPane = inner; // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+        inspectorPane = inner;
         inner.setViewportView(deck);
         inner.getViewport().setBackground(new Color(0x12, 0x12, 0x12));
         /**
          * The listener keeps the mood note in the visible column while the body scrolls.
          */
         inner.getViewport().addChangeListener(new ChangeListener() {
-            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             /**
              * The method calls {@link InspectorDeck#followViewport()}.
              *
@@ -12264,15 +12321,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              */
             @Override
             public void stateChanged(ChangeEvent event) {
-                deck.followViewport(); // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+                deck.followViewport();
             }
         });
         /**
          * The listener asks the deck to measure again when the viewport changes size.
          */
         inner.getViewport().addComponentListener(new ComponentAdapter() {
-            // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1047 docs/specs/common/formal-plan.spec.md FINESSE:f-45
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             /**
              * The method revalidates the deck.
              *
@@ -12287,7 +12344,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener gives the inspector scroll the focus from the mood note or the deck.
          */
         MouseAdapter focusPane = new MouseAdapter() {
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             /**
              * The method asks the inspector scroll pane for focus.
              *
@@ -12321,7 +12378,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener opens the token window from T.
          */
         tokenOpen.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             /**
              * The method calls {@link #openTokenWindow()}.
              * The estimate is not replaced here.
@@ -12338,7 +12395,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          */
         notebookDip = new NotebookDip(new NotebookDip.Seat() {
             /**
-             * The method ignores {@code count}. // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+             * The method ignores {@code count}.
              * A settled host count does not replace the ring estimate.
              *
              * @param count The count is the settled number, and it is not painted.
@@ -12346,14 +12403,16 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             @Override
             public void settled(int count) {
                 // The word stays the ring estimate. A settled host count does not replace it.
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-152
             }
         });
-        southFlow.add(tokenOpen); // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+        southFlow.add(tokenOpen);
         south.add(southFlow, BorderLayout.CENTER);
         p.add(south, BorderLayout.SOUTH);
         return p;
     }
 
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
     /**
      * The class {@code WrapNote} is a header line that wraps inside its column.
      * The text wraps on word boundaries.
@@ -12388,6 +12447,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener revalidates the note when the column width changes.
              */
             addComponentListener(new ComponentAdapter() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method returns when the width still equals {@code laidWidth}.
                  * A new width is stored in {@code laidWidth}.
@@ -12546,9 +12606,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The caret rests when its rectangle is inside the view after that pad on every side.
      * A caret that crosses the padded edge returns false.
      *
-     * @param view The view is the visible rectangle, or null. // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-     * @param dot The dot is the caret rectangle, or null. // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-     * @param slop The slop is the pad, in pixels, that must remain inside the view. // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+     * @param view The view is the visible rectangle, or null.
+     * @param dot The dot is the caret rectangle, or null.
+     * @param slop The slop is the pad, in pixels, that must remain inside the view.
      * @return The return value is true when the caret is already clear of the padded edges.
      */
     static boolean caretRests(Rectangle view, Rectangle dot, int slop) {
@@ -12571,9 +12631,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      */
     private static final class CellCaret extends DefaultCaret {
         @Override
-        /** // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-         * The method scrolls only when the caret is outside the padded viewport. // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-         * A null {@code loc} returns without a scroll. // @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md
+        /**
+         * The method scrolls only when the caret is outside the padded viewport.
+         * A null {@code loc} returns without a scroll.
          * A null component returns without a scroll.
          * A parent that is not a {@link javax.swing.JViewport} uses {@code super.adjustVisibility}.
          * A caret that {@link AetherisNotebookPanel#caretRests(Rectangle, Rectangle, int)} accepts with a pad of {@code 4} returns without a scroll.
@@ -12598,6 +12658,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
     /**
      * The class {@code QuietCaret} is a caret that does not select text.
      * The update policy is {@code NEVER_UPDATE}, so a document change does not scroll to the caret.
@@ -12691,6 +12752,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
     /**
      * The class {@code FactsLine} is one facts line above the inspector.
      * The line is a label in a border layout.
@@ -12724,6 +12786,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener fits the facts font when the column width changes.
              */
             addComponentListener(new ComponentAdapter() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method returns when the width still equals {@code laidWidth}.
                  * A new width is stored in {@code laidWidth}.
@@ -12889,15 +12952,16 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
             int size = factsPointSize(base, text, inner);
             Font next = base.deriveFont((float) size);
-            Font current = line.getFont(); // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-            if (current != null && current.getSize() == size && next.getFamily().equals(current.getFamily())) { // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-                return; // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
-            } // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
-            line.setFont(next); // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-            revalidate(); // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
+            Font current = line.getFont();
+            if (current != null && current.getSize() == size && next.getFamily().equals(current.getFamily())) {
+                return;
+            }
+            line.setFont(next);
+            revalidate();
         }
     }
 
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
     /**
      * The class {@code SnappedFlow} is the inspector row of the label, the soft-wrap box, and both size controls.
      * The layout is a left flow with an 8-pixel horizontal gap and no vertical gap inside the flow itself.
@@ -12919,6 +12983,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener revalidates the row when the column width changes.
              */
             addComponentListener(new ComponentAdapter() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method returns when the width still equals {@code laidWidth}.
                  * A new width is stored in {@code laidWidth}.
@@ -13050,6 +13115,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
     /**
      * The class {@code SnappedHeader} stacks the facts panel and then the width-control panel.
      * The inspector adds those two children in that order.
@@ -13093,7 +13159,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return new Dimension(0, stackHeight(target, span(target)));
         }
 
-        /** // @aa-sdd PK-1091 docs/specs/common/formal-plan.spec.md
+        /**
          * The method returns {@link #preferredLayoutSize(Container)}.
          *
          * @param target The target is the container being measured.
@@ -13145,7 +13211,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             if (target.getWidth() > 0) {
                 return target.getWidth();
             }
-            return 0; // @aa-sdd PK-1086 docs/specs/common/formal-plan.spec.md
+            return 0;
         }
 
         /**
@@ -13188,9 +13254,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
     /**
      * The class {@code InspectorDeck} is the mood note and the inspector body in one scroll.
-     * The mood is a {@link WrapNote}. // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+     * The mood is a {@link WrapNote}.
      * The body is a {@link SoftWrapArea}.
      * The deck uses a null layout, it is opaque, and its background is {@code #121212}.
      * One scroll moves both children.
@@ -13210,7 +13277,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The layout is null.
          * The deck is opaque and its background is {@code #121212}.
          * Both children are added.
-         * // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
+         *
          * @param mood The mood is the yellow note at the top of the deck.
          * @param body The body is the turn text under that note.
          * @param pane The pane is the one inspector scroll.
@@ -13264,8 +13331,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 width = viewW;
             }
             return new Dimension(Math.max(width, 0), moodH + bodyH);
-        } // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
- // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
+        }
+
         @Override
         /**
          * The method places the mood in the visible column and the body under it.
@@ -13274,7 +13341,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A hidden mood is placed at {@code 0}, {@code 0} with no size.
          * The body starts at the left of the deck, under the mood, using its preferred size and at least {@code 1} pixel each way.
          * A null body preferred size counts as {@code 0}.
-         */ // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+         */
         public void doLayout() {
             int vx = viewX();
             int vw = viewportWidth();
@@ -13305,7 +13372,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             Dimension bodyPref = body.getPreferredSize();
             int width = bodyPref == null ? 0 : bodyPref.width;
             int height = bodyPref == null ? 0 : bodyPref.height;
-            return new Dimension(width, height + moodSpan(width)); // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+            return new Dimension(width, height + moodSpan(width));
         }
 
         @Override
@@ -13334,7 +13401,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return metrics.getHeight();
         }
 
-        @Override // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
+        @Override
         /**
          * The method returns the visible height as one block step.
          * A null {@code visible} uses {@link #getScrollableUnitIncrement(Rectangle, int, int)}.
@@ -13360,7 +13427,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          *
          * @return The return value is false.
          */
-        public boolean getScrollableTracksViewportWidth() { // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+        public boolean getScrollableTracksViewportWidth() {
             return false;
         }
 
@@ -13448,7 +13515,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         String reason = error.reason == null ? "" : error.reason;
         String message = error.message == null ? "" : error.message;
         if ("air-gap".equals(reason) || "too-large".equals(reason)
-                || "burner denied".equals(reason) || "pipe".equals(reason) || "no-model".equals(reason) // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+                || "burner denied".equals(reason) || "pipe".equals(reason) || "no-model".equals(reason)
                 || "air-gap".equals(message)
                 || "too-large".equals(message) || "burner denied".equals(message)
                 || "pipe".equals(message) || "no model defined".equals(message)) {
@@ -13456,14 +13523,14 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         return "grok key missing".equals(message) || "unknown provider".equals(message)
                 || "unknown role".equals(message) || "no tool is invocable".equals(message);
-    } // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+    }
 
     /**
      * The method {@code installErrorSlide} builds the notice at the top of this pane.
      * The fill is {@code #3A1414}, the ink is {@code #F8E8E8}, and the edge is {@code #C62828}.
      * The title reads {@code Error} in the edge color, and it is not opaque.
      * The body is three rows and 24 columns.
-     * The body is not editable, it wraps on words, and it is opaque. // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+     * The body is not editable, it wraps on words, and it is opaque.
      * The body uses the fill, the ink, and an empty border of 4 pixels on top.
      * The body tip says the notice stays until it is closed, and the cell does not keep the text.
      * Close calls {@link #hideErrorSlide()}.
@@ -13499,8 +13566,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener closes the error notice.
          */
         close.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             /**
              * The method calls {@link #hideErrorSlide()}.
              *
@@ -13525,7 +13592,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The notice reports {@code errorSlideHeight} while a slide is in progress.
          */
         errorSlide = new JPanel(new BorderLayout()) {
-            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
             /**
              * The method returns the natural preferred size when {@code errorSlideHeight} is below {@code 0}.
              * Any other height replaces the preferred height and keeps the natural width.
@@ -13590,6 +13657,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The runnable moves the notice onto the event thread.
              */
             SwingUtilities.invokeLater(new Runnable() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method calls {@link #showErrorSlide(String, boolean)} on the event thread.
                  */
@@ -13637,6 +13705,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The runnable moves the close onto the event thread.
              */
             SwingUtilities.invokeLater(new Runnable() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method calls {@link #hideErrorSlide()} on the event thread.
                  */
@@ -13679,7 +13748,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener steps the notice height on each timer tick.
          */
         errorTimer = new Timer(16, new ActionListener() {
-            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
             /**
              * The method moves the height toward {@code target} and validates the pane.
              * A negative stored height reads the notice's current height.
@@ -13740,7 +13809,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @return The return value is the status sentence.
      */
     private String statusLine(String extra) {
-        SshTtyConnector connector = host.focusedAmwpConnector(); // @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+        SshTtyConnector connector = host.focusedAmwpConnector();
         String amwp = connector != null && connector.isAmwp() ? "AMWP" : "raw";
         String air = yaml == null ? "unset" : yaml.airGapWord();
         String mismatch = "";
@@ -13802,24 +13871,24 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
             for (int i = 15; i >= 8; i--) {
                 out[i] = (byte) (l & 0xFF);
-                l >>= 8; // @aa-sdd PK-1216 docs/specs/java/org/aetheris/swing/swing.spec.md
-            } // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
+                l >>= 8;
+            }
             return out;
-        } catch (Exception ex) { // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
-            return new byte[16]; // @aa-sdd PK-1190 docs/specs/java/org/aetheris/swing/swing.spec.md
+        } catch (Exception ex) {
+            return new byte[16];
         }
     }
- // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md
+
     /**
      * The method {@code uuidFrom} turns 16 bytes back into a UUID string.
      * A null array returns an empty string.
      * An array whose length is not {@code 16} returns an empty string.
-     * The first 8 bytes are the most significant bits. // @aa-sdd PK-1194 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * The first 8 bytes are the most significant bits.
      * The last 8 bytes are the least significant bits.
      *
-     * @param id The id is the 16-byte value, or null. // @aa-sdd PK-1195 docs/specs/java/org/aetheris/swing/swing.spec.md
-     * @return The return value is the UUID text, or an empty string. // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md
-     */ // @aa-sdd PK-1218 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * @param id The id is the 16-byte value, or null.
+     * @return The return value is the UUID text, or an empty string.
+     */
     private static String uuidFrom(byte[] id) {
         if (id == null || id.length != 16) {
             return "";
@@ -13829,43 +13898,43 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         for (int i = 0; i < 8; i++) {
             msb = (msb << 8) | (id[i] & 0xFF);
         }
-        for (int i = 8; i < 16; i++) { // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+        for (int i = 8; i < 16; i++) {
             lsb = (lsb << 8) | (id[i] & 0xFF);
         }
-        return new UUID(msb, lsb).toString(); // @aa-sdd PK-1219 docs/specs/java/org/aetheris/swing/swing.spec.md
+        return new UUID(msb, lsb).toString();
     }
 
-    // @aa-sdd PK-1216 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1148 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1190 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
-    // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1194 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1195 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1196 PK-743 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/stages.spec.md
-    // @aa-sdd PK-1218 PK-752 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/stages.spec.md
-    // @aa-sdd PK-1028 PK-867 docs/specs/common/formal-plan.spec.md docs/specs/common/stages.spec.md
-    // @aa-sdd PK-1027 PK-89 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1024 PK-97 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1018 PK-98 docs/specs/common/formal-plan.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1015 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1013 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1006 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1005 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1216 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-1
+    // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-10
+    // @aa-sdd PK-1148 docs/specs/common/formal-plan.spec.md FINESSE:f-109
+    // @aa-sdd PK-1189 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-12
+    // @aa-sdd PK-1190 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-13
+    // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md FINESSE:f-186
+    // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
+    // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-2
+    // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md FINESSE:f-206
+    // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-211
+    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+    // @aa-sdd PK-1194 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-3
+    // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
+    // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md FINESSE:f-34
+    // @aa-sdd PK-1195 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-4
+    // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-5
+    // @aa-sdd PK-1218 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-6
+    // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
+    // @aa-sdd PK-1027 docs/specs/common/formal-plan.spec.md FINESSE:f-68
+    // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
+    // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md FINESSE:f-77
+    // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
+    // @aa-sdd PK-1015 docs/specs/common/formal-plan.spec.md FINESSE:f-80
+    // @aa-sdd PK-1013 docs/specs/common/formal-plan.spec.md FINESSE:f-82
+    // @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md FINESSE:f-88
+    // @aa-sdd PK-1006 docs/specs/common/formal-plan.spec.md FINESSE:f-89
+    // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-9
+    // @aa-sdd PK-1005 docs/specs/common/formal-plan.spec.md FINESSE:f-90
+    // @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md FINESSE:f-94
     // @aa-sdd PK-1219 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md FINESSE:f-226
     /**
      * The class {@code CellCard} is one turn on the canvas.
      * The card holds the cell record, the prompt, the reply, the collapse button, and the header.
@@ -13961,7 +14030,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 JLabel err = new JLabel("load error");
                 theme.applyLabel(err);
                 row.add(turn);
-                row.add(err); // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+                row.add(err);
                 row.add(collapseButton);
                 header.add(row, BorderLayout.CENTER);
                 add(header, BorderLayout.NORTH);
@@ -14001,7 +14070,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener folds or opens this card.
              */
             collapseButton.addActionListener(new ActionListener() {
-                // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md FINESSE:f-141
                 /**
                  * The method toggles {@code collapsed} on this cell.
                  * The fold releases this card and does not conceal it.
@@ -14036,7 +14105,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener stores the Expanded View check for this cell.
              */
             expandedBox.addActionListener(new ActionListener() {
-                // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
                 /**
                  * The method stores the checkbox with {@link AetherisNotebookPanel#setExpanded(String, boolean)}.
                  * An open card calls {@link #refitOpenCard()}.
@@ -14057,14 +14126,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             theme.applyCheckBox(pin);
             pin.setToolTipText(buttonTip(
                     "Burner marks this turn as ephemeral."
-                            + "<br>An export leaves its text out unless you keep burner bodies." // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md
+                            + "<br>An export leaves its text out unless you keep burner bodies."
                             + " To terminal refuses it. A cloud Run on a burner turn is denied."
                             + " The text stays on the card."));
-            pin.setSelected(cell.ephemeral); // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md
+            pin.setSelected(cell.ephemeral);
             /**
              * The listener stores the burner check on this cell.
              */
             pin.addActionListener(new ActionListener() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method stores the checkbox in {@code ephemeral}.
                  * {@link AetherisNotebookPanel#persistQuiet(CellRecord)} saves the cell.
@@ -14089,10 +14159,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener opens the read-only reply window.
              */
             view.addActionListener(new ActionListener() {
-                // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md
-                // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md
+                // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-2
+                // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+                // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md FINESSE:f-34
+                // @aa-sdd PK-1196 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-5
                 /**
                  * The method calls {@link AetherisNotebookPanel#showViewModal(CellRecord)}.
                  *
@@ -14112,7 +14182,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener copies this turn's reply.
              */
             copyButton.addActionListener(new ActionListener() {
-                // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md FINESSE:f-34
                 /**
                  * The method copies the reply area when that area exists.
                  * Otherwise it copies {@code assistantText}, or an empty string when that text is null.
@@ -14145,8 +14215,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The listener opens Model Config for this cell.
                  */
                 modelButton.addActionListener(new ActionListener() {
-                    // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
-                    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-211
+                    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
                     /**
                      * The method calls {@link AetherisNotebookPanel#openModelDialog(CellRecord, JTextField)}.
                      *
@@ -14162,7 +14232,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             if (mergeSink(cell)) {
                 final JButton addCellButton = new JButton("Add Cell");
                 addCellButton.setToolTipText(buttonTip(
-                        "Add Cell adds a new turn to this merge group." // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md
+                        "Add Cell adds a new turn to this merge group."
                                 + "<br>The new turn is the next member. It sits with the group."
                                 + " Group, Join, Ungroup, and New stay."));
                 fitAetherisButton(addCellButton);
@@ -14170,13 +14240,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The listener adds a member to this merge group.
                  */
                 addCellButton.addActionListener(new ActionListener() {
-                    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-                    // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+                    // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md FINESSE:f-77
                     /**
                      * The method calls {@link AetherisNotebookPanel#addCell(CellRecord)}.
                      *
                      * @param e The event is the Add Cell click.
-                     */ // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
+                     */
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         addCell(CellCard.this.cell);
@@ -14195,7 +14265,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The choice is not saved.
              */
             groupBarButton.addActionListener(new ActionListener() {
-                // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md
+                // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-2
                 /**
                  * The method toggles {@code groupBarOpen}.
                  * An open row labels the button {@code ^} and the tip says the tools fold away.
@@ -14207,7 +14277,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     groupBarOpen = !groupBarOpen;
-                    groupBarButton.setText(groupBarOpen ? "^" : "v"); // @aa-sdd PK-1190 docs/specs/java/org/aetheris/swing/swing.spec.md
+                    groupBarButton.setText(groupBarOpen ? "^" : "v");
                     if (groupBarOpen) {
                         groupBarButton.setToolTipText(buttonTip(
                                 "Hide group tools."
@@ -14240,12 +14310,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener stores the execution target as it is typed.
              */
             targetField.addKeyListener(new KeyAdapter() {
-                // @aa-sdd PK-1190 docs/specs/java/org/aetheris/swing/swing.spec.md
+                // @aa-sdd PK-1190 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-13
                 /**
                  * The method stores the field text on the cell.
                  * A null field text is stored as an empty string.
                  * {@link #paintModelLabel()} runs after the store.
-                 * Leaving an Ollama target remembers the previous Ollama id. // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+                 * Leaving an Ollama target remembers the previous Ollama id.
                  * Entering a Grok target calls {@link AetherisNotebookPanel#adoptGrok(CellRecord, JTextField, String)} and paints the label again.
                  *
                  * @param e The event is the key that was released in the target field.
@@ -14273,6 +14343,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener normalizes the execution target when the field loses focus.
              */
             targetField.addFocusListener(new FocusAdapter() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method trims the field.
                  * A null field is trimmed as an empty string.
@@ -14330,6 +14401,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener starts a group on this turn.
              */
             groupBtn.addActionListener(new ActionListener() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method calls {@link AetherisNotebookPanel#promoteGroup(CellRecord)}.
                  *
@@ -14344,6 +14416,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener joins this turn to the armed group.
              */
             joinBtn.addActionListener(new ActionListener() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method calls {@link AetherisNotebookPanel#joinGroup(CellRecord)}.
                  *
@@ -14358,6 +14431,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener pulls this turn out of its group.
              */
             ungroupBtn.addActionListener(new ActionListener() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method calls {@link AetherisNotebookPanel#ungroup(CellRecord)}.
                  *
@@ -14387,7 +14461,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 userScroll = null;
             } else {
                 userArea = area(cell.userText, INPUT_GREEN);
-                bindCellUndo(userArea, cell.id); // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+                bindCellUndo(userArea, cell.id);
                 cellMemory(cell.id).sync(userArea.getText(), userArea.getCaretPosition());
                 userScroll = textScroll(userArea);
                 userScroll.setName("turn-user");
@@ -14409,11 +14483,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * An attribute change does not record an edit.
                  */
                 userArea.getDocument().addDocumentListener(new DocumentListener() {
-                        // @aa-sdd PK-1107 docs/specs/common/formal-plan.spec.md
-                        // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
-                        // @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md
-                        // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-                        // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1107 docs/specs/common/formal-plan.spec.md FINESSE:f-171
+                        // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
+                        // @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md FINESSE:f-203
+                        // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
+                        // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
                         /**
                          * The method records an insert through {@link #noteCellEdit(DocumentEvent)}.
                          *
@@ -14535,9 +14609,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             if (headerTop != null) {
                 return groupedMemberWidth();
             }
-            return 480; // @aa-sdd PK-1100 docs/specs/common/formal-plan.spec.md
-        } // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
- // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+            return 480;
+        }
+
         /**
          * The method {@code groupedMember} reports whether this card is a group member.
          * A null group id returns false.
@@ -14627,8 +14701,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * {@link #noteLiveDraft()} writes the cell text and posts the edit.
          * This method does not count tokens itself.
          * The posted edit is what the heat bar reads on its beat.
-         // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
-         // @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md
+         * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-171
+         * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
+         * // @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md FINESSE:f-203
          *
          * @param event The event is the document change.
          */
@@ -14955,10 +15030,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener fits a checked reply after the buffer changes.
              */
             assistantArea.getDocument().addDocumentListener(new DocumentListener() {
-                // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
+                // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
                 /**
-                 * The method calls {@link #queueReplyFit()} after an insert. // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
+                 * The method calls {@link #queueReplyFit()} after an insert.
                  *
                  * @param e The event is the insert.
                  */
@@ -14974,7 +15049,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  */
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    queueReplyFit(); // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
+                    queueReplyFit();
                 }
 
                 /**
@@ -14991,7 +15066,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener fits a checked reply after this card changes size.
              */
             addComponentListener(new ComponentAdapter() {
-                // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
                 /**
                  * The method calls {@link #queueReplyFit()}.
                  *
@@ -15021,7 +15096,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The runnable fits the reply after the current layout pass.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
                 /**
                  * The method returns when the reply area is null.
                  * A collapsed cell returns without a fit.
@@ -15101,7 +15176,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The preview shows the cell line on hover.
              */
             JTextArea brief = new JTextArea(briefSource(cell.assistantText, rows)) {
-                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
                 /**
                  * The method returns the cell line as an HTML tip.
                  *
@@ -15121,7 +15196,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             if (ghost) {
                 brief.setForeground(Color.GRAY);
             } else if (hasResponse) {
-                brief.setForeground(OUTPUT_YELLOW); // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
+                brief.setForeground(OUTPUT_YELLOW);
             } else {
                 brief.setForeground(RESPONSE_GRAY);
             }
@@ -15173,7 +15248,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The method {@code briefSource} returns the start of the reply.
          * A null text returns an empty string.
          * A text whose trim is empty returns an empty string.
-         * The copy stops at {@code rows} newlines and does not include the newline that reaches that count. // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
+         * The copy stops at {@code rows} newlines and does not include the newline that reaches that count.
          * The copy also stops at {@code rows} times {@code 400} characters.
          *
          * @param text The text is the reply, or null.
@@ -15204,7 +15279,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The method {@code stateButton} builds one mark button.
          * The button does not take focus and does not ask for focus.
          * {@code aetheris.cellmark} is true.
-         * {@code aetheris.cellmark.state} is {@code state}. // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md
+         * {@code aetheris.cellmark.state} is {@code state}.
          * {@code aetheris.cellmark.seated} is true when the cell already has {@code state}.
          * A left press calls {@link AetherisNotebookPanel#seatMark(CellRecord, CellState)} and consumes the event.
          * Any other button returns without a mark.
@@ -15217,7 +15292,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             final JButton b = new JButton(label);
             b.setToolTipText(stateTip(label));
             b.setFocusable(false);
-            b.setRequestFocusEnabled(false); // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
+            b.setRequestFocusEnabled(false);
             b.putClientProperty("aetheris.cellmark", Boolean.TRUE);
             b.putClientProperty("aetheris.cellmark.state", state);
             b.putClientProperty("aetheris.cellmark.seated", Boolean.valueOf(cell.state == state));
@@ -15227,9 +15302,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener writes this button's mark on a left press.
              */
             b.addMouseListener(new MouseAdapter() {
-                // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md
-                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md FINESSE:f-186
+                // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-2
+                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
                 /**
                  * The method returns when the press is not the left button.
                  * A left press calls {@link AetherisNotebookPanel#seatMark(CellRecord, CellState)} and consumes the event.
@@ -15254,7 +15329,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A locked cell shows the green closed shackle.
          * An unlocked cell shows the grey open shackle.
          * The control does not take focus and does not ask for focus.
-         * The control is not one of the marks I, E, P, and O. // @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md
+         * The control is not one of the marks I, E, P, and O.
          * A left press calls {@link AetherisNotebookPanel#pressCanvasLock(CellRecord)} and consumes the event.
          * Any other button returns without a press.
          *
@@ -15266,7 +15341,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener presses the head lock.
              */
             b.addMouseListener(new MouseAdapter() {
-                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
                 /**
                  * The method returns when the press is not the left button.
                  * A left press calls {@link AetherisNotebookPanel#pressCanvasLock(CellRecord)} and consumes the event.
@@ -15347,7 +15422,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A reply with no text returns the response-gray edge.
          *
          * @param input The flag is true for the prompt.
-         * @param hasResponse The flag is true when reply text is present. // @aa-sdd PK-1098 docs/specs/common/formal-plan.spec.md
+         * @param hasResponse The flag is true when reply text is present.
          * @return The return value is the frame for that pane.
          */
         private Border paneEdge(boolean input, boolean hasResponse) {
@@ -15432,7 +15507,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The panel shows the cell line on hover.
              */
             JPanel panel = new JPanel(layout) {
-                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
                 /**
                  * The method returns the cell line as an HTML tip.
                  *
@@ -15454,7 +15529,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A saved row count below {@code 1} uses {@code 1}.
          * A null {@code text} is shown as an empty string.
          * The area is 40 columns wide, wraps on words, and uses the field background.
-         * The caret is white and is a {@link CellCaret}. // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
+         * The caret is white and is a {@link CellCaret}.
          * Hover shows the cell line from {@link AetherisNotebookPanel#stampLine(CellRecord)}.
          *
          * @param text The text is the initial document, or null.
@@ -15467,9 +15542,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The area shows the cell line on hover.
              */
             JTextArea a = new JTextArea(text == null ? "" : text, rows, 40) {
-                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1006 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
+                // @aa-sdd PK-1007 docs/specs/common/formal-plan.spec.md FINESSE:f-88
+                // @aa-sdd PK-1006 docs/specs/common/formal-plan.spec.md FINESSE:f-89
                 /**
                  * The method returns the cell line as an HTML tip.
                  *
@@ -15508,7 +15583,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The scroller shows the cell line on hover and clips its children to the pane corner.
              */
             JScrollPane pane = new JScrollPane() {
-                // @aa-sdd PK-1006 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1006 docs/specs/common/formal-plan.spec.md FINESSE:f-89
                 /**
                  * The method returns the cell line as an HTML tip.
                  *
@@ -15545,9 +15620,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The viewport paints without clearing the background first.
              */
             JViewport port = new JViewport() {
-                // @aa-sdd PK-1148 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1110 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1148 docs/specs/common/formal-plan.spec.md FINESSE:f-109
+                // @aa-sdd PK-1110 docs/specs/common/formal-plan.spec.md FINESSE:f-166
+                // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md FINESSE:f-186
                 /**
                  * The method paints directly and does not clear the background first.
                  *
@@ -15638,6 +15713,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     } else if (cell.groupId != null && cell.groupId.length() > 0) {
                         // A click anywhere on this grouped cell takes the caret.
                         // The bar above already returned the wheel to the canvas.
+                        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-166
                         if (!targetHit(e.getComponent())) {
                             JTextArea pane = textPaneOf(e.getComponent());
                             if (pane != null) {
@@ -15704,10 +15780,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 /**
                  * The action listener starts an import into this turn's prompt.
                  * The listener calls {@link #beginImport}.
-                 */ // @aa-sdd PK-1220 docs/specs/java/org/aetheris/swing/swing.spec.md
+                 */
                 item.addActionListener(new ActionListener() {
-                    // @aa-sdd PK-1127 docs/specs/common/formal-plan.spec.md
-                    // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1127 docs/specs/common/formal-plan.spec.md FINESSE:f-140
+                    // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
                     @Override
                     public void actionPerformed(ActionEvent ev) {
                         beginImport();
@@ -15717,6 +15793,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
             // Duplicate group shows on a grouped cell. A merge cell and any
             // member of that group keep the line. A lone cell omits it.
+            // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-140
             boolean inGroup = cell.groupId != null && cell.groupId.length() > 0;
             if (inGroup) {
                 JMenuItem duplicate = new JMenuItem("Duplicate group");
@@ -15751,7 +15828,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener calls {@link AetherisNotebookPanel#transferFromCanvas}.
              */
             transfer.addActionListener(new ActionListener() {
-                // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
                 @Override
                 public void actionPerformed(ActionEvent ev) {
                     transferFromCanvas();
@@ -15891,6 +15968,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * If the read throws, the action calls {@link #showImportError}.
              */
             worker.submit(new Runnable() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 @Override
                 public void run() {
                     try {
@@ -15901,6 +15979,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                              * The action calls {@link Host#aetherisStatus} with {@code import refused: binary}.
                              */
                             SwingUtilities.invokeLater(new Runnable() {
+                                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                                 @Override
                                 public void run() {
                                     host.aetherisStatus("import refused: binary");
@@ -15919,6 +15998,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                          * The action calls {@link AetherisNotebookPanel#refreshInspector}.
                          */
                         SwingUtilities.invokeLater(new Runnable() {
+                            // @aa-sdd L40 aetheris-plan-stage-1.001.md
                             @Override
                             public void run() {
                                 cell.userText = text;
@@ -16000,7 +16080,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 ByteArrayOutputStream raw = new ByteArrayOutputStream();
                 if (filled > 0) {
                     raw.write(head, 0, filled);
-                } // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+                }
                 byte[] chunk = new byte[8192];
                 while ((n = in.read(chunk)) >= 0) {
                     if (n == 0) {
@@ -16046,7 +16126,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          */
         private void scrollUserIntoView() {
             if (userScroll == null) {
-                scrollRectToVisible(new Rectangle(0, 0, Math.max(1, getWidth()), Math.max(1, getHeight()))); // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+                scrollRectToVisible(new Rectangle(0, 0, Math.max(1, getWidth()), Math.max(1, getHeight())));
                 return;
             }
             Rectangle box = SwingUtilities.convertRectangle(userScroll.getParent(), userScroll.getBounds(), this);
@@ -16076,7 +16156,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 assistantArea.requestFocusInWindow();
             } else {
                 focusHeader();
-            } // @aa-sdd PK-1091 docs/specs/common/formal-plan.spec.md
+            }
         }
 
         /**
@@ -16087,16 +16167,17 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             collapseButton.requestFocusInWindow();
         }
 
-        /** // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+        /**
          * A click anywhere on this grouped cell. The text under the pointer
          * already took the caret. The prompt takes it next, then the reply,
          * when that text is showing.
          */
+        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-166
         private void focusGroupCell() {
             if (userArea != null && userArea.isShowing()) {
                 userArea.requestFocusInWindow();
             } else if (assistantArea != null && assistantArea.isShowing()) {
-                assistantArea.requestFocusInWindow(); // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+                assistantArea.requestFocusInWindow();
             } else if (collapseButton != null && collapseButton.isShowing()) {
                 collapseButton.requestFocusInWindow();
             } else {
@@ -16106,7 +16187,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
         /**
          * The stamp sits on the border. A model change asks the column to paint it.
-         */ // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+         */
         private void paintModelLabel() {
             repaintCellCaption();
         }
@@ -16116,7 +16197,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The null result stops a default card tip.
          *
          * @return The return value is null.
-         */ // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+         */
         @Override
         public String getToolTipText() {
             return null;
@@ -16153,15 +16234,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 topH = 24;
             }
             headerTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, topH));
-            int botH = headerBottom.getPreferredSize().height; // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md
-            if (botH < 1) { // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            int botH = headerBottom.getPreferredSize().height;
+            if (botH < 1) {
                 botH = topH;
             }
             headerBottom.setMaximumSize(new Dimension(Integer.MAX_VALUE, botH));
             pinBarRow();
             if (cell.collapsed) {
                 fitCollapsedCard();
-            } else if (assistantScroll != null) { // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            } else if (assistantScroll != null) {
                 applyOpenHeight();
             }
             liftMemberRow();
@@ -16180,7 +16261,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The action calls {@link #revealGroupBar}.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
-                    // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md
+                    // @aa-sdd PK-1217 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-2
                     @Override
                     public void run() {
                         revealGroupBar();
@@ -16227,7 +16308,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 if (node instanceof JScrollPane) {
                     JScrollPane pane = (JScrollPane) node;
                     if (pane.getVerticalScrollBarPolicy() != JScrollPane.VERTICAL_SCROLLBAR_NEVER) {
-                        canvasPane = pane; // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+                        canvasPane = pane;
                         break;
                     }
                 }
@@ -16252,7 +16333,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A collapsed card shows the brief and hides the body.
          * An open card hides the brief and shows the body.
          * The button row stays where it was built.
-         * The prompt document and the reply document stay. // @aa-sdd PK-1420 docs/specs/java/org/aetheris/swing/swing.spec.md
+         * The prompt document and the reply document stay.
          * The run stays. The thinking pane stays.
          */
         private void seatFold() {
@@ -16265,7 +16346,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                                 + " A checked Expanded View reply opens to the whole text."
                                 + " The fold choice is saved on the turn."));
                 paintBriefLine();
-            } else { // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            } else {
                 collapseButton.setText("-");
                 collapseButton.setToolTipText(buttonTip(
                         "Collapse this turn."
@@ -16360,7 +16441,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
-    // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md FINESSE:f-32
     /**
      * Read-only response modal. Font-sync with the control panel.
      */
@@ -16433,7 +16514,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener moves to the previous match in this reply.
              */
             prev.addActionListener(new ActionListener() {
-                // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md FINESSE:f-32
                 /**
                  * The method calls {@link ViewFind#step(int)} with {@code -1}.
                  *
@@ -16453,7 +16534,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener moves to the next match in this reply.
              */
             next.addActionListener(new ActionListener() {
-                // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md FINESSE:f-32
                 /**
                  * The method calls {@link ViewFind#step(int)} with {@code 1}.
                  *
@@ -16479,7 +16560,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener rebuilds the matches whenever the field text changes.
              */
             field.getDocument().addDocumentListener(new DocumentListener() {
-                // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md FINESSE:f-32
                 /**
                  * The method calls {@link ViewFind#retarget()} after an insert.
                  *
@@ -16535,7 +16616,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The action runs when Ctrl-F is pressed in the View window.
              */
             root.getActionMap().put("aetheris-view-find", new AbstractAction() {
-                // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md FINESSE:f-32
                 /**
                  * The method calls {@link ViewFind#onFindKey()}.
                  *
@@ -16550,7 +16631,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The action closes the find bar when Esc is pressed and the bar is showing.
              */
             root.getActionMap().put("aetheris-view-find-esc", new AbstractAction() {
-                // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md FINESSE:f-32
                 /**
                  * The method hides the bar when the bar is visible.
                  * The method then asks the reply area for focus.
@@ -16869,7 +16950,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener disposes {@code dialog}.
          */
         close.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1028 docs/specs/common/formal-plan.spec.md FINESSE:f-67
             @Override
             public void actionPerformed(ActionEvent e) {
                 dialog.dispose();
@@ -16883,7 +16964,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #copyReplyToClipboard} with the text from {@code area}.
          */
         copy.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md FINESSE:f-34
             @Override
             public void actionPerformed(ActionEvent e) {
                 copyReplyToClipboard(area.getText());
@@ -16905,7 +16986,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (saved != null) {
             dialog.setBounds(saved);
         } else {
-            dialog.setSize(720, 480); // @aa-sdd PK-1091 docs/specs/common/formal-plan.spec.md
+            dialog.setSize(720, 480);
             dialog.setLocationRelativeTo(AetherisNotebookPanel.this);
         }
         /**
@@ -16914,12 +16995,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If {@code vault} is present, the listener calls {@link ViewBounds#save} with the vault username and {@code dialog.getBounds()}.
          */
         dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-            // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
+            // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md FINESSE:f-176
+            // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md FINESSE:f-177
+            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
+            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             @Override
             public void windowClosed(java.awt.event.WindowEvent e) {
                 viewModalOpen = false;
@@ -17134,6 +17215,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         return new Point(x, y);
     }
 
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
     /**
      * The class {@code TokenBudgets} holds the context-window integers taken from {@code application.yaml}.
      * The field {@code poolWindow} is the pool window.
@@ -17146,7 +17228,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * The type does not read the file.
      * The type does not write a log line.
-     */ // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+     */
     static final class TokenBudgets {
         final int poolWindow;
         final Map<String, Integer> grokWindows;
@@ -17420,7 +17502,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
             sb.append("used: ").append(percentUsed(n, model.window)).append("%\n");
             sb.append("free: ").append(percentFree(n, model.window)).append("%\n");
-            sb.append("source: ").append(tokenSource(model)).append('\n'); // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            sb.append("source: ").append(tokenSource(model)).append('\n');
         } else {
             sb.append("context window: not reported\n");
             sb.append("remaining: not reported\n");
@@ -17506,8 +17588,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param rows The rows are the token-window rows being filled.
      * @param seen The seen list holds labels already added.
      * @param target The target is one execution target, and it may be null.
-     * @param window The window is the session context window. // @aa-sdd PK-770 docs/specs/common/stages.spec.md
-     * @param known The known flag is true when that session window is a positive budget. // @aa-sdd PK-79 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * @param window The window is the session context window.
+     * @param known The known flag is true when that session window is a positive budget.
      * @param focusedTarget The focused target is the execution target of the focused turn.
      * @param focusedCompletionCap The focused completion cap is the stored cap for a focused Grok turn.
      * @param factory The factory value is the factory completion cap.
@@ -17541,8 +17623,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             addGrokRow(rows, seen, id, focusedTarget, focusedCompletionCap, factory, grokWindows);
             return;
         }
-        if ("pool".equals(provider) && !tokenSeen(seen, "pool")) { // @aa-sdd PK-770 docs/specs/common/stages.spec.md
-            int pool = poolWindow > 0 ? poolWindow : 0; // @aa-sdd PK-79 docs/specs/java/org/aetheris/swing/swing.spec.md
+        if ("pool".equals(provider) && !tokenSeen(seen, "pool")) {
+            int pool = poolWindow > 0 ? poolWindow : 0;
             rows.add(new TokenModel("pool", "pool", pool, pool > 0, 0, false));
             seen.add("pool");
         }
@@ -17591,11 +17673,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A negative block count is stored as 0.
      * If {@link NotebookDip} is present, {@code watch} receives {@code text}.
      *
-     * @param estimate The estimate is the counted tokens. // @aa-sdd PK-770 docs/specs/common/stages.spec.md
-     * @param chars The character count is the counted body length. // @aa-sdd PK-646 docs/specs/common/formal-plan.spec.md
-     * @param blocks The block count is the working-set size. // @aa-sdd PK-647 docs/specs/common/formal-plan.spec.md
-     * @param text The text is the body passed to the dip. // @aa-sdd PK-695 docs/specs/common/pre-plan.spec.md
-     */ // @aa-sdd PK-78 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * @param estimate The estimate is the counted tokens.
+     * @param chars The character count is the counted body length.
+     * @param blocks The block count is the working-set size.
+     * @param text The text is the body passed to the dip.
+     */
     private void paintTokenEstimate(int estimate, int chars, int blocks, String text) {
         tokenEstimate = estimate < 0 ? 0 : estimate;
         tokenChars = chars < 0 ? 0 : chars;
@@ -17605,7 +17687,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
-    // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
     /**
      * The class {@code TokenEdit} is one recorded edit of a cell input.
      * The field {@code sequence} is the number assigned when the edit was offered.
@@ -17630,12 +17712,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * @param cellId The cell id is the id of the card that edited.
          */
         TokenEdit(long sequence, String cellId) {
-            this.sequence = sequence; // @aa-sdd PK-1044 docs/specs/common/formal-plan.spec.md
-            this.cellId = cellId; // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md
+            this.sequence = sequence;
+            this.cellId = cellId;
         }
     }
 
-    // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
     /**
      * The class {@code TokenSeat} is the copy one token estimate reads.
      * The field {@code sequence} is the edit number this copy belongs to.
@@ -17663,8 +17745,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         final boolean cloud;
         final boolean vacant;
 
-        /** // @aa-sdd PK-1044 docs/specs/common/formal-plan.spec.md
-         * The constructor stores the copied values for one estimate. // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md
+        /**
+         * The constructor stores the copied values for one estimate.
          *
          * @param sequence The sequence is the edit number this copy belongs to.
          * @param postedId The posted id is the id of the card that edited.
@@ -17700,7 +17782,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * An older edit that has not started is dropped.
      * An edit whose sequence is no longer current is not painted.
-     // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
      */
     // @aa-sdd PK-770 docs/specs/common/stages.spec.md
     // @aa-sdd PK-646 docs/specs/common/formal-plan.spec.md
@@ -17858,7 +17940,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The task copies the seat on the event-dispatch thread.
                  */
                 SwingUtilities.invokeAndWait(new Runnable() {
-                    // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
                     /**
                      * The method stores {@link AetherisNotebookPanel#captureTokenSeat(TokenEdit)} in the holder.
                      */
@@ -17890,7 +17972,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The task paints the estimate when the posted card is still the focused card.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
                 /**
                  * The method returns when the posted id is non-empty and is not the focused cell id.
                  * Any other result calls {@link AetherisNotebookPanel#acceptTokenPaint(long, int, int, int, String)}.
@@ -17910,7 +17992,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * Copy the armed seat on the EDT. Strings are already immutable.
      * A beat whose card is no longer armed is dropped.
-     // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1090 docs/specs/common/formal-plan.spec.md FINESSE:f-189
      *
      * @param edit the cell-input beat
      * @return the copied seat, or null when a later arm owns the count
@@ -17968,11 +18050,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         copy.assistantText = live.assistantText;
         copy.executionTarget = live.executionTarget;
         return copy;
-    } // @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md
+    }
 
     /**
      * The integer the token window opens on. The frame heatbar wears this count.
      * The selected cell scopes the working set. A settled host count does not replace it.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-160
      *
      * @return the canvas estimate, never negative
      */
@@ -17983,7 +18066,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * The window the canvas beat fills against. The focused cell's model wins.
      * An Ollama model uses 131072. Token Calc still reports session num-ctx.
-     // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-207
      *
      * @return the context window, or 0 when that model has none
      */
@@ -17991,7 +18074,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         return notebookWindow();
     }
 
-    /** // @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md
+    /**
      * The heatbar window for one selected model.
      * A managed token count above zero is that count.
      * A blank word is Ollama. An Ollama word uses 131072.
@@ -18000,7 +18083,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * Pool uses the yaml pool window.
      * Any other word uses 0.
      *
-     * @param modelWord the selected model. The value may be null. // @aa-sdd PK-1421 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * @param modelWord the selected model. The value may be null.
      * @return the context window, or 0 when that model has none
      */
     public int heatBudget(String modelWord) {
@@ -18018,7 +18101,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * Pool uses the yaml pool window.
      * Any other word uses 0.
      *
-     * @param modelWord the selected model. The value may be null. // @aa-sdd PK-1421 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * @param modelWord the selected model. The value may be null.
      * @return the context window, or 0 when that model has none
      */
     private static int modelHeatWindow(String modelWord) {
@@ -18038,8 +18121,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
     /**
      * The window the beat fills against. The focused cell's model wins.
-     // @aa-sdd PK-1165 PK-1072 docs/specs/java/org/aetheris/swing/swing.spec.md docs/specs/common/formal-plan.spec.md
-     * // @aa-sdd PK-1421 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-207
+     *
      * @return the context window, or 0 when that model has none
      */
     private int notebookWindow() {
@@ -18072,7 +18155,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The method sessionFacts returns the session facts for the focused connector.
      * {@link Host#focusedAmwpConnector} supplies the {@link SshTtyConnector}.
      * If that connector is absent, the method returns null.
-     * If the connector is present, the method returns {@link SshTtyConnector#sessionFacts}. // @aa-sdd PK-1034 docs/specs/common/formal-plan.spec.md
+     * If the connector is present, the method returns {@link SshTtyConnector#sessionFacts}.
      *
      * @return The return value is the session facts, or null when no connector is focused.
      */
@@ -18088,7 +18171,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param focusedTarget  the focused turn
      * @return that model's window, or 0 when it is unknown
      */
-    static int selectedHeatBudget(ArrayList<TokenModel> rows, String focusedTarget) { // @aa-sdd PK-1451 docs/specs/java/org/aetheris/swing/swing.spec.md
+    static int selectedHeatBudget(ArrayList<TokenModel> rows, String focusedTarget) {
         if (rows == null || rows.size() == 0) {
             return 0;
         }
@@ -18305,9 +18388,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #showTokenChoice} with {@code ring}, {@code stats}, that model, {@code used}, {@code chars}, and {@code blocks}.
          */
         combo.addItemListener(new ItemListener() {
-            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
+            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             @Override
             public void itemStateChanged(ItemEvent event) {
                 if (event.getStateChange() != ItemEvent.SELECTED) {
@@ -18334,9 +18417,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener disposes {@code dialog}.
          */
         ok.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
+            // @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md FINESSE:f-74
             @Override
             public void actionPerformed(ActionEvent event) {
                 dialog.dispose();
@@ -18373,6 +18456,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         dialog.setVisible(true);
     }
 
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
     /**
      * The class {@code TokenModel} is one model row in the token window.
      * The field {@code label} is the text the combo box shows.
@@ -18434,6 +18518,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
     /**
      * The class {@code TokenRing} is the ring painted in the token window.
      * The ring draws the used arc against the context window with {@code Graphics2D}.
@@ -18498,9 +18583,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The used arc is drawn only when the window is known and the fill is greater than 0.
          * The fill comes from {@link AetherisNotebookPanel#tokenFill(int, int)} with both inputs 0 when the window is unknown.
          * The arc starts at 90 degrees and sweeps clockwise by the fill.
-         * A sweep that rounds to 0 is drawn as {@code -1}. // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-         * The arc color comes from {@link AetherisNotebookPanel#ringInk(double, boolean)}. // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md
-         * An unknown window paints the head {@code no window}. // @aa-sdd PK-1039 docs/specs/common/formal-plan.spec.md
+         * A sweep that rounds to 0 is drawn as {@code -1}.
+         * The arc color comes from {@link AetherisNotebookPanel#ringInk(double, boolean)}.
+         * An unknown window paints the head {@code no window}.
          * An unknown window paints the foot from {@link AetherisNotebookPanel#tokenLine(int)}.
          * A count past the window paints the used percent from {@link AetherisNotebookPanel#percentUsed(int, int)} and a percent sign.
          * A count past the window paints {@code past by} plus the count from {@link AetherisNotebookPanel#tokensOver(int, int)}.
@@ -18512,8 +18597,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * @param graphics The graphics is the pane graphics Swing passed in.
          */
         @Override
-        protected void paintComponent(Graphics graphics) { // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-            super.paintComponent(graphics); // @aa-sdd PK-1039 docs/specs/common/formal-plan.spec.md
+        protected void paintComponent(Graphics graphics) {
+            super.paintComponent(graphics);
             Graphics2D g2 = (Graphics2D) graphics.create();
             try {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -18586,8 +18671,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * @param head The head is the large center line.
          * @param foot The foot is the small center line.
          */
-        private void paintRingWords(Graphics2D g2, int w, int h, String head, String foot) { // @aa-sdd PK-1153 docs/specs/common/formal-plan.spec.md
-            Font base = getFont(); // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+        private void paintRingWords(Graphics2D g2, int w, int h, String head, String foot) {
+            Font base = getFont();
             if (base == null) {
                 base = new Font(Font.SANS_SERIF, Font.PLAIN, 14);
             }
@@ -18804,12 +18889,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The action calls {@link #refreshInspector}.
          */
         SwingUtilities.invokeLater(new Runnable() {
-            // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
+            // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md FINESSE:f-176
+            // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md FINESSE:f-177
+            // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
+            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
+            // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
             @Override
             public void run() {
                 if (username == null || !username.equals(openUsername())) {
@@ -18853,11 +18938,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If {@link #findCell} returns null for {@code cellId}, the action returns.
          * The execution status becomes {@code CANCELLED}.
          * The action calls {@link #persistQuiet} with that cell.
-         * The action passes a list that holds the cell to {@link #absorbConcat}. // @aa-sdd PK-1159 docs/specs/common/stages.spec.md
-         * The action calls {@link #saveCells} with {@code vault}, {@code username}, and that list. // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+         * The action passes a list that holds the cell to {@link #absorbConcat}.
+         * The action calls {@link #saveCells} with {@code vault}, {@code username}, and that list.
          * The action calls {@link #refreshInspector}.
          */
         SwingUtilities.invokeLater(new Runnable() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void run() {
                 if (username == null || !username.equals(openUsername())) {
@@ -18881,7 +18967,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * The method absorbConcat fills a merge cell when its input cells have finished.
      * Each touched cell is considered once per group id.
-     * A null or empty group id is skipped. // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+     * A null or empty group id is skipped.
      * The members come from {@link #orderedCells} on {@link #currentCanvas}.
      * A cell at column position 0 is the merge cell.
      * Any other cell in that group is an input member.
@@ -18920,7 +19006,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 }
                 if (one.columnPosition == 0) {
                     merge = one;
-                    continue; // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+                    continue;
                 }
                 members.add(one);
                 String status = one.executionStatus == null ? "" : one.executionStatus;
@@ -19096,7 +19182,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The card the mood dialog shapes.
      * F-151 keeps an armed readable cell and falls through when the arm misses.
      * F-188 reads that arm on the showing canvas. A readable cell on a hidden canvas is a stale arm.
-     // @aa-sdd PK-1091 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-151
+     * // @aa-sdd PK-1091 docs/specs/common/formal-plan.spec.md FINESSE:f-188
      *
      * @return a readable cell on the showing canvas, or null when that canvas has none
      */
@@ -19165,7 +19252,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A resize inside that range is remembered while the dialog is showing.
      * A resize before that open size is set is not remembered.
      * A resize while the window is closing is not remembered.
-     * Approve, Cancel, and the window close write that size on this user's mood file. // @aa-sdd PK-1435 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * Approve, Cancel, and the window close write that size on this user's mood file.
      * The next open for that user sets that size again once the window is showing.
      * If {@link #moodHasLine} is true, the draft shows the trimmed saved line.
      * The window opens relative to this panel.
@@ -19191,7 +19278,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         String moodModel = shortModelName(moodTarget(card));
         String moodTitle = moodModel.length() == 0 ? "Mood" : "Mood \u00b7 " + moodModel;
         // The title names the model this glass sends. The bar holds that word.
-        // @aa-sdd PK-1086 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1086 docs/specs/common/formal-plan.spec.md FINESSE:f-194
         final JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, moodTitle, true);
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         moodDialog = dialog;
@@ -19244,7 +19331,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If {@code moodDraftSlide} is negative, the height is 0.
          */
         moodDraftStrip = new JPanel(new BorderLayout()) {
-            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md FINESSE:f-54
             @Override
             public Dimension getPreferredSize() {
                 Dimension pref = super.getPreferredSize();
@@ -19270,7 +19357,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A style change calls {@link #syncMoodDraft}.
          */
         draft.getDocument().addDocumentListener(new DocumentListener() {
-            // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md FINESSE:f-77
             @Override
             public void insertUpdate(DocumentEvent e) {
                 syncMoodDraft();
@@ -19318,8 +19405,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         clear.setPreferredSize(clearSized);
         clear.setMinimumSize(clearSized);
         // Cancel takes the same three ems Clear and Approve already take.
+        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-153
         Dimension cancelPref = cancel.getPreferredSize();
-        Dimension cancelSized = new Dimension(cancelPref.width + approveExtra, cancelPref.height); // @aa-sdd PK-1446 docs/specs/common/stages.spec.md
+        Dimension cancelSized = new Dimension(cancelPref.width + approveExtra, cancelPref.height);
         cancel.setPreferredSize(cancelSized);
         cancel.setMinimumSize(cancelSized);
         /**
@@ -19327,8 +19415,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If {@link #confirmClearMood} returns true, the listener calls {@link #clearMoodSession}.
          */
         clear.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
+            // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md FINESSE:f-77
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (confirmClearMood(dialog)) {
@@ -19350,7 +19438,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #refreshInspector}.
          */
         approve.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1046 docs/specs/common/formal-plan.spec.md FINESSE:f-46
             @Override
             public void actionPerformed(ActionEvent e) {
                 String text = draft.getText();
@@ -19378,6 +19466,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #refreshInspector}.
          */
         cancel.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void actionPerformed(ActionEvent e) {
                 closeMoodDialog();
@@ -19397,7 +19486,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * That close then calls {@link #refreshInspector}.
          */
         dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
             @Override
             public void windowOpened(java.awt.event.WindowEvent e) {
                 if (openKept) {
@@ -19436,7 +19525,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #setSshMoodUser} with {@code moodUser} and {@code sshMoodBox.isSelected()}.
          */
         sshMoodBox.addItemListener(new ItemListener() {
-            // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
             @Override
             public void itemStateChanged(ItemEvent event) {
                 setSshMoodUser(moodUser, sshMoodBox.isSelected());
@@ -19467,7 +19556,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A resize is remembered only after the open size is set and the dialog is showing.
          */
         dialog.addComponentListener(new ComponentAdapter() {
-            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md FINESSE:f-54
             @Override
             public void componentResized(ComponentEvent e) {
                 if (moodSizeArmed && dialog.isShowing()) {
@@ -19560,7 +19649,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener disposes {@code ask}.
          */
         yes.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md FINESSE:f-59
             @Override
             public void actionPerformed(ActionEvent e) {
                 accepted[0] = true;
@@ -19572,7 +19661,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener disposes {@code ask}.
          */
         no.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md FINESSE:f-59
             @Override
             public void actionPerformed(ActionEvent e) {
                 ask.dispose();
@@ -19583,7 +19672,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener disposes {@code ask}.
          */
         ask.getRootPane().registerKeyboardAction(new ActionListener() {
-            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1033 docs/specs/common/formal-plan.spec.md FINESSE:f-59
             @Override
             public void actionPerformed(ActionEvent e) {
                 ask.dispose();
@@ -19642,6 +19731,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * Red x snapped to the search field. Not a bar button. The pin red is the fill.
      * The letter stays black. A font change paints this box again.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-144
      *
      * @param button the search clear
      */
@@ -19754,7 +19844,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             moodDraft.setText("");
         }
         MoodGlassConnector glass = moodGlass;
-        if (glass != null) { // @aa-sdd PK-1435 docs/specs/java/org/aetheris/swing/swing.spec.md
+        if (glass != null) {
             glass.dropLine();
             glass.paintTranscript();
         }
@@ -19949,6 +20039,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The action then calls {@link #moodMiss} with that detail and true.
          */
         worker.submit(new Runnable() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void run() {
                 try {
@@ -20179,7 +20270,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If the dialog is still present, the content pane is revalidated again.
          */
         moodDraftTimer = new Timer(16, new ActionListener() {
-            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1038 docs/specs/common/formal-plan.spec.md FINESSE:f-54
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (moodDraftStrip == null) {
@@ -20411,7 +20502,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The action calls {@link #moodMissNow} with {@code detail} and {@code yellow}.
          */
         SwingUtilities.invokeLater(new Runnable() {
-            // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1048 docs/specs/common/formal-plan.spec.md FINESSE:f-44
             @Override
             public void run() {
                 moodMissNow(detail, yellow);
@@ -20493,7 +20584,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         moodStatus.revalidate();
     }
 
-    // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md FINESSE:f-220
     /**
      * The class {@code MoodKeep} is one user's version-1 mood record.
      * The field {@code line} starts empty and holds the mood text.
@@ -20663,7 +20754,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param username canvas user
      */
     private void adoptMoodUser(String username) {
-        // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md FINESSE:f-220
         String want = sanitizeUser(username);
         if (want == null || want.length() == 0 || want.equals(moodOwner)) {
             return;
@@ -20733,7 +20824,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         moodBank.put(key, loaded);
         return loaded;
     }
- // @aa-sdd PK-1435 docs/specs/java/org/aetheris/swing/swing.spec.md
+
     /**
      * @param width dialog width
      * @param height dialog height
@@ -20750,7 +20841,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param width dialog width
      * @param height dialog height
      */
-    private void noteMoodDialogSize(int width, int height) { // @aa-sdd PK-1437 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private void noteMoodDialogSize(int width, int height) {
         if (moodPairKept(width, height)) {
             moodDialogWidth = width;
             moodDialogHeight = height;
@@ -20833,9 +20924,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @return the saved mood line, or null
      */
     public String sshMoodLineFor(String username) {
-        // @aa-sdd PK-1100 docs/specs/common/formal-plan.spec.md
-        // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
-        // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1100 docs/specs/common/formal-plan.spec.md FINESSE:f-179
+        // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md FINESSE:f-187
+        // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md FINESSE:f-220
         String key = sanitizeUser(username);
         MoodKeep keep = moodFor(key);
         return MoodDesk.sshLine(sshMoodOn(username), keep.on, keep.line);
@@ -21023,6 +21114,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If the search throws {@link SQLException}, the action calls {@link Host#aetherisStatus} with {@code search failed: } plus the exception message.
          */
         worker.submit(new Runnable() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void run() {
                 try {
@@ -21039,6 +21131,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The action calls {@link Host#aetherisStatus} with the status line for {@code search} plus the hit count.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
+                        // @aa-sdd L40 aetheris-plan-stage-1.001.md
                         @Override
                         public void run() {
                             if (hits.size() == 0) {
@@ -21065,7 +21158,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
         });
     }
- // @aa-sdd PK-1411 docs/specs/java/org/aetheris/swing/swing.spec.md
+
     /**
      * The method exportCanvas writes the showing canvas to a chosen file.
      * If {@link #currentCanvas} is absent, the method returns.
@@ -21164,6 +21257,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * An {@link IOException} from that close is ignored.
          */
         worker.submit(new Runnable() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void run() {
                 FileInputStream in = null;
@@ -21205,6 +21299,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The action calls {@link Host#aetherisStatus} with the status line for {@code imported} plus the imported count.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
+                        // @aa-sdd L40 aetheris-plan-stage-1.001.md
                         @Override
                         public void run() {
                             rebuildTabs();
@@ -21289,7 +21384,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A backslash doubles. A newline becomes {@code \\n}. A carriage return is removed.
      *
      * @param raw The raw value is the field text.
-     * @return The return value is the escaped text. // @aa-sdd PK-1411 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * @return The return value is the escaped text.
      */
     private static String moodExportEsc(String raw) {
         if (raw == null) {
@@ -21378,6 +21473,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If the save throws {@link SQLException}, the action calls {@link Host#aetherisStatus} with {@code pull failed: } plus the exception message.
          */
         worker.submit(new Runnable() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void run() {
                 try {
@@ -21398,6 +21494,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The action calls {@link Host#aetherisStatus} with the status line for {@code pulled excluded}.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
+                        // @aa-sdd L40 aetheris-plan-stage-1.001.md
                         @Override
                         public void run() {
                             pendingFocusId = cell.id;
@@ -21510,7 +21607,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If the save throws {@link SQLException}, the action calls {@link Host#aetherisStatus} with {@code add cell failed: } plus the exception message.
          */
         worker.submit(new Runnable() {
-            // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md FINESSE:f-77
             @Override
             public void run() {
                 try {
@@ -21539,7 +21636,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The action calls {@link #refreshInspector}.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
+                        // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md FINESSE:f-77
                         @Override
                         public void run() {
                             if (priorGrok != null) {
@@ -21610,6 +21707,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If the save throws {@link SQLException}, the action calls {@link Host#aetherisStatus} with {@code group failed: } plus the exception message.
          */
         worker.submit(new Runnable() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void run() {
                 try {
@@ -21633,6 +21731,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The action calls {@link #refreshInspector}.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
+                        // @aa-sdd L40 aetheris-plan-stage-1.001.md
                         @Override
                         public void run() {
                             rebuildTabs();
@@ -21649,7 +21748,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * The method joinGroup moves one cell into the armed group.
      * If the cell is absent or the armed source id is absent, the method returns.
-     * If {@link #findCell} misses that source, or the source group id is null or empty, the method returns. // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+     * If {@link #findCell} misses that source, or the source group id is null or empty, the method returns.
      * If the cell id equals the source id, the method returns.
      * If {@link #currentCanvas} is absent, the method returns.
      * The new column position is one past the highest column position already in that group.
@@ -21671,7 +21770,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         if (cell.id.equals(focused.id)) {
             return;
-        } // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+        }
         CanvasRecord canvas = currentCanvas();
         if (canvas == null) {
             return;
@@ -21757,7 +21856,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The action calls {@link #duplicateGroup}.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
                 @Override
                 public void run() {
                     duplicateGroup();
@@ -21825,7 +21924,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * {@code readable} is true.
          * {@link VaultStore#saveCell} stores each new cell.
          * The canvas cell list gains every new cell.
-         * An insert index outside the canvas order is replaced by the order size. // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+         * An insert index outside the canvas order is replaced by the order size.
          * Each new id is inserted at that index, in source order.
          * The action calls {@link #snapGroup} with {@code canvas} and the new group id.
          * Each cell in the canvas order receives a turn index of its order position plus 1.
@@ -21836,7 +21935,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If the save throws {@link SQLException}, the action calls {@link Host#aetherisStatus} with {@code duplicate group failed: } plus the exception message.
          */
         worker.submit(new Runnable() {
-            // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
             @Override
             public void run() {
                 try {
@@ -21890,7 +21989,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                      * The action calls {@link Host#aetherisStatus} with {@code duplicated group}.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
-                        // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
+                        // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-210
                         @Override
                         public void run() {
                             for (int i = 0; i < created.size(); i++) {
@@ -21920,36 +22019,129 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * Thinking pane above the footer. The strip is the glass.
-     * Each user keeps a pane. A merge group is the only shared pane.
-     * A cell thought for the armed scope feeds this instance. A console thought feeds the VT100 instance.
+     * The method builds the slot that shows one thinking pane at a time.
+     * The manager creates one pane for a canvas the first time a cell on that canvas asks.
+     * Every later cell on that canvas receives the same pane.
+     * An SSH pane is a separate instance.
+     *
+     * @return the empty slot
      */
-    private ThinkStrip buildThinkStrip() {
+    private JPanel buildThinkStrip() {
+        thinkSlot = new JPanel(new BorderLayout());
+        theme.applyPanel(thinkSlot);
+        return thinkSlot;
+    }
+
+    /**
+     * The method returns the canvas that holds {@code cellId}.
+     * A missing id returns null.
+     * The scan walks every loaded canvas and every cell on that canvas.
+     *
+     * @param cellId the cell id, or null
+     * @return the owning canvas, or null
+     */
+    private CanvasRecord canvasOwning(String cellId) {
+        if (cellId == null || canvases == null) {
+            return null;
+        }
+        for (int i = 0; i < canvases.size(); i++) {
+            CanvasRecord canvas = canvases.get(i);
+            for (int c = 0; c < canvas.cells.size(); c++) {
+                if (cellId.equals(canvas.cells.get(c).id)) {
+                    return canvas;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The method returns the canvas id for a cell that is on the open vault.
+     * The cell's {@code canvasId} is used when it is set.
+     * An empty field uses the canvas that lists the cell.
+     * A cell that is not on the open vault returns an empty string.
+     *
+     * @param cellId the cell id
+     * @return the canvas id, or empty
+     */
+    private String canvasIdOnOpen(String cellId) {
+        CellRecord cell = findCell(cellId);
+        if (cell != null && cell.canvasId != null && cell.canvasId.length() > 0) {
+            return cell.canvasId;
+        }
+        CanvasRecord canvas = canvasOwning(cellId);
+        if (canvas == null || canvas.id == null) {
+            return "";
+        }
+        return canvas.id;
+    }
+
+    /**
+     * The method returns the canvas id for this user and this cell.
+     * The open vault reads the loaded canvases and stores that id.
+     * Any other user reads the id stored when the run was armed.
+     * A missing id returns an empty string.
+     *
+     * @param user the sanitized user
+     * @param cellId the cell id
+     * @return the canvas id, or empty
+     */
+    private String canvasIdFor(String user, String cellId) {
+        if (user != null && user.equals(openUsername())) {
+            String live = canvasIdOnOpen(cellId);
+            if (live.length() > 0) {
+                thinkSeats.rememberCanvas(user, cellId, live);
+                return live;
+            }
+        }
+        return thinkSeats.canvasOf(user, cellId);
+    }
+
+    /**
+     * The method returns the thinking pane for one user and one canvas.
+     * The first call builds the strip and loads that canvas's stored log.
+     * A later call returns the same strip.
+     * Every cell on that canvas receives this strip.
+     * An empty canvas id returns null.
+     *
+     * @param user the sanitized user
+     * @param canvasId the canvas id
+     * @param cellId the cell that is writing
+     * @return the pane, or null
+     */
+    private ThinkStrip canvasPane(final String user, final String canvasId, final String cellId) {
+        if (canvasId == null || canvasId.length() == 0) {
+            return null;
+        }
+        final String key = ThinkSeats.canvasKey(user, canvasId);
+        thinkPanes.rememberCell(user, cellId, key);
+        return thinkPanes.acquire(key, new ThinkPaneManager.StripSource() {
+            @Override
+            public ThinkStrip create() {
+                return newCanvasStrip(user, canvasId);
+            }
+        });
+    }
+
+    /**
+     * The method builds one canvas thinking pane and loads its stored log.
+     * The host writes that canvas's log and leaves every other pane alone.
+     * The strip keeps its own shut flag and its own fold.
+     * The strip stays for the session.
+     *
+     * @param user the sanitized user
+     * @param canvasId the canvas id
+     * @return the new strip
+     */
+    private ThinkStrip newCanvasStrip(final String user, final String canvasId) {
         final AetherisNotebookPanel panel = this;
-        /**
-         * The {@link ThinkStrip.Host} implementation answers this panel for the thinking strip.
-         * {@code maxHeight} uses 48 when {@code thinkStrip} is null.
-         * Any other call uses {@link ThinkStrip#naturalHeight} as the natural height.
-         * If the panel height is less than 1, {@code maxHeight} returns 480.
-         * The room is the panel height minus 160.
-         * If that room is less than the natural height, {@code maxHeight} returns the natural height.
-         * If the room is at least the natural height, {@code maxHeight} returns the room.
-         *
-         * {@code relayout} calls {@code revalidate} on this panel.
-         * {@code saveLog} stores the glass text on that user's pane.
-         * {@code loadLog} returns empty. The legacy thinking file is not read.
-         *
-         * {@code noteChrome} stores {@code closed} in {@code thinkClosed}.
-         * {@code noteChrome} stores {@code height} in {@code thinkUserHeight}.
-         * {@code saveChrome} calls {@link #saveThinkStore}.
-         * {@code cleared} closes the open block on the glass pane only.
-         */
-        thinkStrip = new ThinkStrip(theme, monoFont(), uiFontSize, true, thinkUserHeight, thinkClosed,
+        final ThinkStrip[] born = new ThinkStrip[1];
+        born[0] = new ThinkStrip(theme, monoFont(), uiFontSize, true, thinkUserHeight, thinkBirthShut,
                 false, new ThinkStrip.Host() {
-                    // @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md FINESSE:f-74
                     @Override
                     public int maxHeight() {
-                        int natural = thinkStrip == null ? 48 : thinkStrip.naturalHeight();
+                        int natural = born[0] == null ? 48 : born[0].naturalHeight();
                         if (panel.getHeight() < 1) {
                             return 480;
                         }
@@ -21963,17 +22155,18 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     @Override
                     public void relayout() {
                         panel.revalidate();
+                        panel.repaint();
                     }
 
                     @Override
                     public void saveLog(String text) {
-                        // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
-                        panel.keepGlassText(text);
+                        // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md FINESSE:f-225
+                        panel.storeCanvasText(user, canvasId, text);
                     }
 
                     @Override
                     public String loadLog() {
-                        return "";
+                        return panel.storedCanvasText(user, canvasId);
                     }
 
                     @Override
@@ -21985,16 +22178,95 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     @Override
                     public void saveChrome() {
                         panel.saveThinkStore();
-                    } // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+                    }
 
                     @Override
                     public void cleared() {
-                        // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
-                        panel.clearGlassFlags();
+                        // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md FINESSE:f-225
+                        panel.storeCanvasText(user, canvasId, "");
+                        thinkPanes.stream().finish(born[0]);
+                    }
+
+                    @Override
+                    public void noteSeat(boolean shut, boolean folded) {
+                        // This strip keeps the shut flag and the fold. A neighbor pane is not written.
                     }
                 });
-        thinkStrip.loadStoredLog();
-        return thinkStrip;
+        born[0].loadStoredLog();
+        return born[0];
+    }
+
+    /**
+     * The method puts {@code strip} in the slot.
+     * The same pane returns without a swap.
+     * A null strip clears the slot.
+     * The pane that left the slot keeps its text, its fold, and its shut flag.
+     *
+     * @param strip the pane to show, or null
+     * @param key the scope key, or empty
+     * @param user the sanitized user, or empty
+     */
+    private void seatThinkStrip(ThinkStrip strip, String key, String user) {
+        String nextKey = key == null ? "" : key;
+        String nextUser = user == null ? "" : user;
+        if (strip == seatedThink && nextKey.equals(seatedKey) && nextUser.equals(seatedUser)) {
+            return;
+        }
+        if (thinkSlot == null) {
+            return;
+        }
+        thinkSlot.removeAll();
+        seatedThink = strip;
+        seatedKey = nextKey;
+        seatedUser = nextUser;
+        if (strip != null) {
+            thinkSlot.add(strip, BorderLayout.CENTER);
+        }
+        thinkSlot.revalidate();
+        thinkSlot.repaint();
+        revalidate();
+    }
+
+    /**
+     * The method shows the armed cell's pane for {@code username}.
+     * A missing armed cell clears the slot.
+     * The pane that was showing keeps its own text.
+     *
+     * @param username the sanitized user now on screen
+     */
+    private void showThinkGlass() {
+        seatArmedThink(openUsername());
+    }
+
+    /**
+     * The method seats the armed cell's canvas pane.
+     * An empty user, or a focused id that is not on the loaded canvases, clears the slot.
+     * Another cell on that canvas seats the same pane.
+     *
+     * @param username the sanitized user
+     */
+    private void seatArmedThink(String username) {
+        if (username == null || username.length() == 0 || focusedCellId == null) {
+            seatThinkStrip(null, "", "");
+            return;
+        }
+        if (!username.equals(openUsername())) {
+            seatThinkStrip(null, "", "");
+            return;
+        }
+        CellRecord armed = findCell(focusedCellId);
+        if (armed == null) {
+            seatThinkStrip(null, "", username);
+            return;
+        }
+        String canvasId = canvasIdOnOpen(armed.id);
+        if (canvasId.length() == 0) {
+            seatThinkStrip(null, "", username);
+            return;
+        }
+        String key = ThinkSeats.canvasKey(username, canvasId);
+        ThinkStrip strip = canvasPane(username, canvasId, armed.id);
+        seatThinkStrip(strip, key, username);
     }
 
     /**
@@ -22083,7 +22355,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * Nil-cell kind {@code t}. The notebook strip does not paint this chunk.
      *
      * @param frame stream frame
-     * @return the thought text, or null // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+     * @return the thought text, or null
      */
     public String nilThinkText(AmwpFrame frame) {
         if (frame == null || frame.getType() != AmwpConstants.TYPE_DELTA
@@ -22130,12 +22402,16 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The banner word is {@link #shortModelName} of the execution target.
      * If that name is empty, the banner word is the provider id.
      * {@link ThinkSeats#word} then drops a newline and a box-drawing character.
-     * A merge group shares one pane. A single prompt uses the cell id alone.
-     * A different cell or a different model starts a header.
-     * The same cell and the same model append.
-     * The glass is painted only when this scope is the pane already on the strip.
-     * A chunk for the armed scope of the open user, while another pane is on the glass, captures that pane and then shows this one.
-     * The user's file is written after the chunk. Another user's file is not opened.
+     * The manager returns the pane for that cell's canvas.
+     * Every cell on that canvas receives the same pane.
+     * The stream writes that pane by reference.
+     * Close leaves that same pane in the manager.
+     * A later chunk opens it when it was closed.
+     * A different cell or a different model starts a header on that pane.
+     * The same cell and the same model append on that pane.
+     * A chunk for the open user's canvas is seated in the slot.
+     * A chunk for another canvas writes that canvas's pane and leaves the slot as it is.
+     * The pane's file is written from that pane. Another pane is not written.
      *
      * @param username the sanitized user that owns the cell
      * @param cellId The cell id is the cell that produced the chunk.
@@ -22143,8 +22419,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param text The text is the chunk, and it may be null.
      */
     private void seatThinkDelta(String username, String cellId, char kind, String text) {
-        // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
-        if (thinkStrip == null || kind != 't' || text == null || text.length() == 0) {
+        // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md FINESSE:f-225
+        if (kind != 't' || text == null || text.length() == 0) {
             return;
         }
         if (username == null || username.length() == 0 || cellId == null || CONSOLE_CELL.equals(cellId)) {
@@ -22188,171 +22464,100 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             model = provider;
         }
         model = ThinkSeats.word(model);
-        String mapKey = ThinkSeats.key(username, groupId, cellId);
-        ThinkSeats.ThinkPane pane = thinkSeats.pane(username, groupId, cellId);
-        boolean onGlass = mapKey.equals(glassThinkKey) && username.equals(glassThinkUser);
-        if (onGlass) {
-            // A different cell or a different model starts a header.
-            // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
-            boolean fresh = !pane.live || !cellId.equals(pane.cell) || !model.equals(pane.word);
-            if (fresh) {
-                pane.cell = cellId;
-                pane.word = model;
-                pane.live = true;
-                thinkStrip.begin(model, text);
-            } else {
-                thinkStrip.append(text);
-            }
-            pane.text = thinkStrip.text();
-        } else {
-            ThinkSeats.accept(pane, cellId, model, text);
+        String canvasId = canvasIdFor(username, cellId);
+        if (canvasId.length() == 0) {
+            return;
         }
-        thinkSeats.saveUser(username);
-        String armed = armedThinkKey(username);
-        if (!onGlass && armed != null && armed.equals(mapKey)) {
-            captureThinkGlass();
-            glassThinkKey = mapKey;
-            glassThinkUser = username;
-            thinkStrip.showLog(pane.text);
+        String mapKey = ThinkSeats.canvasKey(username, canvasId);
+        ThinkStrip strip = canvasPane(username, canvasId, cellId);
+        if (strip == null) {
+            return;
         }
+        if (username.equals(openUsername()) && showsChunk(cellId)) {
+            seatThinkStrip(strip, mapKey, username);
+        }
+        // A different cell or a different model starts a header on this pane.
+        // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-210
+        thinkPanes.stream().offer(strip, cellId, model, text);
     }
 
     /**
-     * The method returns the scope key of the armed cell for {@code username}.
-     * A user who is not the open vault returns null, because the loaded canvases are not that user's.
-     * A missing armed cell returns null.
+     * The method reports whether this chunk belongs on the armed canvas.
+     * A missing armed cell shows the chunk's pane.
+     * Every cell on the armed canvas matches.
      *
-     * @param username the sanitized user
-     * @return the key, or null
+     * @param cellId the chunk's cell id
+     * @return true when the slot should show this pane
      */
-    private String armedThinkKey(String username) {
-        if (username == null || !username.equals(openUsername()) || focusedCellId == null) {
-            return null;
+    private boolean showsChunk(String cellId) {
+        if (focusedCellId == null) {
+            return true;
         }
-        CellRecord armed = findCell(focusedCellId);
-        if (armed == null) {
-            return null;
+        String armedCanvas = canvasIdOnOpen(focusedCellId);
+        if (armedCanvas.length() == 0) {
+            return true;
         }
-        return ThinkSeats.key(username, armed.groupId, armed.id);
+        String chunkCanvas = canvasIdOnOpen(cellId);
+        return armedCanvas.equals(chunkCanvas);
     }
 
     /**
-     * The method writes the glass text back onto the pane that is showing.
-     * A glass with no key returns without a write.
+     * The method stores one canvas log.
+     * An empty string drops that canvas from the user's file.
      * Another user's file is not opened.
-     */
-    private void captureThinkGlass() {
-        if (thinkStrip == null || glassThinkKey == null || glassThinkUser == null) {
-            return;
-        }
-        ThinkSeats.ThinkPane pane = thinkSeats.paneIfPresent(glassThinkKey);
-        if (pane == null) {
-            return;
-        }
-        pane.text = thinkStrip.text();
-        thinkSeats.saveUser(glassThinkUser);
-    }
-
-    /**
-     * The method shows the armed cell's pane for the open user.
-     * The pane that was showing is captured first.
-     * A user with no armed cell shows an empty strip, and the previous pane stays stored.
-     */
-    private void showThinkGlass() {
-        captureThinkGlass();
-        revealThinkGlass(openUsername());
-    }
-
-    /**
-     * The method loads {@code username}'s armed pane onto the strip.
-     * An empty user, or a focused id that is not on the loaded canvases, clears the glass key and shows no text.
-     * The chrome height and the closed mark stay on the one strip.
      *
-     * @param username the sanitized user now on screen
+     * @param user the sanitized user
+     * @param canvasId the canvas id
+     * @param text the strip text
      */
-    private void revealThinkGlass(String username) {
-        if (thinkStrip == null) {
+    private void storeCanvasText(String user, String canvasId, String text) {
+        if (user == null || user.length() == 0 || canvasId == null || canvasId.length() == 0) {
             return;
         }
-        if (username == null || username.length() == 0) {
-            glassThinkKey = null;
-            glassThinkUser = "";
-            thinkStrip.showLog("");
-            return;
+        ThinkSeats.ThinkPane row = thinkSeats.canvasLog(user, canvasId);
+        if (text == null || text.length() == 0) {
+            row.clear();
+        } else {
+            row.text = text;
+            row.cell = canvasId;
         }
-        String key = armedThinkKey(username);
-        if (key == null) {
-            glassThinkKey = null;
-            glassThinkUser = username;
-            thinkStrip.showLog("");
-            return;
-        }
-        CellRecord armed = findCell(focusedCellId);
-        String groupId = armed == null || armed.groupId == null ? "" : armed.groupId;
-        glassThinkKey = key;
-        glassThinkUser = username;
-        ThinkSeats.ThinkPane pane = thinkSeats.pane(username, groupId, focusedCellId);
-        thinkStrip.showLog(pane.text);
+        thinkSeats.saveUser(user);
     }
 
     /**
-     * The method arms {@code id} and shows that cell's thinking pane when the scope changed.
-     * The same cell of the same user returns without reloading the strip.
-     * A different cell in the same merge group keeps the strip, because the scope key did not change.
+     * The method returns one canvas log.
+     * A missing row returns an empty string.
+     *
+     * @param user the sanitized user
+     * @param canvasId the canvas id
+     * @return the stored text
+     */
+    private String storedCanvasText(String user, String canvasId) {
+        if (user == null || user.length() == 0 || canvasId == null || canvasId.length() == 0) {
+            return "";
+        }
+        ThinkSeats.ThinkPane row = thinkSeats.canvasLog(user, canvasId);
+        return row.text == null ? "" : row.text;
+    }
+
+    /**
+     * The method arms {@code id} and shows that cell's canvas pane when the cell changed.
+     * The same cell of the same user returns without swapping the slot.
+     * Another cell on the same canvas keeps the pane, because the canvas key did not change.
      *
      * @param id the cell that is now armed
      */
     private void armFocusedCell(String id) {
-        // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md FINESSE:f-225
         String user = openUsername();
-        if (id != null && id.equals(focusedCellId) && user.equals(glassThinkUser)) {
+        if (id != null && id.equals(focusedCellId) && user != null && user.equals(seatedUser)) {
             return;
         }
-        captureThinkGlass();
         focusedCellId = id;
         if (user != null && user.length() > 0 && id != null && findCell(id) != null) {
             thinkFocus.put(user, id);
         }
-        String key = armedThinkKey(user);
-        if (key != null && key.equals(glassThinkKey) && user.equals(glassThinkUser)) {
-            return;
-        }
-        revealThinkGlass(user);
-    }
-
-    /**
-     * The method stores the glass text on the pane that is showing.
-     * A clear stores an empty string and drops that scope from the user's file.
-     * Another user's file is not opened.
-     *
-     * @param text the strip text, or empty after Clear
-     */
-    private void keepGlassText(String text) {
-        if (glassThinkKey == null || glassThinkUser == null || glassThinkUser.length() == 0) {
-            return;
-        }
-        ThinkSeats.ThinkPane pane = thinkSeats.paneIfPresent(glassThinkKey);
-        if (pane == null) {
-            return;
-        }
-        pane.text = text == null ? "" : text;
-        thinkSeats.saveUser(glassThinkUser);
-    }
-
-    /**
-     * The method closes the open block on the glass pane after Clear.
-     * The text was already stored empty by {@link #keepGlassText}.
-     * Another user's pane is left alone.
-     */
-    private void clearGlassFlags() {
-        if (glassThinkKey == null) {
-            return;
-        }
-        ThinkSeats.ThinkPane pane = thinkSeats.paneIfPresent(glassThinkKey);
-        if (pane == null) {
-            return;
-        }
-        pane.clear();
+        seatArmedThink(user);
     }
 
     /**
@@ -22384,7 +22589,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The method finishThink ends the live thinking block on the Swing thread.
      * If the caller is already on that thread, {@link #finishThinkNow} runs at once.
      * Any other caller posts that same call with {@code invokeLater}.
-     * The pause closes the pane that owns this cell for this user.
+     * The pause leaves that pane open or folded as the user left it.
      * Another user's pane stays live.
      *
      * @param username the sanitized user that owns the run
@@ -22400,7 +22605,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The action calls {@link #finishThinkNow} with the user and the cell.
          */
         SwingUtilities.invokeLater(new Runnable() {
-            // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
+            // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md FINESSE:f-225
             @Override
             public void run() {
                 finishThinkNow(username, cellId);
@@ -22409,8 +22615,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * A pause leaves the thinking pane up. Close is the dismiss.
-     * The pause closes only the pane that owns this cell.
+     * A pause leaves the thinking pane as the user left it. Close is the dismiss.
+     * The pause does not fold the pane that owns this cell.
      *
      * @param username the sanitized user that owns the run
      * @param cellId cell whose run paused
@@ -22422,7 +22628,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (CONSOLE_CELL.equals(cellId)) {
             return;
         }
-        thinkSeats.finishCell(username, cellId);
+        ThinkStrip strip = thinkPanes.findCell(username, cellId);
+        if (strip != null) {
+            thinkPanes.stream().finish(strip);
+        }
     }
 
 
@@ -22458,7 +22667,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             errorSlide.setBorder(new LineBorder(edge, 2));
         }
         if (errorBody != null) {
-            errorBody.setBackground(fill); // @aa-sdd PK-1414 docs/specs/java/org/aetheris/swing/swing.spec.md
+            errorBody.setBackground(fill);
             errorBody.setForeground(ink);
         }
         if (errorTitle != null) {
@@ -22849,6 +23058,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The renderer returns the painted component.
          */
         dialogGrokModel.setRenderer(new DefaultListCellRenderer() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                     boolean isSelected, boolean cellHasFocus) {
@@ -22917,6 +23127,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The renderer returns the painted component.
          */
         dialogOllamaId.setRenderer(new DefaultListCellRenderer() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                     boolean isSelected, boolean cellHasFocus) {
@@ -23013,7 +23224,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         grokPane.add(label("Stream"));
         grokPane.add(dialogGrokStream);
         grokPane.add(label("Temperature"));
-        grokPane.add(dialogGrokTemperature); // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
+        grokPane.add(dialogGrokTemperature);
         grokPane.add(label("Max tokens"));
         grokPane.add(dialogGrokMaxTokens);
         grokPane.add(label("Burner"));
@@ -23036,7 +23247,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         JPanel nonePane = new JPanel();
         theme.applyPanel(nonePane);
         final CardLayout deckLayout = new CardLayout();
-        final JPanel deck = new JPanel(deckLayout); // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
+        final JPanel deck = new JPanel(deckLayout);
         theme.applyPanel(deck);
         deck.add(ollamaPane, "ollama");
         deck.add(grokPane, "grok");
@@ -23055,7 +23266,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The item listener switches the model dialog to the chosen family.
          * If {@code dialogAdjusting} is true, the listener returns.
          * If the state change is not {@link ItemEvent#SELECTED}, the listener returns.
-         * If the selected item is null, the listener returns. // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
+         * If the selected item is null, the listener returns.
          *
          * If {@code dialogConsole} is true and the choice is {@code Ollama}, the deck shows {@code ollama}.
          * That console choice calls {@link #askOllamaTags} with {@code CONSOLE_CELL}.
@@ -23080,7 +23291,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A cell choice packs {@code dialog}.
          */
         family.addItemListener(new ItemListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (dialogAdjusting || e.getStateChange() != ItemEvent.SELECTED) {
@@ -23143,7 +23354,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #writeGrokControls}.
          */
         dialogGrokModel.addItemListener(new ItemListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (dialogAdjusting || e.getStateChange() != ItemEvent.SELECTED) {
@@ -23179,7 +23390,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #writeGrokControls}.
          */
         dialogGrokSendEffort.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1091 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1091 docs/specs/common/formal-plan.spec.md FINESSE:f-188
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (dialogAdjusting) {
@@ -23194,9 +23405,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If {@code dialogAdjusting} is true, the listener returns.
          * If the state change is not {@link ItemEvent#SELECTED}, the listener returns.
          * The listener calls {@link #writeGrokControls}.
-         */ // @aa-sdd PK-1405 docs/specs/java/org/aetheris/swing/swing.spec.md
+         */
         dialogGrokEffort.addItemListener(new ItemListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (dialogAdjusting || e.getStateChange() != ItemEvent.SELECTED) {
@@ -23212,7 +23423,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #writeGrokControls}.
          */
         dialogGrokStream.addItemListener(new ItemListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (dialogAdjusting || e.getStateChange() != ItemEvent.SELECTED) {
@@ -23227,7 +23438,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #writeGrokControls}.
          */
         dialogGrokBurner.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (dialogAdjusting) {
@@ -23245,12 +23456,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener then returns.
          * If {@code dialogCell} is null, the listener returns.
          * {@link #thinkOf} for the cell id stores the checkbox in {@code grokOn}.
-         * The listener calls {@link #saveThinkStore}. // @aa-sdd PK-1405 docs/specs/java/org/aetheris/swing/swing.spec.md
+         * The listener calls {@link #saveThinkStore}.
          * When the stream combo was set to {@code true}, the listener calls {@link #writeGrokControls}.
          * The listener calls {@link #persistQuiet} with {@code dialogCell}.
          */
         dialogGrokThink.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (dialogAdjusting) {
@@ -23292,6 +23503,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #persistQuiet} with {@code dialogCell}.
          */
         dialogPoolThink.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (dialogAdjusting || dialogPoolThink == null) {
@@ -23314,7 +23526,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #writeGrokTemperature}.
          */
         dialogGrokTemperature.addFocusListener(new FocusAdapter() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void focusLost(FocusEvent e) {
                 writeGrokTemperature();
@@ -23325,7 +23537,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #writeGrokMaxTokens}.
          */
         dialogGrokMaxTokens.addFocusListener(new FocusAdapter() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void focusLost(FocusEvent e) {
                 writeGrokMaxTokens();
@@ -23347,7 +23559,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener calls {@link #paintCellTarget} with that target.
              */
             ollamaField.addKeyListener(new KeyAdapter() {
-                // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
+                // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
                 @Override
                 public void keyReleased(KeyEvent e) {
                     if (dialogAdjusting || dialogConsole || dialogCell == null || dialogOllamaId == null) {
@@ -23370,7 +23582,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * A non-empty id calls {@link #commitOllamaModel} with true.
              */
             ollamaField.addFocusListener(new FocusAdapter() {
-                // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
+                // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
                 @Override
                 public void focusLost(FocusEvent e) {
                     if (dialogOllamaModelId().length() == 0) {
@@ -23389,7 +23601,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #commitOllamaModel} with true.
          */
         dialogOllamaId.addItemListener(new ItemListener() {
-            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (dialogAdjusting || e.getStateChange() != ItemEvent.SELECTED) {
@@ -23407,6 +23619,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A cancel does nothing.
          */
         dialogOllamaId.addPopupMenuListener(new PopupMenuListener() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                 if (dialogAdjusting) {
@@ -23445,7 +23658,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #refreshOllamaEffortRow}.
          */
         dialogOllamaThink.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (dialogAdjusting || dialogOllamaThink == null) {
@@ -23498,7 +23711,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #persistQuiet} with {@code dialogCell}.
          */
         dialogOllamaEffort.addItemListener(new ItemListener() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (dialogAdjusting || e.getStateChange() != ItemEvent.SELECTED) {
@@ -23531,6 +23744,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * A closed event calls {@link #clearModelDialog}.
          */
         dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
                 dialogAdjusting = true;
@@ -24160,7 +24374,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * The Ollama pane writes the cell while that family is the selected item.
      * A missing combo keeps the old write. The console path does not call this.
-     // @aa-sdd PK-1091 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1091 docs/specs/common/formal-plan.spec.md FINESSE:f-188
      *
      * @return true when an ollama id may land on the cell
      */
@@ -24340,7 +24554,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 return;
             }
             if (max < 1) {
-                host.aetherisStatus(statusLine("settings")); // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
+                host.aetherisStatus(statusLine("settings"));
                 return;
             }
             maxPresent = true;
@@ -24382,7 +24596,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (maxPresent) {
             consoleGrok.maxCompletionTokens = max;
         }
-        consoleGrokThink = grokThink; // @aa-sdd PK-1278 docs/specs/java/org/aetheris/swing/swing.spec.md
+        consoleGrokThink = grokThink;
         consolePoolOn = "true".equals(poolThink);
         consoleProvider = family;
         consoleOllamaModel = ollamaId;
@@ -24414,7 +24628,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If the write throws, the action ignores the exception.
          */
         Thread worker = new Thread(new Runnable() {
-            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
             @Override
             public void run() {
                 try {
@@ -24443,7 +24657,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             char c = raw.charAt(i);
             if (c == '\r' || c == '\n') {
                 continue;
-            } // @aa-sdd PK-1277 docs/specs/java/org/aetheris/swing/swing.spec.md
+            }
             sb.append(c);
         }
         return sb.toString();
@@ -24675,7 +24889,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If the write throws, the action shows the red miss.
          */
         Thread worker = new Thread(new Runnable() {
-            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
             @Override
             public void run() {
                 try {
@@ -24829,7 +25043,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * If the write throws, the action ignores the exception.
          */
         Thread worker = new Thread(new Runnable() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void run() {
                 try {
@@ -24923,17 +25137,18 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * The method missGrokList clears the Grok model combo and shows the red miss. // @aa-sdd PK-35 docs/specs/java/org/aetheris/swing/swing.spec.md
-     * A call off the event thread posts the same call back onto that thread and returns. // @aa-sdd PK-36 docs/specs/java/org/aetheris/swing/swing.spec.md
-     * The stored model id is not written. // @aa-sdd PK-47 docs/specs/java/org/aetheris/swing/swing.spec.md
-     * Listeners stay quiet while the rows are removed. // @aa-sdd PK-49 docs/specs/java/org/aetheris/swing/swing.spec.md
-     */ // @aa-sdd PK-717 docs/specs/common/server.spec.md
-    private void missGrokList() { // @aa-sdd PK-110 docs/specs/java/org/aetheris/swing/swing.spec.md
-        if (!SwingUtilities.isEventDispatchThread()) { // @aa-sdd PK-676 docs/specs/common/formal-plan.spec.md
-            /** // @aa-sdd PK-91 docs/specs/java/org/aetheris/swing/swing.spec.md
+     * The method missGrokList clears the Grok model combo and shows the red miss.
+     * A call off the event thread posts the same call back onto that thread and returns.
+     * The stored model id is not written.
+     * Listeners stay quiet while the rows are removed.
+     */
+    private void missGrokList() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            /**
              * The runnable moves the miss onto the event thread.
              */
             SwingUtilities.invokeLater(new Runnable() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method calls {@link #missGrokList()} on the event thread.
                  */
@@ -24969,14 +25184,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The runnable moves the miss onto the event thread.
              */
             SwingUtilities.invokeLater(new Runnable() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method calls {@link #missOllamaList(String)} on the event thread.
                  */
                 @Override
                 public void run() {
                     missOllamaList(current);
-                } // @aa-sdd PK-1221 docs/specs/java/org/aetheris/swing/swing.spec.md
-            }); // @aa-sdd PK-1221 docs/specs/java/org/aetheris/swing/swing.spec.md
+                }
+            });
             return;
         }
         if (dialogOllamaId != null) {
@@ -25008,6 +25224,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The runnable moves the miss onto the event thread.
              */
             SwingUtilities.invokeLater(new Runnable() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method calls {@link #showModelListMiss(String)} on the event thread.
                  */
@@ -25127,6 +25344,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The listener calls {@link #fireGroupWait} with {@code groupId}.
          */
         Timer timer = new Timer(F19_WAIT_MS, new ActionListener() {
+            // @aa-sdd L40 aetheris-plan-stage-1.001.md
             @Override
             public void actionPerformed(ActionEvent e) {
                 ((Timer) e.getSource()).stop();
@@ -25242,8 +25460,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         refreshInspector();
     }
 
-    // @aa-sdd PK-1044 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1044 docs/specs/common/formal-plan.spec.md FINESSE:f-48
+    // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md FINESSE:f-49
     /**
      * The class {@code ThinkSpinner} is the small panel that shows a thinking clock.
      * The panel holds a glyph label and a words label in a left flow.
@@ -25306,8 +25524,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener advances the spinner glyph and the thinking clock.
              */
             timer = new Timer(120, new ActionListener() {
-                // @aa-sdd PK-1044 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1044 docs/specs/common/formal-plan.spec.md FINESSE:f-48
+                // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md FINESSE:f-49
                 // @aa-sdd PK-1221 docs/specs/java/org/aetheris/swing/swing.spec.md
                 // @aa-sdd PK-1221 docs/specs/java/org/aetheris/swing/swing.spec.md
                 /**
@@ -25326,8 +25544,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                             ? ThinkingClock.format(ownStartedAtMs) : thinkingTime();
                     glyph.setText("<html><font color=\"#00FF66\">"
                             + frames[frame % frames.length] + "</font></html>");
-                    words.setText("<html><font color=\"#00D7FF\">thinking " + clock + "</font></html>"); // @aa-sdd PK-1324 docs/specs/java/org/aetheris/swing/swing.spec.md
-                    frame++; // @aa-sdd PK-102 docs/specs/java/org/aetheris/swing/swing.spec.md
+                    words.setText("<html><font color=\"#00D7FF\">thinking " + clock + "</font></html>");
+                    frame++;
                 }
             });
         }
@@ -25372,8 +25590,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
         /**
          * The method {@code stopSpin} hides the spinner and clears its clock.
-         * {@code ownStartedAtMs} is set to {@code 0}. // @aa-sdd PK-858 docs/specs/common/stages.spec.md
-         * The timer is stopped. // @aa-sdd PK-102 docs/specs/java/org/aetheris/swing/swing.spec.md
+         * {@code ownStartedAtMs} is set to {@code 0}.
+         * The timer is stopped.
          * The glyph text and the words text are cleared.
          * The panel is hidden and revalidated.
          */
@@ -25468,9 +25686,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         root.put("version", Integer.valueOf(1));
         root.put("closed", Boolean.valueOf(thinkClosed));
         if (thinkUserHeight > 0) {
-            root.put("height", Integer.valueOf(thinkUserHeight)); // @aa-sdd PK-114 docs/specs/java/org/aetheris/swing/swing.spec.md
-        } // @aa-sdd PK-116 docs/specs/java/org/aetheris/swing/swing.spec.md
-        LinkedHashMap<String, Object> cells = new LinkedHashMap<String, Object>(); // @aa-sdd PK-83 docs/specs/java/org/aetheris/swing/swing.spec.md
+            root.put("height", Integer.valueOf(thinkUserHeight));
+        }
+        LinkedHashMap<String, Object> cells = new LinkedHashMap<String, Object>();
         for (Map.Entry<String, CellThink> one : ollamaThink.entrySet()) {
             CellThink held = one.getValue();
             if (!thinkWorthSaving(held)) {
@@ -25650,7 +25868,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
-    // @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md FINESSE:f-94
     /**
      * The class {@code QuietSplitUi} is the split UI for the cell bar.
      * The shared split UI stays on the other bars.
@@ -25694,7 +25912,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
-    // @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1001 docs/specs/common/formal-plan.spec.md FINESSE:f-94
     /**
      * The class {@code QuietDivider} is the painted cell bar.
      * The quiet grey sits under the panel and over the black.
@@ -25787,7 +26005,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
-    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
     /**
      * The class {@code CellThink} is the session think state for one cell.
      * The state is one map entry.
@@ -25827,7 +26045,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A caller builds this object with the column count, the row count, and the mood settings.
      * {@link #createScrollBar()} arms the bar while the widget is still being built.
      */
-    private final class MoodGlassWidget extends JediTermWidget { // @aa-sdd PK-1439 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private final class MoodGlassWidget extends JediTermWidget {
 
         /**
          * The constructor builds the mood-glass terminal.
@@ -25856,6 +26074,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
+    // @aa-sdd L40 aetheris-plan-stage-1.001.md
     /**
      * The class {@code MoodGlassSettings} is the settings copy for the mood glass.
      * The mood glass is the private terminal pane for the mood dialog.
@@ -25893,7 +26112,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
-    // @aa-sdd PK-1034 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1034 docs/specs/common/formal-plan.spec.md FINESSE:f-58
     /**
      * The class {@code MoodGlassConnector} is the local terminal seam for the mood glass.
      * The mood glass is the private terminal pane for the mood dialog.
@@ -26226,6 +26445,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The task sends the current glass line.
              */
             SwingUtilities.invokeLater(new Runnable() {
+                // @aa-sdd L40 aetheris-plan-stage-1.001.md
                 /**
                  * The method calls {@link AetherisNotebookPanel#submitGlassLine()}.
                  */
@@ -26356,10 +26576,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 return;
             }
             if (c < 0x20) {
-                crSeen = false; // @aa-sdd PK-765 docs/specs/common/stages.spec.md
-                return; // @aa-sdd PK-57 docs/specs/java/org/aetheris/swing/swing.spec.md
-            } // @aa-sdd PK-64 docs/specs/java/org/aetheris/swing/swing.spec.md
-            crSeen = false; // @aa-sdd PK-103 docs/specs/java/org/aetheris/swing/swing.spec.md
+                crSeen = false;
+                return;
+            }
+            crSeen = false;
             line.append(c);
             offerLocked(String.valueOf(c));
         }
@@ -26547,9 +26767,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
-    // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1039 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
+    // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md FINESSE:f-49
+    // @aa-sdd PK-1039 docs/specs/common/formal-plan.spec.md FINESSE:f-53
     /**
      * The class {@code MoodSwitch} is the two-position control on BB2.
      * The tool bar is BB2.
@@ -26580,8 +26800,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener toggles the mood when the control is enabled.
              */
             addMouseListener(new MouseAdapter() {
-                // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1039 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1045 docs/specs/common/formal-plan.spec.md FINESSE:f-47
+                // @aa-sdd PK-1039 docs/specs/common/formal-plan.spec.md FINESSE:f-53
                 /**
                  * The method returns when the control is not enabled.
                  * An enabled click calls {@link AetherisNotebookPanel#toggleMood()}.
@@ -26711,8 +26931,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
     }
 
-    // @aa-sdd PK-1153 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1153 docs/specs/common/formal-plan.spec.md FINESSE:f-103
+    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
     /**
      * The class {@code InspectorFold} lays out the canvas and the inspector with a bar between them.
      * The canvas is the left pane.
@@ -26787,8 +27007,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The mark's stacking order is set to 0, which is the front.
          * The panel is revalidated and repainted.
          *
-         * @param mark The mark is the button to keep in front of the bar. // @aa-sdd PK-765 docs/specs/common/stages.spec.md
-         */ // @aa-sdd PK-103 docs/specs/java/org/aetheris/swing/swing.spec.md
+         * @param mark The mark is the button to keep in front of the bar.
+         */
         private void seatPin(JButton mark) {
             if (mark == null) {
                 return;
@@ -27140,8 +27360,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return value;
         }
 
-        // @aa-sdd PK-1159 docs/specs/common/stages.spec.md
-        // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1159 docs/specs/common/stages.spec.md FINESSE:f-157
+        // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
         /**
          * The class {@code InspectorBar} is the grab bar between the canvas and the inspector.
          * The fill is {@code 0x3a3a3a}.
@@ -27195,7 +27415,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The listener records a left-button press and runs the arrow that is released.
                  */
                 addMouseListener(new MouseAdapter() {
-                    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
                     /**
                      * The method records the press when the button is the left button.
                      * Any other button returns.
@@ -27263,7 +27483,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                  * The listener drags the bar and updates the hot arrow.
                  */
                 addMouseMotionListener(new MouseAdapter() {
-                    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
                     /**
                      * The method drags the bar when the press zone is 3.
                      * Any other zone returns.

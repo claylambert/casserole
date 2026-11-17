@@ -10,6 +10,10 @@ enum TabWord
 
 The word written under `ui.product.tab`.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

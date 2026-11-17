@@ -13,8 +13,8 @@ An ordinary button takes that emerald while the pointer is on it or while the bu
 
 | | |
 | --- | --- |
-| **Specification** | PK-1151 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-999 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1151 docs/specs/common/formal-plan.spec.md FINESSE:f-105 |
+| **Specification** | PK-999 docs/specs/common/formal-plan.spec.md FINESSE:f-96 |
 
 ## impl egui::theme::StyleProvider<egui::widget_style::ButtonStyle> for ButtonHoverInk
 

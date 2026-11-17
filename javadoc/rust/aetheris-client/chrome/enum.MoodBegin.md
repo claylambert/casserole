@@ -11,6 +11,10 @@ enum MoodBegin
 The enum `MoodBegin` is the gate in front of the mood glass.
 `NoCell` means the focused index is not a card. `Burner` means a cloud run is denied for that card. `NoMux` means the multiplexed channel has not answered. `Open` means the glass may open.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

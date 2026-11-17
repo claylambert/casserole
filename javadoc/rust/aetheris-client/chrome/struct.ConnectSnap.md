@@ -11,6 +11,10 @@ struct ConnectSnap
 The `ConnectSnap` struct is the connect fields last used for one pane.
 `host` is the host text. `port` is the port text. `user` is the user text. `password` is the password text.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

@@ -11,6 +11,10 @@ struct ThinkChrome
 The struct `ThinkChrome` is the fold, the close, and the dragged height of a thought pane.
 The log text stays on [`ThinkLog`](struct.ThinkLog.md). This struct does not hold that text.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

@@ -11,6 +11,10 @@ enum PaneSide
 The `PaneSide` enum names which child a split path step follows.
 [`PaneSide::Left`](#member-left) is the first child. [`PaneSide::Right`](#member-right) is the second child. A horizontal split uses those names for the left child and the right child. A vertical split uses the same names for the top child and the bottom child.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

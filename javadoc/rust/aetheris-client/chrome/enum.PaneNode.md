@@ -13,6 +13,10 @@ The `PaneNode` enum is one node in the pane tree.
 
 `way` is horizontal or vertical. `ratio` is the first child's share of the span after the gap. `left` is the first child. `right` is the second child.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

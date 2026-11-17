@@ -22,7 +22,7 @@ The inspector sits beside the cards. The inspector shows that same set of cards.
 
 A redraw paints the keys already in hand. A redraw then commits a paint budget. The budget paints canvas pieces first. The budget then paints one terminal chunk. The rest stays queued.
 
-Members of one group sit on a sideways row. Each member is as wide as its top bar plus 10 pixels. The merge stays the column width under that row. The block takes the column width. Every card wears a one-pixel line. The armed card's line is sapphire blue. A focused merge lights its group. The footer holds Run and Stop. Run sends the focused card. Stop cancels the card that is running. A later member of that group still runs. The spinner sits on the right of that bar while a card is running. The user combo sits further to the right. The clock shows that running card. A quiet deck hides the spinner. A quiet deck is a canvas with no card running. The combo stays.
+Members of one group sit on a sideways row. Each member is as wide as its top bar plus 10 pixels. The merge stays the column width under that row. The block takes the column width. The row's horizontal bar sits on the bottom of that row. Each group has its own bar. The canvas bar is not that bar. Every card wears a one-pixel line. The armed card's line is sapphire blue. A focused merge lights its group. The footer holds Run and Stop. Run sends the focused card. Stop cancels the card that is running. A later member of that group still runs. The spinner sits on the right of that bar while a card is running. The user combo sits further to the right. The clock shows that running card. A quiet deck hides the spinner. A quiet deck is a canvas with no card running. The combo stays.
 
 Kind `t` appends to the session log above the footer. Kind `t` is a thought. The body is the lighter sapphire blue. A new block opens with a cyan model tag. The text stays off the card. `v` folds that text. `^` restores that text. Close hides the pane and keeps the log. Clear wipes the pane. Clear wipes the saved log. The north edge sets the height. New scrolls the canvas to the newest card.
 
@@ -68,6 +68,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 
 | | |
 | --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
 | **Author** | clayl (2026-10-23) |
 
 ## Type Summary
@@ -77,6 +78,9 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | struct | [`ThinkBlock`](chrome/struct.ThinkBlock.md) | The struct `ThinkBlock` is one thought in the session log. |
 | struct | [`ThinkLog`](chrome/struct.ThinkLog.md) | The struct `ThinkLog` is the session thought log. |
 | struct | [`ThinkChrome`](chrome/struct.ThinkChrome.md) | The struct `ThinkChrome` is the fold, the close, and the dragged height of a thought pane. |
+| struct | [`ThinkSeat`](chrome/struct.ThinkSeat.md) | The struct `ThinkSeat` is one thinking pane. |
+| struct | [`ThinkPipe`](chrome/struct.ThinkPipe.md) | The struct `ThinkPipe` writes one chunk on a pane the caller already holds. |
+| struct | [`ThinkPaneManager`](chrome/struct.ThinkPaneManager.md) | The struct `ThinkPaneManager` is the one store of thinking panes. |
 | struct | [`ThinkStrip`](chrome/struct.ThinkStrip.md) | The struct `ThinkStrip` is the result of painting one thought strip. |
 | struct | [`ThinkYaml`](chrome/struct.ThinkYaml.md) | The struct `ThinkYaml` is version 1 of the shared think file `aetheris-think.yaml`. |
 | struct | [`VtThinkYaml`](chrome/struct.VtThinkYaml.md) | The struct `VtThinkYaml` is version 1 of `aetheris-vt100-think.yaml`. |
@@ -250,7 +254,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | const | [`VIEW_MATCH_BG`](#constant-view_match_bg) | `VIEW_MATCH_BG` is the background color of a find match that is not the current match. The color is dark gold. The current match uses a different background. |
 | const | [`VIEW_BODY`](#constant-view_body) | `VIEW_BODY` is the span kind for reply text that is not a match. The value is 0. That span paints with [`VIEW_FIELD`] behind the text. |
 | const | [`VIEW_MATCH`](#constant-view_match) | `VIEW_MATCH` is the span kind for a find match that is not the current match. The value is 1. That span paints with [`VIEW_MATCH_BG`] behind the text. |
-| const | [`VIEW_CURRENT`](#constant-view_current) | `VIEW_CURRENT` is the span kind for the current find match. The value is 2. That span paints with a different background from [`VIEW_MATCH`]. // @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md |
+| const | [`VIEW_CURRENT`](#constant-view_current) | `VIEW_CURRENT` is the span kind for the current find match. The value is 2. That span paints with a different background from [`VIEW_MATCH`]. |
 | const | [`CLIPBOARD_BUSY`](#constant-clipboard_busy) | Swing's status word when the clipboard set fails. |
 | const | [`SELECT_MODEL_LABEL`](#constant-select_model_label) | `SELECT_MODEL_LABEL` is the Select model line on the console menu. A right-click on the terminal shows that line. The hover text for that action is [`SELECT_MODEL_TIP`]. |
 | const | [`SELECT_MODEL_TIP`](#constant-select_model_tip) | `SELECT_MODEL_TIP` is the hover text for Select model on the console menu. Select model opens the Model Config modal for this console. The next session comes back on that family. The next session comes back on that model. |
@@ -526,13 +530,13 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | const | [`MOOD_ASK_WORDS`](#constant-mood_ask_words) | `MOOD_ASK_WORDS` is the question in the clear-mood window. |
 | const | [`MOOD_YES`](#constant-mood_yes) | `MOOD_YES` is the word on the Yes button in the clear-mood window. |
 | const | [`MOOD_NO`](#constant-mood_no) | `MOOD_NO` is the word on the No button in the clear-mood window. |
-| const | [`MOOD_YES_TIP`](#constant-mood_yes_tip) | `MOOD_YES_TIP` is the hover text on the Yes button in the clear-mood window. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| const | [`MOOD_YES_TIP`](#constant-mood_yes_tip) | `MOOD_YES_TIP` is the hover text on the Yes button in the clear-mood window. |
 | const | [`MOOD_NO_TIP`](#constant-mood_no_tip) | `MOOD_NO_TIP` is the hover text on the No button in the clear-mood window. |
-| const | [`MOOD_SPIN_TIP`](#constant-mood_spin_tip) | `MOOD_SPIN_TIP` is the hover text on the spinner in the mood glass. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| const | [`MOOD_SPIN_TIP`](#constant-mood_spin_tip) | `MOOD_SPIN_TIP` is the hover text on the spinner in the mood glass. |
 | const | [`SSH_MOOD_YAML_FILE`](#constant-ssh_mood_yaml_file) | `SSH_MOOD_YAML_FILE` is the file name of the SSH mood checkbox record. |
 | const | [`MARK_CLASS`](#constant-mark_class) | The constant `MARK_CLASS` is the egui class on the I, E, P, and O marks. |
 | const | [`CANVAS_WEIGHT`](#constant-canvas_weight) | Open canvas share. Swing `setResizeWeight(0.72)`. A drag moves the live share. |
-| const | [`SPLIT_BAR_PX`](#constant-split_bar_px) | Grab bar. Swing `DIVIDER_SIZE` is 11. // @aa-sdd PK-829 docs/specs/common/roux.spec.md |
+| const | [`SPLIT_BAR_PX`](#constant-split_bar_px) | Grab bar. Swing `DIVIDER_SIZE` is 11. |
 | const | [`SPLIT_FILL`](#constant-split_fill) | Bar fill. Swing `DarkDivider` uses `0x3a3a3a`. |
 | const | [`SPLIT_EDGE`](#constant-split_edge) | Bar line. Swing `DarkDivider` uses `0x8a8a8a`. |
 | const | [`DIVIDER_SAVE_MS`](#constant-divider_save_ms) | Door write delay. Swing restarts a 400 ms timer on each move. |
@@ -576,7 +580,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | const | [`SINK_TOOL_CALL`](#constant-sink_tool_call) | `SINK_TOOL_CALL` is the role byte for a tool-call row in the sink. |
 | const | [`APPLE_THUMB_SHARE`](#constant-apple_thumb_share) | The handle is this share of the pane. It does not follow the scroll range. |
 | const | [`INPUT_EDGE_PAD`](#constant-input_edge_pad) | Inset of the input-edge caption from each side of the pane. |
-| const | [`CELL_CLEAR_PX`](#constant-cell_clear_px) | Air under the embedded line, and air between that line and the cell above. // @aa-sdd PK-1432 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| const | [`CELL_CLEAR_PX`](#constant-cell_clear_px) | Air under the embedded line, and air between that line and the cell above. |
 | const | [`FOOTER_EDGE_PX`](#constant-footer_edge_px) | Stroke on the button bar. The same grey as the divider line. |
 | const | [`FOOTER_ROUND`](#constant-footer_round) | Corner of the bar. A square with a short radius, not a pill. |
 | const | [`FOOTER_PAD`](#constant-footer_pad) | Space inside the stroke so the buttons do not touch it. |
@@ -593,6 +597,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | static | [`CANVAS_STRIP_RECT`](#constant-canvas_strip_rect) | `CANVAS_STRIP_RECT` is the test slot for the canvas thinking strip. |
 | static | [`CANVAS_CARD_CLIP`](#constant-canvas_card_clip) | `CANVAS_CARD_CLIP` is the test slot for the first card's clip. |
 | static | [`CANVAS_CARD_RECT`](#constant-canvas_card_rect) | `CANVAS_CARD_RECT` is the test slot for the first card's rectangle. |
+| static | [`MEMBER_PANES`](#constant-member_panes) | `MEMBER_PANES` is the test slot for each group member pane. |
 | static | [`PIN_MARK_RECT`](#constant-pin_mark_rect) | `PIN_MARK_RECT` is the test slot for the folded pin mark. |
 | static | [`PIN_ROW_RECT`](#constant-pin_row_rect) | `PIN_ROW_RECT` is the test slot for the pin row. |
 | static | [`THINK_GRIP_RECT`](#constant-think_grip_rect) | `THINK_GRIP_RECT` is the test slot for the thinking grip row. |
@@ -833,6 +838,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`tip_delay`](#function-tip_delay) | The function `tip_delay` returns how long a pointer must rest before a hover tip opens. |
 | fn | [`seat_button_hover`](#function-seat_button_hover) | The function `seat_button_hover` applies one hover delay and installs the emerald button theme once. |
 | fn | [`add_mood_choice`](#function-add_mood_choice) | The function `add_mood_choice` paints one Yes or No button and returns its response. |
+| fn | [`seat_modal`](#function-seat_modal) | The function `seat_modal` puts one open modal above the pin strip. |
 | fn | [`paint_clear_ask`](#function-paint_clear_ask) | The function `paint_clear_ask` paints the clear-mood question and returns the choice. |
 | fn | [`mood_owns`](#function-mood_owns) | The function `mood_owns` reports whether a wire id belongs to the mood glass. |
 | fn | [`take_mood_line`](#function-take_mood_line) | The function `take_mood_line` takes the typed mood line when Enter is accepted. |
@@ -883,6 +889,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`is_member`](#function-is_member) | The function `is_member` reports whether a card belongs to a group as a member. |
 | fn | [`merge_input_models`](#function-merge_input_models) | The function `merge_input_models` joins the short model names of the input cards in one merge. |
 | fn | [`member_width`](#function-member_width) | The function `member_width` returns the width of one member column. |
+| fn | [`member_pane_height`](#function-member_pane_height) | The function `member_pane_height` returns the height of one group member row. |
 | fn | [`gather_slots`](#function-gather_slots) | The function `gather_slots` builds the visual order of the cards. |
 | fn | [`card_armed`](#function-card_armed) | The function `card_armed` reports whether a card takes the armed edge. |
 | fn | [`card_edge`](#function-card_edge) | The function `card_edge` returns the border color of one card. |
@@ -935,7 +942,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`estimate_tokens`](#function-estimate_tokens) | The function `estimate_tokens` estimates a token count the way `HeuristicTokenCounter` does. |
 | fn | [`ssh_live_count`](#function-ssh_live_count) | The function `ssh_live_count` returns the token estimate for the focused pane. |
 | fn | [`keep_pending`](#function-keep_pending) | The function `keep_pending` stores the newest beat and drops a stale result. |
-| fn | [`seat_ready`](#function-seat_ready) | The function `seat_ready` stores a finished paint when that paint is still the newest one. // @aa-sdd PK-582 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| fn | [`seat_ready`](#function-seat_ready) | The function `seat_ready` stores a finished paint when that paint is still the newest one. |
 | fn | [`run_heat`](#function-run_heat) | The function `run_heat` counts one heatbar beat into a [`HeatPaint`]. |
 | fn | [`heat_worker`](#function-heat_worker) | The function `heat_worker` is the loop on the heatbar thread. |
 | fn | [`hash_mood`](#function-hash_mood) | The function `hash_mood` writes one [`MoodYaml`] into a `DefaultHasher`. |
@@ -1211,7 +1218,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`seat_inline_expanded`](#function-seat_inline_expanded) | `{ id: true, id2: true }`. A pair that is not a key blocks the file. |
 | fn | [`parse_expanded_yaml`](#function-parse_expanded_yaml) | A missing file is fresh. An empty file, or any version other than 1, is blocked. |
 | fn | [`render_expanded_yaml`](#function-render_expanded_yaml) | The function `render_expanded_yaml` writes an [`ExpandedYaml`] as version-1 text. |
-| fn | [`read_expanded_yaml`](#function-read_expanded_yaml) | The function `read_expanded_yaml` loads an [`ExpandedYaml`] from a file. // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md |
+| fn | [`read_expanded_yaml`](#function-read_expanded_yaml) | The function `read_expanded_yaml` loads an [`ExpandedYaml`] from a file. |
 | fn | [`write_expanded_yaml`](#function-write_expanded_yaml) | A blocked file is left alone. |
 | fn | [`load_expanded_file`](#function-load_expanded_file) | The function `load_expanded_file` loads the expanded-view file from the home directory. |
 | fn | [`hide_yaml_path`](#function-hide_yaml_path) | The function `hide_yaml_path` builds the path of the hide-collapsed file. |
@@ -1240,7 +1247,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`clear_deck`](#function-clear_deck) | Disconnect leaves one empty card. |
 | fn | [`clear_plate`](#function-clear_plate) | Clear leaves one empty Included card and a new cell id. |
 | fn | [`removal_indexes`](#function-removal_indexes) | The armed card, or every card of its group. Group 0 is one card. |
-| fn | [`delete_armed`](#function-delete_armed) | Delete stays off when the removal would leave the canvas empty. // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md |
+| fn | [`delete_armed`](#function-delete_armed) | Delete stays off when the removal would leave the canvas empty. |
 | fn | [`plan_delete`](#function-plan_delete) | The card that remains where the first removed card sat. A tail removal lands on the last card. |
 | fn | [`shift_index`](#function-shift_index) | The function `shift_index` maps an index across a deletion. |
 | fn | [`pipe_hits_delete`](#function-pipe_hits_delete) | The running card still sits on the Swing queue. A named card clears the chain. |
@@ -1253,9 +1260,9 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`fold_card`](#function-fold_card) | One card. A missing index leaves the deck alone. |
 | fn | [`collapse_keeps_the_card`](#function-collapse_keeps_the_card) | LOCK F-141. Collapse All, Expand All, and the per-cell fold keep the card. |
 | fn | [`release_fold`](#function-release_fold) | A fold releases the id. It never adds one. |
-| fn | [`conceal_collapsed`](#function-conceal_collapsed) | Hide Collapsed snapshots the folded ids. A fold must not call this. // @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md |
-| fn | [`run_chord`](#function-run_chord) | Ctrl+Enter runs. Plain Enter stays in the prompt. A busy card does not send. // @aa-sdd PK-1124 docs/specs/common/formal-plan.spec.md |
-| fn | [`duplicate_chord`](#function-duplicate_chord) | Ctrl+Shift+G copies the armed group. Swing binds `VK_G` with Ctrl and Shift. // @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md |
+| fn | [`conceal_collapsed`](#function-conceal_collapsed) | Hide Collapsed snapshots the folded ids. A fold must not call this. |
+| fn | [`run_chord`](#function-run_chord) | Ctrl+Enter runs. Plain Enter stays in the prompt. A busy card does not send. |
+| fn | [`duplicate_chord`](#function-duplicate_chord) | Ctrl+Shift+G copies the armed group. Swing binds `VK_G` with Ctrl and Shift. |
 | fn | [`notice_ink`](#function-notice_ink) | Yellow when the status is the group miss. Other lines keep the plate ink. |
 | fn | [`slide_skin`](#function-slide_skin) | Red for a hard miss. Yellow for any other miss. |
 | fn | [`unesc_miss`](#function-unesc_miss) | Swing `unesc` for a reason or a message. `\\n` is a newline. `\\\\` is a slash. |
@@ -1365,7 +1372,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`read_console_import`](#function-read_console_import) | Session import. A refusal is binary or empty. A failed read is the thrown message. |
 | fn | [`read_console_file`](#function-read_console_file) | Read a console file the way Java `readConsoleText` does. |
 | fn | [`rects_intersect`](#function-rects_intersect) | The function `rects_intersect` reports whether two rectangles overlap. |
-| fn | [`chooser_directory_live`](#function-chooser_directory_live) | A missing or empty folder, or a path that is not a directory, stays off the dialog. // @aa-sdd PK-994 docs/specs/common/stages.spec.md |
+| fn | [`chooser_directory_live`](#function-chooser_directory_live) | A missing or empty folder, or a path that is not a directory, stays off the dialog. |
 | fn | [`chooser_parent_dir`](#function-chooser_parent_dir) | The parent of an approved file, when that parent is a directory. |
 | fn | [`parse_chooser_report`](#function-parse_chooser_report) | `BOUNDS x y w h` and `FILE path`. A quiet line is a cancel. A non-positive size is dropped. |
 | fn | [`keep_chooser`](#function-keep_chooser) | Bounds on every close. The folder only when a file is approved. |
@@ -1387,7 +1394,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`air_gap_word`](#function-air_gap_word) | The function `air_gap_word` returns the air-gap word shown on the status line. |
 | fn | [`status_extra`](#function-status_extra) | Connection words stay on the link chip. A canvas word is the status-line tail. |
 | fn | [`aetheris_status_line`](#function-aetheris_status_line) | Java `statusLine`. The vault word is disk. The Rust vault is the file. |
-| fn | [`shell_mode_word`](#function-shell_mode_word) | VT100 or PTY. A missing or unknown token is VT100. AMWP stays off this strip. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| fn | [`shell_mode_word`](#function-shell_mode_word) | VT100 or PTY. A missing or unknown token is VT100. AMWP stays off this strip. |
 | fn | [`shell_term_type`](#function-shell_term_type) | TERM for that mode. Java `SshSessionMode.getTermType`. |
 | fn | [`shell_status_line`](#function-shell_status_line) | The VT100 strip. The wire word is the console mode. The Aetheris strip keeps AMWP. |
 | fn | [`status_facts_line`](#function-status_facts_line) | The function `status_facts_line` builds one status line for the notebook or the terminal. |
@@ -1399,7 +1406,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`icon_ground`](#function-icon_ground) | A light, dull corner is the rounded ground. The eye stays. |
 | fn | [`fill_icon_ground`](#function-fill_icon_ground) | The rounded ground becomes black. The eye stays. The plate stays square. |
 | fn | [`window_icon_rgba`](#function-window_icon_rgba) | Eye of Horus, then the casserole mark. RGBA at [`WINDOW_ICON_PX`]. |
-| fn | [`about_app_rgba`](#function-about_app_rgba) | Eye of Horus at [`ABOUT_APP_PX`]. The ground is black. The eye stays. // @aa-sdd PK-1332 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| fn | [`about_app_rgba`](#function-about_app_rgba) | Eye of Horus at [`ABOUT_APP_PX`]. The ground is black. The eye stays. |
 | fn | [`seat_about_mark`](#function-seat_about_mark) | One About mark as a texture. A failed decode leaves the seat empty. |
 | fn | [`decode_icon_rgba`](#function-decode_icon_rgba) | The function `decode_icon_rgba` decodes an image and scales it to a square. |
 | fn | [`window_icon`](#function-window_icon) | The function `window_icon` builds the window icon for the client window. |
@@ -1836,7 +1843,7 @@ Global switches for this window. Missing means the quiet plate. Not a vault colu
 
 | | |
 | --- | --- |
-| **Specification** | PK-1097 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1097 docs/specs/common/formal-plan.spec.md FINESSE:f-182 |
 
 ### CELL_VIEW_ROWS
 
@@ -2105,7 +2112,7 @@ const VIEW_MATCH: u8 = 1;
 const VIEW_CURRENT: u8 = 2;
 ```
 
-`VIEW_CURRENT` is the span kind for the current find match. The value is 2. That span paints with a different background from [`VIEW_MATCH`](#constant-view_match). // @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
+`VIEW_CURRENT` is the span kind for the current find match. The value is 2. That span paints with a different background from [`VIEW_MATCH`](#constant-view_match).
 
 ### CLIPBOARD_BUSY
 
@@ -2946,6 +2953,10 @@ const HOST_TIP: &str = "Host the SSH session dials.";
 ```
 
 `HOST_TIP` is the hover text on the host field of the connection bar. The field names the machine the SSH session dials. The label beside the field uses the same hover text.
+
+| | |
+| --- | --- |
+| **Specification** | F-157 |
 
 ### PORT_TIP
 
@@ -4555,7 +4566,7 @@ Free points around a button border. The clip and the next shape stay outside it.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1096 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183 |
 
 ### THINK_GRIP_INK
 
@@ -5294,7 +5305,7 @@ const MOOD_BUTTON_TIP: &str = "Mood opens the glass for the selected card. The g
 The tip says Mood opens the glass for the selected card.
 The tip says the glass uses that card's model.
 The tip says Enter sends the line.
-The tip says each send takes a new wire id, and a wire id is the identifier of that send. // @aa-sdd PK-1081 docs/specs/common/formal-plan.spec.md
+The tip says each send takes a new wire id, and a wire id is the identifier of that send.
 The tip says Approve saves the field and turns the switch on.
 The tip says Cancel keeps the saved string and the switch.
 The tip says a saved mood is already in the field.
@@ -5384,7 +5395,7 @@ const MOOD_ASK_TITLE: &str = "Clear mood";
 
 `MOOD_ASK_TITLE` is the title of the window that asks before a mood is cleared.
 The window opens from the Clear mood button.
-Yes and No sit in that window. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+Yes and No sit in that window.
 
 ### MOOD_ASK_WORDS
 
@@ -5430,7 +5441,7 @@ A click leaves the saved mood as it is.
 const MOOD_YES_TIP: &str = "Yes clears the saved string and turns the switch off. The field and this chat start empty. The dialog stays open.";
 ```
 
-`MOOD_YES_TIP` is the hover text on the Yes button in the clear-mood window. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+`MOOD_YES_TIP` is the hover text on the Yes button in the clear-mood window.
 The tip says Yes clears the saved string and turns the switch off.
 The tip says the field and this chat start empty.
 The tip says the dialog stays open.
@@ -5456,7 +5467,7 @@ The tip says the mood dialog stays open.
 const MOOD_SPIN_TIP: &str = "The spinner runs while a mood reply is in flight. The clock counts from that send.";
 ```
 
-`MOOD_SPIN_TIP` is the hover text on the spinner in the mood glass. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+`MOOD_SPIN_TIP` is the hover text on the spinner in the mood glass.
 The spinner sits on the glass footer while a reply is in flight.
 The tip says the spinner runs while a mood reply is in flight.
 The tip says the clock counts from that send.
@@ -5502,7 +5513,7 @@ Open canvas share. Swing `setResizeWeight(0.72)`. A drag moves the live share.
 const SPLIT_BAR_PX: f32 = 11.0;
 ```
 
-Grab bar. Swing `DIVIDER_SIZE` is 11. // @aa-sdd PK-829 docs/specs/common/roux.spec.md
+Grab bar. Swing `DIVIDER_SIZE` is 11.
 
 ### SPLIT_FILL
 
@@ -5642,7 +5653,7 @@ const ARROW_ICON: egui::Color32 = egui::Color32::from_rgb(0xdc, 0xdc, 0xdc);
 ```
 
 `ARROW_ICON` is the color of the triangle on a divider arrow button.
-The triangle is painted after the button fill, and it has no stroke. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+The triangle is painted after the button fill, and it has no stroke.
 The channels are red 220, green 220, and blue 220.
 
 ### WRAP_COLUMNS
@@ -5700,7 +5711,7 @@ const WRAP_MINUS_TIP: &str = "Fewer soft-wrap columns. When soft wrap is on, the
 
 `WRAP_MINUS_TIP` is the hover text on the minus button beside the soft-wrap count.
 The button sits in the inspector column.
-The tip says the button uses fewer soft-wrap columns. // @aa-sdd PK-1171 PK-1174 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+The tip says the button uses fewer soft-wrap columns.
 The tip says the inspector folds a line after this many characters when soft wrap is on.
 The tip says the count is saved with the shell.
 The tip says the smallest count is 1.
@@ -5715,7 +5726,7 @@ const WRAP_PLUS_TIP: &str = "More soft-wrap columns. When soft wrap is on, the i
 
 `WRAP_PLUS_TIP` is the hover text on the plus button beside the soft-wrap count.
 The button sits in the inspector column.
-The tip says the button uses more soft-wrap columns. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+The tip says the button uses more soft-wrap columns.
 The tip says the inspector folds a line after this many characters when soft wrap is on.
 The tip says the count is saved with the shell.
 
@@ -5786,7 +5797,7 @@ The field sits between that row's minus button and plus button.
 The tip says the field is the inspector line length.
 The tip says a typed number applies after a short pause.
 The tip says preview cuts each kept line to this count.
-The tip says the count is saved with the shell. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+The tip says the count is saved with the shell.
 
 ### SCOPE_PER_TURN
 
@@ -6004,7 +6015,7 @@ Inset of the input-edge caption from each side of the pane.
 const CELL_CLEAR_PX: f32 = 4.0;
 ```
 
-Air under the embedded line, and air between that line and the cell above. // @aa-sdd PK-1432 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+Air under the embedded line, and air between that line and the cell above.
 
 ### FOOTER_EDGE_PX
 
@@ -6072,9 +6083,9 @@ const HEAD_LOCK_OPEN: [&str; 16] = [
     "...#........#...",
     "...#........#...",
     "...#...##...#...",
-    "...#...##...#...", // @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
-    "...#........#...", // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-    "....########....", // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+    "...#...##...#...",
+    "...#........#...",
+    "....########....",
     "................",
     "................",
     "................",
@@ -6215,6 +6226,19 @@ static CANVAS_CARD_RECT: std::cell::Cell<Option<egui::Rect>> = const
 `CANVAS_CARD_RECT` is the test slot for the first card's rectangle.
 The slot is a thread-local cell, and it starts empty.
 A paint of card zero stores that card's rectangle.
+
+### MEMBER_PANES
+
+<a id="constant-member_panes"></a>
+
+```rust
+static MEMBER_PANES: std::cell::RefCell<Vec<(u64, egui::Rect, egui::Rect, egui::Vec2)>> =
+std::cell::RefCell::new(Vec::new());
+```
+
+`MEMBER_PANES` is the test slot for each group member pane.
+The slot is a thread-local cell, and it starts empty.
+A group paint stores the group id, the pane rectangle, the horizontal bar rectangle, and the content size.
 
 ### PIN_MARK_RECT
 
@@ -7228,6 +7252,10 @@ The arrow is a triangle. The triangle uses the same emerald green as a hovered b
 The triangle is centered in `rect`. The triangle width is seven tenths of `rect`. The triangle height is forty-five hundredths of `rect`.
 `ui` is the `egui` surface that receives the triangle. `_visuals` is not read. `_open` is not read.
 
+| | |
+| --- | --- |
+| **Specification** | F-154 |
+
 ### think_tag_word
 
 <a id="function-think_tag_word"></a>
@@ -7795,7 +7823,7 @@ The function `parse_vt_think_yaml` reads the text of `aetheris-vt100-think.yaml`
 A blank line and a `#` comment are skipped. A leading `---` line and a leading `%` line are skipped until the first key.
 An indented line before any key returns a blocked record. An indented line after a key is skipped. A line that is not a key returns a blocked record.
 The key `version` must be version 1. A missing version returns a blocked record. Any other version returns a blocked record.
-The key `closed` is read with `think_flag`. The key `height` is read with `think_kept_height`. Any other key is ignored. The thought text is not stored. // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+The key `closed` is read with `think_flag`. The key `height` is read with `think_kept_height`. Any other key is ignored. The thought text is not stored.
 
 ### render_vt_think_yaml
 
@@ -8348,7 +8376,7 @@ fn mood_kept_pair(width: &str, height: &str) -> Option<(i32, i32)>
 
 The function `mood_kept_pair` reads a dialog width and height that the mood file may keep.
 `width` and `height` are the texts after those colons. Each text is read with `yaml_scalar` and parsed as a floating-point number. A value that does not parse returns `None`. A value that is not finite returns `None`.
-Each number is truncated toward zero. The width must sit from 480 through 4000. The height must sit from 320 through 4000. A number outside its range returns `None`. // @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md
+Each number is truncated toward zero. The width must sit from 480 through 4000. The height must sit from 320 through 4000. A number outside its range returns `None`.
 
 ### parse_mood_yaml
 
@@ -8646,7 +8674,7 @@ fn mood_focus_card(cards: &[TurnCard], focus: usize) -> Option<usize>
 The function `mood_focus_card` returns the canvas cell the mood glass uses.
 `cards` is the deck. `focus` is the focused index. The Java client calls this read `moodCard`. An empty deck returns `None`.
 An index inside the deck returns that index. An index past the deck returns the last cell.
-// @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
 
 ### mood_glass_target
 
@@ -8663,7 +8691,7 @@ fn mood_glass_target(
 The function `mood_glass_target` returns the model the mood glass sends.
 `card` is the selected cell. `entry` is that cell's Grok settings, when the document has one. `pool_boot` is the boot id from `mint_pool_boot`. The Java client calls this `moodTarget`.
 The result is the `target` from `crate::model::mood_tune`. A pool card sends the word `pool`. A Grok card with no model id takes the model stored on `entry`.
-// @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
 
 ### mood_glass_title
 
@@ -8676,7 +8704,7 @@ fn mood_glass_title(target: &str) -> String
 The function `mood_glass_title` builds the title bar of the mood glass.
 `target` is the model word the glass will send. The short name comes from `short_model_name`. A blank short name keeps the word `Mood`.
 Any other short name returns `Mood`, a middle dot U+00B7, and that name.
-// @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
 
 ### mood_open_px
 
@@ -8714,7 +8742,7 @@ The function `mood_size_on_close` stores the mood dialog size when the glass clo
 `yaml` is the [`MoodYaml`](chrome/struct.MoodYaml.md) record. `size` is the width and height at the close, when the glass had one.
 A missing size leaves the stored pair alone and returns false.
 A size that `note_mood_size` refuses leaves the stored pair alone and returns false.
-A size inside the kept range is stored and the function returns true. // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
+A size inside the kept range is stored and the function returns true.
 
 ### approve_mood_line
 
@@ -8883,7 +8911,7 @@ fn mood_pane_px(text: &str, inner_chars: usize, line_px: i32, dialog_h: i32) -> 
 
 The function `mood_pane_px` returns the pixel height of the rising mood pane.
 `text` is the field. `inner_chars` is the wrap width. `line_px` is the height of one line, and a value below 1 is treated as 1. `dialog_h` is the dialog height.
-Text that trims to empty returns 0. The line count comes from `mood_wrap_lines`, and it is at least 1. The height is that count times the line height. The cap is half the dialog, or one line when the dialog height is not positive. A cap below one line becomes one line. Taller text is cut to that cap, and the rest scrolls. // @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md
+Text that trims to empty returns 0. The line count comes from `mood_wrap_lines`, and it is at least 1. The height is that count times the line height. The cap is half the dialog, or one line when the dialog height is not positive. A cap below one line becomes one line. Taller text is cut to that cap, and the rest scrolls.
 
 ### mood_slide_next
 
@@ -9057,6 +9085,18 @@ fn add_mood_choice(
 The function `add_mood_choice` paints one Yes or No button and returns its response.
 `ui` is the question row. `text` is the word. `fill` is the button face. `ink` is the word color at rest. The size comes from `mood_choice_size`, using the width of the letter M as one em. The height is at least the style's interact height.
 A pointer inside the predicted rectangle, while the row is enabled, paints the word in the emerald hover ink. Any other pointer keeps `ink`. The button uses that word color, the given fill, and the measured minimum size.
+
+### seat_modal
+
+<a id="function-seat_modal"></a>
+
+```rust
+fn seat_modal(ctx: &egui::Context, layer: egui::LayerId)
+```
+
+The function `seat_modal` puts one open modal above the pin strip.
+`ctx` is the egui context. `layer` is that modal's layer. The layer moves to the top of its order. That layer becomes the modal layer when it is the top one this frame.
+The pin strip stays on the foreground. It does not take this top. A modal on the middle order paints under that strip.
 
 ### paint_clear_ask
 
@@ -9362,7 +9402,7 @@ The function `accept_thought` appends kind `t` text onto the thinking log.
 `log` is the [`ThinkLog`](chrome/struct.ThinkLog.md). `cell` is the sixteen-byte id. `model` is the model word used for the header. `text` is the new thought text. Empty text returns without writing.
 The header is `think_tag_line` of `think_tag_word` for that model. The same open cell and the same header keep the open block. A different cell or a different model pushes a new block, stores the cell, and marks the log open.
 The text is appended to the last block's body.
-// @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-210
 
 ### close_thought
 
@@ -9445,7 +9485,7 @@ The function `think_tail_pin` reports whether the thinking scroll should jump to
 
 | | |
 | --- | --- |
-| **Specification** | PK-1073 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1073 docs/specs/common/formal-plan.spec.md FINESSE:f-219 |
 
 ### think_buffer_len
 
@@ -9460,7 +9500,7 @@ The function `think_buffer_len` counts the bytes in the thinking log.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1073 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1073 docs/specs/common/formal-plan.spec.md FINESSE:f-219 |
 
 ### paint_think_row
 
@@ -9499,7 +9539,7 @@ The height is the measured letter M plus the button padding above and below. The
 
 | | |
 | --- | --- |
-| **Specification** | PK-1096 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183 |
 
 ### button_lane_height
 
@@ -9527,7 +9567,7 @@ A clip whose right edge would pass its left edge sets the right edge equal to th
 
 | | |
 | --- | --- |
-| **Specification** | PK-1096 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183 |
 
 ### folded_control_height
 
@@ -9543,7 +9583,8 @@ A row sized from `egui::TextStyle::Button` ignores the column font and clips Clo
 
 | | |
 | --- | --- |
-| **Specification** | PK-1096 docs/specs/common/formal-plan.spec.md |
+| **Specification** | F-159 |
+| **Specification** | PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183 |
 | **Specification** | PK-1286 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
 
 ### notebook_strip_shown
@@ -9728,7 +9769,7 @@ The slices `groups`, `columns`, and `targets` are parallel rows in index order. 
 
 The scan uses the shortest of the three slices. A row is kept when its group matches the merge and its column is not zero. `short_model_name` supplies the name. An empty name is skipped.
 The separator is ` | `. The names stay in index order. The merge card is omitted because its column is zero.
-// @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-211
 
 ### member_width
 
@@ -9740,6 +9781,19 @@ fn member_width(bar: f32) -> f32
 
 The function `member_width` returns the width of one member column.
 The value `bar` is the top-bar width in pixels. The result adds [`MEMBER_EAST`](#constant-member_east). That constant is ten pixels.
+
+### member_pane_height
+
+<a id="function-member_pane_height"></a>
+
+```rust
+fn member_pane_height(content_h: f32, content_w: f32, pane_w: f32, bar_h: f32) -> f32
+```
+
+The function `member_pane_height` returns the height of one group member row.
+The value `content_h` is the height of the member cards. The value `content_w` is the width of those cards. The value `pane_w` is the width of the member pane. The value `bar_h` is the horizontal bar thickness.
+
+A content height below 1 becomes 1. The bar thickness is added only when the pane width is positive and the cards are wider than that pane. A width that is still not positive skips the bar. The added thickness puts the bar under the cards. The bar belongs to that pane.
 
 ### gather_slots
 
@@ -10119,8 +10173,8 @@ fn split_reserved(gap: f32, closed: bool) -> f32
 ```
 
 The function `split_reserved` returns the width held back for the divider bar and its gaps.
-The width `gap` is one side gap. The flag `closed` is true when the inspector is closed. // @aa-sdd PK-584 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-// @aa-sdd PK-584 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+The width `gap` is one side gap. The flag `closed` is true when the inspector is closed.
+
 A closed inspector returns [`SPLIT_BAR_PX`](#constant-split_bar_px) plus one gap. That bar is 11 pixels. An open inspector returns the bar plus two gaps. The closed pane drops the gap on its side.
 
 ### arrow_zones
@@ -10215,7 +10269,7 @@ A switch that is off returns `None`. The pane then keeps the quiet plate. A swit
 
 | | |
 | --- | --- |
-| **Specification** | PK-1097 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1097 docs/specs/common/formal-plan.spec.md FINESSE:f-182 |
 | **Specification** | PK-1287 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
 
 ### push_kept
@@ -10470,6 +10524,10 @@ The option `held` is the stored Roux integer. The string `memory` is the pane te
 A present integer stays the base. An empty unsent line adds nothing. A non-empty unsent line adds `estimate_tokens` of that line, as an `i32`.
 When nothing is held, an empty unsent line counts `memory` alone. An unsent line that `memory` already ends with is also counted from `memory` alone. The screen estimate then already includes the echoed line. Any other unsent line is concatenated after `memory`, and that joined text is counted.
 
+| | |
+| --- | --- |
+| **Specification** | L40 aa-sdd-source-prose.md FINESSE:f-177 |
+
 ### keep_pending
 
 <a id="function-keep_pending"></a>
@@ -10482,7 +10540,7 @@ The function `keep_pending` stores the newest beat and drops a stale result.
 The slot `slot` is the shared [`HeatSlot`](chrome/struct.HeatSlot.md). The beat `beat` is the edit just posted. The newest pending edit is the one that runs.
 
 `current` becomes `beat.seq`. `pending` becomes this beat. A ready result whose sequence number is not `current` is cleared. A ready result that still matches `current` is left in place.
-// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 
 ### seat_ready
 
@@ -10492,11 +10550,11 @@ The slot `slot` is the shared [`HeatSlot`](chrome/struct.HeatSlot.md). The beat 
 fn seat_ready(slot: &mut HeatSlot, paint: HeatPaint)
 ```
 
-The function `seat_ready` stores a finished paint when that paint is still the newest one. // @aa-sdd PK-582 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-The slot `slot` is the shared [`HeatSlot`](chrome/struct.HeatSlot.md). The paint `paint` is the result just counted. // @aa-sdd PK-583 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+The function `seat_ready` stores a finished paint when that paint is still the newest one.
+The slot `slot` is the shared [`HeatSlot`](chrome/struct.HeatSlot.md). The paint `paint` is the result just counted.
 
 The paint is stored when its sequence number equals `current` and `pending` is empty. Any other paint is not stored. An older result does not replace the slot.
-// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 
 ### run_heat
 
@@ -10512,7 +10570,7 @@ The beat `beat` is that edit. The frame that posted the beat does not run this f
 A canvas beat with `pin_active` builds a [`PinView`](chrome/struct.PinView.md) whose `active` flag is true and whose `shown` vector is copied from the beat. That path calls `inspect_visible_pane_gate`. A canvas beat with the pin off calls `inspect_body_pane_gate`. Both calls receive the card rows, the focus, the mood, the line width, the debug lines, the locks, and the budget.
 The canvas result uses the beat sequence number. `canvas` is true. `estimate`, `chars`, and `blocks` pass through `count_i32`. `body` is the pane text.
 A terminal beat sets `estimate` from `ssh_live_count`. A present `held` integer forces `chars` and `blocks` to zero. A missing `held` sets `chars` from the UTF-16 length of `memory` and `blocks` from `session_memory_lines`. Both of those counts pass through `count_i32`. `canvas` is false. `body` is empty.
-// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 
 ### heat_worker
 
@@ -11354,7 +11412,7 @@ The function `selected_heat_budget` returns the context window Token Calc opens 
 The arguments are the same inputs `token_models` uses. The row comes from `token_model_index`. The first known row does not win.
 
 A selected row whose window is known and above 0 returns that window. An unknown window returns 0. A known window of 0 or less returns 0. A missing row returns 0.
-// @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-207
 
 ### token_model_index
 
@@ -12661,8 +12719,8 @@ A reply that trims to empty uses [`PaneFace::EmptyReply`](chrome/enum.PaneFace.m
 
 ```rust
 fn paint_open_reply(
-    ui: &mut egui::Ui, // @aa-sdd PK-587 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-    reply: &str, // @aa-sdd PK-588 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    ui: &mut egui::Ui,
+    reply: &str,
     ink: egui::Color32,
     member: bool,
     fill: bool,
@@ -12861,7 +12919,7 @@ fn pin_enter_due(on: bool, lost: bool, enter: bool, seen: bool) -> (bool, bool)
 
 The function `pin_enter_due` reports whether this frame should commit Enter.
 The flag `on` is the pin box. The flag `lost` is the focus loss. The flag `enter` is the Enter key. The flag `seen` is true after an earlier frame of the same loss. The pair is the commit flag and the next `seen` flag. Enter commits on the frame the field loses focus.
-// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+
 The box off, or no loss, returns false and false. A loss that was already seen returns false and true, so that later frame does not commit. `seen` stays true until the loss ends. The first frame of a loss returns `pin_enter_commits` and true.
 
 ### apply_pin_clear
@@ -12906,13 +12964,13 @@ fn eligible_locks(marks: &[Mark], head_count: i32) -> Vec<usize>
 ```
 
 The function `eligible_locks` returns the cards that may show a lock.
-The slice `marks` is the mark of each card, from the top. The count `head_count` is the cap. Eligible cards come top first, skipping [`Mark::Excluded`](chrome/enum.Mark.md#member-excluded), and the list is capped by `head-count`. // @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+The slice `marks` is the mark of each card, from the top. The count `head_count` is the cap. Eligible cards come top first, skipping [`Mark::Excluded`](chrome/enum.Mark.md#member-excluded), and the list is capped by `head-count`.
 
 A count of 0 or less returns an empty vector. The walk keeps each other index in order. It stops when the list length reaches `head_count`.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1076 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1076 docs/specs/common/formal-plan.spec.md FINESSE:f-216 |
 
 ### repair_locks
 
@@ -12964,7 +13022,7 @@ The flag `locked` chooses the closed green shackle or the open grey shackle. A h
 
 | | |
 | --- | --- |
-| **Specification** | PK-1066 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1066 docs/specs/common/formal-plan.spec.md FINESSE:f-226 |
 
 ### paint_head_lock
 
@@ -12980,7 +13038,7 @@ The id is `aetheris.headlock` and the card index. The button is not a mark. It d
 
 | | |
 | --- | --- |
-| **Specification** | PK-1066 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1066 docs/specs/common/formal-plan.spec.md FINESSE:f-226 |
 
 ### paint_head_lock_divider
 
@@ -12995,7 +13053,7 @@ The function `paint_head_lock_divider` paints the line between the padlock and t
 
 | | |
 | --- | --- |
-| **Specification** | PK-1066 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1066 docs/specs/common/formal-plan.spec.md FINESSE:f-226 |
 
 ### seat_mark
 
@@ -13282,6 +13340,10 @@ The combo keeps 160, which is [`USER_COMBO_W`](#constant-user_combo_w). The spin
 
 The result is [`USER_COMBO_W`](#constant-user_combo_w).
 
+| | |
+| --- | --- |
+| **Specification** | F-156 |
+
 ### paint_east_capsule
 
 <a id="function-paint_east_capsule"></a>
@@ -13309,7 +13371,7 @@ The flag `open` means the bars are showing. A true flag returns `v`. A false fla
 
 | | |
 | --- | --- |
-| **Specification** | PK-992 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md |
+| **Specification** | PK-992 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md FINESSE:f-223 |
 
 ### bb_fold_line_ink
 
@@ -13378,7 +13440,7 @@ The rectangle `band` is the span under the columns. The bar is painted in its ow
 <a id="function-paint_bar_lane"></a>
 
 ```rust
-fn paint_bar_lane<R>( // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn paint_bar_lane<R>(
     ui: &mut egui::Ui,
     salt: &'static str,
     width: f32,
@@ -13407,7 +13469,7 @@ The mark is `bb_fold_mark` of false, so the glyph is `^`. The mark is the same b
 
 | | |
 | --- | --- |
-| **Specification** | PK-1069 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1069 docs/specs/common/formal-plan.spec.md FINESSE:f-223 |
 
 ### paint_canvas_footer
 
@@ -13453,7 +13515,7 @@ Folded, the thinking line replaces that square.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1069 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1069 docs/specs/common/formal-plan.spec.md FINESSE:f-223 |
 
 ### search_turn
 
@@ -13842,6 +13904,10 @@ fn session_tokens_of(piece: &ScopePiece) -> Option<(i32, i32, i32)>
 `used`, `chars`, and `blocks` from `session_tokens_result:`.
 None when the body is not that reply.
 
+| | |
+| --- | --- |
+| **Specification** | L40 aa-sdd-source-prose.md FINESSE:f-163 |
+
 ### parse_message_table
 
 <a id="function-parse_message_table"></a>
@@ -13872,12 +13938,12 @@ fn split_message_row(line: &str) -> Option<(String, String)>
 ```
 
 The function `split_message_row` splits one message-table row into a role and a text field.
-`line` is that row. // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+`line` is that row.
 The return is `None` when the row does not have the expected commas or the role is not a name.
 
 Commas inside a quoted field do not count. A backslash inside quotes skips the next character.
 The role is the text before the first comma outside quotes.
-The text field is everything after the third comma outside quotes. // @aa-sdd PK-1291 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+The text field is everything after the third comma outside quotes.
 If either comma is missing, the function returns `None`.
 If the first comma is the first character, the function returns `None`.
 
@@ -13933,7 +13999,7 @@ fn table_from_cards(cards: &[TurnCard]) -> String
 One user row and one assistant row per cell that has text. An empty cell stays out.
 A merge group is one pair. The user row joins the input prompts.
 The assistant row is the merge reply. JOIN lines stay.
-// @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-213
 
 ### push_transfer_pair
 
@@ -13963,7 +14029,7 @@ fn transfer_inputs(cards: &[TurnCard], group: u64) -> String
 
 Input prompts of one merge, in deck order, joined by a newline.
 An empty prompt stays out.
-// @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-213
 
 ### transfer_reply
 
@@ -13974,7 +14040,7 @@ fn transfer_reply(cards: &[TurnCard], group: u64) -> String
 ```
 
 The merge card's stored reply. JOIN lines stay.
-// @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-213
 
 ### seat_transferred
 
@@ -14476,7 +14542,7 @@ The extra text is appended after the cells.
 fn read_expanded_yaml(path: &std::path::Path) -> ExpandedYaml
 ```
 
-The function `read_expanded_yaml` loads an [`ExpandedYaml`](chrome/struct.ExpandedYaml.md) from a file. // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
+The function `read_expanded_yaml` loads an [`ExpandedYaml`](chrome/struct.ExpandedYaml.md) from a file.
 `path` is that file.
 
 If the file cannot be read, the return is [`ExpandedYaml::fresh`](chrome/struct.ExpandedYaml.md#method-fresh).
@@ -14861,7 +14927,7 @@ The armed card, or every card of its group. Group 0 is one card.
 fn delete_armed(cards: &[TurnCard], focus: usize) -> bool
 ```
 
-Delete stays off when the removal would leave the canvas empty. // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+Delete stays off when the removal would leave the canvas empty.
 
 ### plan_delete
 
@@ -15027,7 +15093,7 @@ A fold releases the id. It never adds one.
 fn conceal_collapsed(cards: &[TurnCard]) -> Vec<[u8; 16]>
 ```
 
-Hide Collapsed snapshots the folded ids. A fold must not call this. // @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md
+Hide Collapsed snapshots the folded ids. A fold must not call this.
 
 ### run_chord
 
@@ -15037,8 +15103,8 @@ Hide Collapsed snapshots the folded ids. A fold must not call this. // @aa-sdd P
 fn run_chord(enter: bool, ctrl: bool, running: bool, view_open: bool) -> bool
 ```
 
-Ctrl+Enter runs. Plain Enter stays in the prompt. A busy card does not send. // @aa-sdd PK-1124 docs/specs/common/formal-plan.spec.md
-An open reply window keeps the chord. // @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md
+Ctrl+Enter runs. Plain Enter stays in the prompt. A busy card does not send.
+An open reply window keeps the chord.
 
 ### duplicate_chord
 
@@ -15048,7 +15114,7 @@ An open reply window keeps the chord. // @aa-sdd PK-1123 docs/specs/common/forma
 fn duplicate_chord(g: bool, ctrl: bool, shift: bool) -> bool
 ```
 
-Ctrl+Shift+G copies the armed group. Swing binds `VK_G` with Ctrl and Shift. // @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md
+Ctrl+Shift+G copies the armed group. Swing binds `VK_G` with Ctrl and Shift.
 
 ### notice_ink
 
@@ -15113,7 +15179,7 @@ The function `banner_token` reports whether a fault word stays on the status lin
 `token` is that word. The match is exact.
 
 The words are `air-gap`, `too-large`, `burner denied`, `pipe`, and `no-model`.
-`engine-down` is not a banner. That token opens a yellow configuration notice. // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md
+`engine-down` is not a banner. That token opens a yellow configuration notice.
 Any of those words returns true.
 Any other word returns false.
 
@@ -15891,6 +15957,7 @@ fn card_menu(on_reply: bool, in_group: bool) -> &'static [&'static str]
 
 Menu lines. The reply omits Import. Duplicate group shows on a grouped card.
 A card outside a group omits that line. A merge cell and any member keep it.
+// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-140
 
 ### import_refused
 
@@ -16049,6 +16116,7 @@ fn console_menu_gates(
 Open as URL stays dark unless the highlight is a URL. Copy stays dark without a highlight.
 Paste stays dark when the clipboard has no string. Page, line, and clear stay lit.
 Clear on the alternate screen still leaves that grid as it stands.
+// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-143
 
 ### console_menu_tip
 
@@ -16452,7 +16520,7 @@ The far edges are added in `i64` so the sum does not wrap. The rectangles overla
 fn chooser_directory_live(raw: &str) -> Option<&str>
 ```
 
-A missing or empty folder, or a path that is not a directory, stays off the dialog. // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+A missing or empty folder, or a path that is not a directory, stays off the dialog.
 
 ### chooser_parent_dir
 
@@ -16633,7 +16701,7 @@ think string is set and the tag is the short model. Grok opens when
 grok_think is true and the tag is the Grok model. An empty tag reads
 ollama. The end of that turn closes the block even when the gate has shut.
 A different tag on this nil cell starts a header.
-// @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-210
 
 ### clear_canvas
 
@@ -16689,7 +16757,7 @@ fn ssh_heat_budget(managed: i32, engine: &str) -> i32
 The SSH heat budget. A managed count above zero is that count.
 A blank engine counts as ollama. An engine that contains ollama uses 131072.
 Any other engine uses zero. A canvas window is not this number.
-// @aa-sdd PK-994 docs/specs/common/stages.spec.md
+// @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
 
 ### air_gap_word
 
@@ -16730,7 +16798,7 @@ Java `statusLine`. The vault word is disk. The Rust vault is the file.
 fn shell_mode_word(token: &str) -> &'static str
 ```
 
-VT100 or PTY. A missing or unknown token is VT100. AMWP stays off this strip. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+VT100 or PTY. A missing or unknown token is VT100. AMWP stays off this strip.
 
 ### shell_term_type
 
@@ -16858,7 +16926,7 @@ Eye of Horus, then the casserole mark. RGBA at [`WINDOW_ICON_PX`](#constant-wind
 fn about_app_rgba() -> Option<(u32, u32, Vec<u8>)>
 ```
 
-Eye of Horus at [`ABOUT_APP_PX`](#constant-about_app_px). The ground is black. The eye stays. // @aa-sdd PK-1332 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+Eye of Horus at [`ABOUT_APP_PX`](#constant-about_app_px). The ground is black. The eye stays.
 
 ### seat_about_mark
 
@@ -17136,7 +17204,7 @@ fn focused_canvas_home(glass: &str, pane_user: &str, parked: bool) -> ScopeHome
 Focused canvas pieces stay on the glass when that pane's user is the glass,
 or when either name is empty. A different user with a seat stays on that seat.
 A different user with no seat waits on the pane.
-// @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
 
 ### glass_run_pane
 
@@ -17154,7 +17222,7 @@ fn glass_run_pane(
 The pane that carries this glass user's execute.
 An empty glass, or a focused user who is that glass, uses the focused pane.
 Another user's parked pane is that pane. A missing pane sends nothing.
-// @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
 
 ### think_salt
 
@@ -17165,7 +17233,7 @@ fn think_salt(user: &str) -> u64
 ```
 
 Scroll id for one canvas user's thinking pane.
-// @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
 
 ### feed_parts
 
@@ -17225,6 +17293,10 @@ fn send_file_button(ui: &mut egui::Ui, enabled: bool) -> egui::Response
 ```
 
 Send file keeps the full word. Three ems past the text clear the round edge.
+
+| | |
+| --- | --- |
+| **Specification** | F-157 |
 
 ### seat_plate_tabs
 

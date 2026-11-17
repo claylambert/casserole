@@ -11,6 +11,10 @@ enum Detach
 The `Detach` enum is the result of removing one leaf from a [`PaneNode`](enum.PaneNode.md) tree.
 [`Detach::Miss`](#member-miss) holds the tree that was searched, with that leaf still in place. [`Detach::Hit`](#member-hit) holds the sibling that replaces the removed split. `focus` on that hit is the pane id `first_leaf` finds on the sibling.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

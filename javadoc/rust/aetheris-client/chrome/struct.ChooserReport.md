@@ -16,6 +16,10 @@ The field `bounds` is x, y, width, and height when a bounds line has a positive 
 The field `file` is the chosen path.
 `file` is `None` when no path was printed.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

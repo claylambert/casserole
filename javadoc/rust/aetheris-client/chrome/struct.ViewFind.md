@@ -12,7 +12,7 @@ Find inside one reply window. The canvas search stays on the canvas.
 
 | | |
 | --- | --- |
-| **Specification** | PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
 
 ## Field Summary
 

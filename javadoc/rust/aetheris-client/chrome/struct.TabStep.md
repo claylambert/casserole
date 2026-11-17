@@ -11,6 +11,10 @@ struct TabStep
 The `TabStep` struct is one change to the product tab.
 `plate` is the [`Plate`](enum.Plate.md) to show. `restore` is true while a stored Aetheris choice is still waiting. `land` is true when this step should settle on Aetheris. `store` is a [`TabWord`](enum.TabWord.md) to write, or `None` when the stored word stays. `arm_console` is true when this step should give the keyboard to the console.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

@@ -11,6 +11,10 @@ struct PinView
 The struct `PinView` is one frame of the pin.
 The canvas and the inspector both read it. The field `active` says the filter is on. The field `shown` says which cards pass. The marks are not in here. The next frame builds another.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

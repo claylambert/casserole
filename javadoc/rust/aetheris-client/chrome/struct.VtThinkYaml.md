@@ -11,6 +11,10 @@ struct VtThinkYaml
 The struct `VtThinkYaml` is version 1 of `aetheris-vt100-think.yaml`.
 The thought text is not in this file. `blocked` is true when the file is not a version 1 map, and the bytes stay unwritten. `closed` is the closed mark. `height` is a kept height already inside 48 through 2000.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

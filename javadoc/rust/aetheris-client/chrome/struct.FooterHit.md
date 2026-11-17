@@ -13,7 +13,7 @@ The flags record clicks and edits. The positions record where the rows were pain
 
 | | |
 | --- | --- |
-| **Specification** | PK-1123 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1123 docs/specs/common/formal-plan.spec.md FINESSE:f-144 |
 
 ## Field Summary
 
@@ -42,7 +42,7 @@ The flags record clicks and edits. The positions record where the rows were pain
 | f32 | [`master_top`](#member-master_top) | The field `master_top` is the upper edge of the master row. A smaller value is higher on the plate. |
 | Option<f32> | [`tool_top`](#member-tool_top) | The field `tool_top` is the upper edge of the tool row. `None` means that row is hidden. |
 | Option<String> | [`user_pick`](#member-user_pick) | The field `user_pick` is a name that was chosen. `None` means the list is only being filled. |
-| egui::Rect | [`bar`](#member-bar) | The field `bar` is the outer rectangle of the rounded bar. The rectangle includes the margin outside the stroke. // @aa-sdd PK-1157 docs/specs/common/stages.spec.md |
+| egui::Rect | [`bar`](#member-bar) | The field `bar` is the outer rectangle of the rounded bar. The rectangle includes the margin outside the stroke. |
 
 ## Field Detail
 
@@ -260,7 +260,7 @@ The field `user_pick` is a name that was chosen. `None` means the list is only b
 bar: egui::Rect
 ```
 
-The field `bar` is the outer rectangle of the rounded bar. The rectangle includes the margin outside the stroke. // @aa-sdd PK-1157 docs/specs/common/stages.spec.md
+The field `bar` is the outer rectangle of the rounded bar. The rectangle includes the margin outside the stroke.
 
 ---
 

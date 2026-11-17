@@ -10,6 +10,10 @@ enum PaneLink
 
 One pane's link. It follows the session, not a canvas word.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

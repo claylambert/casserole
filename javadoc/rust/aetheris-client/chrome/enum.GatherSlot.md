@@ -13,6 +13,10 @@ The enum `GatherSlot` is one paint slot on the canvas.
 
 The field `group` is the group id. The field `members` lists member indexes in index order. The field `merge` is the merge index. `None` means the group has no merge card. A group occupies one slot. The slots follow the first card of each group.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

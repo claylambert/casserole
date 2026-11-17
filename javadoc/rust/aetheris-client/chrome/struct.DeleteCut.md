@@ -10,11 +10,15 @@ struct DeleteCut
 
 The struct `DeleteCut` is one planned deletion of cards from the canvas.
 A caller builds it with `plan_delete` and applies it with `apply_delete`.
-// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+
 The field `gone` is the indexes to remove, in canvas order.
 The field `focus` is the index the focus should take after those indexes are gone.
 The field `group` is true when the focused card belongs to a group.
 The field `cancel` is the 16-byte cell of a running card among the removed indexes, or `None` when none of them is running.
+
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
 
 ## Field Summary
 

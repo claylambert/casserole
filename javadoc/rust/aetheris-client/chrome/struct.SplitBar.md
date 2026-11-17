@@ -11,6 +11,10 @@ struct SplitBar
 The `SplitBar` struct is one draggable divider in a pane layout.
 `way` is the [`SplitWay`](enum.SplitWay.md) of that split. `rect` is the gap rectangle the pointer drags. `host` is the parent rectangle the ratio is measured against. `path` is the [`PaneSide`](enum.PaneSide.md) steps from the root to this split.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

@@ -13,9 +13,9 @@ A version other than 1 stays unread and is not overwritten. Not a vault column.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1097 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
-| **Specification** | PK-1070 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1097 docs/specs/common/formal-plan.spec.md FINESSE:f-182 |
+| **Specification** | PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-200 |
+| **Specification** | PK-1070 docs/specs/common/formal-plan.spec.md FINESSE:f-221 |
 
 ## Field Summary
 

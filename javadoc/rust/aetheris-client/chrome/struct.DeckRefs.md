@@ -15,7 +15,7 @@ The `DeckRefs` struct is a mutable view of one canvas deck while scope is applie
 
 | | |
 | --- | --- |
-| **Specification** | PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215 |
 
 ## Field Summary
 

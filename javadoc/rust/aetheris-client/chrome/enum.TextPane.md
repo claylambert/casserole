@@ -10,6 +10,10 @@ enum TextPane
 
 A text pane that can hold the wheel. The canvas is no seat.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

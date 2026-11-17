@@ -12,7 +12,7 @@ Version 1 of the shared mood yaml. Width and height stay for the glass.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-200 |
 
 ## Field Summary
 

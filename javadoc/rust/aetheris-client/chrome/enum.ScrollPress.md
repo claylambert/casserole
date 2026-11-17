@@ -10,6 +10,10 @@ enum ScrollPress
 
 Where the press landed. A folded brief is a card press.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

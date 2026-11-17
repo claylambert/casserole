@@ -10,6 +10,10 @@ enum TerminalSeat
 
 Quiet leaves the status. Word is a status. Write is the full turn text.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

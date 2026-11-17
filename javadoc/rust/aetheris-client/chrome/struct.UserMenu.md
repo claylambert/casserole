@@ -11,6 +11,10 @@ struct UserMenu
 The struct `UserMenu` is the pull-down list.
 The field `names` holds the sanitized names. The field `selected` is the focused name when that connection itself is listed. `None` means no listed connection is focused.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

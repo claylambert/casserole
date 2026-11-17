@@ -11,6 +11,10 @@ enum ClearChoice
 The enum `ClearChoice` is the result of the clear-mood question.
 `Stay` means the question is still open. `Yes` is the only path that drops the saved string. `No` leaves the mood. `Escape` leaves the mood. `Close` is the window close, and it leaves the mood.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

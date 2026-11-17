@@ -15,6 +15,10 @@ The field `status` is the status-line word.
 The field `slide` is an [`ErrorNotice`](struct.ErrorNotice.md) when a notice should open.
 `slide` is `None` when the fault stays on the status line.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

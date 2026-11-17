@@ -12,6 +12,10 @@ The enum `RunAsk` is the decision for one Run press.
 `Busy` means a card is already running, or the focused index is missing, or `working_blocks` returns nothing. `Excluded` means the focused card would send no rows, or a group produced no member frame. `TooLarge` means the frame does not fit.
 `Send` carries the bytes of one card. `Group` carries one frame for each member that would be sent.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

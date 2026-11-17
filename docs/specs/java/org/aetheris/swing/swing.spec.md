@@ -1274,3 +1274,8 @@ The mood modal keeps this user's size. The next open for that user sets the last
 
 The mood glass uses the Apple strip. The mood terminal scroll bar is the Apple strip. `MoodGlassWidget` builds that terminal. `armStrip` arms the bar. The screen place stays unkept. The names are `MoodGlassWidget` and `armStrip`. The files are [AetherisNotebookPanel.java](../../../../../../src/main/java/org/aetheris/swing/AetherisNotebookPanel.java) and [AppleScrollBar.java](../../../../../../src/main/java/org/casserole/app/ui/ssh/AppleScrollBar.java).
 **semantic-key:** PK-1439
+
+## A new thought opens a closed thinking pane
+
+A new thought opens a closed thinking pane. A fold stays folded. The user sets the fold. One canvas keeps one pane. Every cell on that canvas writes that pane. Close hides the pane. The text stays. The next thought opens that same pane. The manager drops a pane when that session ends. A reply leaves the pane in place. Deleting a cell leaves the canvas pane in place. The methods are `canvasKey`, `hideStrip`, `offer`, and `release`. The files are [ThinkSeats.java](../../../../../../src/main/java/org/aetheris/swing/ThinkSeats.java), [ThinkStrip.java](../../../../../../src/main/java/org/aetheris/swing/ThinkStrip.java), [ThinkStream.java](../../../../../../src/main/java/org/aetheris/swing/ThinkStream.java), and [ThinkPaneManager.java](../../../../../../src/main/java/org/aetheris/swing/ThinkPaneManager.java).
+**semantic-key:** PK-1455

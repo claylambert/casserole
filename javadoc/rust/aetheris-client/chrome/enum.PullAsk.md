@@ -10,6 +10,10 @@ enum PullAsk
 
 Empty leaves the deck. Seated is the index of the new Excluded card.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

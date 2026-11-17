@@ -10,6 +10,10 @@ struct ShellEnables
 
 Buttons on the open bar. New Term and Clear stay on. Close needs a second pane.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

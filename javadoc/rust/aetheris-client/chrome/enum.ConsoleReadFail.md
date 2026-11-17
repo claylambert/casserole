@@ -13,7 +13,7 @@ The `ConsoleReadFail` enum is why a console import did not return text.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1016 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79 |
 
 ## Enum Constant Summary
 

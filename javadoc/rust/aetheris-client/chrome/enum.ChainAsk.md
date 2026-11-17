@@ -19,6 +19,10 @@ The enum `ChainAsk` is the next action for a pipe chain.
 [`ChainAsk::NoModel`](#member-nomodel) means the card names no model.
 [`ChainAsk::Send`](#member-send) carries the cell id, the frame bytes, and the indexes still queued.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

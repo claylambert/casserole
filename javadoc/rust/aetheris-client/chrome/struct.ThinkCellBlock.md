@@ -11,6 +11,10 @@ struct ThinkCellBlock
 The struct `ThinkCellBlock` is one cell inside the `cells` block of the think yaml.
 `key` is the cell id. `lines` is the key line and the field lines under it.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

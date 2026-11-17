@@ -11,6 +11,10 @@ struct MoodFit
 The struct `MoodFit` is the result of fitting one send into a frame.
 The option `frame` holds the frame bytes when the fit produced a frame. The flag `dropped` records whether that fit dropped rows.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

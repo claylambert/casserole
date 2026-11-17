@@ -10,6 +10,10 @@ struct FrameSeat
 
 The rectangle and the maximized flag held until close.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

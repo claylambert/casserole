@@ -10,6 +10,10 @@ enum SessionFile
 
 The Roux table from one `session_export_result:` body. A failure stays off the file.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

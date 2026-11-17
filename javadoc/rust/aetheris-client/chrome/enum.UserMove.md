@@ -10,6 +10,10 @@ enum UserMove
 
 The enum `UserMove` is what a chosen name does to the vault on screen.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

@@ -10,6 +10,10 @@ enum SplitWay
 
 Which way a split runs. Horizontal is side by side.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

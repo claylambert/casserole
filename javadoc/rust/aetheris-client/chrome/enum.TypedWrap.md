@@ -11,6 +11,10 @@ enum TypedWrap
 The enum `TypedWrap` is the result of reading a typed column count.
 `Keep` restores the field. `Apply` carries the `u32` count to store.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

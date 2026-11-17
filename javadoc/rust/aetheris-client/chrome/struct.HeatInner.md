@@ -13,7 +13,7 @@ The field `slot` is a mutex around a [`HeatSlot`](struct.HeatSlot.md). A poisone
 
 | | |
 | --- | --- |
-| **Specification** | PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209 |
 
 ## Field Summary
 

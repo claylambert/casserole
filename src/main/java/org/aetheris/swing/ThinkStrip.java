@@ -49,16 +49,16 @@ import javax.swing.text.StyledDocument;
 import org.casserole.app.ui.ssh.SshClientTheme;
 import org.casserole.app.ui.ssh.ToolsThinking;
 
-// @aa-sdd PK-1154 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1152 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1146 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1135 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1004 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-998 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1154 docs/specs/common/formal-plan.spec.md FINESSE:f-102
+// @aa-sdd PK-1152 docs/specs/common/formal-plan.spec.md FINESSE:f-104
+// @aa-sdd PK-1146 docs/specs/common/formal-plan.spec.md FINESSE:f-111
+// @aa-sdd PK-1135 docs/specs/common/formal-plan.spec.md FINESSE:f-124
+// @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md FINESSE:f-219
+// @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
+// @aa-sdd PK-1021 docs/specs/common/formal-plan.spec.md FINESSE:f-74
+// @aa-sdd PK-1004 docs/specs/common/formal-plan.spec.md FINESSE:f-91
+// @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
+// @aa-sdd PK-998 docs/specs/common/formal-plan.spec.md FINESSE:f-97
 /**
  * The {@code ThinkStrip} class is the thinking pane.
  * One instance slides up from the bottom on the notebook.
@@ -66,6 +66,12 @@ import org.casserole.app.ui.ssh.ToolsThinking;
  * Another instance slides down from the top on a VT100 panel.
  * That instance puts the grip on the south edge.
  * The strip paints, folds, and slides.
+ * Close removes the pane from view.
+ * The text stays in that same pane.
+ * The manager keeps that pane.
+ * A later thought opens that pane.
+ * A fold stays folded.
+ * The manager drops the pane only when the session ends.
  * The {@link Host} decides which thought arrives.
  * The {@link Host} also decides whether the log is written.
  * The strip does not read a frame, a cell, or a channel.
@@ -77,7 +83,7 @@ public final class ThinkStrip extends JPanel {
     /**
      * The color is the armed card and the clear mark.
      * {@link #VT_THINK_BODY} lightens this color.
-     */ // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+     */
     static final Color SELECTION_SAPPHIRE = new Color(0x2e, 0x86, 0xff);
     /**
      * The color is the thinking body.
@@ -86,7 +92,7 @@ public final class ThinkStrip extends JPanel {
      */
     static final Color VT_THINK_BODY = lightenTowardWhite(SELECTION_SAPPHIRE, 33);
 
-    // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
     /**
      * The {@code Host} interface holds the facts the strip does not own.
      * A notebook host writes the vault log and the notebook chrome.
@@ -139,6 +145,17 @@ public final class ThinkStrip extends JPanel {
          * The host drops its open block.
          */
         void cleared();
+
+        /**
+         * The {@code noteSeat} method stores the shut flag and the fold for the scope on the glass.
+         * A shut scope is closed.
+         * A folded scope keeps the text on the grip row.
+         * The method does not write the chrome file.
+         *
+         * @param shut The flag is true when this scope is closed.
+         * @param folded The flag is true when this scope is folded.
+         */
+        void noteSeat(boolean shut, boolean folded);
     }
 
     private final SshClientTheme theme;
@@ -176,6 +193,18 @@ public final class ThinkStrip extends JPanel {
      */
     private boolean sessionOpen;
     private boolean opening;
+    /**
+     * The flag is true while Close is sliding the pane out of view.
+     * A thought clears the flag.
+     * The pane instance stays.
+     */
+    private boolean hiding;
+    /**
+     * The count identifies the current slide.
+     * Close and a thought each advance it.
+     * A slide tick from an older count does not hide the pane.
+     */
+    private int motion;
     private Timer timer;
 
     /**
@@ -187,7 +216,7 @@ public final class ThinkStrip extends JPanel {
      * The caret color is {@code 0x00D7FF}.
      * A null body font sizes the scroll pane from the current face, or from a 12-point monospaced face.
      * That scroll height is three line heights plus 8.
-     * The natural height is the preferred height while the user height is temporarily 0. // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+     * The natural height is the preferred height while the user height is temporarily 0.
      * A natural height below 48 becomes 48.
      * The strip starts invisible.
      * {@code keepsLog} true says the log stays between sessions and is not stored on the turn.
@@ -205,7 +234,7 @@ public final class ThinkStrip extends JPanel {
      * @param host The host owns the log and the chrome.
      */
     public ThinkStrip(SshClientTheme theme, Font bodyFont, int chromeSize, boolean keepsLog,
-            int userHeight, boolean closed, boolean alongTop, Host host) { // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+            int userHeight, boolean closed, boolean alongTop, Host host) {
         super(new BorderLayout());
         this.theme = theme;
         this.host = host;
@@ -231,11 +260,11 @@ public final class ThinkStrip extends JPanel {
         fitButton(toggle);
         /**
          * The listener calls {@link ThinkStrip#fold}.
-         * // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-         * @param e The event is the toggle click. // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+         *
+         * @param e The event is the toggle click.
          */
         toggle.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
             @Override
             public void actionPerformed(ActionEvent e) {
                 fold();
@@ -258,9 +287,9 @@ public final class ThinkStrip extends JPanel {
          * @param e The event is the Close click.
          */
         closeButton.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
             @Override
-            public void actionPerformed(ActionEvent e) { // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+            public void actionPerformed(ActionEvent e) {
                 hideStrip();
             }
         });
@@ -272,7 +301,7 @@ public final class ThinkStrip extends JPanel {
         scroll = new JScrollPane(pane);
         if (bodyFont != null) {
             setBodyFont(bodyFont);
-        } else { // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+        } else {
             Font face = pane.getFont();
             FontMetrics metrics = pane.getFontMetrics(face == null
                     ? new Font(Font.MONOSPACED, Font.PLAIN, 12) : face);
@@ -292,8 +321,8 @@ public final class ThinkStrip extends JPanel {
          * @param g The graphics is the grip surface.
          */
         grip = new JPanel(new BorderLayout()) {
-            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1000 PK-1022 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
+            // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -328,7 +357,7 @@ public final class ThinkStrip extends JPanel {
          * @param e The event is the mouse event on the grip.
          */
         grip.addMouseListener(new MouseAdapter() {
-            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
             @Override
             public void mousePressed(MouseEvent e) {
                 pressGrip(e);
@@ -346,7 +375,7 @@ public final class ThinkStrip extends JPanel {
          * @param e The event is the drag event.
          */
         grip.addMouseMotionListener(new MouseMotionAdapter() {
-            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
             @Override
             public void mouseDragged(MouseEvent e) {
                 dragGrip(e);
@@ -372,7 +401,7 @@ public final class ThinkStrip extends JPanel {
          * @param e The event is the clear click.
          */
         clearButton.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
             @Override
             public void actionPerformed(ActionEvent e) {
                 clearLog();
@@ -493,10 +522,10 @@ public final class ThinkStrip extends JPanel {
      * {@link #showTail} opens the pane.
      *
      * @param text The text is the chunk.
-     */ // @aa-sdd PK-1154 docs/specs/common/formal-plan.spec.md
-    public void append(String text) { // @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md
-        if (pane == null || text == null || text.length() == 0) { // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-            return; // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+     */
+    public void append(String text) {
+        if (pane == null || text == null || text.length() == 0) {
+            return;
         }
         pinTail();
         try {
@@ -528,6 +557,113 @@ public final class ThinkStrip extends JPanel {
     }
 
     /**
+     * The {@code folded} method reports the grip row.
+     * The flag is true when the text is hidden and the grip is showing.
+     *
+     * @return The return value is that flag.
+     */
+    boolean folded() {
+        return minimized;
+    }
+
+    /**
+     * The {@code shut} method reports Close.
+     * The flag is true when Close hid this strip.
+     *
+     * @return The return value is that flag.
+     */
+    boolean shut() {
+        return closed;
+    }
+
+    /**
+     * The {@code replaceLog} method replaces the pane text and does not move the strip.
+     * A null pane returns without writing.
+     * A null log is stored as empty.
+     * An empty log clears the document.
+     * A log with text is inserted, restyled, and pinned.
+     * A {@link BadLocationException} returns and leaves the strip where it was.
+     *
+     * @param text the stored log, or empty
+     */
+    void replaceLog(String text) {
+        if (pane == null) {
+            return;
+        }
+        String body = text == null ? "" : text;
+        try {
+            StyledDocument doc = pane.getStyledDocument();
+            doc.remove(0, doc.getLength());
+            if (body.length() > 0) {
+                doc.insertString(0, body, bodyAttrs());
+                restyleTags();
+                pinTail();
+            }
+        } catch (BadLocationException ex) {
+            return;
+        }
+    }
+
+    /**
+     * The {@code showScope} method paints one scope's shut flag and fold.
+     * The slide timer is stopped.
+     * A shut scope is hidden.
+     * An open folded scope shows the grip row.
+     * An open unfolded scope shows the text.
+     * The method does not write the chrome file.
+     * The method does not tell the host.
+     *
+     * @param shut The flag is true when this scope is closed.
+     * @param folded The flag is true when this scope is folded.
+     */
+    void showScope(boolean shut, boolean folded) {
+        if (timer != null) {
+            timer.stop();
+        }
+        opening = false;
+        slideHeight = -1;
+        closed = shut;
+        minimized = folded;
+        toggle.setText(minimized ? "^" : "v");
+        holdShortLabel(toggle);
+        if (shut) {
+            sessionOpen = false;
+            setVisible(false);
+            seatFoldedRow();
+            return;
+        }
+        sessionOpen = true;
+        setVisible(true);
+        seatFoldedRow();
+        scroll.setVisible(!minimized);
+        revalidate();
+        if (host != null) {
+            host.relayout();
+        }
+    }
+
+    /**
+     * The {@code hideGlass} method hides an open scope that has no text.
+     * The shut flag is cleared on the widget.
+     * The fold is cleared on the widget.
+     * The chrome file is not written.
+     * The host is not told.
+     */
+    void hideGlass() {
+        if (timer != null) {
+            timer.stop();
+        }
+        opening = false;
+        slideHeight = -1;
+        closed = false;
+        minimized = false;
+        toggle.setText("v");
+        holdShortLabel(toggle);
+        sessionOpen = false;
+        setVisible(false);
+    }
+
+    /**
      * The {@code showLog} method replaces the pane text with one stored log.
      * The method does not write the log back.
      * An empty log hides the strip.
@@ -538,7 +674,7 @@ public final class ThinkStrip extends JPanel {
      * @param text the stored log, or empty
      */
     void showLog(String text) {
-        // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md FINESSE:f-225
         if (pane == null) {
             return;
         }
@@ -636,6 +772,7 @@ public final class ThinkStrip extends JPanel {
     /**
      * The {@code getPreferredSize} method returns the height the strip is using.
      * A slide height at or above 0 wins.
+     * A hidden strip reports a height of 0.
      * An open strip with a user height above 0 uses that height.
      * That height is capped by {@link #ceiling}.
      * That height is also raised to {@link #naturalHeight} when it is shorter.
@@ -648,6 +785,9 @@ public final class ThinkStrip extends JPanel {
         Dimension pref = super.getPreferredSize();
         if (slideHeight >= 0) {
             return new Dimension(pref.width, slideHeight);
+        }
+        if (!isVisible()) {
+            return new Dimension(pref.width, 0);
         }
         if (!minimized && userHeight > 0) {
             int h = userHeight;
@@ -682,10 +822,10 @@ public final class ThinkStrip extends JPanel {
          * The runnable validates the scroll pane and moves the bar to its maximum.
          */
         SwingUtilities.invokeLater(new Runnable() {
-            // @aa-sdd PK-1154 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1154 docs/specs/common/formal-plan.spec.md FINESSE:f-102
+            // @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md FINESSE:f-219
+            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
+            // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
             @Override
             public void run() {
                 host.validate();
@@ -698,6 +838,8 @@ public final class ThinkStrip extends JPanel {
      * The {@code showTail} method marks the session open and shows the tail.
      * {@link #pinTail} runs again.
      * {@link #persistLog} writes the pane when this strip keeps a log.
+     * {@link #cancelHide} stops a Close that is still sliding.
+     * The same pane stays in the manager.
      * A folded strip becomes visible and stays folded.
      * An open strip calls {@link #openStrip}.
      * A host lays the surface out again.
@@ -706,8 +848,19 @@ public final class ThinkStrip extends JPanel {
         sessionOpen = true;
         pinTail();
         persistLog();
+        cancelHide();
         if (minimized) {
+            if (closed) {
+                closed = false;
+                note();
+                if (host != null) {
+                    host.saveChrome();
+                }
+            }
             setVisible(true);
+            if (host != null) {
+                host.noteSeat(false, true);
+            }
         } else {
             openStrip();
         }
@@ -738,6 +891,9 @@ public final class ThinkStrip extends JPanel {
         holdShortLabel(toggle);
         scroll.setVisible(!minimized);
         seatFoldedRow();
+        if (host != null) {
+            host.noteSeat(closed, minimized);
+        }
         revalidate();
         if (host != null) {
             host.relayout();
@@ -771,7 +927,7 @@ public final class ThinkStrip extends JPanel {
             detach(clearButton);
             grip.add(clearButton, BorderLayout.EAST);
             detach(toggle);
-            detach(scroll); // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+            detach(scroll);
             detach(closeButton);
             inner.add(toggle, BorderLayout.WEST);
             inner.add(scroll, BorderLayout.CENTER);
@@ -944,6 +1100,9 @@ public final class ThinkStrip extends JPanel {
         holdShortLabel(toggle);
         scroll.setVisible(!minimized);
         seatFoldedRow();
+        if (host != null) {
+            host.noteSeat(false, minimized);
+        }
         if (!open) {
             setVisible(true);
             slideHeight = seat.slide;
@@ -972,8 +1131,11 @@ public final class ThinkStrip extends JPanel {
     /**
      * The {@code openStrip} method shows an open strip.
      * The session is marked open.
+     * {@link #cancelHide} stops a Close that is still sliding.
      * A folded strip returns without sliding.
      * A visible strip with a height above 0 and no slide returns without sliding.
+     * A closed strip does not take that return.
+     * A strip whose parent has no height opens.
      * A slide that is already opening returns without starting another.
      * A closed mark is cleared, remembered, and written.
      * A strip that was hidden starts the slide at height 0.
@@ -982,16 +1144,20 @@ public final class ThinkStrip extends JPanel {
      */
     private void openStrip() {
         sessionOpen = true;
+        cancelHide();
         if (minimized) {
             return;
         }
-        if (isVisible() && getHeight() > 0 && slideHeight < 0) {
+        Container parent = getParent();
+        boolean parentShut = parent != null && parent.getHeight() < 1;
+        boolean rising = opening && timer != null && timer.isRunning();
+        boolean wasClosed = !rising && (closed || hiding || !isVisible() || getHeight() == 0 || parentShut);
+        if (!wasClosed && isVisible() && getHeight() > 0 && slideHeight < 0 && !parentShut) {
             return;
         }
-        if (opening && timer != null && timer.isRunning()) {
+        if (rising && !wasClosed) {
             return;
         }
-        boolean wasClosed = !isVisible() || getHeight() == 0;
         if (closed) {
             closed = false;
             note();
@@ -999,12 +1165,12 @@ public final class ThinkStrip extends JPanel {
                 host.saveChrome();
             }
         }
-        slideHeight = -1;
-        setVisible(true);
-        scroll.setVisible(true);
+        if (host != null) {
+            host.noteSeat(false, minimized);
+        }
         int target = userHeight > 0 ? userHeight : naturalHeight;
         if (target < 1) {
-            target = getPreferredSize().height;
+            target = naturalHeight;
         }
         if (target < 1) {
             target = 1;
@@ -1015,34 +1181,66 @@ public final class ThinkStrip extends JPanel {
         }
         if (wasClosed) {
             slideHeight = 0;
+            setVisible(true);
+            scroll.setVisible(true);
             opening = true;
             slide(target, true);
+            return;
         }
+        slideHeight = -1;
+        setVisible(true);
+        scroll.setVisible(true);
     }
 
     /**
-     * The {@code hideStrip} method closes the pane.
+     * The {@code hideStrip} method removes the pane from view.
+     * The text stays in the pane.
+     * The manager keeps the pane.
      * The session is marked closed.
-     * A strip that is already hidden returns without writing.
+     * A strip that is already hidden remembers the closed mark and returns.
      * The closed mark is set, remembered, and written.
      * A missing slide height starts from the current height.
      * The slide target is 0.
+     * A later thought opens this same pane.
      */
-    private void hideStrip() {
+    private void hideStrip() { // @aa-sdd PK-1455 docs/specs/java/org/aetheris/swing/swing.spec.md
         sessionOpen = false;
-        if (!isVisible()) {
-            return;
-        }
         closed = true;
         note();
         if (host != null) {
             host.saveChrome();
+            host.noteSeat(true, minimized);
         }
+        if (!isVisible() && !hiding) {
+            return;
+        }
+        hiding = true;
+        motion++;
         opening = false;
         if (slideHeight < 0) {
-            slideHeight = getHeight();
+            int h = getHeight();
+            slideHeight = h > 0 ? h : 0;
         }
         slide(0, false);
+    }
+
+    /**
+     * The {@code cancelHide} method stops a Close that is still sliding.
+     * A pane that is not closing returns without a change.
+     * The text stays in the pane.
+     * The manager keeps the pane.
+     * The current slide count advances so the old tick cannot hide the pane.
+     */
+    private void cancelHide() {
+        if (!hiding) {
+            return;
+        }
+        hiding = false;
+        motion++;
+        if (timer != null) {
+            timer.stop();
+        }
+        opening = false;
     }
 
     /**
@@ -1051,8 +1249,11 @@ public final class ThinkStrip extends JPanel {
      * A missing slide height starts from the current height.
      * The timer ticks every 16 milliseconds.
      * Each step is at least 12 pixels, or one quarter of the remaining span.
+     * A tick from an older slide count stops and leaves the pane.
      * A rising slide stops at the target.
-     * A falling slide stops at the target, hides the strip, and restores the open row.
+     * A falling slide stops at the target and hides the strip when Close is still current.
+     * A falling slide that lost to a thought leaves the pane in view.
+     * The text stays in the pane.
      * A host lays the surface out again on each tick and when the slide ends.
      *
      * @param target The target is the height in pixels.
@@ -1065,16 +1266,22 @@ public final class ThinkStrip extends JPanel {
         if (slideHeight < 0) {
             slideHeight = getHeight();
         }
+        final int mine = motion;
         /**
          * The listener steps the slide height toward the target.
          * The timer stops when the height reaches the target.
+         * An older slide count stops without hiding the pane.
          *
          * @param e The event is the timer tick.
          */
         timer = new Timer(16, new ActionListener() {
-            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (mine != motion) {
+                    ((Timer) e.getSource()).stop();
+                    return;
+                }
                 int h = slideHeight < 0 ? getHeight() : slideHeight;
                 int span = target > h ? target - h : h - target;
                 int step = Math.max(12, span / 4);
@@ -1090,24 +1297,35 @@ public final class ThinkStrip extends JPanel {
                 if (host != null) {
                     host.relayout();
                 }
-                if (next == target) {
-                    ((Timer) e.getSource()).stop();
-                    opening = false;
-                    if (!rising) {
-                        setVisible(false);
-                        slideHeight = -1;
-                        minimized = false;
-                        toggle.setText("v");
-                        holdShortLabel(toggle);
-                        scroll.setVisible(true);
-                        seatFoldedRow();
-                    } else {
-                        slideHeight = -1;
+                if (next != target) {
+                    return;
+                }
+                ((Timer) e.getSource()).stop();
+                opening = false;
+                if (mine != motion) {
+                    return;
+                }
+                if (!rising) {
+                    if (!hiding) {
+                        return;
                     }
-                    revalidate();
+                    hiding = false;
+                    setVisible(false);
+                    slideHeight = -1;
+                    minimized = false;
+                    toggle.setText("v");
+                    holdShortLabel(toggle);
+                    scroll.setVisible(true);
+                    seatFoldedRow();
                     if (host != null) {
-                        host.relayout();
+                        host.noteSeat(true, false);
                     }
+                } else {
+                    slideHeight = -1;
+                }
+                revalidate();
+                if (host != null) {
+                    host.relayout();
                 }
             }
         });

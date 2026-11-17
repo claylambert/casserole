@@ -11,6 +11,10 @@ struct ThinkYaml
 The struct `ThinkYaml` is version 1 of the shared think file `aetheris-think.yaml`.
 `blocked` is true when the file is not a version 1 map, and the bytes stay unwritten. `closed` is the closed mark. `height` is a kept height already inside 48 through 2000. `cells` is the `cells` block, including its key line, and it stays the text that was read. `extras` holds the other top-level blocks in the order they were read.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

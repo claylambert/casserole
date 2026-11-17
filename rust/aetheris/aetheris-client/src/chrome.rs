@@ -26,7 +26,7 @@
 //!
 //! A redraw paints the keys already in hand. A redraw then commits a paint budget. The budget paints canvas pieces first. The budget then paints one terminal chunk. The rest stays queued.
 //!
-//! Members of one group sit on a sideways row. Each member is as wide as its top bar plus 10 pixels. The merge stays the column width under that row. The block takes the column width. Every card wears a one-pixel line. The armed card's line is sapphire blue. A focused merge lights its group. The footer holds Run and Stop. Run sends the focused card. Stop cancels the card that is running. A later member of that group still runs. The spinner sits on the right of that bar while a card is running. The user combo sits further to the right. The clock shows that running card. A quiet deck hides the spinner. A quiet deck is a canvas with no card running. The combo stays.
+//! Members of one group sit on a sideways row. Each member is as wide as its top bar plus 10 pixels. The merge stays the column width under that row. The block takes the column width. The row's horizontal bar sits on the bottom of that row. Each group has its own bar. The canvas bar is not that bar. Every card wears a one-pixel line. The armed card's line is sapphire blue. A focused merge lights its group. The footer holds Run and Stop. Run sends the focused card. Stop cancels the card that is running. A later member of that group still runs. The spinner sits on the right of that bar while a card is running. The user combo sits further to the right. The clock shows that running card. A quiet deck hides the spinner. A quiet deck is a canvas with no card running. The combo stays.
 //!
 //! Kind `t` appends to the session log above the footer. Kind `t` is a thought. The body is the lighter sapphire blue. A new block opens with a cyan model tag. The text stays off the card. `v` folds that text. `^` restores that text. Close hides the pane and keeps the log. Clear wipes the pane. Clear wipes the saved log. The north edge sets the height. New scrolls the canvas to the newest card.
 //!
@@ -70,6 +70,7 @@
 //!
 //! Collapse All keeps the one-line card on the deck. Expand All keeps the one-line card on the deck. The per-cell fold keeps the one-line card on the deck. Those three controls do not add an id to the conceal set. The conceal set is the set of card ids that Hide Collapsed stores. Hide Collapsed is the only path that adds an id. A later version of this window must not pass the fold bit into `shown_slots`. The function `shown_slots` chooses which cards stay on the canvas.
 //!
+//! @aa-sdd L37 rust-aetheris-client.draft.001.md
 //! @author clayl (2026-10-23)
 
 use std::collections::VecDeque;
@@ -169,7 +170,7 @@ const EXPANDED_YAML_FILE: &str = "aetheris-expanded.yaml";
 /// Hide Collapsed for this window. Missing means Show. Not a vault column.
 const HIDE_YAML_FILE: &str = "aetheris-hide.yaml";
 /// Global switches for this window. Missing means the quiet plate. Not a vault column.
-/// @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md FINESSE:f-182
 const SETTINGS_YAML_FILE: &str = "aetheris-settings.yaml";
 /// Default open-cell rows. A missing door key is this count. The footer count replaces it.
 const CELL_VIEW_ROWS: usize = 4;
@@ -230,7 +231,7 @@ const VIEW_MATCH_BG: egui::Color32 = egui::Color32::from_rgb(0x6b, 0x5a, 0x1e);
 const VIEW_BODY: u8 = 0;
 /// `VIEW_MATCH` is the span kind for a find match that is not the current match. The value is 1. That span paints with [`VIEW_MATCH_BG`] behind the text.
 const VIEW_MATCH: u8 = 1;
-/// `VIEW_CURRENT` is the span kind for the current find match. The value is 2. That span paints with a different background from [`VIEW_MATCH`]. // @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
+/// `VIEW_CURRENT` is the span kind for the current find match. The value is 2. That span paints with a different background from [`VIEW_MATCH`].
 const VIEW_CURRENT: u8 = 2;
 /// Swing's status word when the clipboard set fails.
 const CLIPBOARD_BUSY: &str = "clipboard busy";
@@ -550,6 +551,7 @@ const CONTROL_FOLD_TIP: &str = "Fold the connection bar. The fields leave the wi
 /// Connect and Disconnect sit on the row below. Connect folds the bar. A resize while connected folds the bar. Disconnect opens the bar.
 /// The window does not store that choice.
 const CONTROL_SHOW_TIP: &str = "Show the connection bar. Host, port, user, and password sit on the first row. Connect and Disconnect sit on the row below. Connect folds the bar. A resize while connected folds it. Disconnect opens it. The choice is not saved.";
+/// @aa-sdd F-157
 /// `HOST_TIP` is the hover text on the host field of the connection bar. The field names the machine the SSH session dials. The label beside the field uses the same hover text.
 const HOST_TIP: &str = "Host the SSH session dials.";
 /// `PORT_TIP` is the hover text on the port field of the connection bar. The field is the port the SSH session dials. The label beside the field uses the same hover text.
@@ -811,7 +813,7 @@ const PULL_EMPTY: &str = "no terminal line";
 /// `TERMINAL_LABEL` is the word on the To terminal button.
 /// The button sits on the canvas tool row when that row is open.
 /// A click starts a write of the focused turn into the terminal session.
-const TERMINAL_LABEL: &str = "To terminal"; // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+const TERMINAL_LABEL: &str = "To terminal";
 /// `TERMINAL_TIP` is the hover text on the To terminal button.
 /// The tip says the button writes the focused turn into the terminal session.
 /// The tip says the reply is sent when the turn has one.
@@ -1021,6 +1023,7 @@ const THINK_TAG_CAP: usize = 80;
 /// The arrow is a triangle. The triangle uses the same emerald green as a hovered button word. That green is `#00FF66`.
 /// The triangle is centered in `rect`. The triangle width is seven tenths of `rect`. The triangle height is forty-five hundredths of `rect`.
 /// `ui` is the `egui` surface that receives the triangle. `_visuals` is not read. `_open` is not read.
+/// @aa-sdd F-154
 fn emerald_combo_arrow(
     ui: &egui::Ui,
     rect: egui::Rect,
@@ -1038,16 +1041,20 @@ fn emerald_combo_arrow(
     ));
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ThinkBlock` is one thought in the session log.
 /// The field `tag` is the model line. The field `body` is the thought text. The body is painted in the lighter sapphire blue.
+#[derive(Clone)]
 struct ThinkBlock {
     tag: String,
     body: String,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ThinkLog` is the session thought log.
 /// The log is not stored on a turn. The field `blocks` holds each [`ThinkBlock`]. The field `cell` is the 16-byte id of the thought that is open. The field `live` is true while a block is still receiving text.
 // @aa-sdd PK-589 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+#[derive(Clone)]
 struct ThinkLog {
     blocks: Vec<ThinkBlock>,
     cell: [u8; 16],
@@ -1159,7 +1166,7 @@ const THINK_GRIP: f32 = 18.0;
 /// Folded canvas control line. The bottoms sit this far above the outer top of BB1.
 const FOLDED_LINE_LIFT: f32 = 4.0;
 /// Free points around a button border. The clip and the next shape stay outside it.
-/// @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183
 const BUTTON_CLEAR_PX: f32 = 2.0;
 /// Grip line. Swing paints `0x8a8a8a`.
 const THINK_GRIP_INK: egui::Color32 = egui::Color32::from_rgb(0x8a, 0x8a, 0x8a);
@@ -1243,6 +1250,7 @@ const VT_GRIP_TIP: &str = "Drag the south edge to set the height of the thinking
 /// The SSH console starts this far under the Clear button while the strip is open.
 const VT_BELOW_CLEAR: f32 = 3.0;
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ThinkChrome` is the fold, the close, and the dragged height of a thought pane.
 /// The log text stays on [`ThinkLog`]. This struct does not hold that text.
 #[derive(Clone, Copy)]
@@ -1270,6 +1278,196 @@ impl ThinkChrome {
     }
 }
 
+/// The struct `ThinkSeat` is one thinking pane.
+/// `log` is the text. `chrome` is the fold, the close, and the height.
+/// The seat stays for the session. Close changes `chrome` and leaves `log`.
+struct ThinkSeat {
+    log: ThinkLog,
+    chrome: ThinkChrome,
+}
+
+/// The struct `ThinkPipe` writes one chunk on a pane the caller already holds.
+/// The log is that pane. A different log is a different pane.
+/// `offer` starts a header when the block is new, the cell differs, or the model word differs.
+/// The same cell and the same word append. `finish` ends the block and leaves the log.
+/// `finish` does not fold the pane and does not clear the log.
+struct ThinkPipe;
+
+impl ThinkPipe {
+    /// The function `offer` writes `text` on `log` for `cell` under `model`.
+    /// Empty text returns without a write. The write is `accept_thought`.
+    fn offer(log: &mut ThinkLog, cell: [u8; 16], model: &str, text: &str) {
+        accept_thought(log, cell, model, text);
+    }
+
+    /// The function `finish` ends the open block on `log`.
+    /// The blocks stay. The fold is not an argument.
+    fn finish(log: &mut ThinkLog) {
+        close_thought(log);
+    }
+}
+
+/// The struct `ThinkPaneManager` is the one store of thinking panes.
+/// A canvas key is the user, a separator, and `k:` plus the canvas id.
+/// An SSH key is the user, a separator, and `s:` plus the pane id.
+/// The same key returns the same seat. A different user has a different seat.
+/// `offer` writes that seat and opens it. A fold stays folded.
+/// `finish` ends the block and leaves the seat. `hide` closes the chrome and leaves the seat.
+/// `release` drops the seat. Close does not call `release`. A reply does not call `release`.
+struct ThinkPaneManager {
+    seats: std::collections::HashMap<String, ThinkSeat>,
+}
+
+impl ThinkPaneManager {
+    /// The function `new` builds an empty manager.
+    fn new() -> Self {
+        Self {
+            seats: std::collections::HashMap::new(),
+        }
+    }
+
+    /// The function `canvas_key` joins a user and a canvas id.
+    /// `user` is the sanitized user. `canvas_id` is the canvas id.
+    /// The separator is U+0001. The canvas mark is `k:`.
+    fn canvas_key(user: &str, canvas_id: &str) -> String {
+        format!("{user}\u{1}k:{canvas_id}")
+    }
+
+    /// The function `ssh_key` joins a user and an SSH pane id.
+    /// `user` is the sanitized user. `surface_id` is the pane id.
+    /// The separator is U+0001. The pane mark is `s:`.
+    fn ssh_key(user: &str, surface_id: &str) -> String {
+        format!("{user}\u{1}s:{surface_id}")
+    }
+
+    /// The function `contains` reports whether `key` has a seat.
+    fn contains(&self, key: &str) -> bool {
+        self.seats.contains_key(key)
+    }
+
+    /// The function `acquire_canvas` returns the canvas seat for `key`, creating it once.
+    fn acquire_canvas(&mut self, key: &str) -> &mut ThinkSeat { // @aa-sdd PK-1457 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        self.seats.entry(key.to_string()).or_insert_with(|| ThinkSeat {
+            log: ThinkLog::new(),
+            chrome: ThinkChrome::new(),
+        })
+    }
+
+    /// The function `acquire_ssh` returns the SSH seat for `key`, creating it once.
+    /// `seed_height` is the file height used the first time. A later call keeps the seat height.
+    fn acquire_ssh(&mut self, key: &str, seed_height: f32) -> &mut ThinkSeat {
+        self.seats.entry(key.to_string()).or_insert_with(|| {
+            let mut chrome = ThinkChrome::new();
+            chrome.height = seed_height;
+            ThinkSeat {
+                log: ThinkLog::new(),
+                chrome,
+            }
+        })
+    }
+
+    /// The function `insert_canvas` stores a loaded canvas seat at `key`.
+    /// A key that already has a seat keeps that seat.
+    fn insert_canvas(&mut self, key: &str, log: ThinkLog, chrome: ThinkChrome) {
+        self.seats.entry(key.to_string()).or_insert(ThinkSeat { log, chrome });
+    }
+
+    /// The function `rekey` moves a seat from `from` to `to`.
+    /// A missing source stays. A destination that already has a seat stays.
+    /// The same two keys stay.
+    fn rekey(&mut self, from: &str, to: &str) {
+        if from == to || !self.seats.contains_key(from) || self.seats.contains_key(to) {
+            return;
+        }
+        if let Some(seat) = self.seats.remove(from) {
+            self.seats.insert(to.to_string(), seat);
+        }
+    }
+
+    /// The function `blocks` copies the log blocks for `key`.
+    /// A missing key returns an empty list and does not create a seat.
+    fn blocks(&self, key: &str) -> Vec<ThinkBlock> {
+        match self.seats.get(key) {
+            Some(seat) => seat.log.blocks.clone(),
+            None => Vec::new(),
+        }
+    }
+
+    /// The function `chrome_copy` copies the chrome for `key`.
+    /// A missing key returns a closed [`ThinkChrome`] and does not create a seat.
+    fn chrome_copy(&self, key: &str) -> ThinkChrome {
+        match self.seats.get(key) {
+            Some(seat) => seat.chrome,
+            None => ThinkChrome::new(),
+        }
+    }
+
+    /// The function `write_chrome` stores `chrome` on an existing seat.
+    /// A missing key returns without a new seat.
+    fn write_chrome(&mut self, key: &str, chrome: ThinkChrome) {
+        if let Some(seat) = self.seats.get_mut(key) {
+            seat.chrome = chrome;
+        }
+    }
+
+    /// The function `offer` writes one chunk on the seat for `key` and opens that seat.
+    /// The write goes through [`ThinkPipe::offer`]. Empty text does not open the seat.
+    /// A fold stays folded. The seat stays in the manager.
+    fn offer(&mut self, key: &str, cell: [u8; 16], model: &str, text: &str) {
+        if text.is_empty() {
+            return;
+        }
+        let seat = self.acquire_canvas(key);
+        ThinkPipe::offer(&mut seat.log, cell, model, text);
+        if !seat.log.blocks.is_empty() {
+            reveal_think(&mut seat.chrome);
+        }
+    }
+
+    /// The function `finish` ends the open block on `key`.
+    /// A missing key returns. The seat stays. The chrome stays.
+    fn finish(&mut self, key: &str) {
+        if let Some(seat) = self.seats.get_mut(key) {
+            ThinkPipe::finish(&mut seat.log);
+        }
+    }
+
+    /// The function `hide` takes the seat off the plate.
+    /// A missing key returns. The log stays. The seat stays.
+    fn hide(&mut self, key: &str) {
+        if let Some(seat) = self.seats.get_mut(key) {
+            close_think(&mut seat.chrome);
+        }
+    }
+
+    /// The function `clear_log` wipes the text and leaves the strip open.
+    /// A missing key returns. A fold stays folded.
+    fn clear_log(&mut self, key: &str) {
+        if let Some(seat) = self.seats.get_mut(key) {
+            clear_think(&mut seat.log, &mut seat.chrome);
+        }
+    }
+
+    /// The function `release` drops the seat for `key`.
+    /// A missing key returns. This is the session end.
+    fn release(&mut self, key: &str) { // @aa-sdd PK-1457 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        if key.is_empty() {
+            return;
+        }
+        self.seats.remove(key);
+    }
+
+    /// The function `log_text` renders the log for `key`.
+    /// A missing key returns an empty string and does not create a seat.
+    fn log_text(&self, key: &str) -> String {
+        match self.seats.get(key) {
+            Some(seat) => think_log_text(&seat.log.blocks),
+            None => String::new(),
+        }
+    }
+}
+
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ThinkStrip` is the result of painting one thought strip.
 /// `rect` is the strip rectangle. `clear` is true when Clear was clicked. `closed` is true when Close was clicked and the pane is already hidden. `kept_height` is the height in pixels when the drag ended on a height the file keeps.
 struct ThinkStrip {
@@ -1555,6 +1753,7 @@ fn store_think_file(log: &ThinkLog) {
     let _ = write_think_log(&think_log_path(&home), &think_log_text(&log.blocks));
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ThinkYaml` is version 1 of the shared think file `aetheris-think.yaml`.
 /// `blocked` is true when the file is not a version 1 map, and the bytes stay unwritten. `closed` is the closed mark. `height` is a kept height already inside 48 through 2000. `cells` is the `cells` block, including its key line, and it stays the text that was read. `extras` holds the other top-level blocks in the order they were read.
 struct ThinkYaml {
@@ -1861,6 +2060,7 @@ fn nil_cell(cell: &[u8; 16]) -> bool {
     *cell == [0u8; 16]
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `VtThinkYaml` is version 1 of `aetheris-vt100-think.yaml`.
 /// The thought text is not in this file. `blocked` is true when the file is not a version 1 map, and the bytes stay unwritten. `closed` is the closed mark. `height` is a kept height already inside 48 through 2000.
 struct VtThinkYaml {
@@ -1888,7 +2088,7 @@ impl VtThinkYaml {
         Self {
             blocked: true,
             closed: false,
-            height: None, // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+            height: None,
         }
     }
 }
@@ -1905,7 +2105,7 @@ fn vt_think_yaml_path(home: &std::path::Path) -> std::path::PathBuf {
 /// A blank line and a `#` comment are skipped. A leading `---` line and a leading `%` line are skipped until the first key.
 /// An indented line before any key returns a blocked record. An indented line after a key is skipped. A line that is not a key returns a blocked record.
 /// The key `version` must be version 1. A missing version returns a blocked record. Any other version returns a blocked record.
-/// The key `closed` is read with `think_flag`. The key `height` is read with `think_kept_height`. Any other key is ignored. The thought text is not stored. // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// The key `closed` is read with `think_flag`. The key `height` is read with `think_kept_height`. Any other key is ignored. The thought text is not stored.
 fn parse_vt_think_yaml(text: &str) -> VtThinkYaml {
     let text = text.strip_prefix('\u{feff}').unwrap_or(text);
     if text.trim().is_empty() {
@@ -1976,7 +2176,7 @@ fn render_vt_think_yaml(yaml: &VtThinkYaml) -> String {
 /// `path` is the file. A file that cannot be read returns a fresh [`VtThinkYaml`]. An empty file returns a blocked [`VtThinkYaml`].
 /// Any other file is parsed as UTF-8 with lossy replacement, then passed to `parse_vt_think_yaml`.
 fn read_vt_think_yaml(path: &std::path::Path) -> VtThinkYaml {
-    let bytes = match std::fs::read(path) { // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md
+    let bytes = match std::fs::read(path) {
         Ok(bytes) => bytes,
         Err(_) => return VtThinkYaml::fresh(),
     };
@@ -2077,6 +2277,7 @@ fn seat_think_home(log: &ThinkLog, chrome: &mut ThinkChrome, yaml: &ThinkYaml) {
     chrome.open = !log.blocks.is_empty() && !yaml.closed;
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ThinkCellBlock` is one cell inside the `cells` block of the think yaml.
 /// `key` is the cell id. `lines` is the key line and the field lines under it.
 struct ThinkCellBlock {
@@ -2564,7 +2765,7 @@ const MOOD_FORMAT_ASK: &str = "Return the mood text on one final line. The line 
 /// The tip says Mood opens the glass for the selected card.
 /// The tip says the glass uses that card's model.
 /// The tip says Enter sends the line.
-/// The tip says each send takes a new wire id, and a wire id is the identifier of that send. // @aa-sdd PK-1081 docs/specs/common/formal-plan.spec.md
+/// The tip says each send takes a new wire id, and a wire id is the identifier of that send.
 /// The tip says Approve saves the field and turns the switch on.
 /// The tip says Cancel keeps the saved string and the switch.
 /// The tip says a saved mood is already in the field.
@@ -2606,7 +2807,7 @@ const MOOD_CANCEL_TIP: &str = "Cancel drops this chat. The saved string and the 
 const MOOD_CLEAR_TIP: &str = "Clear mood asks before it drops the string. Yes clears the saved string and turns the switch off. The field and this chat start empty. No leaves the mood untouched. The dialog stays open.";
 /// `MOOD_ASK_TITLE` is the title of the window that asks before a mood is cleared.
 /// The window opens from the Clear mood button.
-/// Yes and No sit in that window. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// Yes and No sit in that window.
 const MOOD_ASK_TITLE: &str = "Clear mood";
 /// `MOOD_ASK_WORDS` is the question in the clear-mood window.
 /// The question is a label under the window title.
@@ -2620,7 +2821,7 @@ const MOOD_YES: &str = "Yes";
 /// The button is painted in the off-switch red.
 /// A click leaves the saved mood as it is.
 const MOOD_NO: &str = "No";
-/// `MOOD_YES_TIP` is the hover text on the Yes button in the clear-mood window. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// `MOOD_YES_TIP` is the hover text on the Yes button in the clear-mood window.
 /// The tip says Yes clears the saved string and turns the switch off.
 /// The tip says the field and this chat start empty.
 /// The tip says the dialog stays open.
@@ -2630,7 +2831,7 @@ const MOOD_YES_TIP: &str = "Yes clears the saved string and turns the switch off
 /// The tip says the ask closes.
 /// The tip says the mood dialog stays open.
 const MOOD_NO_TIP: &str = "No leaves the mood untouched. The ask closes. The mood dialog stays open.";
-/// `MOOD_SPIN_TIP` is the hover text on the spinner in the mood glass. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// `MOOD_SPIN_TIP` is the hover text on the spinner in the mood glass.
 /// The spinner sits on the glass footer while a reply is in flight.
 /// The tip says the spinner runs while a mood reply is in flight.
 /// The tip says the clock counts from that send.
@@ -2675,7 +2876,7 @@ fn seated_mood_line(
     bank: &[(String, MoodYaml)],
     ssh_users: &[(String, bool)],
 ) -> Option<String> {
-    // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md FINESSE:f-220
     let name = if asking.is_empty() {
         String::new()
     } else {
@@ -2692,7 +2893,7 @@ fn seated_mood_line(
     ssh_mood_seat(ssh_user_on(ssh_users, &name), mood)
 }
 
-/// @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-200
 /// Version 1 of the shared mood yaml. Width and height stay for the glass.
 #[derive(Clone)]
 struct MoodYaml {
@@ -2778,7 +2979,7 @@ fn ssh_mood_line(checked: bool, mood: &MoodYaml) -> Option<String> {
 /// `checked` is the footer checkbox. `mood` is the [`MoodYaml`] record. The checkbox makes the line available. The mood switch turns that line on through `mood_sends`.
 /// Either one off returns `None`. That `None` clears a pane that already holds a line. The function calls `ssh_mood_line`.
 fn ssh_mood_seat(checked: bool, mood: &MoodYaml) -> Option<String> {
-    // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md FINESSE:f-195
     ssh_mood_line(checked, mood)
 }
 
@@ -3023,8 +3224,8 @@ fn mood_value(rest: &str, more: &[String]) -> String {
 
 /// The function `mood_kept_pair` reads a dialog width and height that the mood file may keep.
 /// `width` and `height` are the texts after those colons. Each text is read with `yaml_scalar` and parsed as a floating-point number. A value that does not parse returns `None`. A value that is not finite returns `None`.
-/// Each number is truncated toward zero. The width must sit from 480 through 4000. The height must sit from 320 through 4000. A number outside its range returns `None`. // @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md
-fn mood_kept_pair(width: &str, height: &str) -> Option<(i32, i32)> { // @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md
+/// Each number is truncated toward zero. The width must sit from 480 through 4000. The height must sit from 320 through 4000. A number outside its range returns `None`.
+fn mood_kept_pair(width: &str, height: &str) -> Option<(i32, i32)> {
     let width = yaml_scalar(width);
     let height = yaml_scalar(height);
     let width: f64 = width.parse().ok()?;
@@ -3235,7 +3436,7 @@ fn read_mood_yaml(path: &std::path::Path) -> MoodYaml {
 /// The function `write_mood_yaml` stores one [`MoodYaml`] when the record is not blocked.
 /// `path` is the file. `yaml` is the record. A blocked record returns false and writes nothing. The parent directory is created when the path has one and that create fails returns false.
 /// The bytes are `render_mood_yaml`. The function returns true when the write succeeds.
-fn write_mood_yaml(path: &std::path::Path, yaml: &MoodYaml) -> bool { // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md
+fn write_mood_yaml(path: &std::path::Path, yaml: &MoodYaml) -> bool {
     if yaml.blocked {
         return false;
     }
@@ -3457,7 +3658,7 @@ fn mood_inspector_head(mood: &MoodYaml) -> String {
         return format!("mood: off {}\n", preview_chars(&mood.line, 80));
     }
     // The yellow card is the mood string. Debug Mood paints the invitation.
-    // @aa-sdd PK-1081 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1081 docs/specs/common/formal-plan.spec.md FINESSE:f-202
     String::new()
 }
 
@@ -3503,7 +3704,7 @@ fn mood_target(card: &TurnCard) -> String {
 /// The function `mood_focus_card` returns the canvas cell the mood glass uses.
 /// `cards` is the deck. `focus` is the focused index. The Java client calls this read `moodCard`. An empty deck returns `None`.
 /// An index inside the deck returns that index. An index past the deck returns the last cell.
-/// // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
 fn mood_focus_card(cards: &[TurnCard], focus: usize) -> Option<usize> {
     if cards.is_empty() {
         return None;
@@ -3518,7 +3719,7 @@ fn mood_focus_card(cards: &[TurnCard], focus: usize) -> Option<usize> {
 /// The function `mood_glass_target` returns the model the mood glass sends.
 /// `card` is the selected cell. `entry` is that cell's Grok settings, when the document has one. `pool_boot` is the boot id from `mint_pool_boot`. The Java client calls this `moodTarget`.
 /// The result is the `target` from [`crate::model::mood_tune`]. A pool card sends the word `pool`. A Grok card with no model id takes the model stored on `entry`.
-/// // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
 fn mood_glass_target(
     card: &TurnCard,
     entry: Option<&crate::model::GrokEntry>,
@@ -3530,7 +3731,7 @@ fn mood_glass_target(
 /// The function `mood_glass_title` builds the title bar of the mood glass.
 /// `target` is the model word the glass will send. The short name comes from `short_model_name`. A blank short name keeps the word `Mood`.
 /// Any other short name returns `Mood`, a middle dot U+00B7, and that name.
-/// // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
 fn mood_glass_title(target: &str) -> String {
     let word = short_model_name(target);
     if word.is_empty() {
@@ -3553,7 +3754,7 @@ fn mood_open_px(yaml: &MoodYaml) -> (f32, f32) {
 /// The function `note_mood_size` stores the mood dialog size for the next open.
 /// `yaml` is the [`MoodYaml`] record. `width` and `height` are the pixel sizes. A blocked record returns false and leaves the stored pair alone.
 /// The width must sit from 480 through 4000. The height must sit from 320 through 4000. A size outside either range returns false and leaves the pair alone. A size inside both ranges is stored and the function returns true.
-fn note_mood_size(yaml: &mut MoodYaml, width: i32, height: i32) -> bool { // @aa-sdd PK-1406 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn note_mood_size(yaml: &mut MoodYaml, width: i32, height: i32) -> bool {
     if yaml.blocked {
         return false;
     }
@@ -3572,8 +3773,8 @@ fn note_mood_size(yaml: &mut MoodYaml, width: i32, height: i32) -> bool { // @aa
 /// `yaml` is the [`MoodYaml`] record. `size` is the width and height at the close, when the glass had one.
 /// A missing size leaves the stored pair alone and returns false.
 /// A size that `note_mood_size` refuses leaves the stored pair alone and returns false.
-/// A size inside the kept range is stored and the function returns true. // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
-fn mood_size_on_close(yaml: &mut MoodYaml, size: Option<(i32, i32)>) -> bool { // @aa-sdd PK-1436 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// A size inside the kept range is stored and the function returns true.
+fn mood_size_on_close(yaml: &mut MoodYaml, size: Option<(i32, i32)>) -> bool {
     let Some((width, height)) = size else {
         return false;
     };
@@ -3656,6 +3857,7 @@ fn mood_fit(screen: egui::Rect, width: f32, height: f32) -> (egui::Pos2, egui::V
     (mood_origin(screen, fit_w, fit_h), egui::vec2(fit_w, fit_h))
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `MoodSlots` holds the pixel heights inside the mood glass.
 /// `glass` is the transcript height, and that region scrolls. `draft` is the rising mood field above the buttons. `buttons` is the button row, and that row stays.
 /// The draft stops at half the window. One gap is used when the draft is hidden. Two gaps are used when the draft shows.
@@ -3715,7 +3917,7 @@ struct MoodBands {
 /// `frame` is the inner area the window claimed. `draft_px` is the wanted draft height. `button_px` is the wanted button height. `gap_px` is one gap.
 /// The heights come from `mood_slots`. The footer is pinned to the bottom of `frame`, so the vertical drag sits on that edge.
 /// The draft sits above the footer when it has height. The transcript fills the room above that. Each region stays inside `frame`.
-fn mood_bands(frame: egui::Rect, draft_px: i32, button_px: i32, gap_px: i32) -> MoodBands { // @aa-sdd PK-1440 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_bands(frame: egui::Rect, draft_px: i32, button_px: i32, gap_px: i32) -> MoodBands {
     let width = frame.width().max(0.0);
     let height = frame.height().round().max(0.0) as i32;
     let slots = mood_slots(height, draft_px, button_px, gap_px);
@@ -3754,7 +3956,7 @@ fn mood_bands(frame: egui::Rect, draft_px: i32, button_px: i32, gap_px: i32) -> 
 
 /// The function `mood_floor` returns the smallest size the mood glass may be dragged to.
 /// `screen` is the app window. The width is [`MOOD_WIDTH_MIN`], or the window width when that is smaller. The height is [`MOOD_HEIGHT_MIN`], or the window height when that is smaller. A negative window side is treated as 0 before that cut.
-fn mood_floor(screen: egui::Rect) -> egui::Vec2 { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_floor(screen: egui::Rect) -> egui::Vec2 {
     egui::vec2(
         (MOOD_WIDTH_MIN as f32).min(screen.width().max(0.0)),
         (MOOD_HEIGHT_MIN as f32).min(screen.height().max(0.0)),
@@ -3786,7 +3988,7 @@ fn mood_resize_icon(icon: egui::CursorIcon) -> bool {
 /// The function `mood_user_resized` reports a drag that changed the dialog size.
 /// `prior` is the outer size from the previous frame of this open. `shown` is this frame. `drag` is true while the primary pointer button is down on a resize cursor.
 /// A missing prior returns false. A pointer that is not dragging a resize returns false. A size equal to the prior returns false. Any other pair returns true.
-fn mood_user_resized(prior: Option<(i32, i32)>, shown: (i32, i32), drag: bool) -> bool { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_user_resized(prior: Option<(i32, i32)>, shown: (i32, i32), drag: bool) -> bool {
     if !drag {
         return false;
     }
@@ -3800,7 +4002,7 @@ fn mood_user_resized(prior: Option<(i32, i32)>, shown: (i32, i32), drag: bool) -
 /// `wanted_w` and `wanted_h` are the size the file asked to open. `shown` is the outer size this frame. `screen` is the app window.
 /// The fitted size comes from `mood_fit`. A fitted side that is at least 2 pixels under the wanted side, and a shown size that matches that fit, returns true.
 /// Any other shown size returns false. That cut is not written over the user's pair.
-fn mood_shown_cut(wanted_w: f32, wanted_h: f32, shown: (i32, i32), screen: egui::Rect) -> bool { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_shown_cut(wanted_w: f32, wanted_h: f32, shown: (i32, i32), screen: egui::Rect) -> bool {
     let (_, fit) = mood_fit(screen, wanted_w, wanted_h);
     let fit_w = fit.x.round() as i32;
     let fit_h = fit.y.round() as i32;
@@ -3813,7 +4015,7 @@ fn mood_shown_cut(wanted_w: f32, wanted_h: f32, shown: (i32, i32), screen: egui:
 /// The function `mood_press` paints one mood footer button at the Swing width.
 /// `ui` is the footer. `label` is the button word. The width is the label, the button padding, and three ems.
 /// The height is the label plus the button padding. The button is that minimum size.
-fn mood_press(ui: &mut egui::Ui, label: &str) -> egui::Response { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_press(ui: &mut egui::Ui, label: &str) -> egui::Response {
     let font = egui::TextStyle::Button.resolve(ui.style());
     let color = ui.visuals().text_color();
     let galley = ui
@@ -3846,13 +4048,13 @@ fn mood_wrap_lines(text: &str, inner_chars: usize) -> usize {
         } else {
             count.div_ceil(width)
         };
-    } // @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md
+    }
     lines
 }
 
 /// The function `mood_pane_px` returns the pixel height of the rising mood pane.
 /// `text` is the field. `inner_chars` is the wrap width. `line_px` is the height of one line, and a value below 1 is treated as 1. `dialog_h` is the dialog height.
-/// Text that trims to empty returns 0. The line count comes from `mood_wrap_lines`, and it is at least 1. The height is that count times the line height. The cap is half the dialog, or one line when the dialog height is not positive. A cap below one line becomes one line. Taller text is cut to that cap, and the rest scrolls. // @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md
+/// Text that trims to empty returns 0. The line count comes from `mood_wrap_lines`, and it is at least 1. The height is that count times the line height. The cap is half the dialog, or one line when the dialog height is not positive. A cap below one line becomes one line. Taller text is cut to that cap, and the rest scrolls.
 fn mood_pane_px(text: &str, inner_chars: usize, line_px: i32, dialog_h: i32) -> i32 {
     if text.trim().is_empty() {
         return 0;
@@ -3924,6 +4126,7 @@ fn mood_spin_clock(elapsed_ms: u64) -> String {
     think_clock(elapsed_ms)
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `MoodTurn` is one line of the mood-glass chat.
 /// `role` is `user` or `assistant`, or any other role the frame carried. `text` is that turn's body.
 struct MoodTurn {
@@ -3931,6 +4134,7 @@ struct MoodTurn {
     text: String,
 }
 
+/// @aa-sdd L40 aa-sdd-source-prose.md#MoodDesk
 /// The struct `MoodDesk` is the mood glass for one selected card.
 /// `open` is true while the dialog is showing. `card_index` is that card's place in the deck. `card_cell` is the card's sixteen-byte id. `turns` is the chat. `line` is the typed send. `draft` is the mood-string field.
 /// `tries` counts replies that did not carry a mood line. `busy` is true while a reply is in flight. `current` is the wire id of that send. `wires` keeps every mood wire id. Those ids stay after the dialog closes so a late frame stays off the cell.
@@ -3978,10 +4182,10 @@ impl MoodDesk {
             wires: Vec::new(),
             started: None,
             slide: -1,
-            place: true, // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+            place: true,
             generation: 0,
-            arm_line: false, // @aa-sdd PK-860 docs/specs/common/stages.spec.md
-            last_size: None, // @aa-sdd PK-586 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            arm_line: false,
+            last_size: None,
             seen_size: None,
             clear_ask: false,
         }
@@ -3998,7 +4202,7 @@ impl MoodDesk {
         self.generation = generation;
         self.open = true;
         self.card_index = index;
-        self.card_cell = cell; // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+        self.card_cell = cell;
         self.place = true;
         self.arm_line = true;
     }
@@ -4012,7 +4216,7 @@ impl MoodDesk {
         *self = Self::shut();
         self.wires = wires;
         self.generation = generation;
-    } // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+    }
 
     /// The method `clear_chat` drops this chat and leaves the dialog open.
     /// The turns, the typed line, and the draft are cleared. The try count is 0. The in-flight flag is cleared. The current wire id is cleared. The send instant is cleared. The rising pane is hidden. The clear question is closed.
@@ -4030,6 +4234,7 @@ impl MoodDesk {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `ClearChoice` is the result of the clear-mood question.
 /// `Stay` means the question is still open. `Yes` is the only path that drops the saved string. `No` leaves the mood. `Escape` leaves the mood. `Close` is the window close, and it leaves the mood.
 #[derive(Clone, Copy)]
@@ -4108,8 +4313,8 @@ fn paint_menu_ink(style: &mut egui::Style) {
     style.visuals.widgets.open.fg_stroke.color = MENU_INK;
 }
 
-/// @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md FINESSE:f-105
+/// @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md FINESSE:f-96
 /// The struct `ButtonHoverInk` is the button theme that paints emerald words on hover.
 /// An ordinary button takes that emerald while the pointer is on it or while the button is active. A tab keeps its own word color. A menu title keeps its own word color. The I, E, P, and O marks take that emerald while the pointer is on them, even though those marks are selectable.
 // @aa-sdd PK-860 docs/specs/common/stages.spec.md
@@ -4201,6 +4406,16 @@ fn add_mood_choice(
     )
 }
 
+/// The function `seat_modal` puts one open modal above the pin strip.
+/// `ctx` is the egui context. `layer` is that modal's layer. The layer moves to the top of its order. That layer becomes the modal layer when it is the top one this frame.
+/// The pin strip stays on the foreground. It does not take this top. A modal on the middle order paints under that strip.
+fn seat_modal(ctx: &egui::Context, layer: egui::LayerId) { // @aa-sdd PK-1454 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    ctx.move_to_top(layer);
+    ctx.memory_mut(|mem| {
+        mem.set_modal_layer(layer);
+    });
+}
+
 /// The function `paint_clear_ask` paints the clear-mood question and returns the choice.
 /// `ctx` is the egui context. `generation` keeps this question on the glass that opened it. `open` is that question's flag. A closed question returns [`ClearChoice::Stay`] and paints nothing.
 /// A foreground area covers the app window and takes click and drag, so a click on the glass behind the question does not dismiss it. Escape with no modifiers closes the question and returns [`ClearChoice::Escape`]. Enter is not a clear.
@@ -4211,7 +4426,9 @@ fn paint_clear_ask(ctx: &egui::Context, generation: u64, open: &mut bool) -> Cle
         return ClearChoice::Stay;
     }
     let screen = ctx.content_rect();
-    egui::Area::new(egui::Id::unique(("aetheris-clear-block", generation)))
+    let block_id = egui::Id::unique(("aetheris-clear-block", generation));
+    let block_layer = egui::LayerId::new(egui::Order::Foreground, block_id);
+    egui::Area::new(block_id)
         .order(egui::Order::Foreground)
         .fixed_pos(screen.min)
         .interactable(true)
@@ -4225,8 +4442,10 @@ fn paint_clear_ask(ctx: &egui::Context, generation: u64, open: &mut bool) -> Cle
     }
     let mut ask_open = true;
     let mut choice = ClearChoice::Stay;
+    let ask_id = egui::Id::unique(("aetheris-clear-ask", generation));
+    let ask_layer = egui::LayerId::new(egui::Order::Foreground, ask_id);
     egui::Window::new(MOOD_ASK_TITLE)
-        .id(egui::Id::unique(("aetheris-clear-ask", generation)))
+        .id(ask_id)
         .order(egui::Order::Foreground)
         .collapsible(false)
         .resizable(false)
@@ -4249,6 +4468,8 @@ fn paint_clear_ask(ctx: &egui::Context, generation: u64, open: &mut bool) -> Cle
                 no.on_hover_text(MOOD_NO_TIP);
             });
         });
+    ctx.move_to_top(ask_layer);
+    seat_modal(ctx, block_layer);
     if !ask_open {
         *open = false;
         return ClearChoice::Close;
@@ -4284,6 +4505,7 @@ fn take_mood_line(desk: &mut MoodDesk) -> bool {
     true
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `MoodBegin` is the gate in front of the mood glass.
 /// `NoCell` means the focused index is not a card. `Burner` means a cloud run is denied for that card. `NoMux` means the multiplexed channel has not answered. `Open` means the glass may open.
 enum MoodBegin {
@@ -4349,7 +4571,7 @@ fn mood_shape_tuned(
     let mut owned: Vec<(&str, &str)> = Vec::with_capacity(turns.len() + 3);
     owned.push(("system", MOOD_SHAPE_SYSTEM));
     if !field.is_empty() {
-        // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md FINESSE:f-195
         owned.push(("system", MOOD_OPENER));
         owned.push(("system", field));
         owned.push(("system", MOOD_CLOSER));
@@ -4587,11 +4809,12 @@ fn mood_mark_word(role: &str) -> &str {
         "you"
     } else if role == "assistant" {
         "assistant"
-    } else { // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
+    } else {
         role
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `MoodPaintRow` is one painted line of the mood-glass chat.
 /// `mark` is the side label, such as `you` or `assistant`. `text` is that physical line. `hot` is true when the line is an assistant mood key and should paint in the hot color.
 struct MoodPaintRow {
@@ -4619,6 +4842,7 @@ fn mood_paint_rows(turns: &[MoodTurn]) -> Vec<MoodPaintRow> {
     rows
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `MoodIntake` is what the mood glass does with one incoming frame.
 /// `Pass` means the frame is not a mood frame. `Quiet` means the glass consumed the frame and the cell path should not see it. `Slide` carries a notice body, a hard-failure flag, and a flag that closes the glass. `Resend` means the glass should ask again for a mood line.
 enum MoodIntake {
@@ -4730,7 +4954,7 @@ fn intake_mood(desk: &mut MoodDesk, piece: &ScopePiece) -> MoodIntake {
 /// `log` is the [`ThinkLog`]. `cell` is the sixteen-byte id. `model` is the model word used for the header. `text` is the new thought text. Empty text returns without writing.
 /// The header is `think_tag_line` of `think_tag_word` for that model. The same open cell and the same header keep the open block. A different cell or a different model pushes a new block, stores the cell, and marks the log open.
 /// The text is appended to the last block's body.
-/// // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
+/// // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-210
 fn accept_thought(log: &mut ThinkLog, cell: [u8; 16], model: &str, text: &str) {
     if text.is_empty() {
         return;
@@ -5016,14 +5240,14 @@ fn seat_vt_console(ui: &mut egui::Ui, origin: egui::Pos2, right: f32, clear_bott
 
 /// The function `think_tail_pin` reports whether the thinking scroll should jump to the tail.
 /// `seen` is the buffer length from the previous paint. `now` is the length this paint. A longer buffer returns true, and the scroll pins the tail. The same length returns false, and a manual scroll is left alone.
-/// @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md FINESSE:f-219
 fn think_tail_pin(seen: usize, now: usize) -> bool {
     now > seen
 }
 
 /// The function `think_buffer_len` counts the bytes in the thinking log.
 /// `blocks` is the list of [`ThinkBlock`] values. Each block adds the length of its tag and the length of its body. A stream that appends to the open block still grows this count.
-/// @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1073 docs/specs/common/formal-plan.spec.md FINESSE:f-219
 fn think_buffer_len(blocks: &[ThinkBlock]) -> usize {
     let mut n = 0usize;
     for block in blocks {
@@ -5058,10 +5282,10 @@ fn paint_think_row(
         ui.add_space(BUTTON_CLEAR_PX);
         let fold = ui.button(think_mark(chrome.folded));
         if fold.clicked() {
-            fold_think(chrome); // @aa-sdd PK-1286 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            fold_think(chrome);
         }
         fold.on_hover_text(fold_tip);
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| { // @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
+        ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
             ui.add_space(BUTTON_CLEAR_PX);
             let close = ui.button(THINK_CLOSE_LABEL);
             if close.clicked() {
@@ -5071,7 +5295,7 @@ fn paint_think_row(
             close.on_hover_text(close_tip);
             if show_text {
                 let h = think_scroll_height(chrome.height, natural, panel_h).min(cap.max(0.0));
-                if h >= 1.0 { // @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
+                if h >= 1.0 {
                 ui.allocate_ui_with_layout(
                     egui::vec2(ui.available_width(), h),
                     egui::Layout::top_down(egui::Align::Min),
@@ -5155,7 +5379,7 @@ fn paint_think_row(
 /// The function `button_outer_height` returns the painted height of a stock button.
 /// `ui` is the column. The column font is the override. [`egui::TextStyle::Button`] ignores that override, so a lane sized from that style is short and the clip cuts the border.
 /// The height is the measured letter M plus the button padding above and below. The stroke is taken from that pad, so it does not add height. The result is at least the style's interact height.
-/// @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183
 fn button_outer_height(ui: &egui::Ui) -> f32 {
     let font = egui::FontSelection::default().resolve(ui.style());
     let galley = ui
@@ -5175,7 +5399,7 @@ fn button_lane_height(ui: &egui::Ui) -> f32 {
 /// `lane` is the button's rectangle. `parent` is the clip it must stay inside. The button keeps its own rectangle. The clip starts as the parent.
 /// The left edge moves to 2 pixels left of the lane when the parent starts further left. The right edge moves to 2 pixels right of the lane when the parent ends further right. The rounded border is therefore not the clip edge. That right limit keeps an overflowing master button off the combo on the right.
 /// A clip whose right edge would pass its left edge sets the right edge equal to the left.
-/// @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183
 fn button_lane_clip(lane: egui::Rect, parent: egui::Rect) -> egui::Rect {
     let mut clip = parent;
     clip.min.x = clip.min.x.max(lane.left() - BUTTON_CLEAR_PX);
@@ -5189,9 +5413,10 @@ fn button_lane_clip(lane: egui::Rect, parent: egui::Rect) -> egui::Rect {
 /// The function `folded_control_height` returns the height of one folded thinking row.
 /// `ui` is the column. The height is the Close button plus its clearance, from `button_lane_height`. It is also at least the 18-pixel grip plus 2 pixels of clearance above and below.
 /// A row sized from [`egui::TextStyle::Button`] ignores the column font and clips Close. This height does not use that style.
-/// @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd F-159
+/// @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183
 /// @aa-sdd PK-1286 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-fn folded_control_height(ui: &egui::Ui) -> f32 { // @aa-sdd PK-1443 PK-1444 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn folded_control_height(ui: &egui::Ui) -> f32 {
     button_lane_height(ui).max(THINK_GRIP + BUTTON_CLEAR_PX * 2.0)
 }
 
@@ -5358,6 +5583,7 @@ fn paint_think_strip(
     let (mut shown, mut full) = notebook_strip_shown(ui, chrome, panel_h);
     if chrome.folded {
         // Canvas only. The VT100 branch returned above.
+        // @aa-sdd F-159
         shown = folded_control_height(ui);
         full = shown;
     }
@@ -5436,8 +5662,8 @@ fn paint_think_strip(
 }
 /// Open canvas share. Swing `setResizeWeight(0.72)`. A drag moves the live share.
 const CANVAS_WEIGHT: f32 = 0.72;
-/// Grab bar. Swing `DIVIDER_SIZE` is 11. // @aa-sdd PK-829 docs/specs/common/roux.spec.md
-const SPLIT_BAR_PX: f32 = 11.0; // @aa-sdd PK-590 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// Grab bar. Swing `DIVIDER_SIZE` is 11.
+const SPLIT_BAR_PX: f32 = 11.0;
 /// Bar fill. Swing `DarkDivider` uses `0x3a3a3a`.
 const SPLIT_FILL: egui::Color32 = egui::Color32::from_rgb(0x3a, 0x3a, 0x3a);
 
@@ -5473,19 +5699,19 @@ const ARROW_GAP: f32 = 4.0;
 /// The fill and the inside stroke both use this radius.
 const ARROW_ROUND: f32 = 2.0;
 /// Triangle margin. Narrower than the old mark so the icon fits the bar.
-const ARROW_INSET: f32 = 2.0; // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+const ARROW_INSET: f32 = 2.0;
 /// Off-gray, lighter than the bar, so the button is noticeable.
 const ARROW_FILL: egui::Color32 = egui::Color32::from_rgb(0x5c, 0x5c, 0x5c);
 /// `ARROW_HOT` is the fill of a divider arrow button while the pointer is on it.
 /// A button that is not under the pointer uses a different fill.
 /// The channels are red 110, green 110, and blue 110.
-const ARROW_HOT: egui::Color32 = egui::Color32::from_rgb(0x6e, 0x6e, 0x6e); // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+const ARROW_HOT: egui::Color32 = egui::Color32::from_rgb(0x6e, 0x6e, 0x6e);
 /// `ARROW_EDGE` is the border color of a divider arrow button.
 /// The border is a one-pixel stroke drawn inside the button.
 /// The channels are red 154, green 154, and blue 154.
 const ARROW_EDGE: egui::Color32 = egui::Color32::from_rgb(0x9a, 0x9a, 0x9a);
 /// `ARROW_ICON` is the color of the triangle on a divider arrow button.
-/// The triangle is painted after the button fill, and it has no stroke. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// The triangle is painted after the button fill, and it has no stroke.
 /// The channels are red 220, green 220, and blue 220.
 const ARROW_ICON: egui::Color32 = egui::Color32::from_rgb(0xdc, 0xdc, 0xdc);
 /// Missing shell column. Swing `getAetherisWrapColumns` uses 80.
@@ -5503,14 +5729,14 @@ const SOFT_WRAP_LABEL: &str = "soft wrap";
 const SOFT_WRAP_TIP: &str = "Soft wrap folds long inspector lines at the column count. Turn it off to keep each line on one row and scroll sideways. The choice applies to the inspector only.";
 /// `WRAP_MINUS_TIP` is the hover text on the minus button beside the soft-wrap count.
 /// The button sits in the inspector column.
-/// The tip says the button uses fewer soft-wrap columns. // @aa-sdd PK-1171 PK-1174 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// The tip says the button uses fewer soft-wrap columns.
 /// The tip says the inspector folds a line after this many characters when soft wrap is on.
 /// The tip says the count is saved with the shell.
 /// The tip says the smallest count is 1.
 const WRAP_MINUS_TIP: &str = "Fewer soft-wrap columns. When soft wrap is on, the inspector folds a line after this many characters. The count is saved with the shell. The smallest count is 1.";
 /// `WRAP_PLUS_TIP` is the hover text on the plus button beside the soft-wrap count.
 /// The button sits in the inspector column.
-/// The tip says the button uses more soft-wrap columns. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// The tip says the button uses more soft-wrap columns.
 /// The tip says the inspector folds a line after this many characters when soft wrap is on.
 /// The tip says the count is saved with the shell.
 const WRAP_PLUS_TIP: &str = "More soft-wrap columns. When soft wrap is on, the inspector folds a line after this many characters. The count is saved with the shell.";
@@ -5520,7 +5746,7 @@ const WRAP_PLUS_TIP: &str = "More soft-wrap columns. When soft wrap is on, the i
 /// The tip says a typed number applies after a short pause.
 /// The tip says the inspector folds a line after this many characters when soft wrap is on.
 /// The tip says the count is saved with the shell.
-const WRAP_FIELD_TIP: &str = "Soft-wrap column count. Type a number. It applies after a short pause. When soft wrap is on, the inspector folds a line after this many characters. The count is saved with the shell."; // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+const WRAP_FIELD_TIP: &str = "Soft-wrap column count. Type a number. It applies after a short pause. When soft wrap is on, the inspector folds a line after this many characters. The count is saved with the shell.";
 /// Missing inspector line length. Swing `getAetherisInspectorLineChars` uses 80.
 const LINE_CHARS: u32 = 80;
 /// `LINE_MINUS_TIP` is the hover text on the minus button for the inspector line length.
@@ -5541,14 +5767,14 @@ const LINE_PLUS_TIP: &str = "More characters on each inspector line. Preview cut
 /// The tip says the field is the inspector line length.
 /// The tip says a typed number applies after a short pause.
 /// The tip says preview cuts each kept line to this count.
-/// The tip says the count is saved with the shell. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// The tip says the count is saved with the shell.
 const LINE_FIELD_TIP: &str = "Inspector line length. Type a number. It applies after a short pause. Preview cuts each kept line to this count. The count is saved with the shell.";
 /// Scope A pieces applied on one turn of the window loop.
 const SCOPE_PER_TURN: usize = 8;
 /// Terminal bursts fed on one turn. The rest stays queued.
 const PAINT_PER_TURN: usize = 1;
 /// Quiet session poll. A backlog uses the short poll.
-const IDLE_POLL_MS: u64 = 16; // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+const IDLE_POLL_MS: u64 = 16;
 /// `COMMIT_POLL_MS` is the short wait, in milliseconds, while a live session still has work queued.
 /// The value is 1.
 /// A session that is caught up waits longer.
@@ -5558,14 +5784,15 @@ const COMMIT_POLL_MS: u64 = 1;
 /// Plate name. Never built from the password. The OS caption is [`WINDOW_CAPTION`].
 pub const WINDOW_TITLE: &str = "Aetheris";
 /// Taskbar hover and the window caption. Windows reads the title.
-pub const WINDOW_CAPTION: &str = "Aetheris Rust"; // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+pub const WINDOW_CAPTION: &str = "Aetheris Rust";
 /// Title-bar and taskbar icon edge. The art is the Java Eye of Horus jpeg.
 const WINDOW_ICON_PX: u32 = 64;
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Keyboard focus for the console. The host still owns the line.
 ///
 /// [`ConsoleFocus::at_open`] arms the first paint. [`ConsoleFocus::session_opened`]
-/// arms the paint after a session opens. [`ConsoleFocus::take`] is that paint. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// arms the paint after a session opens. [`ConsoleFocus::take`] is that paint.
 /// A click or a drag also takes focus. After the arm fires, a quiet paint
 /// leaves focus where the person put it.
 // @aa-sdd PK-829 docs/specs/common/roux.spec.md
@@ -5618,14 +5845,16 @@ fn console_event_filter() -> egui::EventFilter {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `Plate` names which frame fills the window under the tab strip.
-/// `Ssh` is the terminal frame. `Aetheris` is the canvas frame. // @aa-sdd PK-1175 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// `Ssh` is the terminal frame. `Aetheris` is the canvas frame.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Plate {
     Ssh,
-    Aetheris, // @aa-sdd PK-581 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    Aetheris,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `PlatePick` is one choice of the frame under the tab strip.
 /// `plate` is [`Plate::Ssh`] or [`Plate::Aetheris`]. `arm_console` is true when this choice should give the keyboard to the console.
 struct PlatePick {
@@ -5633,7 +5862,7 @@ struct PlatePick {
     arm_console: bool,
 }
 
-/// @aa-sdd PK-1174 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1174 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-222
 /// The struct `CanvasFacts` holds the words from one init body.
 /// `air_gap` is the air-gap word. `num_ctx` is the context size. `managed_tokens` is the managed-token count. `head_count` is the head count.
 /// A missing `managed-tokens` line is zero. A missing `head-count` line is zero. The Aetheris plate is reachable only after the mux answers. Leaving that plate arms the console once. A quiet SSH plate does not arm again.
@@ -5670,7 +5899,7 @@ fn unesc_fact(raw: &str) -> String {
                     chars.next();
                     out.push('\n');
                 }
-                Some('\\') => { // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                Some('\\') => {
                     chars.next();
                     out.push('\\');
                 }
@@ -5741,6 +5970,7 @@ fn accept_scope(facts: &mut Option<CanvasFacts>, text: &mut String, piece: &Scop
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// One letter on a card. A new card starts Included.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Mark {
@@ -5750,7 +5980,7 @@ enum Mark {
     Output,
 }
 
-/// @aa-sdd PK-1175 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1175 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-222
 /// One in-memory card. The cell id lasts for the connect.
 /// `group` 0 is an ordinary card. A merge is `group != 0` and `column == 0`.
 /// A member is `group != 0` and `column > 0`.
@@ -5871,7 +6101,7 @@ fn is_member(group: u64, column: u32) -> bool {
 ///
 /// The scan uses the shortest of the three slices. A row is kept when its group matches the merge and its column is not zero. `short_model_name` supplies the name. An empty name is skipped.
 /// The separator is ` | `. The names stay in index order. The merge card is omitted because its column is zero.
-/// // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
+/// // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-211
 fn merge_input_models(
     groups: &[u64],
     columns: &[u32],
@@ -5909,6 +6139,20 @@ fn member_width(bar: f32) -> f32 {
     bar + MEMBER_EAST
 }
 
+/// The function `member_pane_height` returns the height of one group member row.
+/// The value `content_h` is the height of the member cards. The value `content_w` is the width of those cards. The value `pane_w` is the width of the member pane. The value `bar_h` is the horizontal bar thickness.
+///
+/// A content height below 1 becomes 1. The bar thickness is added only when the pane width is positive and the cards are wider than that pane. A width that is still not positive skips the bar. The added thickness puts the bar under the cards. The bar belongs to that pane.
+fn member_pane_height(content_h: f32, content_w: f32, pane_w: f32, bar_h: f32) -> f32 { // @aa-sdd PK-1453 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    let h = if content_h < 1.0 { 1.0 } else { content_h };
+    if pane_w > 0.0 && content_w > pane_w {
+        h + bar_h.max(0.0)
+    } else {
+        h
+    }
+}
+
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `GatherSlot` is one paint slot on the canvas.
 /// `Card` is one ordinary card. The number inside is the index in the card list. `Block` is one whole group.
 ///
@@ -6288,6 +6532,7 @@ fn inspector_shown(body: &str, columns: u32, soft: bool) -> String {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `TypedWrap` is the result of reading a typed column count.
 /// `Keep` restores the field. `Apply` carries the `u32` count to store.
 enum TypedWrap {
@@ -6323,7 +6568,7 @@ fn arrow_share(share: f32, parked: Option<f32>, hide_canvas: bool) -> (f32, Opti
 /// The function `restore_share` returns the share to put back when a hidden pane opens.
 /// The option `parked` is the saved share. A saved share strictly between 0 and 1 is returned. A missing share returns [`CANVAS_WEIGHT`]. A saved 0 returns [`CANVAS_WEIGHT`]. A saved 1 returns [`CANVAS_WEIGHT`]. That constant is 0.72.
 fn restore_share(parked: Option<f32>) -> f32 {
-    match parked { // @aa-sdd PK-985 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    match parked {
         Some(value) if value > 0.0 && value < 1.0 => value,
         _ => CANVAS_WEIGHT,
     }
@@ -6335,7 +6580,7 @@ fn restore_share(parked: Option<f32>) -> f32 {
 /// A closed inspector returns zero, so no text sits past the bar. `inspector_closed` is that test. The room is `span_x` minus `reserved`. A room of zero or less returns zero. Any other room is multiplied by one minus `weight`, after `weight` is clamped from 0 through 1.
 fn inspector_width(span_x: f32, weight: f32, reserved: f32) -> f32 {
     if inspector_closed(weight) {
-        return 0.0; // @aa-sdd PK-1287 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        return 0.0;
     }
     let room = span_x - reserved;
     if room <= 0.0 {
@@ -6351,8 +6596,8 @@ fn inspector_closed(weight: f32) -> bool {
 }
 
 /// The function `split_reserved` returns the width held back for the divider bar and its gaps.
-/// The width `gap` is one side gap. The flag `closed` is true when the inspector is closed. // @aa-sdd PK-584 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-/// // @aa-sdd PK-584 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// The width `gap` is one side gap. The flag `closed` is true when the inspector is closed.
+///
 /// A closed inspector returns [`SPLIT_BAR_PX`] plus one gap. That bar is 11 pixels. An open inspector returns the bar plus two gaps. The closed pane drops the gap on its side.
 fn split_reserved(gap: f32, closed: bool) -> f32 {
     if closed {
@@ -6453,7 +6698,7 @@ fn reply_ink(mark: Mark, reply: &str) -> egui::Color32 {
     }
 }
 
-/// @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md FINESSE:f-182
 /// The enum `PaneFace` names which canvas text pane wears the optional frame.
 /// `Input` is the prompt pane. `Reply` is a reply pane that has text. `EmptyReply` is a reply pane whose text is blank.
 // @aa-sdd PK-985 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
@@ -6467,7 +6712,7 @@ enum PaneFace {
 /// The flag `on` is the frame switch. The face `face` is the [`PaneFace`]. A reply face follows trimmed text, the same test Java uses for `hasResponse`. This function does not read the reply text.
 ///
 /// A switch that is off returns `None`. The pane then keeps the quiet plate. A switch that is on returns a color. [`PaneFace::Input`] uses [`EDGE_MATCH`]. [`PaneFace::Reply`] uses [`EDGE_ARMED`]. [`PaneFace::EmptyReply`] uses [`RESPONSE_GRAY`].
-/// @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md FINESSE:f-182
 /// @aa-sdd PK-1287 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
 fn pane_edge(on: bool, face: PaneFace) -> Option<egui::Color32> {
     if !on {
@@ -6480,6 +6725,7 @@ fn pane_edge(on: bool, face: PaneFace) -> Option<egui::Color32> {
     })
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `RunAsk` is the decision for one Run press.
 /// `Busy` means a card is already running, or the focused index is missing, or `working_blocks` returns nothing. `Excluded` means the focused card would send no rows, or a group produced no member frame. `TooLarge` means the frame does not fit.
 /// `Send` carries the bytes of one card. `Group` carries one frame for each member that would be sent.
@@ -6533,6 +6779,7 @@ fn push_kept(block: &mut Vec<(&'static str, String)>, mark: Mark, prompt: &str, 
 /// The string `target` is the stored model word. `short_model_name` is tried first. A non-empty short name is returned.
 ///
 /// An empty short name falls back to `target` trimmed. An empty trimmed target returns `ollama`. Any other trimmed target is returned as it is.
+// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-168
 fn join_word(target: &str) -> String {
     let short = short_model_name(target);
     if !short.is_empty() {
@@ -6550,6 +6797,7 @@ fn join_word(target: &str) -> String {
 /// The string `line` is that line. A banner is `JOIN` plus one model token. The legacy literal and a legacy full target are that shape.
 ///
 /// The literal [`JOIN_BANNER`], which is `JOIN ollama`, returns true. A line that starts with `JOIN ` returns true when the rest is non-empty and contains no whitespace. A line without that prefix returns false. An empty token returns false. A token that contains whitespace returns false.
+// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-168
 fn join_banner_line(line: &str) -> bool {
     if line == JOIN_BANNER {
         return true;
@@ -6803,7 +7051,7 @@ fn inspect_heads(
     }
     let focus_group = groups[focus];
     let mut heads = Vec::new();
-    for index in 0..focus { // @aa-sdd PK-1176 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    for index in 0..focus {
         if focus_group != 0 && groups[index] == focus_group {
             continue;
         }
@@ -6843,7 +7091,7 @@ fn visible_heads(prompts: &[String], replies: &[String], marks: &[Mark], view: &
     }
     for index in 0..prompts.len() {
         if !view.shows(index) {
-            continue; // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+            continue;
         }
         let mut block = Vec::new();
         push_kept(&mut block, marks[index], &prompts[index], &replies[index]);
@@ -6902,6 +7150,7 @@ fn estimate_tokens(text: &str) -> usize {
 ///
 /// A present integer stays the base. An empty unsent line adds nothing. A non-empty unsent line adds `estimate_tokens` of that line, as an `i32`.
 /// When nothing is held, an empty unsent line counts `memory` alone. An unsent line that `memory` already ends with is also counted from `memory` alone. The screen estimate then already includes the echoed line. Any other unsent line is concatenated after `memory`, and that joined text is counted.
+/// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-177
 fn ssh_live_count(held: Option<i32>, memory: &str, live: &str) -> i32 {
     if let Some(base) = held {
         if live.is_empty() {
@@ -6920,13 +7169,13 @@ fn ssh_live_count(held: Option<i32>, memory: &str, live: &str) -> i32 {
 
 /// One heatbar beat. The queue keeps the newest pending beat only.
 /// The field `seq` is the sequence number of this beat. The field `kind` is [`HeatKind::Canvas`] or [`HeatKind::Vt`].
-/// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 struct HeatBeat {
     seq: u64,
     kind: HeatKind,
 }
 
-/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 /// The enum `HeatKind` names which pane a heatbar beat describes.
 /// `Canvas` carries a [`CanvasHeat`]. `Vt` carries a [`VtHeat`].
 enum HeatKind {
@@ -6934,8 +7183,8 @@ enum HeatKind {
     Vt(VtHeat),
 }
 
-/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-/// @aa-sdd PK-1176 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
+/// @aa-sdd PK-1176 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-222
 /// The struct `CanvasHeat` is one canvas beat for the heatbar worker.
 /// The vectors `prompts`, `replies`, `marks`, `groups`, and `columns` are the card rows. The index `focus` is the focused card. The record `mood` is the [`MoodYaml`] copied onto the beat.
 ///
@@ -6956,7 +7205,7 @@ struct CanvasHeat {
     managed: i32,
 }
 
-/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 /// The struct `VtHeat` is one terminal beat for the heatbar worker.
 /// The option `held` is the stored integer for the focused pane. The string `memory` is the pane text. The string `live` is the unsent line.
 struct VtHeat {
@@ -6965,7 +7214,7 @@ struct VtHeat {
     live: String,
 }
 
-/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 /// The struct `HeatPaint` is the result of one heatbar beat.
 /// The number `seq` is the beat sequence number. The flag `canvas` is true for a canvas beat and false for a terminal beat. The integer `estimate` is the token count. The integer `chars` is the character count. The integer `blocks` is the block count. The string `body` is the inspector text. A terminal beat leaves `body` empty.
 struct HeatPaint {
@@ -6977,7 +7226,7 @@ struct HeatPaint {
     body: String,
 }
 
-/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 /// The struct `HeatSlot` is the shared state of the heatbar worker.
 /// The option `pending` is the beat waiting to run. The number `current` is the sequence number of the newest beat. The option `ready` is a finished [`HeatPaint`]. The flag `busy` is true while a beat is being counted. The flag `stop` asks the worker to exit.
 struct HeatSlot {
@@ -7002,7 +7251,7 @@ impl HeatSlot {
     }
 }
 
-/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 /// The struct `HeatInner` is the lock and the wait signal shared with the heatbar worker.
 /// The field `slot` is a mutex around a [`HeatSlot`]. A poisoned mutex still yields the inner value. The field `cv` is the condition variable the worker and the window thread signal.
 struct HeatInner {
@@ -7014,20 +7263,20 @@ struct HeatInner {
 /// The slot `slot` is the shared [`HeatSlot`]. The beat `beat` is the edit just posted. The newest pending edit is the one that runs.
 ///
 /// `current` becomes `beat.seq`. `pending` becomes this beat. A ready result whose sequence number is not `current` is cleared. A ready result that still matches `current` is left in place.
-/// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 fn keep_pending(slot: &mut HeatSlot, beat: HeatBeat) {
     slot.current = beat.seq;
     slot.pending = Some(beat);
     if slot.ready.as_ref().is_some_and(|paint| paint.seq != slot.current) {
         slot.ready = None;
     }
-} // @aa-sdd PK-773 docs/specs/common/stages.spec.md
- // @aa-sdd PK-986 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-/// The function `seat_ready` stores a finished paint when that paint is still the newest one. // @aa-sdd PK-582 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-/// The slot `slot` is the shared [`HeatSlot`]. The paint `paint` is the result just counted. // @aa-sdd PK-583 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+}
+
+/// The function `seat_ready` stores a finished paint when that paint is still the newest one.
+/// The slot `slot` is the shared [`HeatSlot`]. The paint `paint` is the result just counted.
 ///
 /// The paint is stored when its sequence number equals `current` and `pending` is empty. Any other paint is not stored. An older result does not replace the slot.
-/// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 fn seat_ready(slot: &mut HeatSlot, paint: HeatPaint) {
     if paint.seq == slot.current && slot.pending.is_none() {
         slot.ready = Some(paint);
@@ -7040,7 +7289,7 @@ fn seat_ready(slot: &mut HeatSlot, paint: HeatPaint) {
 /// A canvas beat with `pin_active` builds a [`PinView`] whose `active` flag is true and whose `shown` vector is copied from the beat. That path calls `inspect_visible_pane_gate`. A canvas beat with the pin off calls `inspect_body_pane_gate`. Both calls receive the card rows, the focus, the mood, the line width, the debug lines, the locks, and the budget.
 /// The canvas result uses the beat sequence number. `canvas` is true. `estimate`, `chars`, and `blocks` pass through `count_i32`. `body` is the pane text.
 /// A terminal beat sets `estimate` from `ssh_live_count`. A present `held` integer forces `chars` and `blocks` to zero. A missing `held` sets `chars` from the UTF-16 length of `memory` and `blocks` from `session_memory_lines`. Both of those counts pass through `count_i32`. `canvas` is false. `body` is empty.
-/// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 fn run_heat(beat: &HeatBeat) -> HeatPaint {
     match &beat.kind {
         HeatKind::Canvas(seat) => {
@@ -7153,7 +7402,7 @@ fn heat_worker(inner: std::sync::Arc<HeatInner>) {
 /// The field `inner` is the shared [`HeatInner`]. The field `thread` holds the worker handle once the thread has been started. The newest pending edit is the one that runs.
 ///
 /// A call on the window thread does not wait for the worker. The worker is joined when this value is dropped.
-/// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 // @aa-sdd PK-773 docs/specs/common/stages.spec.md
 // @aa-sdd PK-986 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
 // @aa-sdd PK-582 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
@@ -7306,7 +7555,7 @@ fn canvas_heat_sig(
     managed: i32,
 ) -> u64 {
     use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new(); // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
     focus.hash(&mut hasher);
     line_chars.hash(&mut hasher);
     pin_active.hash(&mut hasher);
@@ -7415,6 +7664,7 @@ fn counted_inspector(blocks: &[Vec<(&'static str, String)>], mood: &MoodYaml) ->
     counted
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `InspectPane` is one measured inspector view.
 /// The string `body` is the painted text. The count `estimate` is the token estimate. The count `chars` is the UTF-16 length of the counted text. The count `blocks` is the number of blocks that were measured.
 struct InspectPane {
@@ -7487,7 +7737,7 @@ fn sink_inspect(
     }
     let live = pieces.iter().find(|piece| piece.live).cloned();
     let mut stored: Vec<SinkPiece> = pieces.into_iter().filter(|piece| !piece.live).collect();
-    stored.sort_by(|left, right| left.seq.cmp(&right.seq).then(left.ordinal.cmp(&right.ordinal))); // @aa-sdd PK-1177 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    stored.sort_by(|left, right| left.seq.cmp(&right.seq).then(left.ordinal.cmp(&right.ordinal)));
     let mut pin: Vec<usize> = Vec::new();
     let mut lead = 0usize;
     while lead < stored.len() && stored[lead].role == SINK_SYSTEM {
@@ -7620,7 +7870,7 @@ fn sink_role(role: &str) -> u8 {
     }
 }
 
-/// @aa-sdd PK-1177 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1177 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-222
 /// The struct `SinkPiece` is one row while `sink_inspect` chooses what to keep.
 /// The index `ordinal` is the order the row was built. The number `seq` is the sequence number. The byte `role` comes from `sink_role`. The count `tokens` comes from `estimate_tokens`.
 ///
@@ -8174,7 +8424,7 @@ fn ring_arc(width: i32, height: i32, sweep: i32) -> Vec<(i32, i32)> {
     for step in 0..=steps {
         let turns = (sweep as f64 / 360.0) * (step as f64 / steps as f64);
         if let Some(point) = ring_edge(width, height, turns) {
-            points.push(point); // @aa-sdd PK-1172 docs/specs/rust/aetheris/aetheris-client/src/edit.spec.md
+            points.push(point);
         }
     }
     points
@@ -8201,6 +8451,7 @@ fn ring_words(used: i32, budget: i32, known: bool) -> (String, String) {
     )
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `TokenModel` is one model row in the token window.
 /// The string `label` is the row name. The string `family` is `ollama`, `grok`, or `pool`. The integer `window` is the context window. The flag `window_known` is true when that window is a positive count.
 ///
@@ -8239,6 +8490,7 @@ impl TokenModel {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `TokenBudgets` holds the two context windows read from `application.yaml`.
 /// The integer `pool` is the pool window. The vector `grok` pairs each Grok model id with its window. Every other key in the document is dropped.
 struct TokenBudgets {
@@ -8319,7 +8571,7 @@ fn token_budgets_from_yaml(yaml: &str) -> TokenBudgets {
     if let Some(grok) = yaml_key(casserole, "grok").and_then(serde_yaml::Value::as_mapping) {
         if let Some(windows) =
             yaml_key(grok, "context-windows").and_then(serde_yaml::Value::as_mapping)
-        { // @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md
+        {
             for (key, value) in windows {
                 let Some(name) = key.as_str() else {
                     continue;
@@ -8530,7 +8782,7 @@ fn token_models(
 /// The arguments are the same inputs `token_models` uses. The row comes from `token_model_index`. The first known row does not win.
 ///
 /// A selected row whose window is known and above 0 returns that window. An unknown window returns 0. A known window of 0 or less returns 0. A missing row returns 0.
-/// // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+/// // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-207
 fn selected_heat_budget(
     window_known: bool,
     session_window: i32,
@@ -8611,7 +8863,7 @@ fn token_stats(used: i32, chars: i32, blocks: i32, model: Option<&TokenModel>) -
         let over = tokens_over(n, model.window);
         if over > 0 {
             out.push_str(&format!("over: {over}\n"));
-        } // @aa-sdd PK-1076 docs/specs/common/formal-plan.spec.md
+        }
         out.push_str(&format!("used: {}%\n", percent_used(n, model.window)));
         out.push_str(&format!("free: {}%\n", percent_free(n, model.window)));
         out.push_str(&format!("source: {}\n", token_source(model)));
@@ -8764,6 +9016,7 @@ fn frame_for(
     crate::amwp::execute_tuned(cell, tune, &lines)
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `MoodFit` is the result of fitting one send into a frame.
 /// The option `frame` holds the frame bytes when the fit produced a frame. The flag `dropped` records whether that fit dropped rows.
 struct MoodFit {
@@ -8924,7 +9177,7 @@ fn splice_target(cards: &[TurnCard], focus: usize, mood: &MoodYaml) -> Option<St
             &crate::amwp::cell_text(&cards[focus].cell),
         );
     }
-    let ordered: Vec<String> = cards // @aa-sdd PK-1288 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    let ordered: Vec<String> = cards
         .iter()
         .map(|card| crate::amwp::cell_text(&card.cell))
         .collect();
@@ -9072,7 +9325,7 @@ fn fit_blocks(
         };
     }
     let mut with_mood = Vec::with_capacity(blocks.len() + 1);
-    // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-200
     with_mood.push(vec![("system", String::new())]);
     with_mood.extend(blocks.iter().cloned());
     let mut with_heads = Vec::with_capacity(heads.len() + 1);
@@ -9160,7 +9413,7 @@ fn provider_id(target: &str) -> String {
         None => trimmed,
     };
     id.to_ascii_lowercase()
-} // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+}
 
 /// The function `cloud_target` reports whether a target is a cloud provider.
 /// The string `target` is the stored target. The word matches `cloudTarget`.
@@ -9250,7 +9503,7 @@ fn group_burner_blocks(cards: &[TurnCard], group: u64, doc: &crate::model::GrokD
             && card.column > 0
             && card.mark != Mark::Excluded
             && burner_blocks(card, doc)
-    }) // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+    })
 }
 
 /// The function `group_burner_denied` reports whether a member that would be sent is a denied cloud burner.
@@ -9339,7 +9592,7 @@ fn ask_run_doc(
     let prompts: Vec<String> = cards.iter().map(|card| card.prompt.clone()).collect();
     let replies: Vec<String> = cards.iter().map(|card| card.reply.clone()).collect();
     let marks: Vec<Mark> = cards.iter().map(|card| card.mark).collect();
-    let groups: Vec<u64> = cards.iter().map(|card| card.group).collect(); // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+    let groups: Vec<u64> = cards.iter().map(|card| card.group).collect();
     let columns: Vec<u32> = cards.iter().map(|card| card.column).collect();
     let Some(mut blocks) = working_blocks(&prompts, &replies, &marks, &groups, &columns, focus) else {
         return (RunAsk::Busy, false);
@@ -9420,7 +9673,7 @@ fn join_group(cards: &mut [TurnCard], join_from: Option<usize>, target: usize) -
     cards[target].column = max + 1;
     true
 }
- // @aa-sdd PK-1289 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+
 /// The function `add_cell` inserts an empty member immediately before a merge.
 /// The vector `cards` is changed. The index `merge_at` is the merge. The counter `seq` supplies the next cell number. The other cards stay in place. The function returns false when it inserts nothing.
 ///
@@ -9731,6 +9984,7 @@ fn deck_hole(bounds: egui::Rect, north: f32, south: f32) -> egui::Rect {
     )
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ColumnNotice` carries the heights the column paints in this frame.
 /// Swing sends a preferred-size change, and then `revalidate` assigns bounds before paint. egui keeps one window thread and has no listener between widgets. This frame is that notification.
 ///
@@ -9744,6 +9998,7 @@ struct ColumnNotice {
     think: f32,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ColumnBands` holds the rectangles for one column frame.
 /// The field `deck` is the gap the pin strip and the thinking pane leave. The field `think` is the thinking pane when that pane has a rectangle.
 ///
@@ -10036,7 +10291,7 @@ fn apple_drag_delta(seat: &AppleSeat, pos: egui::Pos2, enabled: egui::Vec2b) -> 
         let max_off = apple_max_offset(seat.content[axis], view);
         let start = if axis == 0 {
             seat.inner_min.x
-        } else { // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+        } else {
             seat.inner_min.y
         };
         let thumb = apple_thumb_len(view);
@@ -10075,7 +10330,7 @@ fn show_apple<R>(
             input.pointer.latest_pos(),
             input.pointer.primary_down(),
             input.pointer.primary_pressed(),
-        ) // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+        )
     });
     if !down {
         seat.grab = [None, None];
@@ -10094,7 +10349,7 @@ fn show_apple<R>(
     } else if seat.grab[1].is_some() {
         ui.ctx().set_dragged_id(key.with(1));
     }
-    area = area.scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden); // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+    area = area.scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden);
     if delta.is_some() {
         area = area.animated(false);
     }
@@ -10313,7 +10568,7 @@ fn input_edge_x(pane_left: f32, pane_right: f32, text_width: f32, pad: f32) -> (
 /// Inset of the input-edge caption from each side of the pane.
 const INPUT_EDGE_PAD: f32 = 8.0;
 
-/// Air under the embedded line, and air between that line and the cell above. // @aa-sdd PK-1432 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// Air under the embedded line, and air between that line and the cell above.
 const CELL_CLEAR_PX: f32 = 4.0;
 
 /// The function `embedded_caption_top` returns the top of the embedded caption.
@@ -10427,7 +10682,7 @@ fn paint_input_edge(ui: &mut egui::Ui, rect: egui::Rect, caption: &str, salt: us
     )
     .on_hover_text(crate::model::MODEL_LINE_TIP);
 }
- // @aa-sdd PK-1432 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+
 /// The function `prompt_caret_segment` returns the caret line for an empty prompt.
 /// The rectangle `widget` is the edit. The point `galley_pos` is the text origin. The value `row_h` is the line height.
 ///
@@ -10509,7 +10764,7 @@ fn paint_prompt_window(
                     row_h = ui.ctx().fonts_mut(|fonts| fonts.row_height(&font));
                 }
                 if let Some(segment) =
-                    prompt_caret_segment(output.response.rect, output.galley_pos, row_h) // @aa-sdd PK-987 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                    prompt_caret_segment(output.response.rect, output.galley_pos, row_h)
                 {
                     let stroke = ui.visuals().text_cursor.stroke;
                     ui.painter_at(output.response.rect)
@@ -10524,7 +10779,7 @@ fn paint_prompt_window(
                 )));
             }
             // The widget timer undo stays off. This seat owns the chords.
-            // @aa-sdd PK-1172 docs/specs/rust/aetheris/aetheris-client/src/edit.spec.md
+            // @aa-sdd PK-1172 docs/specs/rust/aetheris/aetheris-client/src/edit.spec.md FINESSE:f-214
             output.state.clear_undoer();
             output.state.store(ui.ctx(), output.response.id);
             (output.response.response, dot)
@@ -10598,8 +10853,8 @@ fn paint_bounded_reply(
 /// A reply that trims to empty uses [`PaneFace::EmptyReply`]. Any other reply uses [`PaneFace::Reply`]. A frame color uses a margin of 4 by 2, the text-edit background, a stroke of [`PANE_EDGE_PX`], and [`PANE_STROKE_ROUND`]. No color uses the inactive stroke and the inactive corner radius, with the same margin and background.
 /// `fill` true sets the minimum width from `merge_column_width` when that width exists. A member or a fill paints a wrapping label. Any other card uses `ui.label`.
 fn paint_open_reply(
-    ui: &mut egui::Ui, // @aa-sdd PK-587 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-    reply: &str, // @aa-sdd PK-588 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    ui: &mut egui::Ui,
+    reply: &str,
     ink: egui::Color32,
     member: bool,
     fill: bool,
@@ -10688,7 +10943,7 @@ const FOOTER_OUT: f32 = 4.0;
 /// Plate behind the buttons. A step above the canvas so the bar reads.
 const FOOTER_FILL: egui::Color32 = egui::Color32::from_rgb(0x1a, 0x1a, 0x1a);
 
-/// @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md FINESSE:f-144
 /// The struct `FooterHit` is what the canvas footer asked for this frame.
 /// The flags record clicks and edits. The positions record where the rows were painted.
 // @aa-sdd PK-987 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
@@ -10727,7 +10982,7 @@ struct FooterHit {
     tool_top: Option<f32>,
     /// The field `user_pick` is a name that was chosen. `None` means the list is only being filled.
     user_pick: Option<String>,
-    /// The field `bar` is the outer rectangle of the rounded bar. The rectangle includes the margin outside the stroke. // @aa-sdd PK-1157 docs/specs/common/stages.spec.md
+    /// The field `bar` is the outer rectangle of the rounded bar. The rectangle includes the margin outside the stroke.
     bar: egui::Rect,
 }
 
@@ -10777,6 +11032,7 @@ fn pin_match(ephemeral: bool, prompt: &str, reply: &str, tokens: &[String]) -> b
     tokens.iter().all(|token| hay.contains(token.as_str()))
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `PinView` is one frame of the pin.
 /// The canvas and the inspector both read it. The field `active` says the filter is on. The field `shown` says which cards pass. The marks are not in here. The next frame builds another.
 // @aa-sdd PK-587 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
@@ -10950,7 +11206,7 @@ fn shown_slots(slots: &[GatherSlot], folds: &[bool], hide: bool) -> Vec<GatherSl
                     .collect();
                 let merge = merge.filter(|index| open(*index));
                 if members.is_empty() && merge.is_none() {
-                    continue; // @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+                    continue;
                 }
                 out.push(GatherSlot::Block {
                     group: *group,
@@ -10979,7 +11235,7 @@ fn pin_enter_commits(on: bool, enter_in_field: bool) -> bool {
 
 /// The function `pin_enter_due` reports whether this frame should commit Enter.
 /// The flag `on` is the pin box. The flag `lost` is the focus loss. The flag `enter` is the Enter key. The flag `seen` is true after an earlier frame of the same loss. The pair is the commit flag and the next `seen` flag. Enter commits on the frame the field loses focus.
-/// // @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+///
 /// The box off, or no loss, returns false and false. A loss that was already seen returns false and true, so that later frame does not commit. `seen` stays true until the loss ends. The first frame of a loss returns `pin_enter_commits` and true.
 fn pin_enter_due(on: bool, lost: bool, enter: bool, seen: bool) -> (bool, bool) {
     if !on || !lost {
@@ -11012,9 +11268,9 @@ fn pin_commit_after_mark(due: bool, mark_pressed: bool) -> bool {
 }
 
 /// The function `eligible_locks` returns the cards that may show a lock.
-/// The slice `marks` is the mark of each card, from the top. The count `head_count` is the cap. Eligible cards come top first, skipping [`Mark::Excluded`], and the list is capped by `head-count`. // @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+/// The slice `marks` is the mark of each card, from the top. The count `head_count` is the cap. Eligible cards come top first, skipping [`Mark::Excluded`], and the list is capped by `head-count`.
 ///
-/// @aa-sdd PK-1076 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1076 docs/specs/common/formal-plan.spec.md FINESSE:f-216
 /// A count of 0 or less returns an empty vector. The walk keeps each other index in order. It stops when the list length reaches `head_count`.
 fn eligible_locks(marks: &[Mark], head_count: i32) -> Vec<usize> {
     if head_count <= 0 {
@@ -11090,9 +11346,9 @@ const HEAD_LOCK_OPEN: [&str; 16] = [
     "...#........#...",
     "...#........#...",
     "...#...##...#...",
-    "...#...##...#...", // @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
-    "...#........#...", // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-    "....########....", // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+    "...#...##...#...",
+    "...#........#...",
+    "....########....",
     "................",
     "................",
     "................",
@@ -11121,7 +11377,7 @@ const HEAD_LOCK_LATCHED: [&str; 16] = [
 /// The tip on the padlock. The lock is separate from I, E, P, and O.
 const HEAD_LOCK_TIP: &str = "The lock is separate from I, E, P, and O. A press keeps a packed prefix from the top. Excluding a locked turn drops that lock.";
 
-/// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md FINESSE:f-226
 /// The function `head_lock_image` builds the 16 by 16 padlock.
 /// The flag `locked` chooses the closed green shackle or the open grey shackle. A hash becomes that ink. A dot stays clear. The result is the image [`paint_head_lock`] draws.
 fn head_lock_image(locked: bool) -> egui::ColorImage {
@@ -11150,7 +11406,7 @@ fn head_lock_image(locked: bool) -> egui::ColorImage {
     egui::ColorImage::from_rgba_unmultiplied([16, 16], &rgba)
 }
 
-/// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md FINESSE:f-226
 /// The function `paint_head_lock` paints the padlock on one card and reports a primary click.
 /// `ui` is the cell bar. `index` is the card. `locked` is true when the shackle is closed. The control is 16 by 16. The image comes from [`head_lock_image`].
 /// The id is `aetheris.headlock` and the card index. The button is not a mark. It does not use [`seat_mark_button`]. A primary click returns true. The tip is [`HEAD_LOCK_TIP`].
@@ -11183,7 +11439,7 @@ fn paint_head_lock(ui: &mut egui::Ui, index: usize, locked: bool) -> bool {
     response.clicked_by(egui::PointerButton::Primary)
 }
 
-/// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md FINESSE:f-226
 /// The function `paint_head_lock_divider` paints the line between the padlock and the marks.
 /// `ui` is the cell bar. The line is not a button. The line is not a mark. The bytes are 110, 110, and 110.
 fn paint_head_lock_divider(ui: &mut egui::Ui) {
@@ -11250,6 +11506,7 @@ fn show_pin_bar(open: bool, pin_on: bool, needle: &str) -> (bool, bool, String) 
     (true, pin_on, needle.to_string())
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `PinHit` is what the pin row asked for this frame.
 /// The field `commit` asks for a pin commit. The field `fold` asks to hide the bar.
 struct PinHit {
@@ -11392,6 +11649,11 @@ thread_local! {
     /// The slot is a thread-local cell, and it starts empty.
     /// A paint of card zero stores that card's rectangle.
     static CANVAS_CARD_RECT: std::cell::Cell<Option<egui::Rect>> = const { std::cell::Cell::new(None) };
+    /// `MEMBER_PANES` is the test slot for each group member pane.
+    /// The slot is a thread-local cell, and it starts empty.
+    /// A group paint stores the group id, the pane rectangle, the horizontal bar rectangle, and the content size.
+    static MEMBER_PANES: std::cell::RefCell<Vec<(u64, egui::Rect, egui::Rect, egui::Vec2)>> =
+        std::cell::RefCell::new(Vec::new());
     /// `PIN_MARK_RECT` is the test slot for the folded pin mark.
     /// The slot is a thread-local cell, and it starts empty.
     /// Painting P on the divider stores that mark's rectangle.
@@ -11541,6 +11803,7 @@ fn paint_pin_row(
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `FootPiece` is one item on a footer row.
 /// [`FootPiece::Word`] is a label, including Mood. [`FootPiece::Gap`] is the separator. [`FootPiece::Switch`] is the mood switch. [`FootPiece::Rows`] is the row count.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -11604,7 +11867,7 @@ fn paint_tool_gap(ui: &mut egui::Ui) {
         [egui::pos2(x, top), egui::pos2(x, bottom)],
         egui::Stroke::new(1.0, ui.visuals().text_color()),
     );
-} // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md
+}
 
 /// The function `paint_mood_switch` paints the mood switch and reports a click.
 /// The surface `ui` is the parent. The record `mood` is the [`MoodYaml`]. The switch is 36 by 22. The function returns true when the switch is enabled and the click landed. The caller flips the mood.
@@ -11684,7 +11947,7 @@ fn paint_footer_spin(ui: &mut egui::Ui, elapsed_ms: u64) {
         rect.center().y - galley.size().y * 0.5,
     );
     ui.painter().galley(pos, galley, THINK_GLYPH);
-    ui.label(egui::RichText::new(THINK_WORD).color(THINK_INK)); // @aa-sdd PK-992 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
+    ui.label(egui::RichText::new(THINK_WORD).color(THINK_INK));
     ui.label(egui::RichText::new(think_clock(elapsed_ms)).color(THINK_INK));
     ui.ctx()
         .request_repaint_after(Duration::from_millis(THINK_FRAME_MS));
@@ -11697,6 +11960,7 @@ const USER_COMBO_MAX: f32 = 180.0;
 /// Distinct from the connection-strip accounts pull-down.
 const USER_COMBO_ID: &str = "aetheris-connected-user";
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ConnectedSeat` is one SSH connection the pull-down can list.
 /// The window builds the list from the focused pane and each parked pane. A test passes two records so the list rule matches the Java list.
 ///
@@ -11708,10 +11972,11 @@ struct ConnectedSeat {
     focused: bool,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `UserMenu` is the pull-down list.
 /// The field `names` holds the sanitized names. The field `selected` is the focused name when that connection itself is listed. `None` means no listed connection is focused.
 struct UserMenu {
-    names: Vec<String>, // @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md
+    names: Vec<String>,
     selected: Option<String>,
 }
 
@@ -11748,6 +12013,7 @@ fn user_menu(seats: &[ConnectedSeat]) -> UserMenu {
     UserMenu { names, selected }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `UserMove` is what a chosen name does to the vault on screen.
 enum UserMove {
     /// The variant `Quiet` is an empty pick. The open vault stays.
@@ -11815,8 +12081,9 @@ fn user_combo_width(remain: f32, reserved: f32) -> f32 {
 /// The function `east_reserve` returns the east column held before the master buttons paint.
 /// The combo keeps 160, which is [`USER_COMBO_W`]. The spinner sits on the control bar and is not part of this reserve.
 ///
+/// @aa-sdd F-156
 /// The result is [`USER_COMBO_W`].
-fn east_reserve() -> f32 { // @aa-sdd PK-1447 docs/specs/common/stages.spec.md
+fn east_reserve() -> f32 {
     USER_COMBO_W
 }
 
@@ -11837,7 +12104,7 @@ fn paint_east_capsule(ui: &mut egui::Ui, users: &UserMenu) -> Option<String> {
     }
     let mut picked = None;
     // The lane is the painted combo. Two points of the parent stay outside it.
-    // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183
     let lane_w = (remain - BUTTON_CLEAR_PX).max(1.0);
     let lane_h = button_outer_height(ui);
     let parent_clip = ui.clip_rect();
@@ -11878,7 +12145,7 @@ const BB_SHOW_TIP: &str = "Show the button bar. The fold mark sits at the left o
 /// The function `bb_fold_mark` returns the fold glyph for the button bar.
 /// The flag `open` means the bars are showing. A true flag returns `v`. A false flag returns `^`, the glyph used while the bars are folded.
 ///
-/// @aa-sdd PK-992 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
+/// @aa-sdd PK-992 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md FINESSE:f-223
 fn bb_fold_mark(open: bool) -> &'static str {
     if open { "v" } else { "^" }
 }
@@ -11909,7 +12176,7 @@ fn footer_ceiling(ui: &egui::Ui, tools_open: bool, bars_open: bool) -> f32 {
 /// The band keeps the host left and the host right. Its bottom is the host bottom.
 /// A height above the host becomes the host height. A height below 0 becomes 0.
 /// An open bar and a folded bar use this same span. The folded bar is the shorter one.
-fn footer_span(host: egui::Rect, footer_h: f32) -> egui::Rect { // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn footer_span(host: egui::Rect, footer_h: f32) -> egui::Rect {
     let h = footer_h.max(0.0).min(host.height().max(0.0));
     egui::Rect::from_min_max(
         egui::pos2(host.left(), host.bottom() - h),
@@ -11921,13 +12188,13 @@ fn footer_span(host: egui::Rect, footer_h: f32) -> egui::Rect { // @aa-sdd PK-14
 /// The value `body_h` is the host height. The value `footer_h` is the footer band.
 /// The result is `body_h` minus that band, and not below 0.
 /// A folded bar is shorter, so both columns grow by the height the fold returns.
-fn column_body_height(body_h: f32, footer_h: f32) -> f32 { // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn column_body_height(body_h: f32, footer_h: f32) -> f32 {
     (body_h - footer_h.max(0.0)).max(0.0)
 }
 
 /// The function `seat_footer_band` counts the button bar on this ui.
 /// The rectangle `band` is the span under the columns. The bar is painted in its own child, and that child does not move this cursor. This call does. The heat strip is the next plate band, so it starts under this span.
-fn seat_footer_band(ui: &mut egui::Ui, band: egui::Rect) { // @aa-sdd PK-1445 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn seat_footer_band(ui: &mut egui::Ui, band: egui::Rect) {
     if band.width() <= 0.0 || band.height() <= 0.0 {
         return;
     }
@@ -11937,7 +12204,7 @@ fn seat_footer_band(ui: &mut egui::Ui, band: egui::Rect) { // @aa-sdd PK-1445 do
 /// The function `paint_bar_lane` paints one button row in a horizontal scroller.
 /// The surface `ui` is the parent. The salt `salt` is the scroll id. The value `width` is the view width. The value `height` is the view height. The closure `add` paints the buttons at their font size.
 /// The view stays the width it was given. The buttons do not shrink to that width. A row wider than the view scrolls on the horizontal Apple strip. A row that fits paints no strip.
-fn paint_bar_lane<R>( // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn paint_bar_lane<R>(
     ui: &mut egui::Ui,
     salt: &'static str,
     width: f32,
@@ -11980,10 +12247,10 @@ fn paint_bar_lane<R>( // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-clien
 /// The function `paint_bb_folded_line` paints one folded button-bar row.
 /// The surface `ui` is the parent. The flag `bars_open` is set true when the unfold mark is clicked. The result is a [`FooterHit`] whose click flags stay false. The row is the unfold mark, then the thinking line. It paints no drag handle, no C, and no Close.
 ///
-/// @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md FINESSE:f-223
 /// The height is `folded_control_height`. The width is the available width, and at least 1. The allocation senses hover.
 /// The mark is `bb_fold_mark` of false, so the glyph is `^`. The mark is the same button as the open fold mark. It sits on the left, inset by [`BUTTON_CLEAR_PX`]. Its height is `button_outer_height`. Its width is the glyph plus the button padding on the left and the right. The hover text is [`BB_SHOW_TIP`]. A click sets `bars_open` true. The line is reserved before the button, so the button face stays above the line. The line starts 6 pixels after the mark and ends 16 pixels before the right edge, at the mark's vertical center. It is drawn only when that span is positive, with a 1 pixel stroke from `bb_fold_line_ink`. `master_top` is the top of the row. `bar` is the outer rectangle.
-fn paint_bb_folded_line(ui: &mut egui::Ui, bars_open: &mut bool) -> FooterHit { // @aa-sdd PK-1442 PK-1443 PK-1444 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn paint_bb_folded_line(ui: &mut egui::Ui, bars_open: &mut bool) -> FooterHit {
     let mut hit = FooterHit {
         make_run: false,
         make_stop: false,
@@ -12096,7 +12363,7 @@ fn paint_canvas_footer(
 /// Paint the footer from a bottom-up layout.
 /// One rounded square wraps both rows while the parent is open.
 /// Folded, the thinking line replaces that square.
-/// @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md FINESSE:f-223
 fn paint_bb_bars(
     ui: &mut egui::Ui,
     allow_delete: bool,
@@ -12145,7 +12412,7 @@ fn paint_bb_bars(
         .show(ui, |ui| {
             ui.set_min_width(ui.available_width());
             // Bottom-up, so this gap is under the rows. The pad sits outside the clip.
-            // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183
             ui.add_space(BUTTON_CLEAR_PX);
             if *tools_open {
                 let row_w = ui.available_width();
@@ -12224,6 +12491,7 @@ fn paint_bb_bars(
                 egui::Layout::left_to_right(egui::Align::Center).with_main_wrap(false),
                 |ui| {
                 // Java holds the east column first. The buttons take what remains.
+                // @aa-sdd F-156
                 ui.add_space(BUTTON_CLEAR_PX);
                 let full = ui.available_width();
                 let gap = ui.spacing().item_spacing.x;
@@ -12231,7 +12499,7 @@ fn paint_bb_bars(
                 let west = (full - east - gap).max(0.0);
                 // The lane matches the painted button. The old lane was the stock
                 // interact size, and the clip was that lane, so the border was cut.
-                // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183
                 let lane_w = (west - BUTTON_CLEAR_PX).max(0.0);
                 let lane_h = button_outer_height(ui);
                 // The buttons keep the font size. A short view scrolls; it does not clip the row.
@@ -12329,6 +12597,7 @@ fn paint_bb_bars(
     hit
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// First hit on this canvas. The prompt and the reply are the text.
 /// The fault line is not text. An empty needle matches nothing.
 struct SearchSeat {
@@ -12377,9 +12646,10 @@ fn search_word(seat: Option<&SearchSeat>) -> String {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The burner question. Cancel, and any other word, writes nothing.
 enum KeepBurners {
-    Yes, // @aa-sdd PK-1290 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    Yes,
     No,
     Cancel,
 }
@@ -12792,6 +13062,7 @@ fn pick_export_path() -> Result<Option<std::path::PathBuf>, String> {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The Roux table from one `session_export_result:` body. A failure stays off the file.
 #[derive(Debug)]
 enum SessionFile {
@@ -12862,6 +13133,7 @@ fn session_replace_file_of(piece: &ScopePiece) -> Option<Result<(), String>> {
 
 /// `used`, `chars`, and `blocks` from `session_tokens_result:`.
 /// None when the body is not that reply.
+/// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
 fn session_tokens_of(piece: &ScopePiece) -> Option<(i32, i32, i32)> {
     let ScopePiece::Later { body, .. } = piece else {
         return None;
@@ -12951,12 +13223,12 @@ fn pair_session(table: &str) -> Result<Vec<(String, String)>, &'static str> {
 }
 
 /// The function `split_message_row` splits one message-table row into a role and a text field.
-/// `line` is that row. // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+/// `line` is that row.
 /// The return is `None` when the row does not have the expected commas or the role is not a name.
 ///
 /// Commas inside a quoted field do not count. A backslash inside quotes skips the next character.
 /// The role is the text before the first comma outside quotes.
-/// The text field is everything after the third comma outside quotes. // @aa-sdd PK-1291 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// The text field is everything after the third comma outside quotes.
 /// If either comma is missing, the function returns `None`.
 /// If the first comma is the first character, the function returns `None`.
 ///
@@ -12968,7 +13240,7 @@ fn split_message_row(line: &str) -> Option<(String, String)> {
     let mut third = None;
     let mut commas = 0usize;
     let mut quote = false;
-    let mut i = 0usize; // @aa-sdd PK-1419 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    let mut i = 0usize;
     while i < chars.len() {
         let c = chars[i];
         if quote {
@@ -12989,7 +13261,7 @@ fn split_message_row(line: &str) -> Option<(String, String)> {
         }
         if c == ',' {
             commas += 1;
-            if commas == 1 { // @aa-sdd PK-1178 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            if commas == 1 {
                 first = Some(i);
             }
             if commas == 3 {
@@ -13044,7 +13316,7 @@ fn unquote_field(field: &str) -> String {
                 n @ ('"' | '\\') => out.push(n),
                 _ => out.push(c),
             }
-            if matches!(chars[i + 1], 'n' | 'r' | 't' | '"' | '\\') { // @aa-sdd PK-1410 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            if matches!(chars[i + 1], 'n' | 'r' | 't' | '"' | '\\') {
                 i += 2;
             } else {
                 i += 1;
@@ -13081,7 +13353,7 @@ fn quote_field(text: &str) -> String {
             '\\' | '"' => {
                 out.push('\\');
                 out.push(c);
-            } // @aa-sdd PK-1410 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            }
             '\n' => out.push_str("\\n"),
             '\r' => out.push_str("\\r"),
             '\t' => out.push_str("\\t"),
@@ -13095,7 +13367,7 @@ fn quote_field(text: &str) -> String {
 /// One user row and one assistant row per cell that has text. An empty cell stays out.
 /// A merge group is one pair. The user row joins the input prompts.
 /// The assistant row is the merge reply. JOIN lines stay.
-/// // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+/// // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-213
 fn table_from_cards(cards: &[TurnCard]) -> String {
     let mut count = 0usize;
     let mut body = String::new();
@@ -13143,7 +13415,7 @@ fn push_transfer_pair(body: &mut String, count: &mut usize, prompt: &str, reply:
 
 /// Input prompts of one merge, in deck order, joined by a newline.
 /// An empty prompt stays out.
-/// // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+/// // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-213
 fn transfer_inputs(cards: &[TurnCard], group: u64) -> String {
     let mut out = String::new();
     if group == 0 {
@@ -13162,7 +13434,7 @@ fn transfer_inputs(cards: &[TurnCard], group: u64) -> String {
 }
 
 /// The merge card's stored reply. JOIN lines stay.
-/// // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md
+/// // @aa-sdd PK-1168 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-213
 fn transfer_reply(cards: &[TurnCard], group: u64) -> String {
     if group == 0 {
         return String::new();
@@ -13381,7 +13653,7 @@ fn begin_export(cards: &[TurnCard], mood_line: Option<&str>) -> Option<String> {
     }
 }
 
-/// @aa-sdd PK-1178 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1178 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-222
 /// One cell from a version 1 file. The parent, the branch, and the status are parsed and dropped.
 struct FiledCell {
     file_id: String,
@@ -13763,7 +14035,7 @@ fn duplicate_group(cards: &mut Vec<TurnCard>, focus: usize, seq: &mut u64) -> Op
                 || copies.iter().any(|card: &TurnCard| card.cell == cell)
         });
         copies.push(blank_like(&cards[index], n, group));
-    } // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+    }
     let at = tail + 1;
     for (offset, card) in copies.into_iter().enumerate() {
         cards.insert(at + offset, card);
@@ -13802,7 +14074,7 @@ fn ungroup_card(cards: &mut [TurnCard], index: usize) {
         return;
     }
     let was_merge = card.column == 0;
-    cards[index].group = 0; // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+    cards[index].group = 0;
     cards[index].column = 0;
     if was_merge {
         return;
@@ -13877,6 +14149,7 @@ fn fail_merge(cards: &mut [TurnCard], group: u64) {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The cell Stop cancels, and whether the next queued member should start.
 struct Halt {
     cell: [u8; 16],
@@ -13961,7 +14234,7 @@ fn group_after(
         return None;
     }
     // One member can finish while another member of this group is still out.
-    // @aa-sdd PK-1157 docs/specs/common/stages.spec.md
+    // @aa-sdd PK-1157 docs/specs/common/stages.spec.md FINESSE:f-212
     let still = cards
         .iter()
         .any(|card| card.group == *live && card.column > 0 && card.running);
@@ -13976,6 +14249,7 @@ fn group_after(
     Some(rest.remove(0))
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Version 1 of `~/.casserole/aetheris-expanded.yaml`. Checked cell ids only.
 /// A version other than 1 stays unread and is not overwritten. Not a vault column.
 struct ExpandedYaml {
@@ -14018,7 +14292,7 @@ impl ExpandedYaml {
 fn expanded_yaml_path(home: &std::path::Path) -> std::path::PathBuf {
     home.join(".casserole").join(EXPANDED_YAML_FILE)
 }
- // @aa-sdd PK-1327 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+
 /// The function `nil_cell_id` reports whether a cell id text should be skipped.
 /// `id` is that text.
 ///
@@ -14172,7 +14446,7 @@ fn render_expanded_yaml(yaml: &ExpandedYaml) -> String {
     out
 }
 
-/// The function `read_expanded_yaml` loads an [`ExpandedYaml`] from a file. // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
+/// The function `read_expanded_yaml` loads an [`ExpandedYaml`] from a file.
 /// `path` is that file.
 ///
 /// If the file cannot be read, the return is [`ExpandedYaml::fresh`].
@@ -14213,6 +14487,7 @@ fn load_expanded_file() -> ExpandedYaml {
     read_expanded_yaml(&expanded_yaml_path(&home))
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Version 1 of `~/.casserole/aetheris-hide.yaml`. One window flag.
 /// A version other than 1 stays unread and is not overwritten. Not a vault column.
 struct HideYaml {
@@ -14404,9 +14679,9 @@ fn load_hide_file() -> HideYaml {
     read_hide_yaml(&hide_yaml_path(&home))
 }
 
-/// @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-/// @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md FINESSE:f-182
+/// @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-200
+/// @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md FINESSE:f-221
 /// Version 1 of `~/.casserole/aetheris-settings.yaml`. Window switches.
 /// A version other than 1 stays unread and is not overwritten. Not a vault column.
 // @aa-sdd PK-1327 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
@@ -14721,9 +14996,9 @@ fn begin_run(card: &mut TurnCard) {
 /// If any of those three tests fails, the card stays as it was.
 fn accept_reply(card: &mut TurnCard, cell: &[u8; 16], body: &[u8]) {
     if card.running && card.cell == *cell && !body.is_empty() {
-        card.reply.push_str(&String::from_utf8_lossy(body)); // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-    } // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-} // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
+        card.reply.push_str(&String::from_utf8_lossy(body));
+    }
+}
 
 /// The function `accept_end` stops a card when its run ends.
 /// `card` is the [`TurnCard`].
@@ -14768,7 +15043,7 @@ fn accept_fault(card: &mut TurnCard, cell: &[u8; 16], body: &[u8]) {
     card.running = false;
     card.started = None;
 }
- // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+
 /// The function `clear_turn` empties the text of one card and stops it.
 /// `card` is that [`TurnCard`].
 ///
@@ -14778,7 +15053,7 @@ fn accept_fault(card: &mut TurnCard, cell: &[u8; 16], body: &[u8]) {
 /// The cell id, the mark, the group, and the other flags stay as they were.
 fn clear_turn(card: &mut TurnCard) {
     card.prompt.clear();
-    card.reply.clear(); // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    card.reply.clear();
     card.fault.clear();
     card.running = false;
     card.started = None;
@@ -14802,9 +15077,10 @@ fn clear_plate(cards: &mut Vec<TurnCard>, focus: &mut usize, seq: &mut u64) -> O
     running
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `DeleteCut` is one planned deletion of cards from the canvas.
 /// A caller builds it with `plan_delete` and applies it with `apply_delete`.
-/// // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+///
 /// The field `gone` is the indexes to remove, in canvas order.
 /// The field `focus` is the index the focus should take after those indexes are gone.
 /// The field `group` is true when the focused card belongs to a group.
@@ -14833,7 +15109,7 @@ fn removal_indexes(cards: &[TurnCard], focus: usize) -> Vec<usize> {
         .collect()
 }
 
-/// Delete stays off when the removal would leave the canvas empty. // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+/// Delete stays off when the removal would leave the canvas empty.
 fn delete_armed(cards: &[TurnCard], focus: usize) -> bool {
     let gone = removal_indexes(cards, focus);
     !gone.is_empty() && gone.len() < cards.len()
@@ -14844,7 +15120,7 @@ fn plan_delete(cards: &[TurnCard], focus: usize) -> Option<DeleteCut> {
     if !delete_armed(cards, focus) {
         return None;
     }
-    let gone = removal_indexes(cards, focus); // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+    let gone = removal_indexes(cards, focus);
     let group = cards[focus].group != 0;
     let mut kept = 0usize;
     let mut slot = None;
@@ -14860,7 +15136,7 @@ fn plan_delete(cards: &[TurnCard], focus: usize) -> Option<DeleteCut> {
     let focus = match slot {
         Some(at) if at < kept => at,
         _ => kept.saturating_sub(1),
-    }; // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+    };
     let cancel = gone.iter().find_map(|index| {
         let card = &cards[*index];
         if card.running {
@@ -14870,7 +15146,7 @@ fn plan_delete(cards: &[TurnCard], focus: usize) -> Option<DeleteCut> {
         }
     });
     Some(DeleteCut {
-        gone, // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        gone,
         focus,
         group,
         cancel,
@@ -14885,7 +15161,7 @@ fn plan_delete(cards: &[TurnCard], focus: usize) -> Option<DeleteCut> {
 /// Otherwise the return is `index` minus how many removed indexes sit before it.
 fn shift_index(index: usize, gone: &[usize]) -> Option<usize> {
     if gone.contains(&index) {
-        None // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        None
     } else {
         let skip = gone.iter().filter(|at| **at < index).count();
         Some(index - skip)
@@ -15019,7 +15295,7 @@ fn fold_card(cards: &mut [TurnCard], index: usize, collapsed: bool) -> bool {
 /// path that adds an id.
 fn collapse_keeps_the_card() -> bool {
     true
-} // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+}
 
 /// A fold releases the id. It never adds one.
 fn release_fold(concealed: &mut Vec<[u8; 16]>, id: [u8; 16]) {
@@ -15027,39 +15303,40 @@ fn release_fold(concealed: &mut Vec<[u8; 16]>, id: [u8; 16]) {
         return;
     }
     concealed.retain(|one| *one != id);
-} // @aa-sdd PK-1156 docs/specs/common/formal-plan.spec.md
- // @aa-sdd PK-1155 docs/specs/common/formal-plan.spec.md
-/// Hide Collapsed snapshots the folded ids. A fold must not call this. // @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md
-fn conceal_collapsed(cards: &[TurnCard]) -> Vec<[u8; 16]> { // @aa-sdd PK-1148 docs/specs/common/formal-plan.spec.md
-    let mut out = Vec::new(); // @aa-sdd PK-1144 docs/specs/common/formal-plan.spec.md
-    for card in cards { // @aa-sdd PK-1141 docs/specs/common/formal-plan.spec.md
-        if card.collapsed { // @aa-sdd PK-1140 docs/specs/common/formal-plan.spec.md
-            out.push(card.cell); // @aa-sdd PK-1139 docs/specs/common/formal-plan.spec.md
-        } // @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md
-    } // @aa-sdd PK-1134 docs/specs/common/formal-plan.spec.md
-    out // @aa-sdd PK-1132 docs/specs/common/formal-plan.spec.md
-} // @aa-sdd PK-1127 docs/specs/common/formal-plan.spec.md
- // @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
-/// Ctrl+Enter runs. Plain Enter stays in the prompt. A busy card does not send. // @aa-sdd PK-1124 docs/specs/common/formal-plan.spec.md
-/// An open reply window keeps the chord. // @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md
-fn run_chord(enter: bool, ctrl: bool, running: bool, view_open: bool) -> bool { // @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md
-    enter && ctrl && !running && !view_open // @aa-sdd PK-1160 docs/specs/common/stages.spec.md
-} // @aa-sdd PK-1115 docs/specs/common/formal-plan.spec.md
- // @aa-sdd PK-1159 docs/specs/common/stages.spec.md
-/// Ctrl+Shift+G copies the armed group. Swing binds `VK_G` with Ctrl and Shift. // @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md
-fn duplicate_chord(g: bool, ctrl: bool, shift: bool) -> bool { // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-    g && ctrl && shift // @aa-sdd PK-1100 PK-1415 docs/specs/common/formal-plan.spec.md docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-} // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
- // @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
-/// Yellow when the status is the group miss. Other lines keep the plate ink.
-fn notice_ink(status: &str) -> Option<egui::Color32> { // @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
-    if status == GROUP_MISS { // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
-        Some(NOTICE_INK) // @aa-sdd PK-1015 docs/specs/common/formal-plan.spec.md
-    } else { // @aa-sdd PK-1014 docs/specs/common/formal-plan.spec.md
-        None // @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md
-    } // @aa-sdd PK-997 docs/specs/common/formal-plan.spec.md
 }
 
+/// Hide Collapsed snapshots the folded ids. A fold must not call this.
+fn conceal_collapsed(cards: &[TurnCard]) -> Vec<[u8; 16]> {
+    let mut out = Vec::new();
+    for card in cards {
+        if card.collapsed {
+            out.push(card.cell);
+        }
+    }
+    out
+}
+
+/// Ctrl+Enter runs. Plain Enter stays in the prompt. A busy card does not send.
+/// An open reply window keeps the chord.
+fn run_chord(enter: bool, ctrl: bool, running: bool, view_open: bool) -> bool {
+    enter && ctrl && !running && !view_open
+}
+
+/// Ctrl+Shift+G copies the armed group. Swing binds `VK_G` with Ctrl and Shift.
+fn duplicate_chord(g: bool, ctrl: bool, shift: bool) -> bool {
+    g && ctrl && shift
+}
+
+/// Yellow when the status is the group miss. Other lines keep the plate ink.
+fn notice_ink(status: &str) -> Option<egui::Color32> {
+    if status == GROUP_MISS {
+        Some(NOTICE_INK)
+    } else {
+        None
+    }
+}
+
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// One open notice. Close drops it. A later miss replaces the body.
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct ErrorNotice {
@@ -15067,6 +15344,7 @@ struct ErrorNotice {
     hard: bool,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `SlideSkin` is the three colors of one error notice.
 /// A caller gets one from `slide_skin`.
 /// A hard notice uses the red colors. Any other notice uses the yellow colors.
@@ -15075,7 +15353,7 @@ struct ErrorNotice {
 /// The field `fill` is the background color.
 /// The field `ink` is the text color.
 struct SlideSkin {
-    edge: egui::Color32, // @aa-sdd PK-1415 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    edge: egui::Color32,
     fill: egui::Color32,
     ink: egui::Color32,
 }
@@ -15097,6 +15375,7 @@ fn slide_skin(hard: bool) -> SlideSkin {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `MissBody` is a parsed fault body from `parse_miss`.
 /// A caller reads the reason and the message to decide the status line and the notice.
 ///
@@ -15162,8 +15441,8 @@ fn parse_miss(raw: &str) -> MissBody {
 
 /// Swing `hardMiss`. Too-large, a pool break, or a Grok transport line.
 /// `engine-down` is a yellow configuration notice, so this function returns false for that token.
-fn hard_miss(reason: &str, message: &str) -> bool { // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
-    if reason == "too-large" || message == "too-large" { // @aa-sdd PK-1172 docs/specs/rust/aetheris/aetheris-client/src/edit.spec.md
+fn hard_miss(reason: &str, message: &str) -> bool {
+    if reason == "too-large" || message == "too-large" {
         return true;
     }
     if reason == "pool down" || reason == "pool parse" || reason == "pool payload" {
@@ -15171,7 +15450,7 @@ fn hard_miss(reason: &str, message: &str) -> bool { // @aa-sdd PK-1163 docs/spec
     }
     if message.starts_with("pool down")
         || message.starts_with("pool parse")
-        || message.starts_with("pool payload") // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        || message.starts_with("pool payload")
     {
         return true;
     }
@@ -15182,7 +15461,7 @@ fn hard_miss(reason: &str, message: &str) -> bool { // @aa-sdd PK-1163 docs/spec
 /// `token` is that word. The match is exact.
 ///
 /// The words are `air-gap`, `too-large`, `burner denied`, `pipe`, and `no-model`.
-/// `engine-down` is not a banner. That token opens a yellow configuration notice. // @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md
+/// `engine-down` is not a banner. That token opens a yellow configuration notice.
 /// Any of those words returns true.
 /// Any other word returns false.
 fn banner_token(token: &str) -> bool {
@@ -15219,6 +15498,7 @@ fn slide_text(raw: &str) -> String {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `FaultSeat` is the status text and the optional notice for one wire fault.
 /// A caller applies `status` to the status line and opens `slide` when it is present.
 ///
@@ -15278,7 +15558,7 @@ fn seat_fault(cards: &[TurnCard], focus: usize, cell: &[u8; 16], body: &[u8]) ->
     let miss = parse_miss(&raw);
     if miss.structured && miss.reason == CELL_BUSY {
         return Some(FaultSeat {
-            status: CELL_BUSY.to_string(), // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            status: CELL_BUSY.to_string(),
             slide: None,
         });
     }
@@ -15301,7 +15581,7 @@ fn seat_fault(cards: &[TurnCard], focus: usize, cell: &[u8; 16], body: &[u8]) ->
     } else {
         raw.as_ref()
     };
-    let trimmed = detail.trim(); // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    let trimmed = detail.trim();
     let status = if miss.structured {
         miss.reason.clone()
     } else {
@@ -15352,6 +15632,7 @@ fn sources_before(cards: &[TurnCard], target: usize) -> Vec<usize> {
     out
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `PipeBody` is the result of resolving `{{cell[k].output}}` tokens in one text.
 /// `resolve_pipes` returns it.
 ///
@@ -15454,6 +15735,7 @@ fn pipe_indexes(cards: &[TurnCard], target: usize) -> Vec<usize> {
     queue
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `PipeMiss` is why one chain card could not be framed.
 /// `pipe_frame` returns it as the error.
 ///
@@ -15508,6 +15790,7 @@ fn pipe_frame(
     ))
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `ChainAsk` is the next action for a pipe chain.
 /// `plan_chain_doc` and `take_next` return it.
 ///
@@ -15641,6 +15924,7 @@ fn plan_chain_doc(
     (ask, dropped)
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `PipeWake` is what the window should do after a chain card finishes.
 /// `pipe_after_doc` returns it.
 ///
@@ -15830,6 +16114,7 @@ fn commit_wait(session_up: bool, more: bool) -> Option<u64> {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `CommitWake` is the result of draining the live session once.
 /// `drain_link` returns it. The window asks for another paint when either flag is set.
 ///
@@ -15862,6 +16147,7 @@ fn border_arm(inside: bool, editor: bool) -> bool {
     inside && !editor
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// A text pane that can hold the wheel. The canvas is no seat.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum TextPane {
@@ -15869,6 +16155,7 @@ enum TextPane {
     Reply,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Where the press landed. A folded brief is a card press.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ScrollPress {
@@ -16020,11 +16307,12 @@ fn disarm_view_glass(ctx: &egui::Context, generation: u64) {
                 size: Some(egui::Vec2::ZERO),
                 interactable: false,
                 last_became_visible_at: None,
-            }, // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            },
         );
     });
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// One saved rectangle. Swing's four keys.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct ViewRect {
@@ -16158,7 +16446,7 @@ fn rects_meet(a: ViewRect, b: ViewRect) -> bool {
 
 /// A short side or a rectangle off every screen loads as the default.
 fn seated_bounds(text: &str, screens: &[ViewRect]) -> Option<ViewRect> {
-    let rect = parse_view_bounds(text)?; // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+    let rect = parse_view_bounds(text)?;
     if screens.iter().any(|screen| rects_meet(rect, *screen)) {
         Some(rect)
     } else {
@@ -16216,6 +16504,7 @@ fn view_body_band(window_height: i32, find_row: i32, control_row: i32) -> i32 {
         .saturating_sub(control_row.max(0))
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The button row stays. The find bar yields when the view is short.
 /// The reply scrolls in `body`. The three heights sum to the window content.
 struct ViewSlots {
@@ -16390,7 +16679,7 @@ fn view_job(
     job
 }
 
-/// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Find inside one reply window. The canvas search stays on the canvas.
 struct ViewFind {
     open: bool,
@@ -16551,6 +16840,7 @@ impl ViewFind {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ViewPane` is one open reply window.
 /// The window paints this value. Closing the window stores `last`.
 ///
@@ -16571,7 +16861,7 @@ struct ViewPane {
 
 /// Menu lines. The reply omits Import. Duplicate group shows on a grouped card.
 /// A card outside a group omits that line. A merge cell and any member keep it.
-///
+/// // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-140
 fn card_menu(on_reply: bool, in_group: bool) -> &'static [&'static str] {
     if on_reply {
         if in_group {
@@ -16605,7 +16895,7 @@ fn has_nul(bytes: &[u8]) -> bool {
 
 /// Quiet import text. A leading NUL is refused.
 /// Bad UTF-8 takes the replacement character. The reply is not an argument.
-fn import_text(mark: Mark, group: u64, column: u32, bytes: &[u8]) -> Result<String, &'static str> { // @aa-sdd PK-1179 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn import_text(mark: Mark, group: u64, column: u32, bytes: &[u8]) -> Result<String, &'static str> {
     if let Some(word) = import_refused(mark, group, column) {
         return Err(word);
     }
@@ -16640,6 +16930,7 @@ fn prompt_status(large: bool, index: usize) -> String {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The enum `ImportRead` is why reading an import file failed.
 /// `read_import` returns it as the error.
 ///
@@ -16658,7 +16949,7 @@ fn read_import(path: &std::path::Path) -> Result<Vec<u8>, ImportRead> {
         Err(err) => return Err(ImportRead::Failed(err.to_string())),
     };
     if meta.len() > IMPORT_CAP {
-        return Err(ImportRead::Big); // @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
+        return Err(ImportRead::Big);
     }
     let bytes = match std::fs::read(path) {
         Ok(bytes) => bytes,
@@ -16670,6 +16961,7 @@ fn read_import(path: &std::path::Path) -> Result<Vec<u8>, ImportRead> {
     Ok(bytes)
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The struct `ChooserReport` is the bounds and the path printed by a file chooser.
 /// `parse_chooser_report` fills it. A caller saves the bounds and reads the path.
 ///
@@ -16682,7 +16974,7 @@ struct ChooserReport {
     file: Option<String>,
 }
 
-/// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
 /// The struct `ImportOutcome` is the result of one prompt import.
 /// `begin_import` returns it.
 ///
@@ -16949,7 +17241,7 @@ fn select_all_span(grid: &Grid) -> ((usize, usize), (usize, usize)) {
 /// Open as URL stays dark unless the highlight is a URL. Copy stays dark without a highlight.
 /// Paste stays dark when the clipboard has no string. Page, line, and clear stay lit.
 /// Clear on the alternate screen still leaves that grid as it stands.
-///
+/// // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-143
 fn console_menu_gates(
     grid: &Grid,
     anchor: Option<(usize, usize)>,
@@ -17037,6 +17329,7 @@ enum MenuFollow {
     Model,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The pane fields the menu writes. The caller sends the clipboard and opens a URL.
 struct MenuSeat<'a> {
     grid: &'a mut Grid,
@@ -17151,6 +17444,7 @@ fn frame_usable(rect: (i32, i32, i32, i32), screens: &[(i32, i32, i32, i32)]) ->
     screens.iter().any(|screen| rects_intersect(rect, *screen))
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The rectangle and the maximized flag held until close.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct FrameSeat {
@@ -17158,9 +17452,10 @@ struct FrameSeat {
     maximized: bool,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// What the next open uses. `physical` means the size is in physical pixels.
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct OpenFrame { // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+struct OpenFrame {
     width: f32,
     height: f32,
     place: Option<(i32, i32)>,
@@ -17263,9 +17558,10 @@ fn console_import_text(raw: &[u8]) -> Result<String, &'static str> {
     if text.is_empty() {
         return Err(FILE_EMPTY);
     }
-    Ok(text) // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+    Ok(text)
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// What OK does with the editor body.
 enum PasteDecision {
     /// Empty writes nothing.
@@ -17300,6 +17596,7 @@ fn paste_wrapped(text: &str) -> Vec<u8> {
     out
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// One pane's link. It follows the session, not a canvas word.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PaneLink {
@@ -17344,6 +17641,7 @@ fn link_from_status(text: &str, prior: PaneLink) -> PaneLink {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Buttons on the open bar. New Term and Clear stay on. Close needs a second pane.
 struct ShellEnables {
     reconnect: bool,
@@ -17368,6 +17666,7 @@ fn shell_enables(phase: PaneLink, panes: usize) -> ShellEnables {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Which way a split runs. Horizontal is side by side.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum SplitWay {
@@ -17375,6 +17674,7 @@ enum SplitWay {
     Vertical,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The `PaneSide` enum names which child a split path step follows.
 /// [`PaneSide::Left`] is the first child. [`PaneSide::Right`] is the second child. A horizontal split uses those names for the left child and the right child. A vertical split uses the same names for the top child and the bottom child.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -17383,6 +17683,7 @@ enum PaneSide {
     Right,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The `PaneNode` enum is one node in the pane tree.
 /// [`PaneNode::Leaf`] holds one pane id. [`PaneNode::Split`] holds a [`SplitWay`], a ratio, and two child nodes.
 ///
@@ -17434,6 +17735,7 @@ fn graft_split(node: PaneNode, old_id: u64, new_id: u64, fresh: SplitWay) -> Pan
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The `Detach` enum is the result of removing one leaf from a [`PaneNode`] tree.
 /// [`Detach::Miss`] holds the tree that was searched, with that leaf still in place. [`Detach::Hit`] holds the sibling that replaces the removed split. `focus` on that hit is the pane id `first_leaf` finds on the sibling.
 enum Detach {
@@ -17511,6 +17813,7 @@ fn set_split_ratio(node: &mut PaneNode, path: &[PaneSide], ratio: f32) {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The `SplitBar` struct is one draggable divider in a pane layout.
 /// `way` is the [`SplitWay`] of that split. `rect` is the gap rectangle the pointer drags. `host` is the parent rectangle the ratio is measured against. `path` is the [`PaneSide`] steps from the root to this split.
 struct SplitBar {
@@ -17520,6 +17823,7 @@ struct SplitBar {
     path: Vec<PaneSide>,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The `SplitLayout` struct is the rectangles for one pane tree.
 /// `leaves` pairs each pane id with the rectangle it paints in. `bars` holds one [`SplitBar`] for each split, in the order `walk_panes` visits them.
 struct SplitLayout {
@@ -17657,7 +17961,7 @@ fn read_growing(path: &std::path::Path) -> Result<Vec<u8>, String> {
     Ok(raw)
 }
 
-/// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
 /// The `PromptBytes` enum is the classified contents of a prompt file.
 /// [`PromptBytes::Text`] holds the bytes that were read. [`PromptBytes::Binary`] means a NUL was found and this value holds no bytes.
 enum PromptBytes {
@@ -17688,7 +17992,7 @@ fn read_prompt_bytes(path: &std::path::Path) -> Result<PromptBytes, String> {
     raw.extend_from_slice(&head[..filled]);
     let mut chunk = [0u8; 8192];
     loop {
-        let n = match std::io::Read::read(&mut input, &mut chunk) { // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
+        let n = match std::io::Read::read(&mut input, &mut chunk) {
             Ok(0) => break,
             Ok(n) => n,
             Err(err) => return Err(io_text(&err)),
@@ -17698,7 +18002,7 @@ fn read_prompt_bytes(path: &std::path::Path) -> Result<PromptBytes, String> {
     Ok(PromptBytes::Text(raw))
 }
 
-/// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
 /// The `ConsoleReadFail` enum is why a console import did not return text.
 /// [`ConsoleReadFail::Refuse`] holds a static refusal such as a binary file or an empty file. [`ConsoleReadFail::Failed`] holds the message from a read that did not complete.
 enum ConsoleReadFail {
@@ -17748,7 +18052,7 @@ fn rects_intersect(a: (i32, i32, i32, i32), b: (i32, i32, i32, i32)) -> bool {
     (ax as i64) < bx2 && ax2 > (bx as i64) && (ay as i64) < by2 && ay2 > (by as i64)
 }
 
-/// A missing or empty folder, or a path that is not a directory, stays off the dialog. // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+/// A missing or empty folder, or a path that is not a directory, stays off the dialog.
 fn chooser_directory_live(raw: &str) -> Option<&str> {
     let text = raw.trim();
     if text.is_empty() {
@@ -17874,7 +18178,7 @@ fn pick_shell_file(
         None => String::new(),
     };
     command.env("AETHERIS_CHOOSER_BOUNDS", bounds_text);
-    let output = match command.output() { // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+    let output = match command.output() {
         Ok(output) => output,
         Err(err) => return Err(err.to_string()),
     };
@@ -17948,7 +18252,7 @@ fn load_import(cards: &mut [TurnCard], index: usize, path: &std::path::Path) -> 
         Err(_) => false,
     };
     let bytes = match read_prompt_bytes(path) {
-        Ok(PromptBytes::Binary) => return (IMPORT_BINARY.to_string(), false), // @aa-sdd PK-1415 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        Ok(PromptBytes::Binary) => return (IMPORT_BINARY.to_string(), false),
         Ok(PromptBytes::Text(bytes)) => bytes,
         Err(msg) => return (format!("{IMPORT_FAILED}{msg}"), true),
     };
@@ -17996,7 +18300,7 @@ fn reply_opens_turn(cards: &[TurnCard], piece: &ScopePiece) -> bool {
     };
     match cards.last() {
         Some(last) => last.cell == *cell && last.running,
-        None => false, // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        None => false,
     }
 }
 
@@ -18056,7 +18360,7 @@ fn route_scope(
                 accept_reply(card, cell, body);
             }
             if !nil_cell(cell) {
-                close_thought(log);
+                ThinkPipe::finish(log);
             }
         }
         ScopePiece::End { cell } => {
@@ -18064,13 +18368,13 @@ fn route_scope(
                 accept_end(card, cell);
             }
             if !nil_cell(cell) {
-                close_thought(log);
+                ThinkPipe::finish(log);
             }
         }
         ScopePiece::Fault { cell, body } => {
             accept_fault_deck(cards, focus, cell, body);
             if !nil_cell(cell) {
-                close_thought(log);
+                ThinkPipe::finish(log);
             }
         }
         ScopePiece::Delta { cell, kind, body } => {
@@ -18086,7 +18390,7 @@ fn route_scope(
             }
             let word = think_model_word(&card.target);
             let text = String::from_utf8_lossy(body);
-            accept_thought(log, *cell, &word, &text);
+            ThinkPipe::offer(log, *cell, &word, &text);
         }
     }
 }
@@ -18097,7 +18401,7 @@ fn route_scope(
 /// grok_think is true and the tag is the Grok model. An empty tag reads
 /// ollama. The end of that turn closes the block even when the gate has shut.
 /// A different tag on this nil cell starts a header.
-/// // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md
+/// // @aa-sdd PK-1166 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-210
 fn route_console_thought(log: &mut ThinkLog, open: bool, tag: &str, piece: &ScopePiece) -> bool {
     match piece {
         ScopePiece::Delta { cell, kind, body }
@@ -18107,12 +18411,12 @@ fn route_console_thought(log: &mut ThinkLog, open: bool, tag: &str, piece: &Scop
                 let text = String::from_utf8_lossy(body);
                 let word = tag.trim();
                 let word = if word.is_empty() { "ollama" } else { word };
-                accept_thought(log, *cell, word, &text);
+                ThinkPipe::offer(log, *cell, word, &text);
             }
             true
         }
         ScopePiece::End { cell } if nil_cell(cell) => {
-            close_thought(log);
+            ThinkPipe::finish(log);
             true
         }
         _ => false,
@@ -18169,7 +18473,7 @@ fn shown_target(target: &str) -> String {
 /// The SSH heat budget. A managed count above zero is that count.
 /// A blank engine counts as ollama. An engine that contains ollama uses 131072.
 /// Any other engine uses zero. A canvas window is not this number.
-/// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+/// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
 fn ssh_heat_budget(managed: i32, engine: &str) -> i32 {
     if managed > 0 {
         return managed;
@@ -18207,8 +18511,8 @@ fn aetheris_status_line(amwp: bool, air: &str, mismatch: bool, engine: &str, ext
     let wire = if amwp { "AMWP" } else { "raw" };
     status_facts_line(wire, air, mismatch, engine, extra)
 }
- // @aa-sdd PK-1086 docs/specs/common/formal-plan.spec.md
-/// VT100 or PTY. A missing or unknown token is VT100. AMWP stays off this strip. // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+
+/// VT100 or PTY. A missing or unknown token is VT100. AMWP stays off this strip.
 fn shell_mode_word(token: &str) -> &'static str {
     if token.trim().eq_ignore_ascii_case("pty") {
         "PTY"
@@ -18225,7 +18529,7 @@ fn shell_term_type(token: &str) -> &'static str {
         "vt100"
     }
 }
- // @aa-sdd PK-1434 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+
 /// The VT100 strip. The wire word is the console mode. The Aetheris strip keeps AMWP.
 fn shell_status_line(mode: &str, air: &str, mismatch: bool, engine: &str, extra: &str) -> String {
     status_facts_line(shell_mode_word(mode), air, mismatch, engine, extra)
@@ -18260,7 +18564,7 @@ fn status_user_name(amwp: bool, user: &str) -> String {
 /// West word on the SSH status strip. The chip keeps the short seat word.
 /// Connected shows host and port. A disconnect reason uses the Java em dash.
 fn shell_status_west(status: &str, host: &str, port: &str) -> String {
-    let text = status.trim(); // @aa-sdd PK-1434 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    let text = status.trim();
     if text == "Connecting" || text.starts_with("Connecting") {
         return "Connecting".to_string();
     }
@@ -18285,32 +18589,32 @@ fn shell_status_west(status: &str, host: &str, port: &str) -> String {
 
 /// The function `status_bar_height` returns the height of the status strip.
 /// `ui` supplies the body font. The height is that font's row height plus [`STATUS_PAD_Y`] above the text and the same pad below it. [`STATUS_PAD_Y`] is 3.
-fn status_bar_height(ui: &egui::Ui) -> f32 { // @aa-sdd PK-1434 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn status_bar_height(ui: &egui::Ui) -> f32 {
     let font = egui::TextStyle::Body.resolve(ui.style());
     let row = ui.fonts_mut(|fonts| fonts.row_height(&font));
     row + STATUS_PAD_Y * 2.0
 }
 
 /// The heat strip is 9 pixels. The needle in that strip is the same height. The button bar does not use this height.
-const HEAT_STRIP_PX: f32 = 9.0; // @aa-sdd PK-1445 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+const HEAT_STRIP_PX: f32 = 9.0;
 
 /// The function `frame_bands` splits one plate into three bands.
 /// The rectangle `host` is the room under the product tabs. The value `status_h` is the status text row.
 /// The first band is the notebook. The canvas, the inspector, and the button bar share it. The second band is the heat strip. It is [`HEAT_STRIP_PX`] tall and starts at the notebook bottom. The third band is the status text. It starts at the heat strip bottom.
 /// A short host keeps the notebook at zero and shortens the heat strip to the room that remains. The status text takes what is left under the heat strip.
-fn frame_bands(host: egui::Rect, status_h: f32) -> (egui::Rect, egui::Rect, egui::Rect) { // @aa-sdd PK-1445 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn frame_bands(host: egui::Rect, status_h: f32) -> (egui::Rect, egui::Rect, egui::Rect) {
     let status_h = status_h.max(0.0);
     let width = host.width().max(0.0);
     let notebook_h = (host.height() - status_h - HEAT_STRIP_PX).max(0.0);
     let notebook = egui::Rect::from_min_size(host.min, egui::vec2(width, notebook_h));
-    let heat_h = HEAT_STRIP_PX.min((host.bottom() - notebook.bottom()).max(0.0)); // @aa-sdd PK-580 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    let heat_h = HEAT_STRIP_PX.min((host.bottom() - notebook.bottom()).max(0.0));
     let heat = egui::Rect::from_min_size(
         egui::pos2(host.left(), notebook.bottom()),
         egui::vec2(width, heat_h),
     );
     let status_bottom = (heat.bottom() + status_h)
         .min(host.bottom())
-        .max(heat.bottom()); // @aa-sdd PK-1434 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        .max(heat.bottom());
     let status = egui::Rect::from_min_max(
         egui::pos2(host.left(), heat.bottom()),
         egui::pos2(host.right(), status_bottom),
@@ -18340,7 +18644,7 @@ fn paint_status_bar(ui: &mut egui::Ui, rect: egui::Rect, west: &str, east: &str)
     painter
         .with_clip_rect(west_clip)
         .galley(egui::pos2(left, y), west_galley, STATUS_FG);
-    if !east.is_empty() { // @aa-sdd PK-1434 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    if !east.is_empty() {
         let x = rect.right() - STATUS_PAD_X - east_galley.size().x;
         painter.galley(egui::pos2(x, y), east_galley, STATUS_FG);
     }
@@ -18355,12 +18659,12 @@ fn icon_ground(r: u8, g: u8, b: u8) -> bool {
 }
 
 /// The rounded ground becomes black. The eye stays. The plate stays square.
-fn fill_icon_ground(rgba: &mut [u8], width: u32, height: u32) { // @aa-sdd PK-1330 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-    let w = width as usize; // @aa-sdd PK-1356 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn fill_icon_ground(rgba: &mut [u8], width: u32, height: u32) {
+    let w = width as usize;
     let h = height as usize;
-    if w == 0 || h == 0 || rgba.len() < w * h * 4 { // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-        return; // @aa-sdd PK-585 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-    } // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    if w == 0 || h == 0 || rgba.len() < w * h * 4 {
+        return;
+    }
     let mut stack = Vec::new();
     stack.push((0usize, 0usize));
     stack.push((w - 1, 0usize));
@@ -18370,12 +18674,12 @@ fn fill_icon_ground(rgba: &mut [u8], width: u32, height: u32) { // @aa-sdd PK-13
     while let Some((x, y)) = stack.pop() {
         let index = y * w + x;
         if seen[index] {
-            continue; // @aa-sdd PK-1331 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-        } // @aa-sdd PK-1356 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            continue;
+        }
         seen[index] = true;
-        let offset = index * 4; // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-        if !icon_ground(rgba[offset], rgba[offset + 1], rgba[offset + 2]) { // @aa-sdd PK-585 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-            continue; // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        let offset = index * 4;
+        if !icon_ground(rgba[offset], rgba[offset + 1], rgba[offset + 2]) {
+            continue;
         }
         rgba[offset] = 0;
         rgba[offset + 1] = 0;
@@ -18405,12 +18709,12 @@ fn window_icon_rgba() -> Option<(u32, u32, Vec<u8>)> {
     })
 }
 
-/// Eye of Horus at [`ABOUT_APP_PX`]. The ground is black. The eye stays. // @aa-sdd PK-1332 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-fn about_app_rgba() -> Option<(u32, u32, Vec<u8>)> { // @aa-sdd PK-1356 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// Eye of Horus at [`ABOUT_APP_PX`]. The ground is black. The eye stays.
+fn about_app_rgba() -> Option<(u32, u32, Vec<u8>)> {
     let bytes = include_bytes!("../../../../src/main/resources/icons/aetheris.jpg");
-    let (width, height, mut rgba) = decode_icon_rgba(bytes, ABOUT_APP_PX)?; // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-    fill_icon_ground(&mut rgba, width, height); // @aa-sdd PK-585 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-    Some((width, height, rgba)) // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    let (width, height, mut rgba) = decode_icon_rgba(bytes, ABOUT_APP_PX)?;
+    fill_icon_ground(&mut rgba, width, height);
+    Some((width, height, rgba))
 }
 
 /// One About mark as a texture. A failed decode leaves the seat empty.
@@ -18477,11 +18781,11 @@ fn shell_icon_seat(os: &str) -> ShellIconSeat {
             class_name: false,
         }
     } else if os == "linux" {
-        ShellIconSeat { // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-            window: true, // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-            taskbar: false, // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-            dock: false, // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-            class_name: true, // @aa-sdd PK-585 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        ShellIconSeat {
+            window: true,
+            taskbar: false,
+            dock: false,
+            class_name: true,
         }
     } else {
         ShellIconSeat {
@@ -18501,12 +18805,12 @@ fn apply_taskbar(
     taskbar: bool,
 ) -> winit::window::WindowAttributes {
     if !taskbar {
-        return attributes; // @aa-sdd PK-1329 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-    } // @aa-sdd PK-1356 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        return attributes;
+    }
     use winit::platform::windows::WindowAttributesExtWindows;
-    attributes.with_taskbar_icon(window_icon()) // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-} // @aa-sdd PK-585 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
- // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    attributes.with_taskbar_icon(window_icon())
+}
+
 /// The function `apply_taskbar` is the host that is not Windows.
 /// The flag `taskbar` is ignored. The Windows trait is not named.
 #[cfg(not(windows))]
@@ -18667,6 +18971,7 @@ fn settle_plate(plate: Plate, mux: bool, pick: Option<Plate>) -> PlatePick {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The word written under `ui.product.tab`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum TabWord {
@@ -18674,6 +18979,7 @@ enum TabWord {
     Aetheris,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The `TabStep` struct is one change to the product tab.
 /// `plate` is the [`Plate`] to show. `restore` is true while a stored Aetheris choice is still waiting. `land` is true when this step should settle on Aetheris. `store` is a [`TabWord`] to write, or `None` when the stored word stays. `arm_console` is true when this step should give the keyboard to the console.
 struct TabStep {
@@ -18682,7 +18988,7 @@ struct TabStep {
     land: bool,
     store: Option<TabWord>,
     arm_console: bool,
-} // @aa-sdd PK-1180 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+}
 
 /// Open sits on SSH. A stored `aetheris` word arms the wait for Connect.
 fn open_product_tab(stored_aetheris: bool) -> TabStep {
@@ -18718,7 +19024,7 @@ fn step_product_tab(plate: Plate, mux: bool, restore: bool, pick: Option<Plate>)
                     arm_console: settled.arm_console,
                 }
             }
-            Plate::Ssh => TabStep { // @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+            Plate::Ssh => TabStep {
                 plate: Plate::Ssh,
                 restore: false,
                 land: false,
@@ -18863,6 +19169,7 @@ pub fn run() {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The `ConnectSnap` struct is the connect fields last used for one pane.
 /// `host` is the host text. `port` is the port text. `user` is the user text. `password` is the password text.
 #[derive(Clone)]
@@ -18873,9 +19180,9 @@ struct ConnectSnap {
     password: String,
 }
 
-/// @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
+/// @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md FINESSE:f-176
+/// @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md FINESSE:f-177
 /// The `ParkedPane` struct is one terminal that is not the pane in front.
 /// The focused pane keeps its grid and session on [`App`]. This struct keeps the same kind of state for every other pane.
 ///
@@ -18885,7 +19192,7 @@ struct ConnectSnap {
 ///
 /// `scope_stash` holds scope pieces waiting for the canvas. The bool is true once this pane offered the console thought. `paint_stash` holds paint bytes waiting for the grid. `osc_hold` holds the tail of a split model sequence. `last` is the [`ConnectSnap`] from the last connect on this pane.
 ///
-/// `vt_think` is this session's thought text. `vt_open` is true when this session's strip is showing. `vt_slide` is the rise from the top. `0` starts shut. `-1` is settled. `vt_folded` is true when the strip is folded. `vt_height` is the dragged height. Zero uses the three-line view. `vt_think_on` is true when this session's thinking is on.
+/// `ssh_think_key` is this session's key in the thinking-pane manager. Empty means this pane has not taken a seat. The log and the chrome stay in the manager. `vt_think_on` is true when this session's thinking is on.
 ///
 /// `roux_used` is the Roux session count. `None` means the reply has not been held. `roux_chars` is the character count in those messages. `roux_blocks` is the stored message count. `tokens_asked` is true after the `session_tokens` ask has been sent. `live_line` is the text typed on this pane and not yet submitted.
 /// `engine_label` is the model this pane last reported. Empty prints as ollama. A canvas cell is not this word. `engine_asked` is true after this connection has been asked for that model. A disconnect clears the ask and leaves the word.
@@ -18909,19 +19216,12 @@ struct ParkedPane {
     paint_stash: VecDeque<Vec<u8>>,
     osc_hold: crate::model::OscHold,
     last: Option<ConnectSnap>,
-    /// This session's thought text. The height stays on this session.
-    vt_think: ThinkLog,
-    /// This session's strip is on the plate. A thought opens it.
-    vt_open: bool,
-    /// Rise from the top of this session. `0` starts shut. `-1` is settled.
-    vt_slide: f32,
-    /// This session's strip is folded. Close returns the mark to `v` on this session.
-    vt_folded: bool,
-    /// This session's dragged height. Zero uses the three-line view.
-    vt_height: f32,
+    /// Key of this pane's seat. Empty until the pane receives a thought. The log stays in the manager.
+    ssh_think_key: String,
     /// This session's thinking is on. Another session's shell result does not clear it.
     vt_think_on: bool,
     /// Roux session count for this pane. None until the reply is held.
+    /// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
     roux_used: Option<i32>,
     /// Characters in the held Roux messages.
     roux_chars: i32,
@@ -18937,7 +19237,7 @@ struct ParkedPane {
     engine_asked: bool,
 }
 
-/// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
 /// The `LoadedCanvas` struct is one user's canvas read from the vault file.
 /// `vault` is the open vault. `cards` are the turns that became cards. `hold` is the cell ids that did not become cards. `canvas_id` is the id of the canvas row those cells came from.
 // @aa-sdd PK-1330 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
@@ -18954,7 +19254,7 @@ struct LoadedCanvas {
 
 /// One user's canvas while another user is on the glass.
 /// The run stays on that user's SSH session. Switching the glass does not cancel it.
-/// // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
 // @aa-sdd PK-1331 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
 // @aa-sdd PK-1356 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
 // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
@@ -18966,7 +19266,6 @@ struct ParkedDeck {
     focus: usize,
     facts: Option<CanvasFacts>,
     scope_text: String,
-    think: ThinkLog,
     vault: Option<crate::vault::Vault>,
     vault_canvas: String,
     vault_hold: Vec<String>,
@@ -18986,7 +19285,7 @@ struct ParkedDeck {
     run_pane: Option<u64>,
 }
 
-/// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
 /// Where a parked pane's canvas piece lands.
 /// Showing updates the glass. Parked updates that user's seat. Hold waits on the pane.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -19020,7 +19319,7 @@ fn scope_home(showing_user: &str, pane_user: &str, parked: bool) -> ScopeHome {
 /// Focused canvas pieces stay on the glass when that pane's user is the glass,
 /// or when either name is empty. A different user with a seat stays on that seat.
 /// A different user with no seat waits on the pane.
-/// // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+/// // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
 fn focused_canvas_home(glass: &str, pane_user: &str, parked: bool) -> ScopeHome {
     if glass.is_empty() || pane_user.is_empty() || glass == pane_user {
         return ScopeHome::Showing;
@@ -19031,7 +19330,7 @@ fn focused_canvas_home(glass: &str, pane_user: &str, parked: bool) -> ScopeHome 
 /// The pane that carries this glass user's execute.
 /// An empty glass, or a focused user who is that glass, uses the focused pane.
 /// Another user's parked pane is that pane. A missing pane sends nothing.
-/// // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+/// // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
 fn glass_run_pane(
     glass: &str,
     focused_user: &str,
@@ -19047,7 +19346,7 @@ fn glass_run_pane(
 }
 
 /// Scroll id for one canvas user's thinking pane.
-/// // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+/// // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
 fn think_salt(user: &str) -> u64 {
     let mut salt = 0xcbf29ce484222325u64;
     for byte in user.as_bytes() {
@@ -19057,7 +19356,7 @@ fn think_salt(user: &str) -> u64 {
     salt
 }
 
-/// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
 /// The `DeckRefs` struct is a mutable view of one canvas deck while scope is applied.
 /// `cards` is the turn list. `focus` is the focused card index. `facts` is the seated canvas facts. `scope_text` is the gathered scope text. `think` is the [`ThinkLog`].
 ///
@@ -19081,7 +19380,7 @@ struct DeckRefs<'a> {
     land_newest: &'a mut bool,
 }
 
-/// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
 /// The `FeedOut` struct is what `feed_parts` asks the caller to do after one burst of scope.
 /// `frames` are the bytes to write on the session that delivered the pieces. `born` is the cell id of each card the burst opened. `pins` are the card indexes that began a run. `status` is a status line to show, or `None`.
 ///
@@ -19179,7 +19478,7 @@ fn feed_parts(
         running_before,
         pieces,
         mood,
-        grok, // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        grok,
         pool_boot,
     );
     match pipe_wake {
@@ -19211,6 +19510,7 @@ fn feed_parts(
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The `ParkedHit` struct is a click or menu choice on a pane that is not in front.
 /// `id` is that pane's id. `focus` is true when the pane should come to the front. `model` is true when the menu asked for Select model. `import` is true when the menu asked for Import.
 struct ParkedHit {
@@ -19220,52 +19520,53 @@ struct ParkedHit {
     import: bool,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The `PasteDraft` struct is the text open in the paste editor.
 /// `text` is the body the editor shows. OK sends that body. Cancel drops the struct.
 struct PasteDraft {
     text: String,
 }
 
-/// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
 /// The `ShellNotice` struct is one modal notice over the terminal.
 /// `title` is the window title. `body` is the message. `hard` is true when the body is a thrown read and the label uses the red ink. A refusal keeps `hard` false.
-struct ShellNotice { // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+struct ShellNotice {
     title: &'static str,
     body: String,
     /// Thrown read. The label uses the red ink. A refusal stays false.
     hard: bool,
 }
 
-/// @aa-sdd PK-1156 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1155 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1148 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1144 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1141 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1140 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1139 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1134 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1132 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1127 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1124 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1160 docs/specs/common/stages.spec.md
-/// @aa-sdd PK-1115 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1159 docs/specs/common/stages.spec.md
-/// @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1100 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md
-/// @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1015 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-1014 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md
-/// @aa-sdd PK-997 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1156 docs/specs/common/formal-plan.spec.md FINESSE:f-100
+/// @aa-sdd PK-1155 docs/specs/common/formal-plan.spec.md FINESSE:f-101
+/// @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md FINESSE:f-105
+/// @aa-sdd PK-1148 docs/specs/common/formal-plan.spec.md FINESSE:f-109
+/// @aa-sdd PK-1144 docs/specs/common/formal-plan.spec.md FINESSE:f-113
+/// @aa-sdd PK-1141 docs/specs/common/formal-plan.spec.md FINESSE:f-116
+/// @aa-sdd PK-1140 docs/specs/common/formal-plan.spec.md FINESSE:f-117
+/// @aa-sdd PK-1139 docs/specs/common/formal-plan.spec.md FINESSE:f-118
+/// @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md FINESSE:f-119
+/// @aa-sdd PK-1134 docs/specs/common/formal-plan.spec.md FINESSE:f-125
+/// @aa-sdd PK-1132 docs/specs/common/formal-plan.spec.md FINESSE:f-129
+/// @aa-sdd PK-1127 docs/specs/common/formal-plan.spec.md FINESSE:f-140
+/// @aa-sdd PK-1126 docs/specs/common/formal-plan.spec.md FINESSE:f-141
+/// @aa-sdd PK-1124 docs/specs/common/formal-plan.spec.md FINESSE:f-143
+/// @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md FINESSE:f-144
+/// @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md FINESSE:f-149
+/// @aa-sdd PK-1160 docs/specs/common/stages.spec.md FINESSE:f-152
+/// @aa-sdd PK-1115 docs/specs/common/formal-plan.spec.md FINESSE:f-154
+/// @aa-sdd PK-1159 docs/specs/common/stages.spec.md FINESSE:f-157
+/// @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md FINESSE:f-173
+/// @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
+/// @aa-sdd PK-1100 docs/specs/common/formal-plan.spec.md FINESSE:f-179
+/// @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-211
+/// @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md FINESSE:f-221
+/// @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md FINESSE:f-77
+/// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
+/// @aa-sdd PK-1015 docs/specs/common/formal-plan.spec.md FINESSE:f-80
+/// @aa-sdd PK-1014 docs/specs/common/formal-plan.spec.md FINESSE:f-81
+/// @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md FINESSE:f-96
+/// @aa-sdd PK-997 docs/specs/common/formal-plan.spec.md FINESSE:f-98
 /// @aa-sdd PK-1180 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
 /// The `App` struct is the state of the client window.
 /// It holds the SSH client settings store, the connection fields, the focused terminal, the canvas deck, and every pane that is not in front.
@@ -19280,15 +19581,15 @@ struct ShellNotice { // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client
 ///
 /// `plate` is [`Plate::Ssh`] or [`Plate::Aetheris`]. `restore_aetheris` is armed when the stored tab word is `aetheris` and Connect has not landed yet. `facts` is the seated canvas facts. `scope_text` is the gathered scope text.
 ///
-/// `think` is the session thought log. Connect, Clear, and Disconnect leave it. `think_chrome` holds fold, close, and the dragged height for this window. `think_yaml` is the shared `aetheris-think.yaml`. A version other than 1 stays unread.
+/// `think_panes` is the one store of thinking panes. One canvas has one seat. One SSH pane has one seat. `ssh_think_key` is the focused pane's key in that store. `think_yaml` is the shared `aetheris-think.yaml`. A version other than 1 stays unread.
 ///
-/// `vt_think` is the thought text of the focused terminal session. `vt_open` is true when that strip is showing. `vt_slide` is the rise from the top. `0` starts shut. `-1` is settled. `vt_folded` is true when the strip is folded. `vt_height` is the dragged height. Zero uses the three-line view. `vt_think_on` is true when this session's thinking is on. `vt_chrome` is the file seed for a new terminal pane. `vt_yaml` is `aetheris-vt100-think.yaml`. A version other than 1 stays unread.
+/// `vt_think_on` is true when the focused session's thinking is on. `vt_chrome` is the file seed for a new terminal pane. `vt_yaml` is `aetheris-vt100-think.yaml`. A version other than 1 stays unread.
 ///
 /// `roux_used` is the Roux count for the focused pane. `None` means the reply has not been held. `roux_chars` is the character count. `roux_blocks` is the stored message count. `tokens_asked` is true after the `session_tokens` ask for the focused pane. `live_line` is the text typed on the focused pane and not yet submitted.
 ///
 /// `mood` is the showing user's mood. A version other than 1 stays unread. `mood_owner` is the sanitized user whose record is `mood`. Empty means no user is seated yet. `mood_bank` holds other users already read. `ssh_mood` is the mood footer box for the canvas user now showing. `ssh_users` pairs each user with whether that user's SSH mood is armed. `ssh_mood_blocked` is true when an SSH mood file is not version 1. `expanded` is the per-cell Expanded View file. A settings store with no file does not read or write that home file. `mood_desk` is the mood glass. `mood_seq` counts mood wire ids and is not the card sequence.
 ///
-/// `cards` is the canvas deck. `focus` is the focused card index. `scroll_seat` is the text pane that receives the wheel, or `None` for the canvas. `cell_seq` is the next card sequence. `edits` is the in-memory undo desk for canvas prompts. `prompt_focus` is the prompt that held focus on the previous canvas paint. `group_live` is the group id that is running. `group_rest` holds the remaining group frames. `run_pane` is the pane that carries the showing deck's run. `None` uses the focused pane. `pipe_live` is true while a pipe chain is running. `pipe_rest` is the card indexes still waiting. `scope_stash` holds scope waiting for the canvas. `paint_stash` holds terminal paint bytes waiting for the focused grid. `join_from` is the card index armed for Join, or `None`. `focus_prompt` asks the next paint to put the keyboard in the prompt. `seat_focus` is a one-shot that puts focus on the selected cell after Hide Collapsed or Show Collapsed. `land_newest` is a one-shot that scrolls to the newest card. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// `cards` is the canvas deck. `focus` is the focused card index. `scroll_seat` is the text pane that receives the wheel, or `None` for the canvas. `cell_seq` is the next card sequence. `edits` is the in-memory undo desk for canvas prompts. `prompt_focus` is the prompt that held focus on the previous canvas paint. `group_live` is the group id that is running. `group_rest` holds the remaining group frames. `run_pane` is the pane that carries the showing deck's run. `None` uses the focused pane. `pipe_live` is true while a pipe chain is running. `pipe_rest` is the card indexes still waiting. `scope_stash` holds scope waiting for the canvas. `paint_stash` holds terminal paint bytes waiting for the focused grid. `join_from` is the card index armed for Join, or `None`. `focus_prompt` asks the next paint to put the keyboard in the prompt. `seat_focus` is a one-shot that puts focus on the selected cell after Hide Collapsed or Show Collapsed. `land_newest` is a one-shot that scrolls to the newest card.
 ///
 /// `canvas_weight` is this window's canvas share. `parked_share` is a share put aside by an arrow. `divider_span` is the last bar span. The settings write waits until that span is at least 32. `divider_armed` is when the share last moved. The settings write waits 400 ms. `inspector_soft_wrap` is the soft-wrap flag. It starts on and is not saved.
 ///
@@ -19311,7 +19612,7 @@ struct ShellNotice { // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client
 /// `exit_ask` is the confirm-exit box. `exit_confirmed` is true after Yes. `new_term_ask` is the split box. `reconnect_clicked`, `clear_term_clicked`, `send_file_clicked`, `close_pane_clicked`, and `import_clicked` are those commands waiting for a later pass. `export_pane` is the pane whose Roux export was asked. `export_file` is the TOON text waiting for the save dialog. `transfer_pane` is the pane whose Roux table is copied onto the canvas. `transfer_roux` is true while the canvas copy into Roux is waiting for the reply. `pane_model_clicked` asks the focused pane to open Model Config. `focus_pane_request` is a pane id to bring forward. `saved_frame` is the restored rectangle. A maximized frame does not replace it. `open_maximized` is the open flag. A missing key keeps the maximized open.
 ///
 /// `ctx` is the egui context. `state` is the winit integration. `painter` is the wgpu painter. `window` is the open window. Each of those three stays `None` until `open_window` succeeds.
-/// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1066 docs/specs/common/formal-plan.spec.md FINESSE:f-226
 struct App {
     door: Door,
     host: String,
@@ -19343,8 +19644,8 @@ struct App {
     jump_tail: bool,
     /// Menu Page or Line motion for the focused console. Positive moves toward the tail.
     console_scroll_lines: i32,
-    /// Offset that motion starts from when the pane was parked. None reads the focused scroll. // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md
-    console_scroll_base: Option<f32>, // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+    /// Offset that motion starts from when the pane was parked. None reads the focused scroll.
+    console_scroll_base: Option<f32>,
     anchor: Option<(usize, usize)>,
     current: Option<(usize, usize)>,
     grid_focus: bool,
@@ -19353,30 +19654,17 @@ struct App {
     restore_aetheris: bool,
     facts: Option<CanvasFacts>,
     scope_text: String,
-    /// Session thought log. Connect, Clear, and Disconnect leave it.
-    /// The think Clear wipes this log and the saved file.
-    think: ThinkLog,
-    /// Fold, Close, and the dragged height for this window.
-    think_chrome: ThinkChrome,
+    /// One store for every canvas pane and every SSH pane.
+    think_panes: ThinkPaneManager,
+    /// Key of the focused SSH pane. Empty until that pane takes a seat.
+    ssh_think_key: String,
     /// Shared `aetheris-think.yaml`. A version other than 1 stays unread.
     think_yaml: ThinkYaml,
-    /// Thought text of the focused VT100 session. Each parked session keeps its own.
-    /// The closed mark stays on the file. The text is not written to the vault log.
-    vt_think: ThinkLog,
-    /// The focused session's strip is on the plate. Each parked session keeps its own.
-    vt_open: bool,
-    /// Rise from the top of the focused session. `0` starts shut. `-1` is settled.
-    vt_slide: f32,
-    /// The focused session's strip is folded. Each parked session keeps its own.
-    /// The yaml does not store it.
-    vt_folded: bool,
-    /// The focused session's dragged height. Each parked session keeps its own.
-    /// Zero uses the three-line view. The file seed is the next new pane.
-    vt_height: f32,
     /// The focused session's thinking is on. Each parked session keeps its own.
     /// The shared gate stays. Another session's empty `think:` line does not clear this.
     vt_think_on: bool,
     /// Roux session count for the focused pane. None until the reply is held.
+    /// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
     roux_used: Option<i32>,
     /// Characters in the held Roux messages.
     roux_chars: i32,
@@ -19385,6 +19673,7 @@ struct App {
     /// The session_tokens ask has been sent for the focused pane.
     tokens_asked: bool,
     /// Characters typed on the focused pane and not yet submitted.
+    /// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-177
     live_line: String,
     /// File seed for a new VT100 pane and the next open. Live height stays on the session.
     vt_chrome: ThinkChrome,
@@ -19399,6 +19688,7 @@ struct App {
     /// Mood footer box for the canvas user now on the glass. The map is the store.
     ssh_mood: bool,
     /// SSH mood armed by canvas user. The shared mood file does not carry this.
+    /// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-176
     ssh_users: Vec<(String, bool)>,
     /// An SSH mood file whose version is not 1. Left unread and not overwritten.
     ssh_mood_blocked: bool,
@@ -19415,8 +19705,8 @@ struct App {
     scroll_seat: Option<(usize, TextPane)>,
     cell_seq: u64,
     /// RAM undo for canvas prompts. One seat per cell. A restart drops it.
-    /// @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
-    /// @aa-sdd PK-1172 docs/specs/rust/aetheris/aetheris-client/src/edit.spec.md
+    /// @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
+    /// @aa-sdd PK-1172 docs/specs/rust/aetheris/aetheris-client/src/edit.spec.md FINESSE:f-214
     edits: crate::edit::EditDesk,
     /// Prompt that held focus on the previous canvas paint.
     prompt_focus: Option<usize>,
@@ -19424,7 +19714,7 @@ struct App {
     group_rest: Vec<([u8; 16], Vec<u8>)>,
     /// Pane that carries the showing deck's run. None uses the focused pane.
     /// A parked user's run stays on that user's pane.
-    /// // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    /// // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
     run_pane: Option<u64>,
     /// Chain cards still waiting. The running card is not in this list.
     pipe_live: bool,
@@ -19435,7 +19725,7 @@ struct App {
     join_from: Option<usize>,
     focus_prompt: bool,
     /// One shot. Hide Collapsed and Show Collapsed seat focus on the selected cell.
-    /// @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md
+    /// @aa-sdd PK-1079 docs/specs/common/formal-plan.spec.md FINESSE:f-204
     seat_focus: bool,
     /// One shot. The next canvas paint scrolls to the newest card.
     land_newest: bool,
@@ -19534,7 +19824,7 @@ struct App {
     /// 0 none, 1 canvas, 2 vt. A plate change posts again.
     heat_kind: u8,
     /// Newest-only heatbar queue. The walk runs off the frame.
-    /// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    /// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
     heat: HeatQueue,
     /// Combo label while the token window is open. Empty selects the focused turn.
     token_pick: String,
@@ -19565,7 +19855,7 @@ struct App {
     next_pane: u64,
     panes: Vec<ParkedPane>,
     /// Canvas seats that are not on the glass. Each keeps its own run.
-    /// // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    /// // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
     decks: Vec<ParkedDeck>,
     /// Glass user when a test has no vault file. Production leaves this off.
     #[cfg(test)]
@@ -19614,7 +19904,7 @@ struct App {
     focus_pane_request: Option<u64>,
     /// Restored rectangle. A maximized frame does not replace it.
     saved_frame: Option<(i32, i32, i32, i32)>,
-    /// Missing key keeps the seated maximized open. // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+    /// Missing key keeps the seated maximized open.
     open_maximized: bool,
     ctx: egui::Context,
     state: Option<egui_winit::State>,
@@ -19638,11 +19928,12 @@ impl App {
         let wrap_columns = door.wrap_columns();
         let line_chars = door.line_chars();
         let view_rows = door.view_rows();
-        let pin_bar_open = door.pin_bar_open(); // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+        let pin_bar_open = door.pin_bar_open();
         let opened = open_product_tab(door.product_tab_is_aetheris());
         let (think, think_chrome, think_yaml) = load_think_file();
+        let mut think_panes = ThinkPaneManager::new();
+        think_panes.insert_canvas(&ThinkPaneManager::canvas_key("", ""), think, think_chrome);
         let (vt_chrome, vt_yaml) = load_vt_think();
-        let vt_height = vt_chrome.height;
         let mood = MoodYaml::fresh();
         let mood_owner = String::new();
         let mood_bank = Vec::new();
@@ -19650,7 +19941,7 @@ impl App {
         let expanded = if door.has_file() {
             load_expanded_file()
         } else {
-            ExpandedYaml::fresh() // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+            ExpandedYaml::fresh()
         };
         let hide_yaml = if door.has_file() {
             load_hide_file()
@@ -19672,7 +19963,7 @@ impl App {
         Self {
             door,
             host,
-            port, // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+            port,
             user,
             password,
             remember,
@@ -19699,16 +19990,11 @@ impl App {
             grid_focus: false,
             plate: opened.plate,
             restore_aetheris: opened.restore,
-            facts: None, // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+            facts: None,
             scope_text: String::new(),
-            think,
-            think_chrome,
+            think_panes,
+            ssh_think_key: String::new(),
             think_yaml,
-            vt_think: ThinkLog::new(),
-            vt_open: false,
-            vt_slide: -1.0,
-            vt_folded: false,
-            vt_height,
             vt_think_on: false,
             roux_used: None,
             roux_chars: 0,
@@ -19755,7 +20041,7 @@ impl App {
             line_field: line_chars.to_string(),
             line_armed: None,
             view_rows,
-            view_field: view_rows.to_string(), // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            view_field: view_rows.to_string(),
             view_armed: None,
             tools_open: false,
             bars_open: true,
@@ -19801,7 +20087,7 @@ impl App {
             heat_kind: 0,
             heat: HeatQueue::idle(),
             token_pick: String::new(),
-            model: crate::model::ModelSession::shut(), // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            model: crate::model::ModelSession::shut(),
             engine_label: String::new(),
             armed_transfer_model: None,
             transfer_heat_model: None,
@@ -19937,7 +20223,7 @@ impl App {
     /// The method `clamp_resize` keeps a physical resize inside the minimum and tells the painter.
     /// `size` is the new physical size. A missing window returns immediately.
     ///
-    /// The size is converted to logical pixels with the window scale. `clamp_logical` raises a side that is under [`MIN_WIDTH`] or [`MIN_HEIGHT`]. A size that changed is requested as the new inner size. A missing painter returns after that request. A width of zero returns. A height of zero returns. Otherwise `on_window_resized` receives the original physical width and height. // @aa-sdd PK-1419 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    /// The size is converted to logical pixels with the window scale. `clamp_logical` raises a side that is under [`MIN_WIDTH`] or [`MIN_HEIGHT`]. A size that changed is requested as the new inner size. A missing painter returns after that request. A width of zero returns. A height of zero returns. Otherwise `on_window_resized` receives the original physical width and height.
     fn clamp_resize(&mut self, size: PhysicalSize<u32>) {
         let Some(window) = &self.window else {
             return;
@@ -19981,7 +20267,7 @@ impl App {
             self.panes.iter().any(|pane| {
                 pane.id == pane_id
                     && pane
-                        .session // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+                        .session
                         .as_ref()
                         .is_some_and(|session| session.mux_answered())
             })
@@ -20024,8 +20310,8 @@ impl App {
     }
 
     /// The save dialog. Cancel writes nothing. Tests do not call this.
-    fn finish_session_export(&mut self) { // @aa-sdd PK-1157 docs/specs/common/stages.spec.md
-        let Some(body) = self.export_file.take() else { // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+    fn finish_session_export(&mut self) {
+        let Some(body) = self.export_file.take() else {
             return;
         };
         let mood_line = if mood_sends(&self.mood) {
@@ -20104,7 +20390,7 @@ impl App {
         if self.cards.iter().any(|card| card.running) {
             self.status = TRANSFER_BUSY.to_string();
             return;
-        } // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+        }
         if let Err(word) = self.console_ready(pane_id) {
             self.status = word.to_string();
             return;
@@ -20127,7 +20413,7 @@ impl App {
                 self.status = format!("replace failed: {msg}");
                 return;
             }
-        } // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        }
         if self.cards.iter().any(|card| card.running) {
             self.status = TRANSFER_BUSY.to_string();
             return;
@@ -20137,7 +20423,7 @@ impl App {
             return;
         }
         let model = self
-            .cards // @aa-sdd PK-1087 docs/specs/common/formal-plan.spec.md
+            .cards
             .get(self.focus)
             .map(|card| card.target.clone())
             .unwrap_or_default();
@@ -20152,7 +20438,7 @@ impl App {
         self.wire_console(self.pane_id, &frame);
     }
 
-    /// The method `land_transfer_export` finishes a Roux table that was copied onto the canvas. // @aa-sdd PK-1157 docs/specs/common/stages.spec.md
+    /// The method `land_transfer_export` finishes a Roux table that was copied onto the canvas.
     /// `file` is the [`SessionFile`]. `transfer_pane` becomes `None`.
     ///
     /// [`SessionFile::Failed`] sets the status to `export failed:` plus the reason. [`SessionFile::Table`] parses the body with `pair_session`. A parsed list calls `land_transfer_cards`. A parse error stores that error text as the status.
@@ -20174,7 +20460,7 @@ impl App {
     ///
     /// `Ok` sets the status to [`TRANSFER_WORD`]. `Err` sets the status to `replace failed:` plus the reason.
     fn land_transfer_replace(&mut self, result: Result<(), String>) {
-        self.transfer_roux = false; // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+        self.transfer_roux = false;
         self.status = match result {
             Ok(()) => {
                 self.transfer_heat_model = self.armed_transfer_model.take();
@@ -20206,13 +20492,13 @@ impl App {
         );
         self.ring_used = 0;
         self.canvas_sig_set = false;
-        close_thought(&mut self.think);
-        self.focus_prompt = true; // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+        self.finish_showing();
+        self.focus_prompt = true;
         self.land_newest = true;
         self.group_rest.clear();
         self.group_live = 0;
         self.pipe_rest.clear();
-        self.pipe_live = false; // @aa-sdd PK-1157 docs/specs/common/stages.spec.md
+        self.pipe_live = false;
         self.join_from = None;
         self.store_vault();
         self.status = TRANSFER_WORD.to_string();
@@ -20240,9 +20526,10 @@ impl App {
         let mut show = false;
         let mut reveal = false;
         let mut pending: Vec<(u64, String, Vec<ScopePiece>, bool)> = Vec::new();
+        let mut ssh_jobs: Vec<(usize, String, bool, ScopePiece)> = Vec::new();
         let shared_open = self.model.console_thought_open();
         let thought_tag = self.model.console_thought_tag();
-        for pane in &mut self.panes {
+        for (index, pane) in self.panes.iter_mut().enumerate() {
             if let Some(session) = pane.session.as_ref() {
                 session.flush_outbound();
             }
@@ -20257,13 +20544,14 @@ impl App {
                             session.wire(&frame);
                         }
                         // One ask for this pane once the mux is up.
+                        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
                         pane.tokens_asked = true;
                     }
                 }
             }
             // One ask for this pane's model once the mux is up. A quiet mux retries.
             // A disconnect in this same frame clears the ask below. The word stays.
-            // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
             let mux_up = pane
                 .session
                 .as_ref()
@@ -20291,12 +20579,13 @@ impl App {
                     }
                     pane.link = PaneLink::Down;
                     // The dropped pane leaves the Roux count.
+                    // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
                     pane.roux_used = None;
                     pane.roux_chars = 0;
                     pane.roux_blocks = 0;
                     pane.tokens_asked = false;
                     // The ask clears. The model word stays.
-                    // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+                    // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
                     pane.engine_asked = false;
                 }
             }
@@ -20326,6 +20615,7 @@ impl App {
             for piece in burst {
                 if let Some((used, chars, blocks)) = session_tokens_of(&piece) {
                     // Held Roux count for this parked pane.
+                    // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
                     pane.roux_used = Some(used);
                     pane.roux_chars = chars;
                     pane.roux_blocks = blocks;
@@ -20345,14 +20635,11 @@ impl App {
                     }
                     continue;
                 }
-                let before = think_log_text(&pane.vt_think.blocks);
-                let _ = route_console_thought(&mut pane.vt_think, accept, &thought_tag, &piece);
-                if think_log_text(&pane.vt_think.blocks) != before && !pane.vt_think.blocks.is_empty()
-                {
-                    open_vt_strip(&mut pane.vt_open, &mut pane.vt_slide);
-                    pane.vt_think_on = true;
-                    reveal = true;
+                if pane.ssh_think_key.is_empty() {
+                    pane.ssh_think_key =
+                        ThinkPaneManager::ssh_key(&pane_user, &pane.id.to_string());
                 }
+                ssh_jobs.push((index, pane.ssh_think_key.clone(), accept, piece.clone()));
                 kept.push(piece);
                 show = true;
             }
@@ -20382,6 +20669,21 @@ impl App {
                 session.flush_outbound();
             }
         }
+        let seed = self.vt_chrome.height;
+        for (index, key, accept, piece) in ssh_jobs {
+            let grew = {
+                let seat = self.think_panes.acquire_ssh(&key, seed);
+                let before = think_log_text(&seat.log.blocks);
+                let _ = route_console_thought(&mut seat.log, accept, &thought_tag, &piece);
+                think_log_text(&seat.log.blocks) != before && !seat.log.blocks.is_empty()
+            };
+            if grew {
+                let seat = self.think_panes.acquire_ssh(&key, seed);
+                open_vt_strip(&mut seat.chrome.open, &mut seat.chrome.slide);
+                self.panes[index].vt_think_on = true;
+                reveal = true;
+            }
+        }
         if reveal {
             if note_vt_opened(&mut self.vt_yaml) {
                 self.store_vt_yaml();
@@ -20390,7 +20692,7 @@ impl App {
         }
         // A parked session keeps feeding the user who owns it.
         // The glass hears that user only when that user is the one on screen.
-        // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
         for (pane, user, pieces, mux) in pending {
             let parked = self.decks.iter().any(|deck| deck.user == user);
             match scope_home(&self.deck_key(), &user, parked) {
@@ -20477,6 +20779,7 @@ impl App {
                         session.wire(&frame);
                     }
                     // One ask for the focused pane once the mux is up.
+                    // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
                     self.tokens_asked = true;
                 }
             }
@@ -20499,13 +20802,17 @@ impl App {
         let mut show = parked_show || status.is_some() || !scope.is_empty() || !chunks.is_empty();
         let mut export_hit: Option<SessionFile> = None;
         let running_before = self.cards.iter().find(|card| card.running).map(|card| card.cell);
-        let think_before = think_log_text(&self.think.blocks);
-        let vt_before = think_log_text(&self.vt_think.blocks);
+        let canvas_key = self.showing_canvas_key();
+        let think_before = self.think_panes.log_text(&canvas_key);
+        self.ensure_focused_ssh_key();
+        let ssh_key = self.ssh_think_key.clone();
+        let vt_before = self.think_panes.log_text(&ssh_key);
         let mut canvas_scope = Vec::new();
         let mut mood_resend = false;
         for (piece, _offered) in &scope {
             if let Some((used, chars, blocks)) = session_tokens_of(piece) {
                 // Held Roux count for the focused pane.
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
                 self.roux_used = Some(used);
                 self.roux_chars = chars;
                 self.roux_blocks = blocks;
@@ -20543,7 +20850,7 @@ impl App {
         let glass = self.deck_key();
         if self.land_focused_canvas(&glass, &canvas_scope) {
             // This pane's user is not the glass. The glass path stays quiet.
-            // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
             canvas_scope.clear();
         }
         for piece in &canvas_scope {
@@ -20560,15 +20867,7 @@ impl App {
                     }
                 }
             }
-            if let Some(at) = land_open_turn(
-                &mut self.cards,
-                &mut self.cell_seq,
-                self.focus,
-                &mut self.facts,
-                &mut self.scope_text,
-                &mut self.think,
-                piece,
-            ) {
+            if let Some(at) = self.land_showing_scope(piece) {
                 let born = self.cards[at].cell;
                 if at > 0 {
                     let prior = crate::amwp::cell_text(&self.cards[at - 1].cell);
@@ -20578,32 +20877,32 @@ impl App {
                     }
                 }
                 self.keep_card_think(born);
-                self.focus = at;
-                self.focus_prompt = true;
-                self.land_newest = true;
             }
         }
-        if think_log_text(&self.think.blocks) != think_before {
-            if !self.think.blocks.is_empty() {
-                reveal_think(&mut self.think_chrome);
-                if note_think_opened(&mut self.think_yaml) {
-                    self.store_think_yaml();
-                }
-            }
-            store_think_file(&self.think);
+        if self.think_panes.log_text(&canvas_key) != think_before {
+            self.reveal_canvas();
         }
         if scope.iter().any(|(piece, _)| console_piece_opens(piece)) {
             self.vt_think_on = true;
         }
         let accept = self.vt_think_on || self.model.console_thought_open();
         let thought_tag = self.model.console_thought_tag();
+        let seed = self.vt_chrome.height;
         for (piece, offered) in &scope {
             if !*offered {
-                let _ = route_console_thought(&mut self.vt_think, accept, &thought_tag, piece);
+                let seat = self.think_panes.acquire_ssh(&ssh_key, seed);
+                let _ = route_console_thought(&mut seat.log, accept, &thought_tag, piece);
             }
         }
-        if think_log_text(&self.vt_think.blocks) != vt_before && !self.vt_think.blocks.is_empty() {
-            open_vt_strip(&mut self.vt_open, &mut self.vt_slide);
+        let ssh_grew = self.think_panes.log_text(&ssh_key) != vt_before
+            && self
+                .think_panes
+                .seats
+                .get(&ssh_key)
+                .is_some_and(|seat| !seat.log.blocks.is_empty());
+        if ssh_grew {
+            let seat = self.think_panes.acquire_ssh(&ssh_key, seed);
+            open_vt_strip(&mut seat.chrome.open, &mut seat.chrome.slide);
             self.vt_think_on = true;
             if note_vt_opened(&mut self.vt_yaml) {
                 self.store_vt_yaml();
@@ -20719,12 +21018,13 @@ impl App {
             self.land_newest = false;
             if let Some(session) = self.session.take() {
                 // The dropped session leaves the Roux count.
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
                 self.roux_used = None;
                 self.roux_chars = 0;
                 self.roux_blocks = 0;
                 self.tokens_asked = false;
                 // The ask clears after any shell ask in this frame. The word stays.
-                // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+                // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
                 self.engine_asked = false;
                 if session.shutdown(JOIN_BOUND).is_err() {
                     self.status = "Disconnected: read thread did not stop".to_string();
@@ -20788,13 +21088,13 @@ impl App {
             Ok(session) => {
                 // Replacing this pane's socket drops a run that lived on it.
                 // A run on another pane stays. The other user's seat stays.
-                // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
                 if self.session.is_some() && !same {
                     self.note_replaced_run();
                 }
                 self.session = Some(session);
                 // A new socket has not been asked. The word already on the strip stays.
-                // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+                // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
                 self.engine_asked = false;
                 self.seat_control_status("Connecting");
                 self.console_focus.session_opened();
@@ -20821,12 +21121,13 @@ impl App {
         self.write_door();
         if let Some(session) = self.session.take() {
             // A reconnect collects the Roux count again.
+            // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
             self.roux_used = None;
             self.roux_chars = 0;
             self.roux_blocks = 0;
             self.tokens_asked = false;
             // The new socket asks again. The word already on the strip stays.
-            // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
             self.engine_asked = false;
             if session.shutdown(JOIN_BOUND).is_err() {
                 self.seat_control_status("Disconnected: read thread did not stop");
@@ -21052,21 +21353,27 @@ impl App {
     }
 
     /// The method `show_focused_thinking` opens the thinking strip on the plate that is showing.
-    /// [`Plate::Aetheris`] passes the notebook open flag and slide to `show_thinking` and stores the returned open, slide, and folded values on `think_chrome`. [`Plate::Ssh`] does the same with `vt_open` and `vt_slide` and stores the result on the focused terminal strip.
+    /// [`Plate::Aetheris`] opens the showing canvas seat. [`Plate::Ssh`] opens the focused SSH seat.
+    /// The log stays. A fold opens because this is the Tools command.
     fn show_focused_thinking(&mut self) {
         match self.plate {
             Plate::Aetheris => {
-                let (open, slide, folded) =
-                    show_thinking(self.think_chrome.open, self.think_chrome.slide);
-                self.think_chrome.open = open;
-                self.think_chrome.slide = slide;
-                self.think_chrome.folded = folded;
+                let key = self.showing_canvas_key();
+                let chrome = &mut self.think_panes.acquire_canvas(&key).chrome;
+                let (open, slide, folded) = show_thinking(chrome.open, chrome.slide);
+                chrome.open = open;
+                chrome.slide = slide;
+                chrome.folded = folded;
             }
             Plate::Ssh => {
-                let (open, slide, folded) = show_thinking(self.vt_open, self.vt_slide);
-                self.vt_open = open;
-                self.vt_slide = slide;
-                self.vt_folded = folded;
+                self.ensure_focused_ssh_key();
+                let key = self.ssh_think_key.clone();
+                let seed = self.vt_chrome.height;
+                let chrome = &mut self.think_panes.acquire_ssh(&key, seed).chrome;
+                let (open, slide, folded) = show_thinking(chrome.open, chrome.slide);
+                chrome.open = open;
+                chrome.slide = slide;
+                chrome.folded = folded;
             }
         }
     }
@@ -21092,7 +21399,7 @@ impl App {
                 if ui.button("New Term...").on_hover_text(FILE_NEW_TIP).clicked() {
                     self.new_term_ask = true;
                     ui.close();
-                } // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+                }
                 if ui
                     .add_enabled(close_on, egui::Button::new(CLOSE_PANE_MENU))
                     .on_hover_text(FILE_CLOSE_TIP)
@@ -21107,7 +21414,7 @@ impl App {
                 }
                 ui.separator();
                 // Settings is the first global switch. Painted text borders starts off.
-                // @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1097 docs/specs/common/formal-plan.spec.md FINESSE:f-182
                 if ui.button("Settings...").on_hover_text(FILE_SETTINGS_TIP).clicked() {
                     self.settings_open = true;
                     ui.close();
@@ -21245,7 +21552,7 @@ impl App {
                 }
             });
         if let Some(inner) = shown {
-            ctx.move_to_top(inner.response.layer_id);
+            seat_modal(ctx, inner.response.layer_id);
         }
         if borders != self.painted_borders
             || debug_mood != self.debug_mood
@@ -21283,9 +21590,10 @@ impl App {
             let mut open = true;
             let mut accept = false;
             let mut cancel = false;
-            egui::Window::new(PASTE_TITLE)
+            let shown = egui::Window::new(PASTE_TITLE)
                 .collapsible(false)
                 .resizable(true)
+                .order(egui::Order::Foreground)
                 .default_width(480.0)
                 .open(&mut open)
                 .show(ctx, |ui| {
@@ -21309,6 +21617,9 @@ impl App {
                         }
                     });
                 });
+            if let Some(inner) = shown {
+                seat_modal(ctx, inner.response.layer_id);
+            }
             if let Some(draft) = self.paste.as_mut() {
                 draft.text = text;
             }
@@ -21324,9 +21635,10 @@ impl App {
             let hard = notice.hard;
             let mut open = true;
             let mut dismiss = false;
-            egui::Window::new(title)
+            let shown = egui::Window::new(title)
                 .collapsible(false)
                 .resizable(false)
+                .order(egui::Order::Foreground)
                 .open(&mut open)
                 .show(ctx, |ui| {
                     if hard {
@@ -21338,6 +21650,9 @@ impl App {
                         dismiss = true;
                     }
                 });
+            if let Some(inner) = shown {
+                seat_modal(ctx, inner.response.layer_id);
+            }
             if dismiss || !open {
                 self.shell_notice = None;
             }
@@ -21346,9 +21661,10 @@ impl App {
             let mut open = true;
             let mut way = None;
             let mut cancel = false;
-            egui::Window::new(NEW_TERM_TITLE)
+            let shown = egui::Window::new(NEW_TERM_TITLE)
                 .collapsible(false)
                 .resizable(false)
+                .order(egui::Order::Foreground)
                 .open(&mut open)
                 .show(ctx, |ui| {
                     ui.label(NEW_TERM_BODY);
@@ -21364,6 +21680,9 @@ impl App {
                         }
                     });
                 });
+            if let Some(inner) = shown {
+                seat_modal(ctx, inner.response.layer_id);
+            }
             if way.is_some() || cancel || !open {
                 self.new_term_ask = false;
             }
@@ -21375,9 +21694,10 @@ impl App {
             let mut open = true;
             let mut body = HELP_BODY.to_string();
             let mut dismiss = false;
-            egui::Window::new(HELP_TITLE)
+            let shown = egui::Window::new(HELP_TITLE)
                 .collapsible(false)
                 .resizable(true)
+                .order(egui::Order::Foreground)
                 .default_size(egui::vec2(520.0, 360.0))
                 .open(&mut open)
                 .show(ctx, |ui| {
@@ -21393,6 +21713,9 @@ impl App {
                         dismiss = true;
                     }
                 });
+            if let Some(inner) = shown {
+                seat_modal(ctx, inner.response.layer_id);
+            }
             if dismiss || !open {
                 self.help_open = false;
             }
@@ -21429,7 +21752,7 @@ impl App {
                     }
                 });
             if let Some(inner) = shown {
-                ctx.move_to_top(inner.response.layer_id);
+                seat_modal(ctx, inner.response.layer_id);
             }
             if !open || dismiss {
                 self.about_open = false;
@@ -21451,13 +21774,14 @@ impl App {
                 .id(id)
                 .collapsible(false)
                 .resizable(false)
+                .order(egui::Order::Foreground)
                 .open(&mut open);
             if let Some((x, y)) = self.door.exit_pos() {
                 if exit_pos_usable(x, y, view_box) {
                     window = window.default_pos(egui::pos2(x as f32, y as f32));
                 }
             }
-            window.show(ctx, |ui| {
+            let shown = window.show(ctx, |ui| {
                 ui.label(EXIT_BODY);
                 ui.horizontal(|ui| {
                     if ui.button("Yes").on_hover_text(EXIT_YES_TIP).clicked() {
@@ -21468,6 +21792,9 @@ impl App {
                     }
                 });
             });
+            if let Some(inner) = shown {
+                seat_modal(ctx, inner.response.layer_id);
+            }
             if let Some(rect) = ctx.memory(|mem| mem.area_rect(id)) {
                 let x = rect.min.x.round() as i32;
                 let y = rect.min.y.round() as i32;
@@ -21523,14 +21850,14 @@ impl App {
         self.tree = graft_split(std::mem::replace(&mut self.tree, PaneNode::Leaf(new_id)), old_id, new_id, way);
         self.seat_control_status("Disconnected");
         self.control_open = true;
-        self.console_focus.session_opened(); // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-    } // @aa-sdd PK-1076 docs/specs/common/formal-plan.spec.md
+        self.console_focus.session_opened();
+    }
 
     /// The method `close_focused_pane` removes the focused pane when another pane remains.
     /// A `pane_count` of 1 or less returns with the tree unchanged. `detach_leaf` removes the focused id. A [`Detach::Miss`] returns while the tree is the temporary leaf whose id is 0. A [`Detach::Hit`] stores the sibling as the tree.
     ///
     /// A focused session is shut down. The Roux counts and `tokens_asked` are cleared. The grid becomes 80 by 24 and `note_grid` runs. Both stashes are cleared. `install_pane` then brings the hit's focus id forward.
-    fn close_focused_pane(&mut self) {
+    fn close_focused_pane(&mut self) { // @aa-sdd PK-1457 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
         if self.pane_count() <= 1 {
             return;
         }
@@ -21543,6 +21870,7 @@ impl App {
             let _ = session.shutdown(JOIN_BOUND);
         }
         // The closed pane leaves the Roux count. The sibling brings its own.
+        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
         self.roux_used = None;
         self.roux_chars = 0;
         self.roux_blocks = 0;
@@ -21551,6 +21879,8 @@ impl App {
         self.note_grid();
         self.scope_stash.clear();
         self.paint_stash.clear();
+        let closing_key = std::mem::take(&mut self.ssh_think_key);
+        self.think_panes.release(&closing_key);
         self.install_pane(focus);
     }
 
@@ -21571,7 +21901,7 @@ impl App {
     /// The method `capture_focused` moves the focused pane into a [`ParkedPane`].
     /// The link comes from `focused_link` of whether a session is stored, the status, and `link_up`. The grid, session, selection, scroll, scope, paint, model hold, last connect, terminal thought, Roux counts, token ask, and live line move into the result.
     ///
-    /// The focused grid is left as a fresh 80 by 24 grid. `menu_jump` on the result is false, so the focused `jump_tail` is not copied. The terminal height left behind is `vt_chrome.height`. The other terminal-strip fields left behind are shut.
+    /// The focused grid is left as a fresh 80 by 24 grid. `menu_jump` on the result is false, so the focused `jump_tail` is not copied. The thinking key moves with the pane. The focused key left behind is empty. The file seed height stays on `vt_chrome`.
     fn capture_focused(&mut self) -> ParkedPane {
         let link = focused_link(self.session.is_some(), &self.status, self.link_up);
         ParkedPane {
@@ -21589,11 +21919,7 @@ impl App {
             paint_stash: std::mem::take(&mut self.paint_stash),
             osc_hold: std::mem::replace(&mut self.osc_hold, crate::model::OscHold::new()),
             last: self.last_connect.take(),
-            vt_think: std::mem::replace(&mut self.vt_think, ThinkLog::new()),
-            vt_open: std::mem::replace(&mut self.vt_open, false),
-            vt_slide: std::mem::replace(&mut self.vt_slide, -1.0),
-            vt_folded: std::mem::replace(&mut self.vt_folded, false),
-            vt_height: std::mem::replace(&mut self.vt_height, self.vt_chrome.height),
+            ssh_think_key: std::mem::take(&mut self.ssh_think_key),
             vt_think_on: std::mem::replace(&mut self.vt_think_on, false),
             roux_used: std::mem::replace(&mut self.roux_used, None),
             roux_chars: std::mem::replace(&mut self.roux_chars, 0),
@@ -21631,11 +21957,7 @@ impl App {
         self.scope_stash = parked.scope_stash;
         self.paint_stash = parked.paint_stash;
         self.osc_hold = parked.osc_hold;
-        self.vt_think = parked.vt_think;
-        self.vt_open = parked.vt_open;
-        self.vt_slide = parked.vt_slide;
-        self.vt_folded = parked.vt_folded;
-        self.vt_height = parked.vt_height;
+        self.ssh_think_key = parked.ssh_think_key;
         self.vt_think_on = parked.vt_think_on;
         self.roux_used = parked.roux_used;
         self.roux_chars = parked.roux_chars;
@@ -21664,7 +21986,7 @@ impl App {
             let want = crate::vault::sanitize_user(&self.user);
             if !want.is_empty() {
                 // The focused pane's user takes the glass. The other seat keeps its run.
-                // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                // @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
                 self.seat_canvas_user(&want);
             }
         }
@@ -21719,7 +22041,7 @@ impl App {
         self.link_up = link;
         self.status = text.to_string();
         if text.starts_with("Disconnected") {
-            // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
             self.engine_asked = false;
         }
     }
@@ -21735,6 +22057,162 @@ impl App {
             return self.canvas_user.clone();
         }
         String::new()
+    }
+
+    /// The key of the canvas pane on the glass.
+    /// The user is `deck_key`. The canvas id is `vault_canvas`.
+    fn showing_canvas_key(&self) -> String {
+        ThinkPaneManager::canvas_key(&self.deck_key(), &self.vault_canvas)
+    }
+
+    /// The function `claim_canvas` moves a startup seat onto the canvas that just opened.
+    /// `old_user` and `old_canvas` are the key from before the load.
+    /// The same user keeps the seat when the canvas id changes.
+    /// An empty old user is the file loaded at startup.
+    /// A different user keeps the old seat and starts a new one.
+    fn claim_canvas(&mut self, old_user: &str, old_canvas: &str) {
+        let new_user = self.deck_key();
+        let new_key = self.showing_canvas_key();
+        let old_key = ThinkPaneManager::canvas_key(old_user, old_canvas);
+        if old_user == new_user || old_user.is_empty() {
+            self.think_panes.rekey(&old_key, &new_key);
+        }
+    }
+
+    /// The function `finish_showing` ends the open block on the canvas that is showing.
+    /// The seat stays. The chrome stays.
+    fn finish_showing(&mut self) {
+        let key = self.showing_canvas_key();
+        self.think_panes.finish(&key);
+    }
+
+    /// The function `land_showing_scope` applies one scope piece to the showing canvas.
+    /// The thinking log is the showing canvas seat. A piece that opens a card moves focus.
+    fn land_showing_scope(&mut self, piece: &ScopePiece) -> Option<usize> {
+        let key = self.showing_canvas_key();
+        let App {
+            cards,
+            cell_seq,
+            focus,
+            facts,
+            scope_text,
+            think_panes,
+            focus_prompt,
+            land_newest,
+            ..
+        } = self;
+        let seat = think_panes.acquire_canvas(&key);
+        let at = land_open_turn(
+            cards,
+            cell_seq,
+            *focus,
+            facts,
+            scope_text,
+            &mut seat.log,
+            piece,
+        )?;
+        *focus = at;
+        *focus_prompt = true;
+        *land_newest = true;
+        Some(at)
+    }
+
+    /// The function `canvas_log` returns the showing canvas log, creating the seat once.
+    fn canvas_log(&mut self) -> &mut ThinkLog {
+        let key = self.showing_canvas_key();
+        &mut self.think_panes.acquire_canvas(&key).log
+    }
+
+    /// The function `canvas_chrome` returns the showing canvas chrome, creating the seat once.
+    fn canvas_chrome(&mut self) -> &mut ThinkChrome {
+        let key = self.showing_canvas_key();
+        &mut self.think_panes.acquire_canvas(&key).chrome
+    }
+
+    /// The function `ensure_focused_ssh_key` stores the focused pane's key the first time.
+    fn ensure_focused_ssh_key(&mut self) {
+        if self.ssh_think_key.is_empty() {
+            let user = crate::vault::sanitize_user(&self.user);
+            self.ssh_think_key = ThinkPaneManager::ssh_key(&user, &self.pane_id.to_string());
+        }
+    }
+
+    /// The function `focused_ssh_log` returns the focused SSH log, creating the seat once.
+    fn focused_ssh_log(&mut self) -> &mut ThinkLog {
+        self.ensure_focused_ssh_key();
+        let key = self.ssh_think_key.clone();
+        let seed = self.vt_chrome.height;
+        &mut self.think_panes.acquire_ssh(&key, seed).log
+    }
+
+    /// The function `focused_ssh_chrome` returns the focused SSH chrome, creating the seat once.
+    fn focused_ssh_chrome(&mut self) -> &mut ThinkChrome {
+        self.ensure_focused_ssh_key();
+        let key = self.ssh_think_key.clone();
+        let seed = self.vt_chrome.height;
+        &mut self.think_panes.acquire_ssh(&key, seed).chrome
+    }
+
+    /// The function `ensure_parked_ssh_key` stores a parked pane's key the first time.
+    fn ensure_parked_ssh_key(&mut self, index: usize) {
+        if self.panes[index].ssh_think_key.is_empty() {
+            let id = self.panes[index].id;
+            let user = self.panes[index]
+                .last
+                .as_ref()
+                .map(|snap| crate::vault::sanitize_user(&snap.user))
+                .unwrap_or_default();
+            self.panes[index].ssh_think_key = ThinkPaneManager::ssh_key(&user, &id.to_string());
+        }
+    }
+
+    /// The function `parked_ssh_log` returns one parked SSH log, creating the seat once.
+    fn parked_ssh_log(&mut self, index: usize) -> &mut ThinkLog {
+        self.ensure_parked_ssh_key(index);
+        let key = self.panes[index].ssh_think_key.clone();
+        let seed = self.vt_chrome.height;
+        &mut self.think_panes.acquire_ssh(&key, seed).log
+    }
+
+    /// The function `parked_ssh_chrome` returns one parked SSH chrome, creating the seat once.
+    fn parked_ssh_chrome(&mut self, index: usize) -> &mut ThinkChrome {
+        self.ensure_parked_ssh_key(index);
+        let key = self.panes[index].ssh_think_key.clone();
+        let seed = self.vt_chrome.height;
+        &mut self.think_panes.acquire_ssh(&key, seed).chrome
+    }
+
+    /// The function `reveal_canvas` opens the showing canvas seat when it holds text.
+    /// A fold stays folded. The saved file is written. The yaml opens when the seat was shut.
+    fn reveal_canvas(&mut self) {
+        let key = self.showing_canvas_key();
+        let nonempty = self
+            .think_panes
+            .seats
+            .get(&key)
+            .is_some_and(|seat| !seat.log.blocks.is_empty());
+        if nonempty {
+            reveal_think(&mut self.think_panes.acquire_canvas(&key).chrome);
+            if note_think_opened(&mut self.think_yaml) {
+                self.store_think_yaml();
+            }
+        }
+        if let Some(seat) = self.think_panes.seats.get(&key) {
+            store_think_file(&seat.log);
+        }
+    }
+
+    /// The function `reveal_seat` opens the chrome for `key` when that log holds text.
+    /// A fold stays folded. The showing file is not written.
+    fn reveal_seat(&mut self, key: &str) {
+        let nonempty = self
+            .think_panes
+            .seats
+            .get(key)
+            .is_some_and(|seat| !seat.log.blocks.is_empty());
+        if nonempty {
+            reveal_think(&mut self.think_panes.acquire_canvas(key).chrome);
+        }
     }
 
     /// Pane id for the glass user's execute. None when that user has no pane.
@@ -21778,7 +22256,7 @@ impl App {
     /// Seat focused canvas pieces on the user who owns this pane.
     /// Showing returns false so the caller keeps the glass path.
     /// Parked updates that seat and does not paint. Hold waits on this pane.
-    /// // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+    /// // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
     fn land_focused_canvas(&mut self, glass: &str, pieces: &[ScopePiece]) -> bool {
         if pieces.is_empty() {
             return false;
@@ -21792,7 +22270,7 @@ impl App {
                     .session
                     .as_ref()
                     .is_some_and(|session| session.mux_answered());
-                let frames = self.deliver_scope(self.pane_id, &pane_user, pieces, mux, false); // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+                let frames = self.deliver_scope(self.pane_id, &pane_user, pieces, mux, false);
                 if !frames.is_empty() {
                     self.wire_pane(self.pane_id, &frames);
                 }
@@ -21820,7 +22298,7 @@ impl App {
                 card.started = None;
             }
         }
-        self.group_live = 0; // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        self.group_live = 0;
         self.group_rest.clear();
         self.pipe_live = false;
         self.pipe_rest.clear();
@@ -21875,7 +22353,6 @@ impl App {
             focus: std::mem::replace(&mut self.focus, 0),
             facts: self.facts.take(),
             scope_text: std::mem::take(&mut self.scope_text),
-            think: std::mem::replace(&mut self.think, ThinkLog::new()),
             vault: self.vault.take(),
             vault_canvas: std::mem::take(&mut self.vault_canvas),
             vault_hold: std::mem::take(&mut self.vault_hold),
@@ -21899,7 +22376,7 @@ impl App {
     /// `deck` is that [`ParkedDeck`]. The `user` text on `deck` is not copied.
     ///
     /// `cards` becomes `deck.cards`. `focus` becomes `deck.focus`. `facts` becomes `deck.facts`. `scope_text` becomes `deck.scope_text`.
-    /// `think` becomes `deck.think`. `vault` becomes `deck.vault`. `vault_canvas` becomes `deck.vault_canvas`. `vault_hold` becomes `deck.vault_hold`.
+    /// The thinking log stays in the manager under that user's canvas key. `vault` becomes `deck.vault`. `vault_canvas` becomes `deck.vault_canvas`. `vault_hold` becomes `deck.vault_hold`.
     /// `edits` becomes `deck.edits`. `prompt_focus` becomes `deck.prompt_focus`. `group_live` becomes `deck.group_live`. `group_rest` becomes `deck.group_rest`.
     /// `pipe_live` becomes `deck.pipe_live`. `pipe_rest` becomes `deck.pipe_rest`. `join_from` becomes `deck.join_from`.
     /// `focus_prompt` becomes `deck.focus_prompt`. `land_newest` becomes `deck.land_newest`. `concealed` becomes `deck.concealed`. `conceal_armed` becomes `deck.conceal_armed`.
@@ -21913,7 +22390,6 @@ impl App {
         self.focus = deck.focus;
         self.facts = deck.facts;
         self.scope_text = deck.scope_text;
-        self.think = deck.think;
         self.vault = deck.vault;
         self.vault_canvas = deck.vault_canvas;
         self.vault_hold = deck.vault_hold;
@@ -21958,6 +22434,10 @@ impl App {
         };
         let deck = self.decks.remove(index);
         self.plant_showing(deck);
+        #[cfg(test)]
+        {
+            self.canvas_user = user.to_string();
+        }
         true
     }
 
@@ -22012,6 +22492,8 @@ impl App {
     ///
     /// `scroll_seat` becomes `None`. `canvas_sig_set` becomes false. `seat_mood_canvas` stores a clone of `vault_canvas` on `mood.canvas`.
     fn adopt_loaded(&mut self, loaded: LoadedCanvas) {
+        let old_user = self.deck_key();
+        let old_canvas = self.vault_canvas.clone();
         let stamp = card_stamp().max(0) as u64;
         if stamp > self.cell_seq {
             self.cell_seq = stamp;
@@ -22038,6 +22520,7 @@ impl App {
         self.vault_canvas = loaded.canvas_id;
         self.vault_hold = loaded.hold;
         self.vault = Some(loaded.vault);
+        self.claim_canvas(&old_user, &old_canvas);
         self.scroll_seat = None;
         self.canvas_sig_set = false;
         self.seat_mood_canvas();
@@ -22050,7 +22533,7 @@ impl App {
         self.adopt_mood_user(picked);
         let want = crate::vault::sanitize_user(picked);
         if want.is_empty() {
-            return; // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
+            return;
         }
         let open = self.deck_key();
         if !open.is_empty() && open == want {
@@ -22091,7 +22574,9 @@ impl App {
     }
 
     /// Apply canvas pieces to the user who owns them.
-    /// `pane` is the session that carried the pieces. `paint` writes the status line and the thinking file. A parked seat does not.
+    /// `pane` is the session that carried the pieces. `paint` writes the status line.
+    /// The thinking log is that user's canvas seat. The glass file is written when that user is showing and `paint` is true.
+    /// A parked user opens that seat and leaves the glass file alone.
     fn deliver_scope(
         &mut self,
         pane: u64,
@@ -22112,40 +22597,82 @@ impl App {
             }
         }
         let showing = self.deck_key() == user;
+        let key = if showing {
+            self.showing_canvas_key()
+        } else {
+            let Some(canvas_id) = self
+                .decks
+                .iter()
+                .find(|deck| deck.user == user)
+                .map(|deck| deck.vault_canvas.clone())
+            else {
+                return Vec::new();
+            };
+            ThinkPaneManager::canvas_key(&user, &canvas_id)
+        };
         let out = if showing {
+            let App {
+                cards,
+                focus,
+                facts,
+                scope_text,
+                think_panes,
+                cell_seq,
+                group_live,
+                group_rest,
+                pipe_live,
+                pipe_rest,
+                focus_prompt,
+                land_newest,
+                mood,
+                grok,
+                pool_boot,
+                ..
+            } = self;
+            let seat = think_panes.acquire_canvas(&key);
             feed_parts(
                 DeckRefs {
-                    cards: &mut self.cards,
-                    focus: &mut self.focus,
-                    facts: &mut self.facts,
-                    scope_text: &mut self.scope_text,
-                    think: &mut self.think,
-                    group_live: &mut self.group_live,
-                    group_rest: &mut self.group_rest,
-                    pipe_live: &mut self.pipe_live,
-                    pipe_rest: &mut self.pipe_rest,
-                    focus_prompt: &mut self.focus_prompt,
-                    land_newest: &mut self.land_newest,
+                    cards,
+                    focus,
+                    facts,
+                    scope_text,
+                    think: &mut seat.log,
+                    group_live,
+                    group_rest,
+                    pipe_live,
+                    pipe_rest,
+                    focus_prompt,
+                    land_newest,
                 },
-                &mut self.cell_seq,
+                cell_seq,
                 pieces,
-                &self.mood,
-                &mut self.grok,
-                &self.pool_boot,
+                mood,
+                grok,
+                pool_boot.as_str(),
                 mux,
             )
         } else {
             let Some(index) = self.decks.iter().position(|deck| deck.user == user) else {
                 return Vec::new();
             };
-            let mut deck = self.decks.swap_remove(index);
-            let fed = feed_parts(
+            let App {
+                decks,
+                think_panes,
+                cell_seq,
+                mood,
+                grok,
+                pool_boot,
+                ..
+            } = self;
+            let deck = &mut decks[index];
+            let seat = think_panes.acquire_canvas(&key);
+            feed_parts(
                 DeckRefs {
                     cards: &mut deck.cards,
                     focus: &mut deck.focus,
                     facts: &mut deck.facts,
                     scope_text: &mut deck.scope_text,
-                    think: &mut deck.think,
+                    think: &mut seat.log,
                     group_live: &mut deck.group_live,
                     group_rest: &mut deck.group_rest,
                     pipe_live: &mut deck.pipe_live,
@@ -22153,15 +22680,13 @@ impl App {
                     focus_prompt: &mut deck.focus_prompt,
                     land_newest: &mut deck.land_newest,
                 },
-                &mut self.cell_seq,
+                cell_seq,
                 pieces,
-                &self.mood,
-                &mut self.grok,
-                &self.pool_boot,
+                mood,
+                grok,
+                pool_boot.as_str(),
                 mux,
-            );
-            self.decks.push(deck);
-            fed
+            )
         };
         for cell in &out.born {
             self.keep_card_think(*cell);
@@ -22178,14 +22703,12 @@ impl App {
                 self.slide = Some(notice);
             }
             seat_mood_slide(&mut self.slide, out.mood_dropped);
-            if out.think_changed {
-                if !self.think.blocks.is_empty() {
-                    reveal_think(&mut self.think_chrome);
-                    if note_think_opened(&mut self.think_yaml) {
-                        self.store_think_yaml();
-                    }
-                }
-                store_think_file(&self.think);
+        }
+        if out.think_changed {
+            if showing && paint {
+                self.reveal_canvas();
+            } else if !showing {
+                self.reveal_seat(&key);
             }
         }
         out.frames
@@ -22288,7 +22811,7 @@ impl App {
     /// Checked cards join the file. An unchecked card is left as it was.
     /// Other ids stay. A nil id stays out. A blocked file stays.
     /// A memory door updates the seat and writes nothing.
-    /// // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
+    /// // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md FINESSE:f-206
     fn remember_live_expanded(&mut self) {
         if self.expanded.blocked {
             return;
@@ -22420,7 +22943,7 @@ impl App {
 
     /// Vault, mode, air-gap, and engine. AMWP stays on the Aetheris strip.
     /// The engine is this pane's model. A canvas cell is not this word.
-    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
     fn shell_status_facts(&self) -> String {
         let air = self
             .facts
@@ -22487,7 +23010,7 @@ impl App {
     /// If a bank row's name equals `user`, that row's record becomes `yaml`. The method then returns.
     /// The comparison uses the stored name and `user` as written. If no row matches, the method appends `user` and `yaml` as a new row.
     fn remember_mood(&mut self, user: &str, yaml: MoodYaml) {
-        if user.is_empty() { // @aa-sdd PK-1436 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        if user.is_empty() {
             return;
         }
         if let Some(row) = self.mood_bank.iter_mut().find(|(name, _)| name == user) {
@@ -22500,9 +23023,9 @@ impl App {
     /// Seat `picked`. Stash the user who was showing. Claim the shared file only
     /// for the first user, and only when no per-user file exists yet.
     fn adopt_mood_user(&mut self, picked: &str) {
-        // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md FINESSE:f-220
         let want = crate::vault::sanitize_user(picked);
-        if want.is_empty() || self.mood_owner == want { // @aa-sdd PK-1436 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        if want.is_empty() || self.mood_owner == want {
             return;
         }
         if !self.mood_owner.is_empty() {
@@ -22548,7 +23071,7 @@ impl App {
         }
         self.mood = MoodYaml::fresh();
         self.mood_owner = want.clone();
-        self.remember_mood(&want, self.mood.clone()); // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+        self.remember_mood(&want, self.mood.clone());
     }
 
     /// Read a pane user's file into the bank. A missing file is not cached and is not claimed.
@@ -22569,7 +23092,7 @@ impl App {
         };
         let path = mood_user_path(&home, &name);
         if path.is_file() {
-            self.mood_bank.push((name, read_mood_yaml(&path))); // @aa-sdd PK-1282 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            self.mood_bank.push((name, read_mood_yaml(&path)));
         }
     }
 
@@ -22641,7 +23164,7 @@ impl App {
             return;
         }
         // The send uses the selected canvas cell. The card captured at open does not win.
-        // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
         let Some(index) = mood_focus_card(&self.cards, self.focus) else {
             self.mood_miss(MOOD_KEYWORD, false);
             return;
@@ -22696,7 +23219,7 @@ impl App {
     /// `dismiss_mood` writes the last size, then drops the chat and closes the dialog. The wire list stays. The generation stays.
     ///
     /// `slide` becomes an [`ErrorNotice`] with that body and `hard`. `status` becomes [`MOOD_KEYWORD`].
-    fn mood_miss(&mut self, detail: &str, hard: bool) { // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    fn mood_miss(&mut self, detail: &str, hard: bool) {
         let text = detail.trim();
         let body = if text.is_empty() {
             MOOD_KEYWORD.to_string()
@@ -22720,7 +23243,7 @@ impl App {
     /// If `mood` is blocked, the stored size stays as it was. If the width is outside [`MOOD_WIDTH_MIN`] through [`MOOD_WIDTH_MAX`], the stored size stays as it was.
     /// If the height is outside [`MOOD_HEIGHT_MIN`] through [`MOOD_HEIGHT_MAX`], the stored size stays as it was.
     /// If both sides sit inside those ranges, the pair is stored.
-    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    ///
     /// The method calls `store_mood_yaml`. If `mood` is blocked, if `mood_owner` is empty, or if the home directory is missing, that call writes nothing.
     /// `close_glass` then drops the chat and closes the dialog. The wire list stays. The generation stays. The saved mood line stays. The mood switch stays.
     fn seal_mood(&mut self, keep_line: bool) {
@@ -22734,7 +23257,7 @@ impl App {
     }
 
     /// The method `dismiss_mood` writes the last mood-dialog size and closes the glass.
-    /// The size is `mood_desk.last_size`. `mood_size_on_close` stores that pair when it is present and inside the kept range. // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    /// The size is `mood_desk.last_size`. `mood_size_on_close` stores that pair when it is present and inside the kept range.
     /// A missing size leaves the stored pair alone. A size outside the kept range leaves the stored pair alone.
     /// When the stored pair changes, `store_mood_yaml` writes the record. `close_glass` then drops the chat and closes the dialog.
     /// The saved mood line stays. The mood switch stays.
@@ -22774,7 +23297,7 @@ impl App {
             cap,
             budgets.pool,
             &budgets.grok,
-        ); // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+        );
         if self.token_pick.is_empty() || rows.iter().all(|row| row.label != self.token_pick) {
             let index = token_model_index(&rows, &focused);
             if let Some(row) = rows.get(index) {
@@ -22785,8 +23308,9 @@ impl App {
         let mut still = true;
         let mut dismiss = false;
         let mut next_pick = None;
-        egui::Window::new("Token window")
+        let shown = egui::Window::new("Token window")
             .id(egui::Id::unique("aetheris-token-window"))
+            .order(egui::Order::Foreground)
             .collapsible(false)
             .resizable(true)
             .constrain(true)
@@ -22807,7 +23331,7 @@ impl App {
                         .selected_text(shown)
                         .width(280.0)
                         .show_ui(ui, |ui| {
-                            for row in &rows { // @aa-sdd PK-1282 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                            for row in &rows {
                                 if ui.selectable_label(row.label == pick, &row.label).clicked() {
                                     chosen = Some(row.label.clone());
                                 }
@@ -22848,6 +23372,9 @@ impl App {
                     ok.on_hover_text(TOKEN_OK_TIP);
                 });
             });
+        if let Some(inner) = shown {
+            seat_modal(ctx, inner.response.layer_id);
+        }
         if let Some(label) = next_pick {
             self.token_pick = label;
         }
@@ -22860,7 +23387,7 @@ impl App {
     /// The mood glass. The window stays inside the app. The center is the
     /// text window. The button row stays at the bottom of the claimed frame.
     /// That claim is the window frame, so the bottom edge is the vertical drag.
-    /// Tests do not call this, so the OS window stays closed.
+    /// The window sits above the pin strip. Tests do not call this, so the OS window stays closed.
     fn paint_mood(&mut self, ctx: &egui::Context) {
         if self.mood_desk.open
             && !self
@@ -22887,8 +23414,8 @@ impl App {
         let screen = ctx.content_rect();
         let (origin, fit) = mood_fit(screen, open_w, open_h);
         // The title names the model of the selected canvas cell. The bar holds that word.
-        // @aa-sdd PK-1086 docs/specs/common/formal-plan.spec.md
-        // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        // @aa-sdd PK-1086 docs/specs/common/formal-plan.spec.md FINESSE:f-194
+        // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
         let title = match mood_focus_card(&self.cards, self.focus).and_then(|index| self.cards.get(index))
         {
             Some(card) => {
@@ -22900,11 +23427,9 @@ impl App {
             None => MOOD_TITLE.to_string(),
         };
         let window_id = egui::Id::unique(("aetheris-mood", generation));
-        ctx.memory_mut(|mem| {
-            mem.set_modal_layer(egui::LayerId::new(egui::Order::Middle, window_id));
-        });
         let mut window = egui::Window::new(title)
             .id(window_id)
+            .order(egui::Order::Foreground)
             .collapsible(false)
             .resizable(true)
             .drag_area(egui::WindowDrag::TitleBar)
@@ -23039,7 +23564,7 @@ impl App {
                                     }
                                     edit.on_hover_text(MOOD_LINE_TIP);
                                 });
-                            }); // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+                            });
                     });
                 }
             }
@@ -23110,6 +23635,7 @@ impl App {
             }
         });
         if let Some(inner) = shown {
+            seat_modal(ctx, inner.response.layer_id);
             let size = inner.response.rect.size();
             let width = size.x.round() as i32;
             let height = size.y.round() as i32;
@@ -23195,7 +23721,7 @@ impl App {
                 self.status = crate::model::RAW_CONSOLE.to_string();
             }
             // No session is the same red miss as an empty catalog. The stored id stays.
-            // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
             if wires
                 .iter()
                 .any(|wire| matches!(wire, crate::model::ModelWire::GrokModels { .. }))
@@ -23266,7 +23792,7 @@ impl App {
                     apply_snap(card, think);
                 }
             }
-            if let Some(think) = effect.think.as_ref() { // @aa-sdd PK-1124 docs/specs/common/formal-plan.spec.md
+            if let Some(think) = effect.think.as_ref() {
                 let echoed = before.as_ref().is_some_and(|prior| {
                     think_open_echo(effect.target.as_deref(), prior, think)
                 });
@@ -23342,9 +23868,9 @@ impl App {
         self.engine_asked = true;
         self.send_model_wires(&[crate::model::ModelWire::ShellModel]);
     }
- // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+
     /// The mux asks once. The answer seats the family and the model. The modal stays shut.
-    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
     fn ask_shell_once(&mut self) {
         let live = self
             .session
@@ -23368,7 +23894,7 @@ impl App {
     /// The method `seat_pane_engine` stores one pane's model word.
     /// `pane` is that pane. `word` is the engine word. The focused pane stores it on `engine_label`.
     /// Any other pane stores it on that parked pane. A canvas cell is not this word.
-    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
     fn seat_pane_engine(&mut self, pane: u64, word: &str) {
         if pane == self.pane_id {
             self.engine_label = word.to_string();
@@ -23382,7 +23908,7 @@ impl App {
     /// The method `sync_list_slide` copies a new model-list notice onto the error slide.
     /// A generation that was already copied returns. A notice opens a red slide.
     /// A cleared notice closes the slide only when the slide is still one of the two list sentences.
-    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
     fn sync_list_slide(&mut self) {
         if self.model.list_miss_gen == self.list_slide_gen {
             return;
@@ -23422,7 +23948,7 @@ impl App {
                 self.seat_pane_engine(pane, &word);
             }
             // A parked pane keeps its own word. It does not open this dialog.
-            // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
             if key != crate::model::CONSOLE_CELL || pane != self.pane_id {
                 return;
             }
@@ -23594,16 +24120,20 @@ impl App {
         }
         let mut session = std::mem::replace(&mut self.model, crate::model::ModelSession::shut());
         let mut still = true;
-        egui::Window::new("Model Config")
+        let shown = egui::Window::new("Model Config")
             .id(egui::Id::unique("aetheris-model-config"))
             .collapsible(false)
             .resizable(false)
+            .order(egui::Order::Foreground)
             .constrain(true)
             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
             .open(&mut still)
             .show(ctx, |ui| {
                 self.paint_model_body(ui, &mut session);
             });
+        if let Some(inner) = shown {
+            seat_modal(ctx, inner.response.layer_id);
+        }
         let dialog = session.console && session.open;
         let gate = session.console_thought_open();
         let own = self.vt_think_on;
@@ -23687,7 +24217,7 @@ impl App {
         }
         if let Some(words) = session.list_miss {
             // The same red as Java `MODEL_LIST_MISS`.
-            // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
             ui.label(egui::RichText::new(words).color(egui::Color32::from_rgb(0xc6, 0x28, 0x28)));
         }
     }
@@ -23988,13 +24518,14 @@ impl App {
         self.land_newest = false;
         if let Some(session) = self.session.take() {
             // Disconnect leaves the Roux count.
+            // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
             self.roux_used = None;
             self.roux_chars = 0;
             self.roux_blocks = 0;
             self.tokens_asked = false;
             // The ask clears. The pane word stays.
-            // @aa-sdd PK-994 docs/specs/common/stages.spec.md
-            self.engine_asked = false; // @aa-sdd PK-1407 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
+            self.engine_asked = false;
             if session.shutdown(JOIN_BOUND).is_err() {
                 self.seat_control_status("Disconnected: read thread did not stop");
                 return;
@@ -24012,7 +24543,7 @@ impl App {
                 self.live_line.pop();
             } else if !ch.is_control() {
                 self.live_line.push(ch);
-            } // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+            }
         }
     }
 
@@ -24028,7 +24559,7 @@ impl App {
     }
 
     /// The grid changed. The cached console text is stale.
-    /// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    /// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
     fn note_grid(&mut self) {
         self.grid_gen = self.grid_gen.wrapping_add(1);
     }
@@ -24091,7 +24622,7 @@ impl App {
     }
 
     /// Post the canvas beat when the seat changed. The frame paints the last integer.
-    /// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    /// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
     fn post_canvas_heat(
         &mut self,
         ctx: &egui::Context,
@@ -24151,7 +24682,7 @@ impl App {
     }
 
     /// Post the VT100 beat when the line or the grid changed. The key does not walk the grid.
-    /// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    /// // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
     fn post_vt_heat(&mut self, ctx: &egui::Context) {
         if self.vt_memory_gen != self.grid_gen {
             self.vt_memory = std::sync::Arc::from(session_memory_text(&self.grid));
@@ -24206,8 +24737,8 @@ impl App {
     fn mood_line_for_user(&self, user: &str) -> Option<String> {
         // The checkbox makes the seat available. The footer switch turns it on.
         // The line and the switch are that user's record.
-        // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md
-        // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md FINESSE:f-195
+        // @aa-sdd PK-1071 docs/specs/common/formal-plan.spec.md FINESSE:f-220
         seated_mood_line(
             &self.mood_owner,
             user,
@@ -24519,6 +25050,7 @@ impl App {
                     self.close_pane_clicked = true;
                 }
                 // The font control follows Close Pane. The host row keeps the fields.
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-172
                 ui.separator();
                 ui.label("Font size").on_hover_text(FONT_TIP);
                 if ui.button("-").on_hover_text(FONT_MINUS_TIP).clicked() {
@@ -24538,7 +25070,7 @@ impl App {
                 }
                 // The thinking cluster sits to the right of the font control.
                 // A quiet deck paints nothing.
-                // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md FINESSE:f-180
                 if let Some(elapsed_ms) = spin_ms {
                     paint_footer_spin(ui, elapsed_ms);
                 }
@@ -24574,7 +25106,7 @@ impl App {
                         self.paint_menu(ui);
                     }
                     // Far east of the menu row. The same cluster. A quiet deck paints nothing.
-                    // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md FINESSE:f-180
                     if let Some(elapsed_ms) = spin_ms {
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             ui.horizontal(|ui| paint_footer_spin(ui, elapsed_ms));
@@ -24635,7 +25167,7 @@ impl App {
                 );
                 let (known, window) = session_window(self.facts.as_ref());
                 // The ring count. The budget is the selected cell, the Token Calc row.
-                // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+                // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-207
                 let used = self.ring_used;
                 let budgets = application_yaml_budgets();
                 let targets = canvas_token_targets(&self.cards);
@@ -24690,7 +25222,8 @@ impl App {
                     egui::vec2(rest.width(), bar_h.min(rest.height())),
                 );
                 // The held Roux count stays the base. The unsent line posts. The walk is off the key.
-                // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163 FINESSE:f-177
+                // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
                 self.post_vt_heat(ui.ctx());
                 let used = self.vt_used;
                 let counted = if used < 0 { 0usize } else { used as usize };
@@ -24700,7 +25233,7 @@ impl App {
                     .map(|facts| facts.managed_tokens)
                     .unwrap_or(0);
                 // A blank pane word counts as ollama. Another engine uses zero when managed is zero.
-                // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+                // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
                 let (known, window) = session_window(self.facts.as_ref());
                 let budgets = application_yaml_budgets();
                 let targets = canvas_token_targets(&self.cards);
@@ -24754,7 +25287,8 @@ impl App {
             self.paint_model(ui.ctx());
             if self.plate != Plate::Aetheris {
                 // Token Calc opens on the same integer the heatbar wears.
-                // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
+                // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
                 let used = self.vt_used;
                 let chars = if self.roux_used.is_some() {
                     self.roux_chars
@@ -24941,7 +25475,7 @@ impl App {
             }
             RunAsk::Send(frame) => {
                 // The glass user's own session carries the execute. Another user's socket stays idle.
-                // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
                 let Some(pane) = self.live_glass_pane() else {
                     return;
                 };
@@ -24984,8 +25518,8 @@ impl App {
                 self.run_pane = Some(pane);
                 // Every member frame goes out now. One member does not wait for another.
                 // The glass user's session carries each frame.
-                // @aa-sdd PK-1157 docs/specs/common/stages.spec.md
-                // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1157 docs/specs/common/stages.spec.md FINESSE:f-212
+                // @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
                 for (cell, frame) in frames {
                     self.wire_pane(pane, &[frame]);
                     if let Some(index) = self.cards.iter().position(|card| card.cell == cell) {
@@ -25017,7 +25551,7 @@ impl App {
         };
         let frame = crate::amwp::cancel_frame(&halt.cell);
         let _ = self.wire_owned(&frame);
-        close_thought(&mut self.think);
+        self.finish_showing();
         self.status = HALT_STOP.to_string();
         self.pipe_rest.clear();
         self.pipe_live = false;
@@ -25102,7 +25636,7 @@ impl App {
     /// When no card was running, `run_pane` becomes absent and the method returns. Otherwise each running cell gets a cancel frame through `wire_owned`. `run_pane` becomes absent. The status becomes `Stopped.`.
     fn try_clear(&mut self) {
         // This canvas pin returns to the head. The mood line stays.
-        // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-200
         self.seat_mood_canvas();
         if !self.mood.blocked && !self.mood.canvas.is_empty() {
             let canvas = self.mood.canvas.clone();
@@ -25112,7 +25646,7 @@ impl App {
         }
         // The armed card's model. Captured before the wipe.
         // Thinking flags stay off on the fresh card.
-        // @aa-sdd PK-1087 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1087 docs/specs/common/formal-plan.spec.md FINESSE:f-193
         let kept_target = self
             .cards
             .get(self.focus)
@@ -25127,7 +25661,7 @@ impl App {
         self.edits.clear();
         self.prompt_focus = None;
         // Clear cancels every member that is still out.
-        // @aa-sdd PK-1157 docs/specs/common/stages.spec.md
+        // @aa-sdd PK-1157 docs/specs/common/stages.spec.md FINESSE:f-212
         let running: Vec<[u8; 16]> = self
             .cards
             .iter()
@@ -25142,7 +25676,7 @@ impl App {
         if let Some(born) = self.cards.get(self.focus).map(|card| card.cell) {
             self.keep_card_think(born);
         }
-        close_thought(&mut self.think);
+        self.finish_showing();
         self.focus_prompt = true;
         self.land_newest = false;
         self.group_rest.clear();
@@ -25194,7 +25728,7 @@ impl App {
             .collect();
         if !inflight.is_empty() {
             // Delete cancels every member of the cut that is still out.
-            // @aa-sdd PK-1157 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-1157 docs/specs/common/stages.spec.md FINESSE:f-212
             for cell in &inflight {
                 let frame = crate::amwp::cancel_frame(cell);
                 let _ = self.wire_owned(&frame);
@@ -25203,7 +25737,7 @@ impl App {
                     card.started = None;
                 }
             }
-            close_thought(&mut self.think);
+            self.finish_showing();
         }
         if drop_pipe {
             self.pipe_rest.clear();
@@ -25515,7 +26049,7 @@ impl App {
     ///
     /// An open bar shows `Group` and `Join` when the group is 0, or `Ungroup` otherwise, plus the target field. A change calls `note_target_change`. A lost focus calls `note_target_leave`. A click keeps the caret. An unfolded card that is not a merge paints the prompt window. Focus, wheel ownership, and a click are recorded. An unfolded reply uses `paint_bounded_reply` when `group_pane_height` returns a height, and `paint_open_reply` otherwise. A non-empty fault is drawn under an unfolded card. A secondary click on the reply stores the status `import refused on output`. The context menu can import, transfer, or duplicate. A hover caption comes from `frame_caption`. The edge color comes from `pinned_edge`.
     ///
-    /// A group block paints members in a horizontal scroller and then the merge card. `land_newest` scrolls to the bottom with no animation. A prompt or reply that owns the wheel clears the smooth scroll delta. The header plate covers the north band. An open thinking strip is `paint_think_strip`, and a clear, a close, or a kept height is recorded.
+    /// A group block paints members in a horizontal scroller and then the merge card. The horizontal bar sits on the bottom of that member pane. Each group has its own bar. The canvas bar is not that bar. The member row does not take the wheel. `land_newest` scrolls to the bottom with no animation. A prompt or reply that owns the wheel clears the smooth scroll delta. The header plate covers the north band. An open thinking strip is `paint_think_strip`, and a clear, a close, or a kept height is recorded.
     ///
     /// The split bar can be dragged. The canvas arrow and the inspector arrow call `arrow_share`. A drag calls `drag_weight`. Hover text says which side will be hidden. When the pin bar is folded, `P` is painted on the bar. A click on that mark asks to open the bar. When no view is open, hovering that mark shows `PIN_SHOW_TIP`.
     ///
@@ -25644,7 +26178,9 @@ impl App {
         let last = prompts.len().saturating_sub(1);
         let focus_at_paint = self.focus;
         let mut focus_now = focus_at_paint;
-        let mut think_chrome = self.think_chrome;
+        let think_key = self.showing_canvas_key();
+        let think_blocks = self.think_panes.blocks(&think_key);
+        let mut think_chrome = self.think_panes.chrome_copy(&think_key);
         let mut clear_think_log = false;
         let mut think_closed_now = false;
         let mut think_height_now: Option<i32> = None;
@@ -25835,6 +26371,7 @@ impl App {
                         let think_h = if think_chrome.open {
                             if think_chrome.folded {
                                 // The band holds the full button plus the gap above BB1.
+                                // @aa-sdd F-159
                                 folded_control_height(ui) + FOLDED_LINE_LIFT
                             } else {
                                 notebook_strip_shown(ui, &think_chrome, panel_h).0
@@ -25880,6 +26417,7 @@ impl App {
                                     PIN_HIT_CARD.with(|slot| slot.set(None));
                                     CANVAS_CARD_CLIP.with(|slot| slot.set(None));
                                     CANVAS_CARD_RECT.with(|slot| slot.set(None));
+                                    MEMBER_PANES.with(|slot| slot.borrow_mut().clear());
                                 }
                                 let mut hold_wheel = false;
                                 // Swing's column stacks from the top. The scroll
@@ -26360,23 +26898,81 @@ impl App {
                         } => {
                             ui.vertical(|ui| {
                                 ui.spacing_mut().item_spacing.y = 0.0;
-                                ui.set_min_width(ui.available_width());
+                                let column_w = ui.available_width().max(1.0);
+                                ui.set_width(column_w);
                                 if !members.is_empty() {
-                                    show_apple(
-                                        ui,
-                                        egui::ScrollArea::horizontal()
-                                            .id_salt(("gather", group))
-                                            .auto_shrink([false, true]),
-                                        egui::Vec2b::new(true, false),
+                                    let bar_h = ui.spacing().scroll.bar_width.max(1.0);
+                                    let pane_id = ui.scope_id().with(("member-pane", group));
+                                    let remembered = ui
+                                        .ctx()
+                                        .data(|data| data.get_temp::<egui::Vec2>(pane_id));
+                                    let (content_w, content_h) = match remembered {
+                                        Some(size) => (size.x, size.y),
+                                        None => (
+                                            column_w + 1.0,
+                                            prompt_window_height(ui, row_count(view_rows))
+                                                + ui.spacing().interact_size.y * 3.0,
+                                        ),
+                                    };
+                                    let pane_h =
+                                        member_pane_height(content_h, content_w, column_w, bar_h);
+                                    let painted = ui.allocate_ui_with_layout(
+                                        egui::vec2(column_w, pane_h),
+                                        egui::Layout::top_down(egui::Align::Min),
                                         |ui| {
-                                            ui.horizontal(|ui| {
-                                                for index in members {
-                                                    ui.vertical(|ui| {
-                                                        paint_card!(ui, index, true, card_gap_y);
+                                            ui.set_min_size(egui::vec2(column_w, pane_h));
+                                            show_apple(
+                                                ui,
+                                                egui::ScrollArea::horizontal()
+                                                    .id_salt(("gather", group))
+                                                    .max_width(column_w)
+                                                    .auto_shrink([false, true])
+                                                    .scroll_source(pane_wheel(false)),
+                                                egui::Vec2b::new(true, false),
+                                                |ui| {
+                                                    ui.horizontal(|ui| {
+                                                        for index in members {
+                                                            ui.vertical(|ui| {
+                                                                paint_card!(
+                                                                    ui, index, true, card_gap_y
+                                                                );
+                                                            });
+                                                        }
                                                     });
-                                                }
-                                            });
+                                                },
+                                            )
+                                        },
+                                    );
+                                    let output = painted.inner;
+                                    ui.ctx().data_mut(|data| {
+                                        data.insert_temp(pane_id, output.content_size);
+                                    });
+                                    let needed = member_pane_height(
+                                        output.content_size.y,
+                                        output.content_size.x,
+                                        column_w,
+                                        bar_h,
+                                    );
+                                    if (needed - pane_h).abs() > 0.5 {
+                                        ui.ctx().request_repaint();
+                                    }
+                                    #[cfg(test)]
+                                    {
+                                        let host = output.inner_rect;
+                                        let bar = if output.content_size.x > host.width() + 0.5 {
+                                            apple_track_rect(host, 0, bar_h)
+                                        } else {
+                                            egui::Rect::NOTHING
+                                        };
+                                        MEMBER_PANES.with(|slot| {
+                                            slot.borrow_mut().push((
+                                                group,
+                                                host,
+                                                bar,
+                                                output.content_size,
+                                            ));
                                         });
+                                    }
                                 }
                                 if let Some(index) = merge {
                                     paint_card!(ui, index, false, card_gap_y);
@@ -26448,7 +27044,7 @@ impl App {
                             strip_ui.set_clip_rect(think_rect.intersect(strip_ui.clip_rect()));
                             paint_think_strip(
                                 &mut strip_ui,
-                                &self.think.blocks,
+                                &think_blocks,
                                 &mut think_chrome,
                                 panel_h,
                                 false,
@@ -26569,6 +27165,7 @@ impl App {
             }
             // The editors have written this frame. The heatbar wears that count
             // when the inspector column is closed and when it is open.
+            // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-171
             self.seat_mood_canvas();
             let debug = mood_debug_seat(
                 self.debug_mood,
@@ -26580,8 +27177,8 @@ impl App {
             // The editors have written this frame. The walk runs off the key.
             // The heatbar wears the last seated integer.
             // A mark press seats one cell. It does not commit the pin.
-            // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-            // @aa-sdd PK-1076 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
+            // @aa-sdd PK-1076 docs/specs/common/formal-plan.spec.md FINESSE:f-216
             if pin_commit_after_mark(
                 pin_write_due(pin_commit, pin_on, self.view.is_some()),
                 mark_press,
@@ -26735,11 +27332,12 @@ impl App {
                     }
                     face.on_hover_text(TOKEN_OPEN_TIP);
                     // The estimate sits on the status heatbar. The inspector keeps T.
+                    // @aa-sdd F-160
                 });
             }
             seat_footer_band(ui, footer_rect);
         });
-        self.think_chrome = think_chrome;
+        self.think_panes.write_chrome(&think_key, think_chrome);
         if mood_flip && note_mood_flip(&mut self.mood) {
             self.store_mood_yaml();
         }
@@ -26754,8 +27352,10 @@ impl App {
             self.store_think_yaml();
         }
         if clear_think_log {
-            clear_think(&mut self.think, &mut self.think_chrome);
-            store_think_file(&self.think);
+            self.think_panes.clear_log(&think_key);
+            if let Some(seat) = self.think_panes.seats.get(&think_key) {
+                store_think_file(&seat.log);
+            }
         }
         let view_modal = self.view.is_some();
         if !view_modal {
@@ -26882,7 +27482,7 @@ impl App {
             self.focus = focus_now;
         }
         // Mood opens after the seat lands. The glass takes that cell's model.
-        // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
         if mood_open {
             self.try_open_mood(self.focus);
         }
@@ -27123,7 +27723,7 @@ impl App {
         }
         }
         // The view glass must not drop a check. The file hears the box either way.
-        // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md FINESSE:f-206
         let mut expanded_dirty = false;
         for (i, on) in expands.iter().enumerate() {
             if i >= self.cards.len() {
@@ -27419,12 +28019,9 @@ impl App {
             let raw = view_rect_from(inner.response.rect);
             pane.last = Some(bound_view(screen, raw, pane.body.len() as i32));
         }
-        ctx.memory_mut(|mem| {
-            mem.areas_mut().move_to_top(view_layer);
-            if still {
-                mem.set_modal_layer(view_layer);
-            }
-        });
+        if still {
+            seat_modal(ctx, view_layer);
+        }
         if still {
             self.view = Some(pane);
         } else {
@@ -27433,22 +28030,24 @@ impl App {
         }
     }
 
-    /// The method `paint_vt_strip` paints the terminal thinking strip and stores a close or a height change. The parameter `ui` is the egui surface. The strip uses the current pane id as its salt. `seat_vt_chrome` builds the chrome from `vt_open`, `vt_slide`, `vt_folded`, and `vt_height`.
+    /// The method `paint_vt_strip` paints the focused terminal thinking strip and stores a close or a height change. The parameter `ui` is the egui surface. The strip uses the current pane id as its salt.
     ///
-    /// `paint_think_strip` draws `vt_think` blocks with the terminal flag true. A returned strip can clear the log, mark the strip closed, or keep a height. `keep_vt_session` writes the open, slide, folded, and height fields back.
+    /// The log and the chrome come from the focused pane's seat. A missing seat paints closed and is not created. `paint_think_strip` draws that log with the terminal flag true. A returned strip can clear the log, mark the strip closed, or keep a height. The chrome is written back when the seat exists.
     ///
-    /// A close is noted on `vt_yaml`. A kept height is noted there too, and a real change also sets `vt_chrome.height`. A dirty yaml file is stored with `store_vt_yaml`. A clear wipes `vt_think` and `vt_chrome` through `clear_think`.
+    /// A close is noted on `vt_yaml`. A kept height is noted there too, and a real change also sets `vt_chrome.height`. A dirty yaml file is stored with `store_vt_yaml`. A clear wipes that seat.
     fn paint_vt_strip(&mut self, ui: &mut egui::Ui) {
         let panel_h = ui.available_height();
         let salt = self.pane_id;
-        let mut vt_chrome =
-            seat_vt_chrome(self.vt_open, self.vt_slide, self.vt_folded, self.vt_height);
+        self.ensure_focused_ssh_key();
+        let key = self.ssh_think_key.clone();
+        let blocks = self.think_panes.blocks(&key);
+        let mut vt_chrome = self.think_panes.chrome_copy(&key);
         let mut vt_clear = false;
         let mut vt_closed = false;
         let mut kept: Option<i32> = None;
         if let Some(strip) = paint_think_strip(
             ui,
-            &self.vt_think.blocks,
+            &blocks,
             &mut vt_chrome,
             panel_h,
             true,
@@ -27459,11 +28058,7 @@ impl App {
             kept = strip.kept_height;
             let _ = strip.rect;
         }
-        let (open, slide, folded, height) = keep_vt_session(&vt_chrome);
-        self.vt_open = open;
-        self.vt_slide = slide;
-        self.vt_folded = folded;
-        self.vt_height = height;
+        self.think_panes.write_chrome(&key, vt_chrome);
         let mut vt_dirty = false;
         if vt_closed {
             vt_dirty |= note_vt_closed(&mut self.vt_yaml);
@@ -27478,7 +28073,7 @@ impl App {
             self.store_vt_yaml();
         }
         if vt_clear {
-            clear_think(&mut self.vt_think, &mut self.vt_chrome);
+            self.think_panes.clear_log(&key);
         }
     }
 
@@ -27568,7 +28163,7 @@ impl App {
 
     /// The method `paint_parked` paints one unfocused terminal pane and returns the click it saw. The parameter `ui` is the egui surface. The parameter `id` is the pane id. The parameter `rect` is that pane's rectangle. An unknown id returns `None`.
     ///
-    /// The face is monospace at `term_font`. A glyph width at or below one half becomes 8. A row height at or below one half becomes 16. The thinking strip uses that pane's own chrome and blocks. A close or a kept height is written to the shared `vt_yaml`, and a dirty file is stored. A clear wipes that pane's think log. The grid is resized to the leftover columns and rows, and a live session is resized with it.
+    /// The face is monospace at `term_font`. A glyph width at or below one half becomes 8. A row height at or below one half becomes 16. The thinking strip uses that pane's seat. A close or a kept height is written to the shared `vt_yaml`, and a dirty file is stored. A clear wipes that seat. The grid is resized to the leftover columns and rows, and a live session is resized with it.
     ///
     /// The scroll area sticks to the bottom and paints each visible history cell. A zero-width cell is skipped. `paint_colors` supplies the ink with selection false. A non-default background, or a reverse cell, fills the cell. Non-empty text is drawn. The cursor cell is stroked with `CURSOR`. `at_tail` becomes the result of `view_on_tail`.
     ///
@@ -27592,26 +28187,20 @@ impl App {
         );
         child.set_clip_rect(rect.intersect(child.clip_rect()));
         let salt = self.panes[index].id;
-        let mut chrome = seat_vt_chrome(
-            self.panes[index].vt_open,
-            self.panes[index].vt_slide,
-            self.panes[index].vt_folded,
-            self.panes[index].vt_height,
-        );
+        self.ensure_parked_ssh_key(index);
+        let key = self.panes[index].ssh_think_key.clone();
+        let blocks = self.think_panes.blocks(&key);
+        let mut chrome = self.think_panes.chrome_copy(&key);
         let panel_h = child.available_height();
         let strip = paint_think_strip(
             &mut child,
-            &self.panes[index].vt_think.blocks,
+            &blocks,
             &mut chrome,
             panel_h,
             true,
             salt,
         );
-        let (open, slide, folded, height) = keep_vt_session(&chrome);
-        self.panes[index].vt_open = open;
-        self.panes[index].vt_slide = slide;
-        self.panes[index].vt_folded = folded;
-        self.panes[index].vt_height = height;
+        self.think_panes.write_chrome(&key, chrome);
         let mut vt_dirty = false;
         let mut vt_clear = false;
         if let Some(strip) = strip {
@@ -27630,7 +28219,7 @@ impl App {
             self.store_vt_yaml();
         }
         if vt_clear {
-            clear_think(&mut self.panes[index].vt_think, &mut self.vt_chrome);
+            self.think_panes.clear_log(&key);
         }
         let available = child.available_size();
         let cols = ((available.x - 16.0) / char_w).floor().max(1.0) as usize;
@@ -27665,7 +28254,7 @@ impl App {
                 );
                 response.context_menu(|ui| {
                     let clip = self
-                        .state // @aa-sdd PK-579 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                        .state
                         .as_mut()
                         .and_then(|state| state.clipboard_text());
                     let anchor = self.panes[index].anchor;
@@ -27717,7 +28306,7 @@ impl App {
                             painter.text(
                                 cell_rect.min,
                                 egui::Align2::LEFT_TOP,
-                                cell.text(), // @aa-sdd PK-1292 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                                cell.text(),
                                 font.clone(),
                                 fg,
                             );
@@ -27736,7 +28325,7 @@ impl App {
         let parked_tail = view_on_tail(
             scroll_out.content_size.y,
             scroll_out.inner_rect.height(),
-            scroll_out.state.clamped_offset().y, // @aa-sdd PK-1293 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            scroll_out.state.clamped_offset().y,
         );
         self.panes[index].at_tail = parked_tail;
         if let Some(label) = menu_pick {
@@ -27771,7 +28360,7 @@ impl App {
                             self.show_shell_notice("Paste", NOT_CONNECTED);
                         } else if !body.is_empty() {
                             if let Some(session) = self.panes[index].session.as_ref() {
-                                session.write(&paste_wrapped(&body)); // @aa-sdd PK-1433 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                                session.write(&paste_wrapped(&body));
                             }
                             self.panes[index].live_line.push_str(&body);
                         }
@@ -28159,7 +28748,7 @@ impl ApplicationHandler for App {
         }
         if let WindowEvent::Moved(_) = &event {
             self.note_frame(&window);
-        } // @aa-sdd PK-1423 docs/specs/common/canvas.spec.md
+        }
         let consumed = self
             .state
             .as_mut()
@@ -28232,6 +28821,7 @@ fn control_tip(open: bool) -> &'static str {
 }
 
 /// Send file keeps the full word. Three ems past the text clear the round edge.
+/// @aa-sdd F-157
 fn send_file_button(ui: &mut egui::Ui, enabled: bool) -> egui::Response {
     let label = "Load File";
     let font = egui::TextStyle::Button.resolve(ui.style());
@@ -28304,6 +28894,7 @@ fn paint_link_chip(ui: &mut egui::Ui, text: &str) {
     painter.galley(pos, galley, egui::Color32::WHITE);
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// A beat on the connection bar. Connecting is not a beat.
 enum ControlBeat {
     Connected,
@@ -28415,7 +29006,7 @@ pub(crate) fn view_on_tail(content: f32, view: f32, offset: f32) -> bool {
     offset >= max - 1.0
 }
 
-/// @aa-sdd PK-1124 docs/specs/common/formal-plan.spec.md
+/// @aa-sdd PK-1124 docs/specs/common/formal-plan.spec.md FINESSE:f-143
 /// The enum `TermStroke` is one console input after the event list has been read. `Text` is characters to encode. `Key` is one terminal key. `Paste` is clipboard text that joins the unsent line. `Copy` copies the highlight and writes no byte. `Motion` is a console menu label that stays on this pane and writes no byte.
 // @aa-sdd PK-579 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
 enum TermStroke {
@@ -28719,6 +29310,7 @@ fn pull_source(
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Empty leaves the deck. Seated is the index of the new Excluded card.
 enum PullAsk {
     Empty,
@@ -28759,6 +29351,7 @@ fn terminal_card(cards: &[TurnCard], focus: usize) -> Option<&TurnCard> {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Quiet leaves the status. Burner is refused. Ready is the text to write.
 enum TerminalAsk {
     Quiet,
@@ -28874,6 +29467,7 @@ fn terminal_bytes(live: bool, text: &str) -> Result<Vec<u8>, &'static str> {
     Ok(out)
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Quiet leaves the status. Word is a status. Write is the full turn text.
 enum TerminalSeat {
     Quiet,
@@ -30419,14 +31013,14 @@ mod tests {
         app.control_open = false;
         app.vt_chrome.height = 140.0;
         app.vt_chrome.folded = true;
-        app.vt_open = true;
-        app.vt_slide = -1.0;
-        app.vt_folded = false;
-        app.vt_think.blocks = vec![block("focused-secret")];
-        app.panes[0].vt_open = true;
-        app.panes[0].vt_slide = -1.0;
-        app.panes[0].vt_folded = true;
-        app.panes[0].vt_think.blocks = vec![block("parked-secret")];
+        app.focused_ssh_chrome().open = true;
+        app.focused_ssh_chrome().slide = -1.0;
+        app.focused_ssh_chrome().folded = false;
+        app.focused_ssh_log().blocks = vec![block("focused-secret")];
+        app.parked_ssh_chrome(0).open = true;
+        app.parked_ssh_chrome(0).slide = -1.0;
+        app.parked_ssh_chrome(0).folded = true;
+        app.parked_ssh_log(0).blocks = vec![block("parked-secret")];
         let ctx = app.ctx.clone();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1000.0, 700.0));
         let mut clock = 1.0_f64;
@@ -30448,10 +31042,10 @@ mod tests {
         assert!(first.iter().any(|text| text.contains("focused-secret")));
         assert!(first.iter().all(|text| !text.contains("parked-secret")));
         assert!(app.vt_chrome.folded, "focused paint wrote the shared fold");
-        assert!(!app.vt_folded);
-        assert!(app.panes[0].vt_folded);
+        assert!(!app.focused_ssh_chrome().folded);
+        assert!(app.parked_ssh_chrome(0).folded);
         assert_eq!(app.vt_chrome.height, 140.0);
-        assert!(app.panes[0].vt_open);
+        assert!(app.parked_ssh_chrome(0).open);
         app.vt_chrome.folded = false;
         let parked_id = app.panes[0].id;
         app.focus_pane(parked_id);
@@ -30459,22 +31053,22 @@ mod tests {
         assert!(second.iter().any(|text| text.contains("focused-secret")));
         assert!(second.iter().all(|text| !text.contains("parked-secret")));
         assert!(!app.vt_chrome.folded, "parked paint wrote the shared fold");
-        assert!(app.vt_folded);
-        assert!(!app.panes[0].vt_folded);
+        assert!(app.focused_ssh_chrome().folded);
+        assert!(!app.parked_ssh_chrome(0).folded);
         assert_eq!(app.vt_chrome.height, 140.0);
-        app.panes[0].vt_folded = true;
-        let mut closing = seat_vt_chrome(app.vt_open, app.vt_slide, app.vt_folded, app.vt_height);
+        app.parked_ssh_chrome(0).folded = true;
+        let mut closing = *app.focused_ssh_chrome();
         close_think(&mut closing);
         let (open, slide, folded, height) = keep_vt_session(&closing);
-        app.vt_open = open;
-        app.vt_slide = slide;
-        app.vt_folded = folded;
-        app.vt_height = height;
-        assert!(!app.vt_open);
-        assert!(!app.vt_folded);
+        app.focused_ssh_chrome().open = open;
+        app.focused_ssh_chrome().slide = slide;
+        app.focused_ssh_chrome().folded = folded;
+        app.focused_ssh_chrome().height = height;
+        assert!(!app.focused_ssh_chrome().open);
+        assert!(!app.focused_ssh_chrome().folded);
         assert!(!app.vt_chrome.folded);
-        assert!(app.panes[0].vt_open);
-        assert!(app.panes[0].vt_folded, "close unfolded the other pane");
+        assert!(app.parked_ssh_chrome(0).open);
+        assert!(app.parked_ssh_chrome(0).folded, "close unfolded the other pane");
         assert_eq!(app.vt_chrome.height, 140.0);
     }
 
@@ -30518,25 +31112,26 @@ mod tests {
         app.plate = super::Plate::Ssh;
         app.control_open = false;
         app.vt_chrome.height = 140.0;
-        app.vt_height = 220.0;
-        app.vt_open = true;
-        app.vt_slide = -1.0;
-        app.vt_folded = false;
+        app.focused_ssh_chrome().height = 220.0;
+        app.focused_ssh_chrome().open = true;
+        app.focused_ssh_chrome().slide = -1.0;
+        app.focused_ssh_chrome().folded = false;
         app.split_focused(super::SplitWay::Horizontal);
-        assert!((app.vt_height - 140.0).abs() < 0.1, "new pane {}", app.vt_height);
-        assert!((app.panes[0].vt_height - 220.0).abs() < 0.1);
-        assert!(!app.vt_folded);
-        assert!(!app.panes[0].vt_folded);
-        app.vt_open = true;
-        app.vt_slide = -1.0;
-        app.vt_folded = false;
-        app.vt_height = 200.0;
-        app.vt_think.blocks = vec![block("focused-size")];
-        app.panes[0].vt_open = true;
-        app.panes[0].vt_slide = -1.0;
-        app.panes[0].vt_folded = true;
-        app.panes[0].vt_height = 80.0;
-        app.panes[0].vt_think.blocks = vec![block("parked-size")];
+        let height = app.focused_ssh_chrome().height;
+        assert!((height - 140.0).abs() < 0.1, "new pane {height}");
+        assert!((app.parked_ssh_chrome(0).height - 220.0).abs() < 0.1);
+        assert!(!app.focused_ssh_chrome().folded);
+        assert!(!app.parked_ssh_chrome(0).folded);
+        app.focused_ssh_chrome().open = true;
+        app.focused_ssh_chrome().slide = -1.0;
+        app.focused_ssh_chrome().folded = false;
+        app.focused_ssh_chrome().height = 200.0;
+        app.focused_ssh_log().blocks = vec![block("focused-size")];
+        app.parked_ssh_chrome(0).open = true;
+        app.parked_ssh_chrome(0).slide = -1.0;
+        app.parked_ssh_chrome(0).folded = true;
+        app.parked_ssh_chrome(0).height = 80.0;
+        app.parked_ssh_log(0).blocks = vec![block("parked-size")];
         let ctx = app.ctx.clone();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1000.0, 700.0));
         let mut output = ctx.run_ui(
@@ -30548,10 +31143,12 @@ mod tests {
             |ui| app.ui(ui),
         );
         output.textures_delta.clear();
-        assert!((app.vt_height - 200.0).abs() < 0.1, "focused {}", app.vt_height);
-        assert!((app.panes[0].vt_height - 80.0).abs() < 0.1, "parked {}", app.panes[0].vt_height);
-        assert!(!app.vt_folded);
-        assert!(app.panes[0].vt_folded);
+        let height = app.focused_ssh_chrome().height;
+        assert!((height - 200.0).abs() < 0.1, "focused {height}");
+        let parked_height = app.parked_ssh_chrome(0).height;
+        assert!((parked_height - 80.0).abs() < 0.1, "parked {parked_height}");
+        assert!(!app.focused_ssh_chrome().folded);
+        assert!(app.parked_ssh_chrome(0).folded);
         assert!((app.vt_chrome.height - 140.0).abs() < 0.1);
         let parked_id = app.panes[0].id;
         app.focus_pane(parked_id);
@@ -30564,10 +31161,12 @@ mod tests {
             |ui| app.ui(ui),
         );
         output.textures_delta.clear();
-        assert!(app.vt_folded);
-        assert!((app.vt_height - 80.0).abs() < 0.1, "swapped focused {}", app.vt_height);
-        assert!(!app.panes[0].vt_folded);
-        assert!((app.panes[0].vt_height - 200.0).abs() < 0.1, "swapped parked {}", app.panes[0].vt_height);
+        assert!(app.focused_ssh_chrome().folded);
+        let height = app.focused_ssh_chrome().height;
+        assert!((height - 80.0).abs() < 0.1, "swapped focused {height}");
+        assert!(!app.parked_ssh_chrome(0).folded);
+        let parked_height = app.parked_ssh_chrome(0).height;
+        assert!((parked_height - 200.0).abs() < 0.1, "swapped parked {parked_height}");
         assert!((app.vt_chrome.height - 140.0).abs() < 0.1);
     }
 
@@ -30678,14 +31277,14 @@ mod tests {
         };
         app.scope_stash.push_back((more, false));
         let _ = app.drain_link();
-        assert_eq!(app.vt_think.blocks[0].body, "alpha-thought more");
-        assert!(app.vt_open);
-        assert_eq!(app.vt_slide, 0.0);
+        assert_eq!(app.focused_ssh_log().blocks[0].body, "alpha-thought more");
+        assert!(app.focused_ssh_chrome().open);
+        assert_eq!(app.focused_ssh_chrome().slide, 0.0);
         app.split_focused(super::SplitWay::Horizontal);
-        assert!(!app.vt_open);
-        assert!(app.panes[0].vt_open);
-        assert_eq!(app.panes[0].vt_slide, 0.0);
-        assert_eq!(app.panes[0].vt_think.blocks[0].body, "alpha-thought more");
+        assert!(!app.focused_ssh_chrome().open);
+        assert!(app.parked_ssh_chrome(0).open);
+        assert_eq!(app.parked_ssh_chrome(0).slide, 0.0);
+        assert_eq!(app.parked_ssh_log(0).blocks[0].body, "alpha-thought more");
         let beta = crate::amwp::ScopePiece::Delta {
             cell: nil,
             kind: b't',
@@ -30693,10 +31292,10 @@ mod tests {
         };
         app.scope_stash.push_back((beta, false));
         let _ = app.drain_link();
-        assert!(app.vt_open);
-        assert_eq!(app.vt_slide, 0.0);
-        assert_eq!(app.vt_think.blocks[0].body, "beta-thought");
-        assert_eq!(app.panes[0].vt_think.blocks[0].body, "alpha-thought more");
+        assert!(app.focused_ssh_chrome().open);
+        assert_eq!(app.focused_ssh_chrome().slide, 0.0);
+        assert_eq!(app.focused_ssh_log().blocks[0].body, "beta-thought");
+        assert_eq!(app.parked_ssh_log(0).blocks[0].body, "alpha-thought more");
         let ctx = app.ctx.clone();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1000.0, 700.0));
         let mut clock = 1.0_f64;
@@ -30762,7 +31361,7 @@ mod tests {
         app.scope_stash.push_back((quiet, false));
         let _ = app.drain_link();
         assert!(!app.vt_think_on);
-        assert!(app.vt_think.blocks.is_empty());
+        assert!(app.focused_ssh_log().blocks.is_empty());
         app.scope_stash.push_back((
             crate::amwp::ScopePiece::Later {
                 cell: nil,
@@ -30783,9 +31382,9 @@ mod tests {
         assert!(app.model.console_thought_open());
         assert_eq!(app.model.console_thought_tag(), "grok-4.3");
         assert!(app.vt_think_on);
-        assert!(app.vt_open);
-        assert_eq!(app.vt_think.blocks[0].body, "lantern");
-        assert!(app.vt_think.blocks[0].tag.contains("grok-4.3"));
+        assert!(app.focused_ssh_chrome().open);
+        assert_eq!(app.focused_ssh_log().blocks[0].body, "lantern");
+        assert!(app.focused_ssh_log().blocks[0].tag.contains("grok-4.3"));
     }
 
     #[test]
@@ -30843,12 +31442,12 @@ mod tests {
         .unwrap();
         let _ = app.drain_link();
         assert!(app.panes[0].vt_think_on);
-        assert!(app.panes[0].vt_open);
-        assert_eq!(app.panes[0].vt_slide, 0.0);
-        assert_eq!(app.panes[0].vt_think.blocks[0].body, "parked-thought");
+        assert!(app.parked_ssh_chrome(0).open);
+        assert_eq!(app.parked_ssh_chrome(0).slide, 0.0);
+        assert_eq!(app.parked_ssh_log(0).blocks[0].body, "parked-thought");
         assert!(!app.vt_think_on);
-        assert!(!app.vt_open);
-        assert!(app.vt_think.blocks.is_empty());
+        assert!(!app.focused_ssh_chrome().open);
+        assert!(app.focused_ssh_log().blocks.is_empty());
         assert!(!app.model.console_thought_open());
 
         app.scope_stash.push_back((
@@ -30869,10 +31468,10 @@ mod tests {
         ));
         let _ = app.drain_link();
         assert!(app.vt_think_on);
-        assert!(app.vt_open);
-        assert_eq!(app.vt_slide, 0.0);
-        assert_eq!(app.vt_think.blocks[0].body, "focused-thought");
-        assert_eq!(app.panes[0].vt_think.blocks[0].body, "parked-thought");
+        assert!(app.focused_ssh_chrome().open);
+        assert_eq!(app.focused_ssh_chrome().slide, 0.0);
+        assert_eq!(app.focused_ssh_log().blocks[0].body, "focused-thought");
+        assert_eq!(app.parked_ssh_log(0).blocks[0].body, "parked-thought");
         assert!(app.model.console_thought_open());
         assert_eq!(app.model.console_thought_tag(), "deepseek-r1");
 
@@ -30894,8 +31493,8 @@ mod tests {
         let _ = app.drain_link();
         assert!(app.model.console_thought_open());
         assert_eq!(app.model.console_thought_tag(), "deepseek-r1");
-        assert_eq!(app.vt_think.blocks[0].body, "focused-thought more");
-        assert_eq!(app.panes[0].vt_think.blocks[0].body, "parked-thought");
+        assert_eq!(app.focused_ssh_log().blocks[0].body, "focused-thought more");
+        assert_eq!(app.parked_ssh_log(0).blocks[0].body, "parked-thought");
 
         app.model.console = true;
         app.model.open = true;
@@ -30915,7 +31514,7 @@ mod tests {
         );
         assert!(!app.vt_think_on);
         assert!(app.panes[0].vt_think_on);
-        assert!(app.panes[0].vt_open);
+        assert!(app.parked_ssh_chrome(0).open);
         tx.send(ScopePiece::Delta {
             cell: nil,
             kind: b't',
@@ -30931,10 +31530,10 @@ mod tests {
             false,
         ));
         let _ = app.drain_link();
-        assert_eq!(app.panes[0].vt_think.blocks[0].body, "parked-thought still");
-        assert_eq!(app.vt_think.blocks[0].body, "focused-thought more");
-        assert!(app.panes[0].vt_open);
-        assert!(app.vt_open);
+        assert_eq!(app.parked_ssh_log(0).blocks[0].body, "parked-thought still");
+        assert_eq!(app.focused_ssh_log().blocks[0].body, "focused-thought more");
+        assert!(app.parked_ssh_chrome(0).open);
+        assert!(app.focused_ssh_chrome().open);
     }
 
     #[test]
@@ -31629,17 +32228,17 @@ mod tests {
         let mut app = super::App::new(crate::door::Door::memory_only(), None);
         app.plate = super::Plate::Aetheris;
         app.pin_bar_open = true;
-        app.think_chrome.open = true;
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.height = 160.0;
-        app.think.blocks.clear();
+        app.canvas_chrome().open = true;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().height = 160.0;
+        app.canvas_log().blocks.clear();
         for n in 0..24 {
-            app.think.blocks.push(super::ThinkBlock {
+            app.canvas_log().blocks.push(super::ThinkBlock {
                 tag: think_tag_line("deepseek-r1:1.5b"),
                 body: format!("line {n}"),
             });
         }
-        app.think.blocks.push(super::ThinkBlock {
+        app.canvas_log().blocks.push(super::ThinkBlock {
             tag: think_tag_line("deepseek-r1:1.5b"),
             body: "ZEBRA-THINK".to_string(),
         });
@@ -33426,7 +34025,7 @@ mod tests {
         };
         let mut app = super::App::new(crate::door::Door::memory_only(), None);
         app.plate = super::Plate::Ssh;
-        app.think_chrome.open = false;
+        app.canvas_chrome().open = false;
         app.vt_chrome.open = false;
         let ctx = app.ctx.clone();
         let mut clock = 1.0_f64;
@@ -33632,7 +34231,7 @@ mod tests {
         };
         let mut app = super::App::new(crate::door::Door::memory_only(), None);
         app.plate = super::Plate::Ssh;
-        app.think_chrome.open = false;
+        app.canvas_chrome().open = false;
         app.vt_chrome.open = false;
         let ctx = app.ctx.clone();
         let mut clock = 1.0_f64;
@@ -33862,7 +34461,7 @@ mod tests {
         }
         let mut app = super::App::new(crate::door::Door::memory_only(), None);
         app.plate = super::Plate::Ssh;
-        app.think_chrome.open = false;
+        app.canvas_chrome().open = false;
         app.vt_chrome.open = false;
         let ctx = app.ctx.clone();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1100.0, 700.0));
@@ -33982,76 +34581,76 @@ mod tests {
         assert!(!same_row(file, ssh));
         assert_eq!(super::TOOLS_MENU, "Tools");
         assert_eq!(super::SHOW_THINKING, "Show Thinking");
-        let vt_len = app.vt_think.blocks.len();
-        let think_len = app.think.blocks.len();
+        let vt_len = app.focused_ssh_log().blocks.len();
+        let think_len = app.canvas_log().blocks.len();
         app.plate = super::Plate::Ssh;
-        app.vt_open = false;
-        app.vt_slide = -1.0;
-        app.vt_folded = true;
+        app.focused_ssh_chrome().open = false;
+        app.focused_ssh_chrome().slide = -1.0;
+        app.focused_ssh_chrome().folded = true;
         app.vt_yaml.closed = true;
-        app.think_chrome.open = false;
-        app.think_chrome.slide = 12.0;
-        app.think_chrome.folded = true;
+        app.canvas_chrome().open = false;
+        app.canvas_chrome().slide = 12.0;
+        app.canvas_chrome().folded = true;
         app.think_yaml.closed = true;
         app.show_focused_thinking();
-        assert!(app.vt_open);
-        assert_eq!(app.vt_slide, 0.0);
-        assert!(!app.vt_folded);
-        assert!(!app.think_chrome.open);
-        assert_eq!(app.think_chrome.slide, 12.0);
-        assert!(app.think_chrome.folded);
+        assert!(app.focused_ssh_chrome().open);
+        assert_eq!(app.focused_ssh_chrome().slide, 0.0);
+        assert!(!app.focused_ssh_chrome().folded);
+        assert!(!app.canvas_chrome().open);
+        assert_eq!(app.canvas_chrome().slide, 12.0);
+        assert!(app.canvas_chrome().folded);
         assert!(app.vt_yaml.closed);
         assert!(app.think_yaml.closed);
-        assert_eq!(app.vt_think.blocks.len(), vt_len);
-        assert_eq!(app.think.blocks.len(), think_len);
-        app.vt_open = true;
-        app.vt_slide = 12.0;
-        app.vt_folded = true;
+        assert_eq!(app.focused_ssh_log().blocks.len(), vt_len);
+        assert_eq!(app.canvas_log().blocks.len(), think_len);
+        app.focused_ssh_chrome().open = true;
+        app.focused_ssh_chrome().slide = 12.0;
+        app.focused_ssh_chrome().folded = true;
         app.show_focused_thinking();
-        assert!(app.vt_open);
-        assert_eq!(app.vt_slide, 12.0);
-        assert!(!app.vt_folded);
-        assert!(!app.think_chrome.open);
-        app.vt_slide = -1.0;
-        app.vt_folded = false;
+        assert!(app.focused_ssh_chrome().open);
+        assert_eq!(app.focused_ssh_chrome().slide, 12.0);
+        assert!(!app.focused_ssh_chrome().folded);
+        assert!(!app.canvas_chrome().open);
+        app.focused_ssh_chrome().slide = -1.0;
+        app.focused_ssh_chrome().folded = false;
         app.show_focused_thinking();
-        assert!(app.vt_open);
-        assert_eq!(app.vt_slide, -1.0);
-        assert!(!app.vt_folded);
+        assert!(app.focused_ssh_chrome().open);
+        assert_eq!(app.focused_ssh_chrome().slide, -1.0);
+        assert!(!app.focused_ssh_chrome().folded);
         app.plate = super::Plate::Aetheris;
-        app.vt_open = false;
-        app.vt_slide = 4.0;
-        app.vt_folded = true;
-        app.think_chrome.open = false;
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.folded = true;
+        app.focused_ssh_chrome().open = false;
+        app.focused_ssh_chrome().slide = 4.0;
+        app.focused_ssh_chrome().folded = true;
+        app.canvas_chrome().open = false;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().folded = true;
         app.show_focused_thinking();
-        assert!(app.think_chrome.open);
-        assert_eq!(app.think_chrome.slide, 0.0);
-        assert!(!app.think_chrome.folded);
-        assert!(!app.vt_open);
-        assert_eq!(app.vt_slide, 4.0);
-        assert!(app.vt_folded);
+        assert!(app.canvas_chrome().open);
+        assert_eq!(app.canvas_chrome().slide, 0.0);
+        assert!(!app.canvas_chrome().folded);
+        assert!(!app.focused_ssh_chrome().open);
+        assert_eq!(app.focused_ssh_chrome().slide, 4.0);
+        assert!(app.focused_ssh_chrome().folded);
         assert!(app.vt_yaml.closed);
         assert!(app.think_yaml.closed);
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.folded = false;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().folded = false;
         app.show_focused_thinking();
-        assert!(app.think_chrome.open);
-        assert_eq!(app.think_chrome.slide, -1.0);
-        assert!(!app.think_chrome.folded);
-        assert!(!app.vt_open);
-        app.think_chrome.slide = 12.0;
-        app.think_chrome.folded = true;
+        assert!(app.canvas_chrome().open);
+        assert_eq!(app.canvas_chrome().slide, -1.0);
+        assert!(!app.canvas_chrome().folded);
+        assert!(!app.focused_ssh_chrome().open);
+        app.canvas_chrome().slide = 12.0;
+        app.canvas_chrome().folded = true;
         app.show_focused_thinking();
-        assert!(app.think_chrome.open);
-        assert_eq!(app.think_chrome.slide, 12.0);
-        assert!(!app.think_chrome.folded);
-        assert!(!app.vt_open);
+        assert!(app.canvas_chrome().open);
+        assert_eq!(app.canvas_chrome().slide, 12.0);
+        assert!(!app.canvas_chrome().folded);
+        assert!(!app.focused_ssh_chrome().open);
         assert!(app.vt_yaml.closed);
         assert!(app.think_yaml.closed);
-        assert_eq!(app.vt_think.blocks.len(), vt_len);
-        assert_eq!(app.think.blocks.len(), think_len);
+        assert_eq!(app.focused_ssh_log().blocks.len(), vt_len);
+        assert_eq!(app.canvas_log().blocks.len(), think_len);
     }
 
     #[test]
@@ -34684,6 +35283,7 @@ mod tests {
         /// The `LINE` constant is the mood text this test paints.
         /// The text is `LANTERN-KEEP-MOOD`.
         const LINE: &str = "LANTERN-KEEP-MOOD";
+        /// @aa-sdd L37 rust-aetheris-client.draft.001.md
         ///
         /// The `Spot` struct is one painted text hit inside this test.
         /// The field `rect` is the visual bounds of that text. The field `clip` is the clip rectangle stored with the hit.
@@ -34737,7 +35337,7 @@ mod tests {
         }
         let mut app = super::App::new(crate::door::Door::memory_only(), None);
         app.plate = super::Plate::Aetheris;
-        app.think_chrome.open = false;
+        app.canvas_chrome().open = false;
         app.vt_chrome.open = false;
         app.pin_bar_open = false;
         app.tools_open = false;
@@ -35162,6 +35762,104 @@ mod tests {
                 },
                 GatherSlot::Card(1),
             ]
+        );
+    }
+
+    #[test]
+    /// The `the_member_bar_sits_on_the_group_pane` test checks the horizontal bar on a group member row.
+    /// [`super::member_pane_height`] of content height 40, content width 200, pane width 100, and bar thickness 8 is 48.
+    /// The same height and a content width of 80 on that pane is 40. A content width equal to the pane stays 40.
+    /// A content height of 0 with a wider content becomes 9. A pane width of 0 skips the bar and stays 40. A negative pane width stays 40.
+    ///
+    /// Two groups are painted. Group 4 has three members and a merge. Group 9 has three members and a merge. The canvas share is 0.42.
+    /// The second paint stores two panes. The first pane is group 4. The second pane is group 9.
+    /// Each content is wider than its pane. Each bar sits on the bottom of its pane. The bar uses the pane's left and right.
+    /// The bar is shorter than the pane. The first pane ends above the canvas clip. The second pane ends below the first pane.
+    /// The two bars do not share a bottom.
+    fn the_member_bar_sits_on_the_group_pane() {
+        assert_eq!(super::member_pane_height(40.0, 200.0, 100.0, 8.0), 48.0);
+        assert_eq!(super::member_pane_height(40.0, 80.0, 100.0, 8.0), 40.0);
+        assert_eq!(super::member_pane_height(40.0, 100.0, 100.0, 8.0), 40.0);
+        assert_eq!(super::member_pane_height(0.0, 200.0, 100.0, 8.0), 9.0);
+        assert_eq!(super::member_pane_height(40.0, 200.0, 0.0, 8.0), 40.0);
+        assert_eq!(super::member_pane_height(40.0, 200.0, -1.0, 8.0), 40.0);
+
+        let seat = |n: u64, group: u64, column: u32| {
+            let mut card = TurnCard::fresh(n);
+            card.group = group;
+            card.column = column;
+            card
+        };
+        let mut app = super::App::new(crate::door::Door::memory_only(), None);
+        app.plate = super::Plate::Aetheris;
+        app.canvas_weight = 0.42;
+        app.cards = vec![
+            seat(1, 4, 1),
+            seat(2, 4, 2),
+            seat(3, 4, 3),
+            seat(4, 4, 0),
+            seat(5, 9, 1),
+            seat(6, 9, 2),
+            seat(7, 9, 3),
+            seat(8, 9, 0),
+        ];
+        let ctx = app.ctx.clone();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1000.0, 760.0));
+        let paint = |app: &mut super::App| {
+            ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(screen),
+                    ..Default::default()
+                },
+                |ui| app.paint_empty(ui),
+            )
+            .drop_without_applying_deltas();
+        };
+        paint(&mut app);
+        paint(&mut app);
+        let clip = super::PIN_SCROLL_CLIP
+            .with(|slot| slot.get())
+            .expect("canvas clip");
+        let panes = super::MEMBER_PANES.with(|slot| slot.borrow().clone());
+        assert_eq!(panes.len(), 2, "panes {}", panes.len());
+        assert_eq!(panes[0].0, 4);
+        assert_eq!(panes[1].0, 9);
+        for (group, pane, bar, content) in &panes {
+            assert!(
+                content.x > pane.width() + 0.5,
+                "group {group} content {} pane {}",
+                content.x,
+                pane.width()
+            );
+            assert!(bar.height() > 1.0, "group {group} bar {}", bar.height());
+            assert!(bar.height() < pane.height(), "group {group}");
+            assert!((bar.bottom() - pane.bottom()).abs() < 0.6, "group {group}");
+            assert!((bar.left() - pane.left()).abs() < 0.6, "group {group}");
+            assert!((bar.right() - pane.right()).abs() < 0.6, "group {group}");
+            assert!(
+                pane.height() + 40.0 < clip.height(),
+                "group {group} pane {} clip {}",
+                pane.height(),
+                clip.height()
+            );
+        }
+        assert!(
+            panes[0].1.bottom() + 24.0 < clip.bottom(),
+            "pane {} clip {}",
+            panes[0].1.bottom(),
+            clip.bottom()
+        );
+        assert!(
+            panes[1].1.top() > panes[0].1.bottom() - 1.0,
+            "second {} first {}",
+            panes[1].1.top(),
+            panes[0].1.bottom()
+        );
+        assert!(
+            (panes[0].2.bottom() - panes[1].2.bottom()).abs() > 4.0,
+            "bars {} {}",
+            panes[0].2.bottom(),
+            panes[1].2.bottom()
         );
     }
 
@@ -36874,7 +37572,7 @@ mod tests {
         app.plate = super::Plate::Aetheris;
         app.pin_bar_open = false;
         app.pin_on = false;
-        app.think_chrome.open = false;
+        app.canvas_chrome().open = false;
         app.tools_open = false;
         app.cards[0].reply = "The cell replied.".to_string();
         let ctx = app.ctx.clone();
@@ -37012,6 +37710,147 @@ mod tests {
         let _ = paint(&mut app, vec![click_at(mark.center(), false)]);
         assert!(!app.pin_bar_open, "P opened under the view");
         assert!(app.view.is_some());
+    }
+
+    #[test]
+    /// The `the_mood_sits_above_the_pin_strip` test checks that an open modal paints above the pin strip.
+    /// The plate is [`Plate::Aetheris`]. The pin bar starts open. The mood glass opens on the first card. The screen is 1400 by 900.
+    /// After two paints the mood layer is above the north layer. The mood order is foreground. The north layer does not allow interaction. The top modal layer is the mood layer.
+    /// A title drag moves the mood window onto the pin row. The mood layer stays above the north layer. The layer at the pin row is the mood layer. A primary click on that row leaves the pin bar open and leaves the mood glass open.
+    /// The token window and the Settings window then open. Each of those layers is above the north layer.
+    /// The clear question then opens. Its window and its shield are above the mood layer. The north layer stays below the mood layer.
+    fn the_mood_sits_above_the_pin_strip() {
+        let mut app = super::App::new(crate::door::Door::memory_only(), None);
+        app.plate = super::Plate::Aetheris;
+        app.pin_bar_open = true;
+        app.canvas_chrome().open = false;
+        app.tools_open = false;
+        app.mood_desk.open_on(0, app.cards[0].cell);
+        let generation = app.mood_desk.generation;
+        let ctx = app.ctx.clone();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1400.0, 900.0));
+        let mut clock = 3.0_f64;
+        let mood_id = egui::Id::unique(("aetheris-mood", generation));
+        let mood_layer = egui::LayerId::new(egui::Order::Foreground, mood_id);
+        let mut paint = |app: &mut super::App, events: Vec<egui::Event>| {
+            clock += 0.05;
+            let mut output = ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(screen),
+                    events,
+                    time: Some(clock),
+                    ..Default::default()
+                },
+                |ui| {
+                    egui::CentralPanel::default().show(ui, |ui| {
+                        app.paint_empty(ui);
+                    });
+                    if app.settings_open {
+                        app.paint_settings(ui.ctx());
+                    }
+                },
+            );
+            output.textures_delta.clear();
+        };
+        let above = |upper: egui::LayerId, lower: egui::LayerId, label: &str| {
+            let ids: Vec<egui::LayerId> = ctx.memory(|mem| mem.layer_ids().collect());
+            let at = |layer: egui::LayerId| ids.iter().position(|item| *item == layer);
+            let up = at(upper).unwrap_or_else(|| {
+                panic!("{label} upper missing {upper:?} in {ids:?}")
+            });
+            let down = at(lower).unwrap_or_else(|| {
+                panic!("{label} lower missing {lower:?} in {ids:?}")
+            });
+            assert!(up > down, "{label} {up} under {down}");
+        };
+        paint(&mut app, Vec::new());
+        paint(&mut app, Vec::new());
+        let north = super::CANVAS_NORTH_LAYER
+            .with(|slot| slot.get())
+            .expect("north layer");
+        let row = super::PIN_ROW_RECT.with(|slot| slot.get()).expect("pin row");
+        assert_eq!(mood_layer.order, egui::Order::Foreground);
+        above(mood_layer, north, "mood under the pin strip");
+        ctx.memory(|mem| {
+            assert!(!mem.allows_interaction(north));
+            assert!(mem.allows_interaction(mood_layer));
+            assert_eq!(mem.top_modal_layer(), Some(mood_layer));
+        });
+        let mood_rect = ctx.memory(|mem| mem.area_rect(mood_id)).expect("mood rect");
+        let from = egui::pos2(mood_rect.center().x, mood_rect.top() + 10.0);
+        let to = row.center();
+        let button = |pos: egui::Pos2, pressed: bool| egui::Event::PointerButton {
+            pos,
+            button: egui::PointerButton::Primary,
+            pressed,
+            modifiers: egui::Modifiers::NONE,
+        };
+        paint(&mut app, vec![egui::Event::PointerMoved(from)]);
+        paint(&mut app, vec![button(from, true)]);
+        paint(&mut app, vec![egui::Event::PointerMoved(from.lerp(to, 0.5))]);
+        paint(&mut app, vec![egui::Event::PointerMoved(to)]);
+        paint(&mut app, vec![button(to, false)]);
+        paint(&mut app, Vec::new());
+        let north = super::CANVAS_NORTH_LAYER
+            .with(|slot| slot.get())
+            .expect("north after the drag");
+        let row = super::PIN_ROW_RECT
+            .with(|slot| slot.get())
+            .expect("pin row after the drag");
+        above(mood_layer, north, "the drag put the mood under the pin strip");
+        let moved = ctx.memory(|mem| mem.area_rect(mood_id)).expect("moved mood");
+        assert!(
+            moved.contains(row.center()),
+            "mood {moved:?} missed the pin row {row:?}"
+        );
+        assert_eq!(ctx.layer_id_at(row.center()), Some(mood_layer));
+        let click_at = |pos, pressed| egui::Event::PointerButton {
+            pos,
+            button: egui::PointerButton::Primary,
+            pressed,
+            modifiers: egui::Modifiers::NONE,
+        };
+        paint(&mut app, vec![egui::Event::PointerMoved(row.center())]);
+        paint(&mut app, vec![click_at(row.center(), true)]);
+        paint(&mut app, vec![click_at(row.center(), false)]);
+        assert!(app.pin_bar_open, "the pin strip took the click");
+        assert!(app.mood_desk.open, "the mood glass closed");
+        app.token_open = true;
+        app.settings_open = true;
+        paint(&mut app, Vec::new());
+        paint(&mut app, Vec::new());
+        let north = super::CANVAS_NORTH_LAYER
+            .with(|slot| slot.get())
+            .expect("north with the other modals");
+        let token_layer = egui::LayerId::new(
+            egui::Order::Foreground,
+            egui::Id::unique("aetheris-token-window"),
+        );
+        // Window::new hashes the title text as Some(title), the same value Atoms::text returns.
+        let settings_layer = egui::LayerId::new(
+            egui::Order::Foreground,
+            egui::Id::unique(Some(super::SETTINGS_TITLE)),
+        );
+        above(token_layer, north, "token under the pin strip");
+        above(settings_layer, north, "settings under the pin strip");
+        above(mood_layer, north, "mood left the top");
+        app.mood_desk.clear_ask = true;
+        paint(&mut app, Vec::new());
+        paint(&mut app, Vec::new());
+        let north = super::CANVAS_NORTH_LAYER
+            .with(|slot| slot.get())
+            .expect("north under the question");
+        let ask_layer = egui::LayerId::new(
+            egui::Order::Foreground,
+            egui::Id::unique(("aetheris-clear-ask", generation)),
+        );
+        let block_layer = egui::LayerId::new(
+            egui::Order::Foreground,
+            egui::Id::unique(("aetheris-clear-block", generation)),
+        );
+        above(block_layer, mood_layer, "the shield is under the mood");
+        above(ask_layer, block_layer, "the question is under its shield");
+        above(mood_layer, north, "the mood left the pin strip");
     }
 
     #[test]
@@ -39753,7 +40592,7 @@ mod tests {
         assert_eq!(super::think_salt("face"), super::think_salt("face"));
 
         let mut app = super::App::new(crate::door::Door::memory_only(), None);
-        app.think = super::ThinkLog::new();
+        *app.canvas_log() = super::ThinkLog::new();
         app.user = "hannibal".to_string();
         app.cards[0].cell = super::mint_cell(9);
         app.cards[0].target = "ollama/gemma".to_string();
@@ -39773,19 +40612,20 @@ mod tests {
         };
         let end = ScopePiece::End { cell };
         assert!(app.land_focused_canvas("face", &[delta, end]));
-        assert!(app.think.blocks.is_empty());
+        assert!(app.canvas_log().blocks.is_empty());
         assert!(!app.cards[0].running);
         assert_eq!(app.cards[0].prompt, "grok");
         assert!(app.plant_user("hannibal"));
         assert!(!app.cards[0].running);
         assert_eq!(app.cards[0].prompt, "stay");
-        assert!(!app.think.blocks.is_empty());
-        assert!(app.think.blocks[0].body.contains("gemma-trace"));
-        assert!(app.think.blocks[0].tag.contains("gemma"));
+        assert!(!app.canvas_log().blocks.is_empty());
+        assert!(app.canvas_log().blocks[0].body.contains("gemma-trace"));
+        assert!(app.canvas_log().blocks[0].tag.contains("gemma"));
 
         app.cards[0].running = true;
         let parked_run = app.lift_showing("hannibal".to_string());
         app.remember_deck(parked_run);
+        app.canvas_user = "face".to_string();
         app.cards[0].prompt = "hello".to_string();
         app.cards[0].target = "ollama/gemma".to_string();
         app.cards[0].running = false;
@@ -42338,6 +43178,7 @@ cells:
         app.cell_seq = 12;
         app.focus = 11;
         app.land_newest = true;
+        /// @aa-sdd L37 rust-aetheris-client.draft.001.md
         /// `HoldScroll` is a guard that clears the forced pin scroll when it leaves scope.
         /// The test holds one value while it paints the pin field.
         /// The flag `PIN_FORCE_SCROLL` is set true only after this value exists.
@@ -42518,9 +43359,9 @@ cells:
         app.pin_bar_open = true;
         app.pin_on = true;
         app.pin_needle = "tea".to_string();
-        app.think_chrome.open = true;
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.height = 160.0;
+        app.canvas_chrome().open = true;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().height = 160.0;
         app.cards = (1..=4)
             .map(|n| {
                 let mut card = super::TurnCard::fresh(n);
@@ -42602,7 +43443,7 @@ cells:
             clip.bottom() <= grip.top() + 0.5,
             "south clip {clip:?} grip {grip:?}"
         );
-        app.think_chrome.open = false;
+        app.canvas_chrome().open = false;
         let (_, _, closed_clip, closed_strip) = paint(&mut app, screen, Vec::new());
         assert!(closed_strip.is_none(), "closed strip {closed_strip:?}");
         let closed_clip = closed_clip.expect("closed clip");
@@ -42610,7 +43451,7 @@ cells:
             closed_clip.bottom() > clip.bottom() + 8.0,
             "open {clip:?} closed {closed_clip:?}"
         );
-        app.think_chrome.open = true;
+        app.canvas_chrome().open = true;
         app.pin_bar_open = false;
         let (_, _, folded_clip, folded_strip) = paint(&mut app, screen, Vec::new());
         let folded_clip = folded_clip.expect("folded clip");
@@ -42640,7 +43481,7 @@ cells:
             "folded south {folded_clip:?} strip {folded_strip:?}"
         );
         app.pin_bar_open = true;
-        app.think_chrome.height = 280.0;
+        app.canvas_chrome().height = 280.0;
         let (_, _, tall_clip, tall_strip) = paint(&mut app, screen, Vec::new());
         let tall_clip = tall_clip.expect("tall clip");
         let tall_strip = tall_strip.expect("tall strip");
@@ -42663,7 +43504,7 @@ cells:
             tall_clip.bottom() <= tall_grip.top() + 0.5,
             "tall clip {tall_clip:?} grip {tall_grip:?}"
         );
-        app.think_chrome.height = 160.0;
+        app.canvas_chrome().height = 160.0;
         app.pin_on = false;
         app.land_newest = true;
         super::PIN_FORCE_SCROLL.with(|slot| slot.set(true));
@@ -42685,9 +43526,9 @@ cells:
         app.pin_bar_open = true;
         app.pin_on = true;
         app.pin_needle = "tea".to_string();
-        app.think_chrome.open = true;
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.height = 160.0;
+        app.canvas_chrome().open = true;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().height = 160.0;
         let _ = paint(&mut app, screen, Vec::new());
         let (_, _, _, grip_strip) = paint(&mut app, screen, Vec::new());
         let grip_strip = grip_strip.expect("grip strip");
@@ -42715,8 +43556,8 @@ cells:
             "drag clip {dragged_clip:?} strip {dragged_strip:?}"
         );
         let short = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1000.0, 420.0));
-        app.think_chrome.height = 2000.0;
-        app.think_chrome.slide = -1.0;
+        app.canvas_chrome().height = 2000.0;
+        app.canvas_chrome().slide = -1.0;
         let _ = paint(&mut app, short, Vec::new());
         let (short_header, short_field, short_clip, short_strip) =
             paint(&mut app, short, Vec::new());
@@ -42742,15 +43583,15 @@ cells:
         app.pin_bar_open = true;
         app.pin_on = true;
         app.pin_needle = "tea".to_string();
-        app.think_chrome.open = true;
-        app.think_chrome.folded = false;
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.height = 160.0;
+        app.canvas_chrome().open = true;
+        app.canvas_chrome().folded = false;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().height = 160.0;
         let _ = paint(&mut app, screen, Vec::new());
         let (_, _, _, open_strip) = paint(&mut app, screen, Vec::new());
         let open_strip = open_strip.expect("open strip");
         app.cards[0].prompt = "tea".to_string();
-        app.think_chrome.folded = true;
+        app.canvas_chrome().folded = true;
         super::PIN_FORCE_SCROLL.with(|slot| slot.set(true));
         let _ = paint(&mut app, screen, Vec::new());
         let (_, text_field, text_clip, text_strip) = paint(&mut app, screen, Vec::new());
@@ -42795,10 +43636,10 @@ cells:
         let wide = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1920.0, 1080.0));
         app.pin_bar_open = false;
         app.pin_on = true;
-        app.think_chrome.open = true;
-        app.think_chrome.folded = false;
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.height = 420.0;
+        app.canvas_chrome().open = true;
+        app.canvas_chrome().folded = false;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().height = 420.0;
         app.tools_open = true;
         let _ = paint(&mut app, wide, Vec::new());
         let (_, _, zoom_clip, zoom_strip) = paint(&mut app, wide, Vec::new());
@@ -42816,7 +43657,7 @@ cells:
             zoom_clip.bottom() <= zoom_grip.top() + 0.5,
             "zoom grip {zoom_grip:?} clip {zoom_clip:?} strip {zoom_strip:?}"
         );
-        app.think_chrome.folded = true;
+        app.canvas_chrome().folded = true;
         let _ = paint(&mut app, wide, Vec::new());
         let (_, _, zoom_fold_clip, _) = paint(&mut app, wide, Vec::new());
         let zoom_fold_clip = zoom_fold_clip.expect("zoom fold clip");
@@ -42843,10 +43684,10 @@ cells:
         app.pin_bar_open = true;
         app.pin_on = true;
         app.pin_needle = "tea".to_string();
-        app.think_chrome.open = true;
-        app.think_chrome.folded = false;
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.height = 160.0;
+        app.canvas_chrome().open = true;
+        app.canvas_chrome().folded = false;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().height = 160.0;
         app.tools_open = true;
         app.cards = (1..=4)
             .map(|n| {
@@ -42945,7 +43786,7 @@ cells:
             card.top() + 0.5 >= clip.top(),
             "card {card:?} clip {clip:?}"
         );
-        app.think_chrome.height = 420.0;
+        app.canvas_chrome().height = 420.0;
         let _ = paint(&mut app, Vec::new());
         let (_, _, tall_clip, tall_card, tall_grip, tall_leaks) = paint(&mut app, Vec::new());
         let tall_clip = tall_clip.expect("tall clip");
@@ -42968,7 +43809,7 @@ cells:
             (tall_card.top() - card.top()).abs() < 1.0,
             "card moved open {card:?} tall {tall_card:?}"
         );
-        app.think_chrome.folded = true;
+        app.canvas_chrome().folded = true;
         let _ = paint(&mut app, Vec::new());
         let (_, _, fold_clip, fold_card, fold_grip, fold_leaks) = paint(&mut app, Vec::new());
         let fold_clip = fold_clip.expect("fold clip");
@@ -42992,8 +43833,8 @@ cells:
             "card moved fold {fold_card:?} open {card:?}"
         );
         app.pin_bar_open = false;
-        app.think_chrome.folded = false;
-        app.think_chrome.height = 160.0;
+        app.canvas_chrome().folded = false;
+        app.canvas_chrome().height = 160.0;
         let _ = paint(&mut app, Vec::new());
         let (mark_tab, _, mark_clip, mark_card, mark_grip, mark_leaks) =
             paint(&mut app, Vec::new());
@@ -43022,7 +43863,7 @@ cells:
             mark_card.top() + 0.5 >= mark_clip.top(),
             "folded card {mark_card:?} clip {mark_clip:?}"
         );
-        app.think_chrome.height = 420.0;
+        app.canvas_chrome().height = 420.0;
         let _ = paint(&mut app, Vec::new());
         let (_, _, mark_tall_clip, mark_tall_card, mark_tall_grip, mark_tall_leaks) =
             paint(&mut app, Vec::new());
@@ -43051,6 +43892,7 @@ cells:
     /// Opening the thinking pane keeps the deck top on the shared P and Canvas strip.
     #[test]
     fn the_deck_top_stays_when_the_think_pane_opens() {
+        /// @aa-sdd L37 rust-aetheris-client.draft.001.md
         /// `ResetForce` is a guard that clears the forced pin scroll when it leaves scope.
         /// The test creates one value before it paints the deck.
         /// The flag `PIN_FORCE_SCROLL` is set false while this value is alive.
@@ -43072,10 +43914,10 @@ cells:
         app.pin_bar_open = false;
         app.pin_on = true;
         app.pin_needle = "tea".to_string();
-        app.think_chrome.open = false;
-        app.think_chrome.folded = false;
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.height = 160.0;
+        app.canvas_chrome().open = false;
+        app.canvas_chrome().folded = false;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().height = 160.0;
         app.tools_open = true;
         app.cards = (1..=12)
             .map(|n| {
@@ -43178,8 +44020,8 @@ cells:
             card_clip.top() + 0.5 >= strip_bottom,
             "closed card clip {card_clip:?} strip {strip_bottom}"
         );
-        app.think_chrome.open = true;
-        app.think_chrome.slide = 0.0;
+        app.canvas_chrome().open = true;
+        app.canvas_chrome().slide = 0.0;
         let mut rose_top = clip.top();
         for _ in 0..24 {
             let (_, _, frame_clip, _, _, _) = paint(&mut app, Vec::new());
@@ -43190,8 +44032,8 @@ cells:
             rose_top + 0.5 >= clip.top(),
             "rise lifted {rose_top} closed {clip:?}"
         );
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.height = 160.0;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().height = 160.0;
         let _ = paint(&mut app, Vec::new());
         let (open_tab, open_mark, open_clip, open_card, open_card_clip, open_leaks) =
             paint(&mut app, Vec::new());
@@ -43280,7 +44122,7 @@ cells:
             scrolled_card_clip.top() + 0.5 >= open_strip,
             "scrolled card clip {scrolled_card_clip:?} strip {open_strip}"
         );
-        app.think_chrome.open = false;
+        app.canvas_chrome().open = false;
         still = 0;
         let mut shut_clip = scrolled_clip;
         let mut shut_card = scrolled_card;
@@ -43483,10 +44325,10 @@ cells:
         app.plate = super::Plate::Aetheris;
         app.pin_bar_open = true;
         app.pin_on = true;
-        app.think_chrome.open = true;
-        app.think_chrome.folded = false;
-        app.think_chrome.slide = -1.0;
-        app.think_chrome.height = 120.0;
+        app.canvas_chrome().open = true;
+        app.canvas_chrome().folded = false;
+        app.canvas_chrome().slide = -1.0;
+        app.canvas_chrome().height = 120.0;
         app.cards.clear();
         let ctx = app.ctx.clone();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1280.0, 800.0));
@@ -44357,22 +45199,22 @@ casserole:
             kind: b't',
             body: b"alpha".to_vec(),
         };
-        assert!(super::route_console_thought(&mut app.vt_think, true, "pool", &alpha));
+        assert!(super::route_console_thought(app.focused_ssh_log(), true, "pool", &alpha));
         app.split_focused(super::SplitWay::Horizontal);
-        assert!(app.vt_think.blocks.is_empty());
-        assert_eq!(app.panes[0].vt_think.blocks[0].body, "alpha");
+        assert!(app.focused_ssh_log().blocks.is_empty());
+        assert_eq!(app.parked_ssh_log(0).blocks[0].body, "alpha");
         let beta = crate::amwp::ScopePiece::Delta {
             cell: nil,
             kind: b't',
             body: b"beta".to_vec(),
         };
-        assert!(super::route_console_thought(&mut app.vt_think, true, "ollama", &beta));
-        assert_eq!(app.vt_think.blocks[0].body, "beta");
-        assert_eq!(app.panes[0].vt_think.blocks[0].body, "alpha");
+        assert!(super::route_console_thought(app.focused_ssh_log(), true, "ollama", &beta));
+        assert_eq!(app.focused_ssh_log().blocks[0].body, "beta");
+        assert_eq!(app.parked_ssh_log(0).blocks[0].body, "alpha");
         let parked = app.panes[0].id;
         app.focus_pane(parked);
-        assert_eq!(app.vt_think.blocks[0].body, "alpha");
-        assert_eq!(app.panes[0].vt_think.blocks[0].body, "beta");
+        assert_eq!(app.focused_ssh_log().blocks[0].body, "alpha");
+        assert_eq!(app.parked_ssh_log(0).blocks[0].body, "beta");
         let again = crate::amwp::ScopePiece::Delta {
             cell: nil,
             kind: b't',
@@ -44380,7 +45222,7 @@ casserole:
         };
         app.scope_stash.push_back((again, true));
         let _ = app.drain_link();
-        assert_eq!(app.vt_think.blocks[0].body, "alpha");
+        assert_eq!(app.focused_ssh_log().blocks[0].body, "alpha");
         assert_eq!(super::NEW_TERM_TITLE, "New Term");
         assert_eq!(super::NEW_TERM_BODY, "Split the focused terminal:");
         assert_eq!(super::PASTE_TITLE, "Edit paste");
@@ -44474,5 +45316,82 @@ casserole:
         assert_eq!(app.term_font, 14);
         assert!(app.open_maximized);
         assert!(app.saved_frame.is_none());
+    }
+
+    /// One canvas keeps one thinking pane for the session.
+    /// Two cells on that canvas share the log. The same cell and the same model word append.
+    /// A different cell starts a header on that same log. A different canvas and a different user each keep a log.
+    /// An SSH pane keeps a different log. Close hides the chrome and leaves the log. The next thought opens that same log.
+    /// A fold stays folded. Finish leaves the seat. Release drops only that seat.
+    #[test]
+    fn one_canvas_keeps_one_thinking_pane() {
+        let mut panes = super::ThinkPaneManager::new();
+        let canvas = super::ThinkPaneManager::canvas_key("ada", "deck-1");
+        let other = super::ThinkPaneManager::canvas_key("ada", "deck-2");
+        let bob = super::ThinkPaneManager::canvas_key("bob", "deck-1");
+        let ssh = super::ThinkPaneManager::ssh_key("ada", "7");
+        let fresh = super::ThinkPaneManager::canvas_key("ada", "empty");
+        let cell_a = [1u8; 16];
+        let cell_b = [2u8; 16];
+        panes.offer(&fresh, cell_a, "gemma", "");
+        assert!(!panes.contains(&fresh));
+        panes.offer(&canvas, cell_a, "gemma", "alpha");
+        panes.offer(&canvas, cell_a, "gemma", "beta");
+        let shared = panes.blocks(&canvas);
+        assert_eq!(shared.len(), 1);
+        assert_eq!(shared[0].body, "alphabeta");
+        panes.hide(&canvas);
+        assert!(panes.contains(&canvas));
+        assert!(!panes.chrome_copy(&canvas).open);
+        let hidden = panes.blocks(&canvas);
+        assert_eq!(hidden[0].body, "alphabeta");
+        panes.offer(&canvas, cell_a, "gemma", "more");
+        let opened = panes.chrome_copy(&canvas);
+        assert!(opened.open);
+        assert!(!opened.folded);
+        let grown = panes.blocks(&canvas);
+        assert_eq!(grown[0].body, "alphabetamore");
+        panes.offer(&canvas, cell_b, "gemma", "next");
+        let shared = panes.blocks(&canvas);
+        assert_eq!(shared.len(), 2);
+        assert_eq!(shared[0].body, "alphabetamore");
+        assert_eq!(shared[1].body, "next");
+        panes.offer(&other, cell_a, "gemma", "side");
+        panes.offer(&bob, cell_a, "gemma", "bob-thought");
+        assert_eq!(panes.blocks(&canvas).len(), 2);
+        let side = panes.blocks(&other);
+        assert_eq!(side[0].body, "side");
+        let bob_blocks = panes.blocks(&bob);
+        assert_eq!(bob_blocks[0].body, "bob-thought");
+        super::ThinkPipe::offer(
+            &mut panes.acquire_ssh(&ssh, 140.0).log,
+            cell_a,
+            "ollama",
+            "shell",
+        );
+        let shell = panes.blocks(&ssh);
+        assert_eq!(shell[0].body, "shell");
+        let canvas_blocks = panes.blocks(&canvas);
+        assert!(canvas_blocks.iter().all(|block| block.body != "shell"));
+        panes.acquire_canvas(&canvas).chrome.folded = true;
+        panes.acquire_canvas(&canvas).chrome.open = false;
+        panes.offer(&canvas, cell_b, "llama", "folded-thought");
+        let folded = panes.chrome_copy(&canvas);
+        assert!(folded.open);
+        assert!(folded.folded);
+        panes.finish(&canvas);
+        assert!(panes.contains(&canvas));
+        assert!(!panes.blocks(&canvas).is_empty());
+        let after = panes.chrome_copy(&canvas);
+        assert!(after.open);
+        assert!(after.folded);
+        assert!(!panes.acquire_canvas(&canvas).log.live);
+        panes.release("");
+        assert!(panes.contains(&canvas));
+        panes.release(&canvas);
+        assert!(!panes.contains(&canvas));
+        assert!(panes.contains(&ssh));
+        assert!(panes.contains(&other));
+        assert!(panes.contains(&bob));
     }
 }

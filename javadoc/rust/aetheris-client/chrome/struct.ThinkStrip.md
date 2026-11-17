@@ -11,6 +11,10 @@ struct ThinkStrip
 The struct `ThinkStrip` is the result of painting one thought strip.
 `rect` is the strip rectangle. `clear` is true when Clear was clicked. `closed` is true when Close was clicked and the pane is already hidden. `kept_height` is the height in pixels when the drag ended on a height the file keeps.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

@@ -94,6 +94,8 @@ import org.aetheris.config.AetherisYaml;
 import org.casserole.mood.MoodDesk;
 import org.aetheris.swing.AetherisNotebookPanel;
 import org.aetheris.swing.AetherisWorker;
+import org.aetheris.swing.ThinkPaneManager;
+import org.aetheris.swing.ThinkStream;
 import org.aetheris.wire.AmwpClientListener;
 import org.aetheris.wire.AmwpCodec;
 import org.aetheris.wire.AmwpConstants;
@@ -105,34 +107,34 @@ import org.roux.token.Transcript;
 
 import com.jediterm.core.util.TermSize;
 
-// @aa-sdd PK-1155 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1147 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1141 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1137 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1134 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1133 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1131 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1117 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1160 docs/specs/common/stages.spec.md
-// @aa-sdd PK-1159 docs/specs/common/stages.spec.md
-// @aa-sdd PK-1158 docs/specs/common/stages.spec.md
-// @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1100 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1050 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1049 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1162 docs/specs/common/stages.spec.md
-// @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-// @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1013 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1012 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-996 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1155 docs/specs/common/formal-plan.spec.md FINESSE:f-101
+// @aa-sdd PK-1147 docs/specs/common/formal-plan.spec.md FINESSE:f-110
+// @aa-sdd PK-1141 docs/specs/common/formal-plan.spec.md FINESSE:f-116
+// @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md FINESSE:f-119
+// @aa-sdd PK-1137 docs/specs/common/formal-plan.spec.md FINESSE:f-120
+// @aa-sdd PK-1134 docs/specs/common/formal-plan.spec.md FINESSE:f-125
+// @aa-sdd PK-1133 docs/specs/common/formal-plan.spec.md FINESSE:f-127
+// @aa-sdd PK-1131 docs/specs/common/formal-plan.spec.md FINESSE:f-130
+// @aa-sdd PK-1123 docs/specs/common/formal-plan.spec.md FINESSE:f-144
+// @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md FINESSE:f-149
+// @aa-sdd PK-1117 docs/specs/common/formal-plan.spec.md FINESSE:f-150
+// @aa-sdd PK-1160 docs/specs/common/stages.spec.md FINESSE:f-152
+// @aa-sdd PK-1159 docs/specs/common/stages.spec.md FINESSE:f-157
+// @aa-sdd PK-1158 docs/specs/common/stages.spec.md FINESSE:f-158
+// @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md FINESSE:f-173
+// @aa-sdd PK-1100 docs/specs/common/formal-plan.spec.md FINESSE:f-179
+// @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md FINESSE:f-185
+// @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md FINESSE:f-37
+// @aa-sdd PK-1050 docs/specs/common/formal-plan.spec.md FINESSE:f-42
+// @aa-sdd PK-1049 docs/specs/common/formal-plan.spec.md FINESSE:f-43
+// @aa-sdd PK-1162 docs/specs/common/stages.spec.md FINESSE:f-62
+// @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md FINESSE:f-7
+// @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
+// @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
+// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
+// @aa-sdd PK-1013 docs/specs/common/formal-plan.spec.md FINESSE:f-82
+// @aa-sdd PK-1012 docs/specs/common/formal-plan.spec.md FINESSE:f-83
+// @aa-sdd PK-996 docs/specs/common/formal-plan.spec.md FINESSE:f-99
 // @aa-sdd PK-1232 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-1232 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 /**
@@ -142,6 +144,7 @@ import com.jediterm.core.util.TermSize;
  * Connect and disconnect go through {@link SshSessionController}.
  * The window uses the Metal look from {@link SshClientTheme}.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
  *
  * @author clayl (2026-08-24)
  */
@@ -247,7 +250,7 @@ import com.jediterm.core.util.TermSize;
 // @aa-sdd PK-229 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-242 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1111 PK-1117 PK-1121 PK-1131 PK-1133 PK-1163 PK-1164 docs/specs/common/formal-plan.spec.md docs/specs/java/org/casserole/edit/edit.spec.md docs/specs/java/org/aetheris/swing/swing.spec.md
+public class SshClientApp extends JFrame
     implements SshConnectionPanel.Listener, TerminalSession.Host, AetherisNotebookPanel.Host {
 
     /**
@@ -328,9 +331,9 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The {@code restoreAetheris} flag asks the next successful connection to select the Aetheris tab.
      */
     private boolean restoreAetheris;
- // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md
+
     /**
-     * The {@code normalFrame} rectangle is the restored window bounds. // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+     * The {@code normalFrame} rectangle is the restored window bounds.
      * A maximized frame does not replace it.
      */
     private Rectangle normalFrame;
@@ -347,7 +350,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The Aetheris tab starts disabled.
      * The status word starts as {@code est. tokens: 1}.
      * The token timer repeats every 200 milliseconds.
-     * The resize timer waits 400 milliseconds and does not repeat. // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md
+     * The resize timer waits 400 milliseconds and does not repeat.
      * The minimum size is 640 by 480.
      *
      * A saved frame that meets a screen is restored.
@@ -363,7 +366,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         super(yaml == null || yaml.getTitle() == null || yaml.getTitle().trim().length() == 0
                 ? AetherisYaml.DEFAULT_TITLE : yaml.getTitle().trim());
         this.properties = properties;
-        this.theme = theme; // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+        this.theme = theme;
         this.aetherisYaml = yaml == null ? new AetherisYaml() : yaml;
         this.aetherisWorker = new AetherisWorker();
         this.aetherisPanel = new AetherisNotebookPanel(theme, aetherisWorker, this.aetherisYaml, this,
@@ -387,7 +390,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         productTabs.addTab("SSH", terminalHost);
         productTabs.addTab("Aetheris", aetherisPanel);
         productTabs.setEnabledAt(1, false);
-        /** // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+        /**
          * The listener stores the product tab and repaints the status.
          * A suppressed write skips the store and clears nothing.
          * Any other change clears {@code restoreAetheris}.
@@ -396,9 +399,9 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * {@link FoldingPanel#syncPlates} runs when the folding panel exists.
          */
         productTabs.addChangeListener(new ChangeListener() {
-            // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-            // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md FINESSE:f-37
+            // @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md FINESSE:f-7
+            // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
             @Override
             public void stateChanged(ChangeEvent e) {
                 if (!suppressProductTabWrite) {
@@ -415,7 +418,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
             }
         });
         /**
-         * The listener clears a pending Aetheris restore when SSH is pressed. // @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md
+         * The listener clears a pending Aetheris restore when SSH is pressed.
          * A suppressed write returns immediately.
          * A false restore flag returns immediately.
          * A press that is not on tab {@code 0} returns immediately.
@@ -423,15 +426,15 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The stored product tab becomes SSH.
          */
         productTabs.addMouseListener(new MouseAdapter() {
-            // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-            @Override // @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md
-            public void mousePressed(MouseEvent e) { // @aa-sdd PK-1113 docs/specs/common/formal-plan.spec.md
-                if (suppressProductTabWrite || !restoreAetheris) { // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md FINESSE:f-37
+            // @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md FINESSE:f-7
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (suppressProductTabWrite || !restoreAetheris) {
                     return;
                 }
                 int index = productTabs.indexAtLocation(e.getX(), e.getY());
-                if (index != 0) { // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+                if (index != 0) {
                     return;
                 }
                 restoreAetheris = false;
@@ -449,7 +452,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * Any other index is selected.
          */
         foldingPanel = new FoldingPanel(connectionPanel, productTabs, theme, new FoldingPanel.BarPick() {
-            // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
             @Override
             public void pressed(int index) {
                 if (suppressProductTabWrite) {
@@ -457,7 +460,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                 }
                 if (index == 0 && restoreAetheris) {
                     restoreAetheris = false;
-                    properties.setProductTab(SshClientProperties.PRODUCT_TAB_SSH); // @aa-sdd PK-1012 docs/specs/common/formal-plan.spec.md
+                    properties.setProductTab(SshClientProperties.PRODUCT_TAB_SSH);
                 }
                 if (index < 0 || productTabs.getTabCount() <= index) {
                     return;
@@ -467,13 +470,13 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                 }
                 if (productTabs.getSelectedIndex() == index) {
                     return;
-                } // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md
-                productTabs.setSelectedIndex(index); // @aa-sdd PK-1012 docs/specs/common/formal-plan.spec.md
+                }
+                productTabs.setSelectedIndex(index);
             }
         });
         add(foldingPanel, BorderLayout.CENTER);
         installMenu();
-        // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md FINESSE:f-180
         foldingPanel.seatThink(aetherisPanel.thinkCluster());
 
         statusLabel = new JLabel();
@@ -484,7 +487,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         statusLabel.setForeground(theme.getStatusForeground());
         statusLabel.setBackground(theme.getStatusBackground());
         statusUserLabel.setForeground(theme.getStatusForeground());
-        statusUserLabel.setBackground(theme.getStatusBackground()); // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+        statusUserLabel.setBackground(theme.getStatusBackground());
         statusBar.add(statusLabel, BorderLayout.WEST);
         statusBar.add(statusUserLabel, BorderLayout.EAST);
         JPanel statusColumn = new JPanel(new BorderLayout());
@@ -506,11 +509,12 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * {@link #feedComposerHeat} paints the stored integer.
          */
         composerDip = new OllamaTokenDip(new OllamaTokenDip.Seat() {
-            // @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+            // @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md FINESSE:f-149
+            // @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md FINESSE:f-7
             @Override
             public void settled(int count) {
                 // The word stays the ring tally. A settled host count does not replace it.
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-152
                 feedComposerHeat();
             }
         });
@@ -521,13 +525,13 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * {@link #feedComposerHeat} runs on every tick.
          */
         composerHeatTimer = new Timer(200, new ActionListener() {
-            // @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1113 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1118 docs/specs/common/formal-plan.spec.md FINESSE:f-149
+            // @aa-sdd PK-1113 docs/specs/common/formal-plan.spec.md FINESSE:f-160
+            // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
             @Override
             public void actionPerformed(ActionEvent event) {
                 // The tick paints the stored integer. It does not count.
-                // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
                 if (productTabs != null
                         && ToolsThinking.front(productTabs.getSelectedIndex()) != ToolsThinking.Plate.AETHERIS
                         && focused != null) {
@@ -557,7 +561,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * {@link #saveFrameState} does the write.
          */
         resizeSaveTimer = new Timer(400, new ActionListener() {
-            // @aa-sdd PK-1012 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1012 docs/specs/common/formal-plan.spec.md FINESSE:f-83
             // @aa-sdd PK-1233 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -572,12 +576,13 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * A move only restarts the timer.
          */
         addComponentListener(new ComponentAdapter() {
-            // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1012 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md FINESSE:f-37
+            // @aa-sdd PK-1012 docs/specs/common/formal-plan.spec.md FINESSE:f-83
             // @aa-sdd PK-1234 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
             @Override
             public void componentResized(ComponentEvent e) {
                 resizeSaveTimer.restart();
+                // @aa-sdd G-27 aetheris-stages-1-3.finalize.md
                 foldingPanel.noteSpan(getWidth(), getHeight());
             }
 
@@ -593,7 +598,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * An opened event calls {@link #paintCaption}.
          */
         addWindowListener(new WindowAdapter() {
-            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
             // @aa-sdd PK-1235 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
             @Override
             public void windowClosing(WindowEvent e) {
@@ -610,7 +615,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * {@link #paintCaption} runs after that restart.
          */
         addWindowStateListener(new WindowAdapter() {
-            // @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+            // @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md FINESSE:f-7
             @Override
             public void windowStateChanged(WindowEvent e) {
                 resizeSaveTimer.restart();
@@ -634,6 +639,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * A read failure leaves the window able to open.
      * The stream is closed afterward.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-135
      */
     private static void printConsoleBanner() {
         InputStream in = SshClientApp.class.getResourceAsStream("/aetheris-banner.txt");
@@ -692,14 +698,15 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         /**
          * The runnable creates the window and shows it.
          * The properties, the theme, and the yaml from {@code main} are used.
-         */ // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+         */
         SwingUtilities.invokeLater(new Runnable() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void run() {
                 SshClientApp app = new SshClientApp(props, theme, yaml);
                 app.setVisible(true);
             }
-        }); // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+        });
     }
 
     /**
@@ -707,7 +714,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * A live username that already matches the form returns immediately.
      * An empty live name does not take that shortcut.
      * The form is stored as the last request.
-     * A connected pane reconnects. // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+     * A connected pane reconnects.
      * Any other state starts a connect.
      */
     @Override
@@ -716,13 +723,13 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         SshSessionController.ConnectRequest request = buildConnectRequest(session);
         String live = liveUserName(session);
         if (live.length() > 0 && live.equals(request.getUsername())) {
-            return; // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-        } // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-        session.setLastRequest(request); // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
+            return;
+        }
+        session.setLastRequest(request);
         if (session.getState() == SshConnectionState.CONNECTED) {
             session.getController().reconnect(request);
             return;
-        } // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+        }
         session.getController().connect(request);
     }
 
@@ -731,6 +738,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * A missing folding panel returns immediately.
      * {@link FoldingPanel#showFields} opens the bar.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-132
      */
     @Override
     public void usernameChosen() {
@@ -864,11 +872,12 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         if (file == null) {
             return;
         }
-        /** // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+        /**
          * The runnable reads the chosen file as a paste.
          * {@link #sendFileAsPaste} opens the editor.
          */
         Thread worker = new Thread(new Runnable() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void run() {
                 sendFileAsPaste(file);
@@ -893,7 +902,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The runnable imports a file into this pane.
          */
         session.getPanel().setImportRequest(new Runnable() {
-            // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
             // @aa-sdd PK-1236 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
             @Override
             public void run() {
@@ -905,7 +914,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The notebook is asked for the console model.
          */
         session.getPanel().setSelectModelRequest(new Runnable() {
-            // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
             @Override
             public void run() {
                 selectSession(session);
@@ -917,7 +926,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The notebook transfers from the console.
          */
         session.getPanel().setTransferRequest(new Runnable() {
-            // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
             // @aa-sdd PK-1237 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
             @Override
             public void run() {
@@ -930,13 +939,13 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The count is not computed on this call.
          */
         session.getPanel().setDraftBeat(new Runnable() {
-            // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
+            // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md FINESSE:f-176
+            // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md FINESSE:f-177
             @Override
             public void run() {
                 // The key wrote the line. This posts. The count is not on this call.
-                // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
                 offerSshEdit(session);
             }
         });
@@ -988,7 +997,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                 if (large) {
                     if (!showPolite("Import", LARGE_FILE)) {
                         return;
-                    } // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+                    }
                 }
                 final String text = readImportStream(file, "Import");
                 if (text == null) {
@@ -1115,7 +1124,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The shown flag becomes true after the dialog returns.
          */
         Runnable show = new Runnable() {
-            // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
             @Override
             public void run() {
                 JOptionPane.showMessageDialog(
@@ -1241,6 +1250,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * A missing second file returns immediately.
      * The image list holds the master, a 32-pixel copy, and a 16-pixel copy.
      *
+     * // @aa-sdd G-26 aetheris-stages-1-3.finalize.md
      */
     private void applyWindowIcon() {
         URL url = SshClientApp.class.getResource("/icons/aetheris.jpg");
@@ -1284,7 +1294,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * Ctrl+V with terminal focus opens the paste editor and returns true.
          */
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
-            // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+            // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
             @Override
             public boolean dispatchKeyEvent(KeyEvent e) {
                 if (e.getID() != KeyEvent.KEY_PRESSED) {
@@ -1298,6 +1308,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                      * The runnable splits the focused pane side by side.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
+                        // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
                         @Override
                         public void run() {
                             splitFocused(true);
@@ -1311,6 +1322,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                      * The runnable splits the focused pane one above the other.
                      */
                     SwingUtilities.invokeLater(new Runnable() {
+                        // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
                         @Override
                         public void run() {
                             splitFocused(false);
@@ -1349,7 +1361,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                     if (shift) {
                         writeRedoChord();
                     } else {
-                        writeUndoChord(); // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+                        writeUndoChord();
                     }
                     return true;
                 }
@@ -1399,7 +1411,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * A missing clipboard returns immediately.
      * A clipboard without string data returns immediately.
      * A null or empty string returns immediately.
-     * The text is normalized and then opened. // @aa-sdd PK-1105 docs/specs/common/formal-plan.spec.md
+     * The text is normalized and then opened.
      * A clipboard failure is ignored.
      */
     private void pasteFromClipboardViaDialog() {
@@ -1409,7 +1421,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                 return;
             }
             String text = (String) t.getTransferData(DataFlavor.stringFlavor);
-            if (text == null || text.length() == 0) { // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+            if (text == null || text.length() == 0) {
                 return;
             }
             openPasteDialog(normalizeNewlines(text));
@@ -1423,7 +1435,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * On the Swing thread the editor runs immediately.
      * Off that thread the editor is posted to the Swing thread.
      * OK sends the edited text as a paste.
-     * A cancel does nothing. // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+     * A cancel does nothing.
      *
      * @param text The initial text.
      */
@@ -1438,6 +1450,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * A send failure shows a Load File error.
          */
         Runnable show = new Runnable() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void run() {
                 Font editorFont = requireFocused().getPanel().getTerminalFont().deriveFont(
@@ -1468,7 +1481,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                     if (message == null || message.length() == 0) {
                         message = ex.getClass().getSimpleName();
                     }
-                    showSendFileError(message); // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+                    showSendFileError(message);
                 }
             }
         };
@@ -1501,8 +1514,9 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The message type is an error.
          */
         SwingUtilities.invokeLater(new Runnable() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
-            public void run() { // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+            public void run() {
                 JOptionPane.showMessageDialog(
                         SshClientApp.this,
                         message,
@@ -1516,7 +1530,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The {@code sessionConnecting} method marks a pane as connecting.
      * A pane that is not focused only refreshes the Aetheris user list.
      * The focused pane is selected.
-     * The link word becomes {@code Connecting}. // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+     * The link word becomes {@code Connecting}.
      * The status line and the focused user are refreshed.
      *
      * @param session The pane that is opening a connection.
@@ -1542,7 +1556,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The focused pane is selected.
      * A connected connector applies {@link FoldingPanel.Beat#CONNECTED}.
      * Any other result opens the connection fields.
-     * The remote server and the port are remembered. // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+     * The remote server and the port are remembered.
      * The terminal takes focus.
      * The Aetheris tab is refreshed and may be restored.
      * The focused user and the Aetheris user list are refreshed.
@@ -1628,7 +1642,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The focused user and the Aetheris user list are refreshed.
      * An error dialog titled {@code Connection failed} shows the message.
      *
-     * @param session The pane that failed. // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+     * @param session The pane that failed.
      * @param connector The connector captured before it was cleared.
      * @param message The failure text.
      */
@@ -1642,7 +1656,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         if (session != focused) {
             refreshAetherisUsers();
             return;
-        } // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+        }
         selectSession(session);
         rememberLink("Disconnected: " + message);
         refreshFocusedUser();
@@ -1700,7 +1714,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         linkWord = "Connected";
         linkHost = host == null ? "" : host;
         linkPort = Integer.toString(port);
-        paintFrameStatus(); // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
+        paintFrameStatus();
     }
 
     /**
@@ -1764,8 +1778,9 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The bar shows that guess and budget.
      * The word label uses the bar's word and ink.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-160
      */
-    private void feedComposerHeat() { // @aa-sdd PK-1422 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+    private void feedComposerHeat() {
         if (composerHeat == null || aetherisPanel == null || productTabs == null) {
             return;
         }
@@ -1776,9 +1791,9 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
             budget = aetherisPanel.tokenRingWindow();
         } else {
             // The focused pane's stored integer. The walk posted it.
-            // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
             guess = focusedLiveCount();
-            budget = aetherisPanel.heatBudget(sshPaneEngine()); // @aa-sdd PK-1422 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+            budget = aetherisPanel.heatBudget(sshPaneEngine());
         }
         composerHeat.showHeuristic(guess, budget);
         composerWord.setText(composerHeat.word());
@@ -1790,6 +1805,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * A missing pane or panel returns an empty string.
      * A null panel text returns an empty string.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-160
      *
      * @return The session text, or an empty string.
      */
@@ -1812,6 +1828,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * That path adds the draft through {@link #countDraft}.
      * Any other path counts the session text and the draft.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-177 FINESSE:f-192
      *
      * @return The integer the token window opens on.
      */
@@ -1822,7 +1839,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         }
         String user = focusedVaultUser();
         if (aetherisPanel.rouxSessionHeld(user)) {
-            // @aa-sdd PK-1105 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1105 docs/specs/common/formal-plan.spec.md FINESSE:f-174
             int base = new StoredCountEstimator(user, aetherisPanel.rouxSessionUsed(user))
                     .estimate(Transcript.empty());
             return countDraft(true, base, "", draft);
@@ -1835,7 +1852,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * A missing pane or panel returns one.
      * The value is the panel's live count.
      *
-     // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
      *
      * @return The focused pane's stored estimate.
      */
@@ -1857,7 +1874,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * Any other unheld snapshot counts the memory alone.
      * Those unheld counts use {@link Vt100TokenWindow#heuristic}.
      *
-     // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
      *
      * @param held True when a Roux tally is the base.
      * @param base The held integer.
@@ -1913,7 +1930,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The edit number increases by one.
      * Older edits that have not started are dropped by the queue.
      *
-     // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
      *
      * @param session The pane whose line changed, or the pane now in front.
      */
@@ -1954,7 +1971,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         return new SshSeat(edit.sequence, edit.session, held, base, memory, draft);
     }
 
-    // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
     /**
      * The {@code SshEdit} is one posted SSH edit.
      * The sequence is the newest number at the time it was offered.
@@ -1969,8 +1986,8 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         /**
          * The constructor stores the sequence and the pane.
          *
-         * @param sequence The edit number. // @aa-sdd PK-937 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-         * @param session The pane to copy. // @aa-sdd PK-219 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+         * @param sequence The edit number.
+         * @param session The pane to copy.
          */
         private SshEdit(long sequence, TerminalSession session) {
             this.sequence = sequence;
@@ -1978,7 +1995,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         }
     }
 
-    // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
     /**
      * The {@code SshSeat} is the text snapshot a count runs on.
      * The strings are copied before the worker counts them.
@@ -1994,8 +2011,8 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         private final int base;
         private final String memory;
         private final String draft;
- // @aa-sdd PK-1328 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-        /** // @aa-sdd PK-219 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+
+        /**
          * The constructor stores one snapshot.
          * A null memory becomes an empty string.
          * A null draft becomes an empty string.
@@ -2024,7 +2041,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The worker does not paint.
      * The keyboard path does not wait for the worker.
      *
-     // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
      */
     // @aa-sdd PK-1328 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
     // @aa-sdd PK-773 docs/specs/common/stages.spec.md
@@ -2035,16 +2052,16 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
     // @aa-sdd PK-695 docs/specs/common/pre-plan.spec.md
     // @aa-sdd PK-247 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
     // @aa-sdd PK-219 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-    private final class SshEditQueue implements Runnable { // @aa-sdd PK-1328 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-        private final ArrayDeque<SshEdit> pending = new ArrayDeque<SshEdit>(); // @aa-sdd PK-773 docs/specs/common/stages.spec.md
-        private final Object gate = new Object(); // @aa-sdd PK-646 docs/specs/common/formal-plan.spec.md
-        private final Thread thread; // @aa-sdd PK-647 docs/specs/common/formal-plan.spec.md
-        private boolean started; // @aa-sdd PK-223 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+    private final class SshEditQueue implements Runnable {
+        private final ArrayDeque<SshEdit> pending = new ArrayDeque<SshEdit>();
+        private final Object gate = new Object();
+        private final Thread thread;
+        private boolean started;
 
-        /** // @aa-sdd PK-695 docs/specs/common/pre-plan.spec.md
-         * The constructor creates the daemon thread. // @aa-sdd PK-247 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-         * The thread name is {@code ssh-token-edit}. // @aa-sdd PK-219 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-         * The thread is not started here. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        /**
+         * The constructor creates the daemon thread.
+         * The thread name is {@code ssh-token-edit}.
+         * The thread is not started here.
          */
         SshEditQueue() {
             thread = new Thread(this, "ssh-token-edit");
@@ -2168,7 +2185,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                  * {@link SshClientApp#copySshSeat} stores the snapshot.
                  */
                 SwingUtilities.invokeAndWait(new Runnable() {
-                    // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
                     @Override
                     public void run() {
                         held[0] = copySshSeat(edit);
@@ -2195,7 +2212,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
              * The focused pane also repaints the token bar.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
                 @Override
                 public void run() {
                     if (seat.sequence < sshEditSeq) {
@@ -2229,6 +2246,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * A write failure is ignored.
      * The status line is repainted after the loop.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-175 FINESSE:f-176
      */
     @Override
     public void relayArmedMoods() {
@@ -2265,7 +2283,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
             }
         }
         // The strip follows the seat. The switch off clears SSH mood. The checkbox only makes it available.
-        // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md FINESSE:f-187
         paintFrameStatus();
     }
 
@@ -2451,6 +2469,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The restore flag is cleared.
      * The frame, the connection fields, and the vault are saved or closed.
      * The worker is shut down.
+     * Each session's thinking pane leaves the manager.
      * Every session is disposed.
      * The frame is disposed.
      * {@code System.exit} is called with zero.
@@ -2478,6 +2497,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         aetherisPanel.closeVault();
         aetherisWorker.shutdown();
         for (int i = 0; i < sessions.size(); i++) {
+            releaseSessionThought(sessions.get(i));
             sessions.get(i).dispose();
         }
         dispose();
@@ -2506,7 +2526,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The connection bar follows the pane state.
      * Close Pane is enabled when more than one pane exists.
      * A last request copies the remote server, the port, the username, and the password onto the bar.
-     * // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+     *
      * A connected pane remembers that link.
      * A switch onto a connected pane applies {@link FoldingPanel.Beat#CONNECTED}.
      * A connecting pane sets the link word to {@code Connecting}.
@@ -2560,6 +2580,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         markPaneFocus(session);
         if (aetherisPanel != null && session.getState() == SshConnectionState.CONNECTED) {
             // One ask when this username's mux is up.
+            // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
             aetherisPanel.requestSessionTokens();
             askPaneEngine(session);
         }
@@ -2607,6 +2628,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * More than one pane lights the focused pane.
      * A single pane clears every outline.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-155
      *
      * @param session The focused pane.
      */
@@ -2632,6 +2654,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * Any other pane is selected on the Swing thread.
          */
         Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void eventDispatched(AWTEvent event) {
                 if (event.getID() != MouseEvent.MOUSE_PRESSED) {
@@ -2654,6 +2677,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                  * The runnable selects the pane that was pressed.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
+                    // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
                     @Override
                     public void run() {
                         selectSession(chosen);
@@ -2751,11 +2775,11 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         Container oldParent = oldPanel.getParent();
         if (oldParent == null) {
             return;
-        } // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
+        }
         int slot = childSlot(oldParent, oldPanel);
 
         TerminalSession created = new TerminalSession(termSettings, theme, this);
-        created.getPanel().setFontSize(connectionPanel.getFontSize()); // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
+        created.getPanel().setFontSize(connectionPanel.getFontSize());
         wireConsoleImport(created);
         sessions.add(created);
 
@@ -2763,13 +2787,14 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
 
         JSplitPane inner = new JSplitPane(
                 horizontal ? JSplitPane.HORIZONTAL_SPLIT : JSplitPane.VERTICAL_SPLIT);
+        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-155
         inner.putClientProperty("ssh.pane.split", Boolean.TRUE);
         theme.applySplitPane(inner);
         inner.setOneTouchExpandable(true);
         inner.setContinuousLayout(true);
         inner.setResizeWeight(0.5);
         inner.setLeftComponent(oldPanel);
-        inner.setRightComponent(created.getPanel()); // @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md
+        inner.setRightComponent(created.getPanel());
         putChild(oldParent, inner, slot);
         oldParent.invalidate();
         oldParent.validate();
@@ -2787,6 +2812,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The new pane then takes terminal focus.
          */
         SwingUtilities.invokeLater(new Runnable() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void run() {
                 int span = sideBySide ? split.getWidth() : split.getHeight();
@@ -2801,16 +2827,39 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
     }
 
     /**
+     * The method drops the thinking pane bound to {@code session}.
+     * The call is the end of that SSH session.
+     * Close on the strip does not call this method.
+     * A null session returns without a change.
+     * A missing panel returns without a change.
+     * The strip object stays on the panel until the panel is disposed.
+     * A later reply on a living pane does not call this method.
+     *
+     * @param session the SSH session that is closing
+     */
+    private void releaseSessionThought(TerminalSession session) { // @aa-sdd PK-1456 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+        if (session == null || aetherisPanel == null) {
+            return;
+        }
+        SshTerminalPanel panel = session.getPanel();
+        if (panel == null) {
+            return;
+        }
+        aetherisPanel.thinkPanes().releaseStrip(panel.thoughtPane());
+    }
+
+    /**
      * The {@code closeFocusedPane} method closes the focused pane.
      * A single pane returns immediately.
      * A parent that is not a split pane returns immediately.
      * A missing grandparent or sibling returns immediately.
+     * The manager drops that pane's thinking strip.
      * The closing pane is disposed and removed from the list.
      * The sibling replaces the split.
      * The remaining pane is selected and takes focus.
      * A sibling that owns no session selects the first session.
      */
-    private void closeFocusedPane() {
+    private void closeFocusedPane() { // @aa-sdd PK-1456 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
         if (sessions.size() <= 1) {
             return;
         }
@@ -2829,6 +2878,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         int slot = childSlot(grand, sp);
         sp.remove(closing.getPanel());
         sp.remove(sibling);
+        releaseSessionThought(closing);
         closing.dispose();
         sessions.remove(closing);
         grand.remove(sp);
@@ -2918,7 +2968,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      */
     private TerminalSession sessionContaining(Component component) {
         Component walk = component;
-        while (walk != null) { // @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md
+        while (walk != null) {
             for (int i = 0; i < sessions.size(); i++) {
                 if (walk == sessions.get(i).getPanel()) {
                     return sessions.get(i);
@@ -3055,8 +3105,8 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         properties.setAetherisInspectorLineChars(count);
     }
 
-    /** // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-     * The {@code shellPinBarOpen} method returns whether the pin bar is open. // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+    /**
+     * The {@code shellPinBarOpen} method returns whether the pin bar is open.
      * @return True when the stored pin bar is open.
      */
     @Override
@@ -3078,8 +3128,8 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * A null username returns immediately.
      * An empty username returns immediately.
      * The name is passed through the vault name.
-     * A focused connected AMWP pane with that vault name is selected and the search stops. // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-     * Otherwise the first other connected AMWP pane with that vault name is selected. // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+     * A focused connected AMWP pane with that vault name is selected and the search stops.
+     * Otherwise the first other connected AMWP pane with that vault name is selected.
      * No match leaves the focus unchanged.
      *
      * @param username The user to focus.
@@ -3114,7 +3164,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
             }
             if (want.equals(aetherisPanel.vaultName(last.getUsername()))) {
                 selectSession(session);
-                return; // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+                return;
             }
         }
     }
@@ -3151,6 +3201,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The dialog is hidden either way.
          */
         chooser.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (JFileChooser.APPROVE_SELECTION.equals(e.getActionCommand())) {
@@ -3187,6 +3238,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         return selected;
     }
 
+    // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
     /**
      * The {@code RememberedChooser} opens a file dialog.
      * {@code JFileChooser.createDialog} is protected, so this subclass calls it.
@@ -3370,7 +3422,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * The byte is {@code 0x1A}.
      * A failure is ignored.
      *
-     // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+     * // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
      */
     private void writeUndoChord() {
         try {
@@ -3551,7 +3603,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * @return The engine word, or an empty string.
      */
     @Override
-    public String focusedEngine() { // @aa-sdd PK-1418 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+    public String focusedEngine() {
         return sshPaneEngine();
     }
 
@@ -3561,7 +3613,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * A missing pane returns.
      */
     @Override
-    public void noteTransferredSession() { // @aa-sdd PK-1418 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+    public void noteTransferredSession() {
         if (focused == null) {
             return;
         }
@@ -3690,6 +3742,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * That switch does not store the product tab.
      * The folded buttons are refreshed when the folding panel exists.
      *
+     * // @aa-sdd G-17 aetheris-stages-1-3.finalize.md
      */
     private void refreshAetherisTab() {
         SshTtyConnector connector = focusedAmwpConnector();
@@ -3757,6 +3810,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The listener opens the split dialog.
          */
         newTerm.addActionListener(new java.awt.event.ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 promptAndSplit();
@@ -3768,6 +3822,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The listener closes the focused pane.
          */
         closePane.addActionListener(new java.awt.event.ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 closeFocusedPane();
@@ -3776,9 +3831,10 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         JMenuItem exit = new JMenuItem("Exit");
         exit.setToolTipText("Close Aetheris. A confirm comes first.");
         /**
-         * The listener asks to exit. // @aa-sdd PK-1240 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+         * The listener asks to exit.
          */
         exit.addActionListener(new java.awt.event.ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 confirmAndExit();
@@ -3800,7 +3856,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         file.add(closePane);
         file.add(importFile);
         file.addSeparator();
-        // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
+        // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-197
         JMenuItem settings = new JMenuItem("Settings...");
         settings.setToolTipText("Settings opens the global switches for this window.");
         /**
@@ -3808,7 +3864,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * A missing notebook does nothing.
          */
         settings.addActionListener(new java.awt.event.ActionListener() {
-            // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1164 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-197
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 if (aetherisPanel != null) {
@@ -3826,7 +3882,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The listener opens the help text.
          */
         helpItem.addActionListener(new java.awt.event.ActionListener() {
-            // @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md FINESSE:f-119
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 showHelp();
@@ -3838,6 +3894,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The listener opens About.
          */
         about.addActionListener(new java.awt.event.ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 showAbout();
@@ -3853,6 +3910,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The listener shows thinking on the plate in front.
          */
         showThinking.addActionListener(new java.awt.event.ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 revealFocusedThinking();
@@ -3865,6 +3923,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The listener opens the token window.
          */
         tokenCalc.addActionListener(new java.awt.event.ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshClientApp
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 openTokenCalc();
@@ -3891,6 +3950,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
      * Any other SSH pane reveals the session-text length and the non-blank row count.
      * The SSH count comes from {@link #sshLiveCount}.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-160 FINESSE:f-163
      */
     private void openTokenCalc() {
         int index = productTabs == null ? 0 : productTabs.getSelectedIndex();
@@ -3973,6 +4033,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         JTextArea area = new JTextArea(ABOUT_TEXT);
         area.setEditable(false);
         // Every About line stays on one row. The width follows the copyright line.
+        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-146
         area.setLineWrap(false);
         area.setWrapStyleWord(false);
         java.awt.FontMetrics aboutMetrics = area.getFontMetrics(area.getFont());
@@ -4003,7 +4064,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
          * The listener brings the About dialog forward when it opens.
          */
         dialog.addWindowListener(new WindowAdapter() {
-            // @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1138 docs/specs/common/formal-plan.spec.md FINESSE:f-119
             @Override
             public void windowOpened(WindowEvent event) {
                 dialog.toFront();
@@ -4149,7 +4210,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         area.setEditable(false);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
-        area.setBackground(theme.getPanelBackground()); // @aa-sdd PK-671 docs/specs/common/formal-plan.spec.md
+        area.setBackground(theme.getPanelBackground());
         area.setForeground(theme.getPanelForeground());
         JScrollPane scroll = new JScrollPane(area);
         scroll.setPreferredSize(new java.awt.Dimension(520, 360));
@@ -4157,8 +4218,8 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
         JOptionPane.showMessageDialog(this, scroll, "Help", JOptionPane.PLAIN_MESSAGE);
     }
 
-    // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
+    // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
     /**
      * The {@code UserFrameListener} receives AMWP frames for one SSH user.
      * Frames are accepted under the stored username.
@@ -4211,13 +4272,17 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
              * The runnable offers console thought to the open user.
              * A username that is not open returns immediately.
              * A missing panel returns immediately.
-             * A closed thought pane finishes the thought when the frame ends.
-             * An open thought pane offers a non-null chunk with the notebook tag.
+             * The manager binds this pane's strip for the user.
+             * The stream writes that strip by reference.
+             * Close hides that strip and leaves it in the manager.
+             * A model switch that is off drops the chunk.
+             * That switch finishes the thought when the frame ends.
+             * A switch that is on offers a non-null chunk with the notebook tag.
              * An end marker finishes the thought.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-                // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
+                // @aa-sdd PK-1022 docs/specs/common/formal-plan.spec.md FINESSE:f-73
                 @Override
                 public void run() {
                     if (!username.equals(aetherisPanel.openUsername())) {
@@ -4227,17 +4292,20 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
                     if (panel == null) {
                         return;
                     }
+                    ThinkPaneManager panes = aetherisPanel.thinkPanes();
+                    panes.bind(ThinkPaneManager.sshKey(username, panel.surfaceId()), panel.thoughtPane());
+                    ThinkStream stream = panes.stream();
                     if (!aetherisPanel.consoleThoughtOpen()) {
                         if (end) {
-                            panel.finishConsoleThought();
+                            panel.finishConsoleThought(stream);
                         }
                         return;
                     }
                     if (chunk != null) {
-                        panel.offerConsoleThought(chunk, aetherisPanel.consoleThoughtTag());
+                        panel.offerConsoleThought(stream, chunk, aetherisPanel.consoleThoughtTag());
                     }
                     if (end) {
-                        panel.finishConsoleThought();
+                        panel.finishConsoleThought(stream);
                     }
                 }
             });
@@ -4307,7 +4375,7 @@ public class SshClientApp extends JFrame // @aa-sdd PK-1083 PK-1092 PK-1103 PK-1
              * The runnable gives the model and the thought to the notebook.
              */
             SwingUtilities.invokeLater(new Runnable() {
-                // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
                 @Override
                 public void run() {
                     aetherisPanel.onConsoleModel(model, think);

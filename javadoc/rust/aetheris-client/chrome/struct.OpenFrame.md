@@ -10,6 +10,10 @@ struct OpenFrame
 
 What the next open uses. `physical` means the size is in physical pixels.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

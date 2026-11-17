@@ -13,7 +13,7 @@ The number `seq` is the beat sequence number. The flag `canvas` is true for a ca
 
 | | |
 | --- | --- |
-| **Specification** | PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209 |
 
 ## Field Summary
 

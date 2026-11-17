@@ -10,6 +10,10 @@ enum KeepBurners
 
 The burner question. Cancel, and any other word, writes nothing.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

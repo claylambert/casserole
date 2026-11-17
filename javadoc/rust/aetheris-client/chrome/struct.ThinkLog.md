@@ -11,6 +11,10 @@ struct ThinkLog
 The struct `ThinkLog` is the session thought log.
 The log is not stored on a turn. The field `blocks` holds each [`ThinkBlock`](struct.ThinkBlock.md). The field `cell` is the 16-byte id of the thought that is open. The field `live` is true while a block is still receiving text.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

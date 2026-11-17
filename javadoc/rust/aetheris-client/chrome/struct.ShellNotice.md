@@ -13,7 +13,7 @@ The `ShellNotice` struct is one modal notice over the terminal.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1016 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79 |
 
 ## Field Summary
 

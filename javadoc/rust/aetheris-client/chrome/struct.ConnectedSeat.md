@@ -13,6 +13,10 @@ The window builds the list from the focused pane and each parked pane. A test pa
 
 The field `name` is the raw name. The field `connected` says the connection is up. The field `amwp` says the connection speaks that protocol. The field `focused` says this record is the focused pane.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

@@ -15,6 +15,10 @@ The field `show` is true when this drain changed something the window paints.
 The field `more` is true when a scope queue or a paint queue still holds a piece.
 `commit_wait` uses `more` to choose a short wait while a session is up.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

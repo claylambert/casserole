@@ -16,6 +16,10 @@ The field `edge` is the border color.
 The field `fill` is the background color.
 The field `ink` is the text color.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

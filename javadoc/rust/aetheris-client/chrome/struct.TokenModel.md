@@ -13,6 +13,10 @@ The string `label` is the row name. The string `family` is `ollama`, `grok`, or 
 
 The integer `completion_cap` is the completion cap. The flag `completion_known` is true when that cap is a positive count.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

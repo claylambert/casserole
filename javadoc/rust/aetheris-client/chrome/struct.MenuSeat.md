@@ -10,6 +10,10 @@ struct MenuSeat<'a>
 
 The pane fields the menu writes. The caller sends the clipboard and opens a URL.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

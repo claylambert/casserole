@@ -11,6 +11,10 @@ struct PinHit
 The struct `PinHit` is what the pin row asked for this frame.
 The field `commit` asks for a pin commit. The field `fold` asks to hide the bar.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

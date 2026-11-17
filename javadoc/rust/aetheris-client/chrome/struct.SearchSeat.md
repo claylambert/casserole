@@ -11,6 +11,10 @@ struct SearchSeat
 First hit on this canvas. The prompt and the reply are the text.
 The fault line is not text. An empty needle matches nothing.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

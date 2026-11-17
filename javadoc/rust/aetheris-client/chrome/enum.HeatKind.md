@@ -13,7 +13,7 @@ The enum `HeatKind` names which pane a heatbar beat describes.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209 |
 
 ## Enum Constant Summary
 

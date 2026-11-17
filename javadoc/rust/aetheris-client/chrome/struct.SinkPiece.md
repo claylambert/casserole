@@ -15,7 +15,7 @@ The flag `head` is the lock copied from the block. The flag `stay` marks a user 
 
 | | |
 | --- | --- |
-| **Specification** | PK-1177 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1177 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-222 |
 
 ## Field Summary
 

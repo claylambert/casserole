@@ -13,6 +13,10 @@ Swing sends a preferred-size change, and then `revalidate` assigns bounds before
 
 The pass reads the open state and writes the rectangles.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

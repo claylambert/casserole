@@ -15,7 +15,7 @@ The `FeedOut` struct is what `feed_parts` asks the caller to do after one burst 
 
 | | |
 | --- | --- |
-| **Specification** | PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215 |
 
 ## Field Summary
 

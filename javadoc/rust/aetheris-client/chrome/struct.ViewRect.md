@@ -10,6 +10,10 @@ struct ViewRect
 
 One saved rectangle. Swing's four keys.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

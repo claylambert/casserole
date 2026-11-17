@@ -11,6 +11,10 @@ struct MoodPaintRow
 The struct `MoodPaintRow` is one painted line of the mood-glass chat.
 `mark` is the side label, such as `you` or `assistant`. `text` is that physical line. `hot` is true when the line is an assistant mood key and should paint in the hot color.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

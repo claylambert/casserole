@@ -19,7 +19,7 @@ A refusal leaves `red` false.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1016 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79 |
 
 ## Field Summary
 

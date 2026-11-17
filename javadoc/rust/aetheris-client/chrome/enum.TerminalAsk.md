@@ -10,6 +10,10 @@ enum TerminalAsk
 
 Quiet leaves the status. Burner is refused. Ready is the text to write.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

@@ -10,6 +10,10 @@ struct ErrorNotice
 
 One open notice. Close drops it. A later miss replaces the body.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

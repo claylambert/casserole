@@ -12,7 +12,7 @@ The struct `HeatQueue` listens to heatbar edits on a background thread.
 The field `inner` is the shared [`HeatInner`](struct.HeatInner.md). The field `thread` holds the worker handle once the thread has been started. The newest pending edit is the one that runs.
 
 A call on the window thread does not wait for the worker. The worker is joined when this value is dropped.
-// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 
 ## Field Summary
 

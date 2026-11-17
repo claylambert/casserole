@@ -11,6 +11,10 @@ struct PlatePick
 The struct `PlatePick` is one choice of the frame under the tab strip.
 `plate` is [`Plate::Ssh`](enum.Plate.md#member-ssh) or [`Plate::Aetheris`](enum.Plate.md#member-aetheris). `arm_console` is true when this choice should give the keyboard to the console.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

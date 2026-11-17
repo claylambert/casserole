@@ -17,6 +17,10 @@ An unstructured body leaves `reason` empty.
 The field `message` is the unescaped text of a `message:` line.
 An unstructured body stores the whole text in `message`.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

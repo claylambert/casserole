@@ -15,6 +15,10 @@ The enum `PipeMiss` is why one chain card could not be framed.
 [`PipeMiss::Excluded`](#member-excluded) means the card produced no working blocks.
 [`PipeMiss::NoModel`](#member-nomodel) means the card's target names no model.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

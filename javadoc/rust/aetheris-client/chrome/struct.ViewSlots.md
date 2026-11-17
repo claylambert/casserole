@@ -11,6 +11,10 @@ struct ViewSlots
 The button row stays. The find bar yields when the view is short.
 The reply scrolls in `body`. The three heights sum to the window content.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

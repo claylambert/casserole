@@ -11,6 +11,10 @@ struct TokenBudgets
 The struct `TokenBudgets` holds the two context windows read from `application.yaml`.
 The integer `pool` is the pool window. The vector `grok` pairs each Grok model id with its window. Every other key in the document is dropped.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

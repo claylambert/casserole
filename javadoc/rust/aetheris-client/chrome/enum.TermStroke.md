@@ -12,7 +12,7 @@ The enum `TermStroke` is one console input after the event list has been read. `
 
 | | |
 | --- | --- |
-| **Specification** | PK-1124 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1124 docs/specs/common/formal-plan.spec.md FINESSE:f-143 |
 
 ## Enum Constant Summary
 

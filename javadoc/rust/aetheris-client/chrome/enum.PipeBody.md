@@ -14,6 +14,10 @@ The enum `PipeBody` is the result of resolving `{{cell[k].output}}` tokens in on
 [`PipeBody::Text`](#member-text) holds the text after the tokens are replaced.
 [`PipeBody::Blocked`](#member-blocked) means a token could not be replaced.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

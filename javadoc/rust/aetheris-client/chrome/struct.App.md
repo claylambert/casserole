@@ -21,15 +21,15 @@ It holds the SSH client settings store, the connection fields, the focused termi
 
 `plate` is [`Plate::Ssh`](enum.Plate.md#member-ssh) or [`Plate::Aetheris`](enum.Plate.md#member-aetheris). `restore_aetheris` is armed when the stored tab word is `aetheris` and Connect has not landed yet. `facts` is the seated canvas facts. `scope_text` is the gathered scope text.
 
-`think` is the session thought log. Connect, Clear, and Disconnect leave it. `think_chrome` holds fold, close, and the dragged height for this window. `think_yaml` is the shared `aetheris-think.yaml`. A version other than 1 stays unread.
+`think_panes` is the one store of thinking panes. One canvas has one seat. One SSH pane has one seat. `ssh_think_key` is the focused pane's key in that store. `think_yaml` is the shared `aetheris-think.yaml`. A version other than 1 stays unread.
 
-`vt_think` is the thought text of the focused terminal session. `vt_open` is true when that strip is showing. `vt_slide` is the rise from the top. `0` starts shut. `-1` is settled. `vt_folded` is true when the strip is folded. `vt_height` is the dragged height. Zero uses the three-line view. `vt_think_on` is true when this session's thinking is on. `vt_chrome` is the file seed for a new terminal pane. `vt_yaml` is `aetheris-vt100-think.yaml`. A version other than 1 stays unread.
+`vt_think_on` is true when the focused session's thinking is on. `vt_chrome` is the file seed for a new terminal pane. `vt_yaml` is `aetheris-vt100-think.yaml`. A version other than 1 stays unread.
 
 `roux_used` is the Roux count for the focused pane. `None` means the reply has not been held. `roux_chars` is the character count. `roux_blocks` is the stored message count. `tokens_asked` is true after the `session_tokens` ask for the focused pane. `live_line` is the text typed on the focused pane and not yet submitted.
 
 `mood` is the showing user's mood. A version other than 1 stays unread. `mood_owner` is the sanitized user whose record is `mood`. Empty means no user is seated yet. `mood_bank` holds other users already read. `ssh_mood` is the mood footer box for the canvas user now showing. `ssh_users` pairs each user with whether that user's SSH mood is armed. `ssh_mood_blocked` is true when an SSH mood file is not version 1. `expanded` is the per-cell Expanded View file. A settings store with no file does not read or write that home file. `mood_desk` is the mood glass. `mood_seq` counts mood wire ids and is not the card sequence.
 
-`cards` is the canvas deck. `focus` is the focused card index. `scroll_seat` is the text pane that receives the wheel, or `None` for the canvas. `cell_seq` is the next card sequence. `edits` is the in-memory undo desk for canvas prompts. `prompt_focus` is the prompt that held focus on the previous canvas paint. `group_live` is the group id that is running. `group_rest` holds the remaining group frames. `run_pane` is the pane that carries the showing deck's run. `None` uses the focused pane. `pipe_live` is true while a pipe chain is running. `pipe_rest` is the card indexes still waiting. `scope_stash` holds scope waiting for the canvas. `paint_stash` holds terminal paint bytes waiting for the focused grid. `join_from` is the card index armed for Join, or `None`. `focus_prompt` asks the next paint to put the keyboard in the prompt. `seat_focus` is a one-shot that puts focus on the selected cell after Hide Collapsed or Show Collapsed. `land_newest` is a one-shot that scrolls to the newest card. // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+`cards` is the canvas deck. `focus` is the focused card index. `scroll_seat` is the text pane that receives the wheel, or `None` for the canvas. `cell_seq` is the next card sequence. `edits` is the in-memory undo desk for canvas prompts. `prompt_focus` is the prompt that held focus on the previous canvas paint. `group_live` is the group id that is running. `group_rest` holds the remaining group frames. `run_pane` is the pane that carries the showing deck's run. `None` uses the focused pane. `pipe_live` is true while a pipe chain is running. `pipe_rest` is the card indexes still waiting. `scope_stash` holds scope waiting for the canvas. `paint_stash` holds terminal paint bytes waiting for the focused grid. `join_from` is the card index armed for Join, or `None`. `focus_prompt` asks the next paint to put the keyboard in the prompt. `seat_focus` is a one-shot that puts focus on the selected cell after Hide Collapsed or Show Collapsed. `land_newest` is a one-shot that scrolls to the newest card.
 
 `canvas_weight` is this window's canvas share. `parked_share` is a share put aside by an arrow. `divider_span` is the last bar span. The settings write waits until that span is at least 32. `divider_armed` is when the share last moved. The settings write waits 400 ms. `inspector_soft_wrap` is the soft-wrap flag. It starts on and is not saved.
 
@@ -55,38 +55,38 @@ It holds the SSH client settings store, the connection fields, the focused termi
 
 | | |
 | --- | --- |
-| **Specification** | PK-1156 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1155 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1151 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1148 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1144 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1141 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1140 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1139 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1138 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1134 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1132 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1127 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1126 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1124 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1123 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1118 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1160 docs/specs/common/stages.spec.md |
-| **Specification** | PK-1115 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1159 docs/specs/common/stages.spec.md |
-| **Specification** | PK-1106 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1104 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1100 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md |
-| **Specification** | PK-1070 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1018 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1016 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1015 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1014 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-999 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-997 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1156 docs/specs/common/formal-plan.spec.md FINESSE:f-100 |
+| **Specification** | PK-1155 docs/specs/common/formal-plan.spec.md FINESSE:f-101 |
+| **Specification** | PK-1151 docs/specs/common/formal-plan.spec.md FINESSE:f-105 |
+| **Specification** | PK-1148 docs/specs/common/formal-plan.spec.md FINESSE:f-109 |
+| **Specification** | PK-1144 docs/specs/common/formal-plan.spec.md FINESSE:f-113 |
+| **Specification** | PK-1141 docs/specs/common/formal-plan.spec.md FINESSE:f-116 |
+| **Specification** | PK-1140 docs/specs/common/formal-plan.spec.md FINESSE:f-117 |
+| **Specification** | PK-1139 docs/specs/common/formal-plan.spec.md FINESSE:f-118 |
+| **Specification** | PK-1138 docs/specs/common/formal-plan.spec.md FINESSE:f-119 |
+| **Specification** | PK-1134 docs/specs/common/formal-plan.spec.md FINESSE:f-125 |
+| **Specification** | PK-1132 docs/specs/common/formal-plan.spec.md FINESSE:f-129 |
+| **Specification** | PK-1127 docs/specs/common/formal-plan.spec.md FINESSE:f-140 |
+| **Specification** | PK-1126 docs/specs/common/formal-plan.spec.md FINESSE:f-141 |
+| **Specification** | PK-1124 docs/specs/common/formal-plan.spec.md FINESSE:f-143 |
+| **Specification** | PK-1123 docs/specs/common/formal-plan.spec.md FINESSE:f-144 |
+| **Specification** | PK-1118 docs/specs/common/formal-plan.spec.md FINESSE:f-149 |
+| **Specification** | PK-1160 docs/specs/common/stages.spec.md FINESSE:f-152 |
+| **Specification** | PK-1115 docs/specs/common/formal-plan.spec.md FINESSE:f-154 |
+| **Specification** | PK-1159 docs/specs/common/stages.spec.md FINESSE:f-157 |
+| **Specification** | PK-1106 docs/specs/common/formal-plan.spec.md FINESSE:f-173 |
+| **Specification** | PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175 |
+| **Specification** | PK-1100 docs/specs/common/formal-plan.spec.md FINESSE:f-179 |
+| **Specification** | PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-211 |
+| **Specification** | PK-1070 docs/specs/common/formal-plan.spec.md FINESSE:f-221 |
+| **Specification** | PK-1018 docs/specs/common/formal-plan.spec.md FINESSE:f-77 |
+| **Specification** | PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79 |
+| **Specification** | PK-1015 docs/specs/common/formal-plan.spec.md FINESSE:f-80 |
+| **Specification** | PK-1014 docs/specs/common/formal-plan.spec.md FINESSE:f-81 |
+| **Specification** | PK-999 docs/specs/common/formal-plan.spec.md FINESSE:f-96 |
+| **Specification** | PK-997 docs/specs/common/formal-plan.spec.md FINESSE:f-98 |
 | **Specification** | PK-1180 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
-| **Specification** | PK-1066 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1066 docs/specs/common/formal-plan.spec.md FINESSE:f-226 |
 
 ## Field Summary
 
@@ -115,7 +115,7 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | bool | [`at_tail`](#member-at_tail) |  |
 | bool | [`jump_tail`](#member-jump_tail) |  |
 | i32 | [`console_scroll_lines`](#member-console_scroll_lines) | Menu Page or Line motion for the focused console. Positive moves toward the tail. |
-| Option<f32> | [`console_scroll_base`](#member-console_scroll_base) | Offset that motion starts from when the pane was parked. None reads the focused scroll. // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md |
+| Option<f32> | [`console_scroll_base`](#member-console_scroll_base) | Offset that motion starts from when the pane was parked. None reads the focused scroll. |
 | Option<(usize, usize)> | [`anchor`](#member-anchor) |  |
 | Option<(usize, usize)> | [`current`](#member-current) |  |
 | bool | [`grid_focus`](#member-grid_focus) |  |
@@ -123,14 +123,9 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | bool | [`restore_aetheris`](#member-restore_aetheris) | Armed when the stored word is `aetheris`. Connect has not landed yet. |
 | Option<CanvasFacts> | [`facts`](#member-facts) |  |
 | String | [`scope_text`](#member-scope_text) |  |
-| ThinkLog | [`think`](#member-think) | Session thought log. Connect, Clear, and Disconnect leave it. |
-| ThinkChrome | [`think_chrome`](#member-think_chrome) | Fold, Close, and the dragged height for this window. |
+| ThinkPaneManager | [`think_panes`](#member-think_panes) | One store for every canvas pane and every SSH pane. |
+| String | [`ssh_think_key`](#member-ssh_think_key) | Key of the focused SSH pane. Empty until that pane takes a seat. |
 | ThinkYaml | [`think_yaml`](#member-think_yaml) | Shared `aetheris-think.yaml`. A version other than 1 stays unread. |
-| ThinkLog | [`vt_think`](#member-vt_think) | Thought text of the focused VT100 session. Each parked session keeps its own. |
-| bool | [`vt_open`](#member-vt_open) | The focused session's strip is on the plate. Each parked session keeps its own. |
-| f32 | [`vt_slide`](#member-vt_slide) | Rise from the top of the focused session. `0` starts shut. `-1` is settled. |
-| bool | [`vt_folded`](#member-vt_folded) | The focused session's strip is folded. Each parked session keeps its own. |
-| f32 | [`vt_height`](#member-vt_height) | The focused session's dragged height. Each parked session keeps its own. |
 | bool | [`vt_think_on`](#member-vt_think_on) | The focused session's thinking is on. Each parked session keeps its own. |
 | Option<i32> | [`roux_used`](#member-roux_used) | Roux session count for the focused pane. None until the reply is held. |
 | i32 | [`roux_chars`](#member-roux_chars) | Characters in the held Roux messages. |
@@ -269,7 +264,7 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | bool | [`pane_model_clicked`](#member-pane_model_clicked) |  |
 | Option<u64> | [`focus_pane_request`](#member-focus_pane_request) |  |
 | Option<(i32, i32, i32, i32)> | [`saved_frame`](#member-saved_frame) | Restored rectangle. A maximized frame does not replace it. |
-| bool | [`open_maximized`](#member-open_maximized) | Missing key keeps the seated maximized open. // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md |
+| bool | [`open_maximized`](#member-open_maximized) | Missing key keeps the seated maximized open. |
 | egui::Context | [`ctx`](#member-ctx) |  |
 | Option<egui_winit::State> | [`state`](#member-state) |  |
 | Option<egui_wgpu::winit::Painter> | [`painter`](#member-painter) |  |
@@ -289,7 +284,7 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | fn | [`wire_console`](#method-wire_console) | The function `wire_console` sends one frame on a pane's session. |
 | fn | [`ask_transfer_from_console`](#method-ask_transfer_from_console) | OK, then the Roux table. The canvas stays until that table parses. |
 | fn | [`ask_transfer_from_canvas`](#method-ask_transfer_from_canvas) | OK, then the cells. Roux stays until the server accepts the table. |
-| fn | [`land_transfer_export`](#method-land_transfer_export) | The method `land_transfer_export` finishes a Roux table that was copied onto the canvas. // @aa-sdd PK-1157 docs/specs/common/stages.spec.md |
+| fn | [`land_transfer_export`](#method-land_transfer_export) | The method `land_transfer_export` finishes a Roux table that was copied onto the canvas. |
 | fn | [`land_transfer_replace`](#method-land_transfer_replace) | The function `land_transfer_replace` records the reply to a canvas copy into Roux. |
 | fn | [`land_transfer_cards`](#method-land_transfer_cards) | The canvas becomes the copied cells. An empty list leaves one empty card. |
 | fn | [`drain_parked`](#method-drain_parked) | The method `drain_parked` reads every pane that is not in front and returns whether the window should paint again. |
@@ -328,6 +323,20 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | fn | [`live_seats`](#method-live_seats) | The method `live_seats` lists one [`ConnectedSeat`] for the focused pane and one for each parked pane. |
 | fn | [`seat_control_status`](#method-seat_control_status) | A shell word moves the connection bar. A canvas line does not call this. |
 | fn | [`deck_key`](#method-deck_key) | The user whose canvas is on the glass. Empty until a vault is open. |
+| fn | [`showing_canvas_key`](#method-showing_canvas_key) | The key of the canvas pane on the glass. |
+| fn | [`claim_canvas`](#method-claim_canvas) | The function `claim_canvas` moves a startup seat onto the canvas that just opened. |
+| fn | [`finish_showing`](#method-finish_showing) | The function `finish_showing` ends the open block on the canvas that is showing. |
+| fn | [`land_showing_scope`](#method-land_showing_scope) | The function `land_showing_scope` applies one scope piece to the showing canvas. |
+| fn | [`canvas_log`](#method-canvas_log) | The function `canvas_log` returns the showing canvas log, creating the seat once. |
+| fn | [`canvas_chrome`](#method-canvas_chrome) | The function `canvas_chrome` returns the showing canvas chrome, creating the seat once. |
+| fn | [`ensure_focused_ssh_key`](#method-ensure_focused_ssh_key) | The function `ensure_focused_ssh_key` stores the focused pane's key the first time. |
+| fn | [`focused_ssh_log`](#method-focused_ssh_log) | The function `focused_ssh_log` returns the focused SSH log, creating the seat once. |
+| fn | [`focused_ssh_chrome`](#method-focused_ssh_chrome) | The function `focused_ssh_chrome` returns the focused SSH chrome, creating the seat once. |
+| fn | [`ensure_parked_ssh_key`](#method-ensure_parked_ssh_key) | The function `ensure_parked_ssh_key` stores a parked pane's key the first time. |
+| fn | [`parked_ssh_log`](#method-parked_ssh_log) | The function `parked_ssh_log` returns one parked SSH log, creating the seat once. |
+| fn | [`parked_ssh_chrome`](#method-parked_ssh_chrome) | The function `parked_ssh_chrome` returns one parked SSH chrome, creating the seat once. |
+| fn | [`reveal_canvas`](#method-reveal_canvas) | The function `reveal_canvas` opens the showing canvas seat when it holds text. |
+| fn | [`reveal_seat`](#method-reveal_seat) | The function `reveal_seat` opens the chrome for `key` when that log holds text. |
 | fn | [`glass_pane`](#method-glass_pane) | Pane id for the glass user's execute. None when that user has no pane. |
 | fn | [`live_glass_pane`](#method-live_glass_pane) | The glass user's pane when its mux has answered. Another user's socket stays idle. |
 | fn | [`land_focused_canvas`](#method-land_focused_canvas) | Seat focused canvas pieces on the user who owns this pane. |
@@ -428,7 +437,7 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | fn | [`open_view`](#method-open_view) | The method `open_view` opens the reply window for one card. The parameter `index` is that card's place. The parameter `screen` is the content rectangle used to fit a saved window. An open view returns without a change. |
 | fn | [`store_closed_view`](#method-store_closed_view) | The method `store_closed_view` writes the reply window's last rectangle. The parameter `last` is that rectangle. A missing rectangle returns. A missing session returns. A missing home directory returns. A missing path from `view_bounds_path` returns. |
 | fn | [`paint_view`](#method-paint_view) | The reply window. It is the modal above the canvas. |
-| fn | [`paint_vt_strip`](#method-paint_vt_strip) | The method `paint_vt_strip` paints the terminal thinking strip and stores a close or a height change. The parameter `ui` is the egui surface. The strip uses the current pane id as its salt. `seat_vt_chrome` builds the chrome from `vt_open`, `vt_slide`, `vt_folded`, and `vt_height`. |
+| fn | [`paint_vt_strip`](#method-paint_vt_strip) | The method `paint_vt_strip` paints the focused terminal thinking strip and stores a close or a height change. The parameter `ui` is the egui surface. The strip uses the current pane id as its salt. |
 | fn | [`paint_shell`](#method-paint_shell) | The method `paint_shell` paints the terminal plate. The parameter `ui` is the egui surface. One pane, or none, paints `paint_vt_strip` and then `paint_grid`, and returns. |
 | fn | [`paint_parked`](#method-paint_parked) | The method `paint_parked` paints one unfocused terminal pane and returns the click it saw. The parameter `ui` is the egui surface. The parameter `id` is the pane id. The parameter `rect` is that pane's rectangle. An unknown id returns `None`. |
 | fn | [`paint_grid`](#method-paint_grid) | The method `paint_grid` paints the focused terminal grid, the selection, and the console menu. The parameter `ui` is the egui surface. A primary press clears `scroll_seat`. |
@@ -644,7 +653,7 @@ Menu Page or Line motion for the focused console. Positive moves toward the tail
 console_scroll_base: Option<f32>
 ```
 
-Offset that motion starts from when the pane was parked. None reads the focused scroll. // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md
+Offset that motion starts from when the pane was parked. None reads the focused scroll.
 
 ### anchor
 
@@ -704,26 +713,25 @@ facts: Option<CanvasFacts>
 scope_text: String
 ```
 
-### think
+### think_panes
 
-<a id="member-think"></a>
-
-```rust
-think: ThinkLog
-```
-
-Session thought log. Connect, Clear, and Disconnect leave it.
-The think Clear wipes this log and the saved file.
-
-### think_chrome
-
-<a id="member-think_chrome"></a>
+<a id="member-think_panes"></a>
 
 ```rust
-think_chrome: ThinkChrome
+think_panes: ThinkPaneManager
 ```
 
-Fold, Close, and the dragged height for this window.
+One store for every canvas pane and every SSH pane.
+
+### ssh_think_key
+
+<a id="member-ssh_think_key"></a>
+
+```rust
+ssh_think_key: String
+```
+
+Key of the focused SSH pane. Empty until that pane takes a seat.
 
 ### think_yaml
 
@@ -734,59 +742,6 @@ think_yaml: ThinkYaml
 ```
 
 Shared `aetheris-think.yaml`. A version other than 1 stays unread.
-
-### vt_think
-
-<a id="member-vt_think"></a>
-
-```rust
-vt_think: ThinkLog
-```
-
-Thought text of the focused VT100 session. Each parked session keeps its own.
-The closed mark stays on the file. The text is not written to the vault log.
-
-### vt_open
-
-<a id="member-vt_open"></a>
-
-```rust
-vt_open: bool
-```
-
-The focused session's strip is on the plate. Each parked session keeps its own.
-
-### vt_slide
-
-<a id="member-vt_slide"></a>
-
-```rust
-vt_slide: f32
-```
-
-Rise from the top of the focused session. `0` starts shut. `-1` is settled.
-
-### vt_folded
-
-<a id="member-vt_folded"></a>
-
-```rust
-vt_folded: bool
-```
-
-The focused session's strip is folded. Each parked session keeps its own.
-The yaml does not store it.
-
-### vt_height
-
-<a id="member-vt_height"></a>
-
-```rust
-vt_height: f32
-```
-
-The focused session's dragged height. Each parked session keeps its own.
-Zero uses the three-line view. The file seed is the next new pane.
 
 ### vt_think_on
 
@@ -808,6 +763,10 @@ roux_used: Option<i32>
 ```
 
 Roux session count for the focused pane. None until the reply is held.
+
+| | |
+| --- | --- |
+| **Specification** | L40 aa-sdd-source-prose.md FINESSE:f-163 |
 
 ### roux_chars
 
@@ -848,6 +807,10 @@ live_line: String
 ```
 
 Characters typed on the focused pane and not yet submitted.
+
+| | |
+| --- | --- |
+| **Specification** | L40 aa-sdd-source-prose.md FINESSE:f-177 |
 
 ### vt_chrome
 
@@ -918,6 +881,10 @@ ssh_users: Vec<(String, bool)>
 ```
 
 SSH mood armed by canvas user. The shared mood file does not carry this.
+
+| | |
+| --- | --- |
+| **Specification** | L40 aa-sdd-source-prose.md FINESSE:f-176 |
 
 ### ssh_mood_blocked
 
@@ -1006,8 +973,8 @@ RAM undo for canvas prompts. One seat per cell. A restart drops it.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md |
-| **Specification** | PK-1172 docs/specs/rust/aetheris/aetheris-client/src/edit.spec.md |
+| **Specification** | PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191 |
+| **Specification** | PK-1172 docs/specs/rust/aetheris/aetheris-client/src/edit.spec.md FINESSE:f-214 |
 
 ### prompt_focus
 
@@ -1045,7 +1012,7 @@ run_pane: Option<u64>
 
 Pane that carries the showing deck's run. None uses the focused pane.
 A parked user's run stays on that user's pane.
-// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
 
 ### pipe_live
 
@@ -1111,7 +1078,7 @@ One shot. Hide Collapsed and Show Collapsed seat focus on the selected cell.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1079 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1079 docs/specs/common/formal-plan.spec.md FINESSE:f-204 |
 
 ### land_newest
 
@@ -1656,7 +1623,7 @@ heat: HeatQueue
 ```
 
 Newest-only heatbar queue. The walk runs off the frame.
-// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 
 ### token_pick
 
@@ -1813,7 +1780,7 @@ decks: Vec<ParkedDeck>
 ```
 
 Canvas seats that are not on the glass. Each keeps its own run.
-// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
 
 ### canvas_user
 
@@ -2101,7 +2068,7 @@ Restored rectangle. A maximized frame does not replace it.
 open_maximized: bool
 ```
 
-Missing key keeps the seated maximized open. // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+Missing key keeps the seated maximized open.
 
 ### ctx
 
@@ -2176,7 +2143,7 @@ fn clamp_resize(&mut self, size: PhysicalSize<u32>)
 The method `clamp_resize` keeps a physical resize inside the minimum and tells the painter.
 `size` is the new physical size. A missing window returns immediately.
 
-The size is converted to logical pixels with the window scale. `clamp_logical` raises a side that is under [`MIN_WIDTH`](../chrome.md#constant-min_width) or [`MIN_HEIGHT`](../chrome.md#constant-min_height). A size that changed is requested as the new inner size. A missing painter returns after that request. A width of zero returns. A height of zero returns. Otherwise `on_window_resized` receives the original physical width and height. // @aa-sdd PK-1419 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+The size is converted to logical pixels with the window scale. `clamp_logical` raises a side that is under [`MIN_WIDTH`](../chrome.md#constant-min_width) or [`MIN_HEIGHT`](../chrome.md#constant-min_height). A size that changed is requested as the new inner size. A missing painter returns after that request. A width of zero returns. A height of zero returns. Otherwise `on_window_resized` receives the original physical width and height.
 
 ### ask_session_export
 
@@ -2262,7 +2229,7 @@ OK, then the cells. Roux stays until the server accepts the table.
 fn land_transfer_export(&mut self, file: SessionFile)
 ```
 
-The method `land_transfer_export` finishes a Roux table that was copied onto the canvas. // @aa-sdd PK-1157 docs/specs/common/stages.spec.md
+The method `land_transfer_export` finishes a Roux table that was copied onto the canvas.
 `file` is the [`SessionFile`](enum.SessionFile.md). `transfer_pane` becomes `None`.
 
 [`SessionFile::Failed`](enum.SessionFile.md#member-failed) sets the status to `export failed:` plus the reason. [`SessionFile::Table`](enum.SessionFile.md#member-table) parses the body with `pair_session`. A parsed list calls `land_transfer_cards`. A parse error stores that error text as the status.
@@ -2546,7 +2513,8 @@ fn show_focused_thinking(&mut self)
 ```
 
 The method `show_focused_thinking` opens the thinking strip on the plate that is showing.
-[`Plate::Aetheris`](enum.Plate.md#member-aetheris) passes the notebook open flag and slide to `show_thinking` and stores the returned open, slide, and folded values on `think_chrome`. [`Plate::Ssh`](enum.Plate.md#member-ssh) does the same with `vt_open` and `vt_slide` and stores the result on the focused terminal strip.
+[`Plate::Aetheris`](enum.Plate.md#member-aetheris) opens the showing canvas seat. [`Plate::Ssh`](enum.Plate.md#member-ssh) opens the focused SSH seat.
+The log stays. A fold opens because this is the Tools command.
 
 ### paint_menu
 
@@ -2690,7 +2658,7 @@ fn capture_focused(&mut self) -> ParkedPane
 The method `capture_focused` moves the focused pane into a [`ParkedPane`](struct.ParkedPane.md).
 The link comes from `focused_link` of whether a session is stored, the status, and `link_up`. The grid, session, selection, scroll, scope, paint, model hold, last connect, terminal thought, Roux counts, token ask, and live line move into the result.
 
-The focused grid is left as a fresh 80 by 24 grid. `menu_jump` on the result is false, so the focused `jump_tail` is not copied. The terminal height left behind is `vt_chrome.height`. The other terminal-strip fields left behind are shut.
+The focused grid is left as a fresh 80 by 24 grid. `menu_jump` on the result is false, so the focused `jump_tail` is not copied. The thinking key moves with the pane. The focused key left behind is empty. The file seed height stays on `vt_chrome`.
 
 ### install_pane
 
@@ -2752,6 +2720,155 @@ fn deck_key(&self) -> String
 
 The user whose canvas is on the glass. Empty until a vault is open.
 
+### showing_canvas_key
+
+<a id="method-showing_canvas_key"></a>
+
+```rust
+fn showing_canvas_key(&self) -> String
+```
+
+The key of the canvas pane on the glass.
+The user is `deck_key`. The canvas id is `vault_canvas`.
+
+### claim_canvas
+
+<a id="method-claim_canvas"></a>
+
+```rust
+fn claim_canvas(&mut self, old_user: &str, old_canvas: &str)
+```
+
+The function `claim_canvas` moves a startup seat onto the canvas that just opened.
+`old_user` and `old_canvas` are the key from before the load.
+The same user keeps the seat when the canvas id changes.
+An empty old user is the file loaded at startup.
+A different user keeps the old seat and starts a new one.
+
+### finish_showing
+
+<a id="method-finish_showing"></a>
+
+```rust
+fn finish_showing(&mut self)
+```
+
+The function `finish_showing` ends the open block on the canvas that is showing.
+The seat stays. The chrome stays.
+
+### land_showing_scope
+
+<a id="method-land_showing_scope"></a>
+
+```rust
+fn land_showing_scope(&mut self, piece: &ScopePiece) -> Option<usize>
+```
+
+The function `land_showing_scope` applies one scope piece to the showing canvas.
+The thinking log is the showing canvas seat. A piece that opens a card moves focus.
+
+### canvas_log
+
+<a id="method-canvas_log"></a>
+
+```rust
+fn canvas_log(&mut self) -> &mut ThinkLog
+```
+
+The function `canvas_log` returns the showing canvas log, creating the seat once.
+
+### canvas_chrome
+
+<a id="method-canvas_chrome"></a>
+
+```rust
+fn canvas_chrome(&mut self) -> &mut ThinkChrome
+```
+
+The function `canvas_chrome` returns the showing canvas chrome, creating the seat once.
+
+### ensure_focused_ssh_key
+
+<a id="method-ensure_focused_ssh_key"></a>
+
+```rust
+fn ensure_focused_ssh_key(&mut self)
+```
+
+The function `ensure_focused_ssh_key` stores the focused pane's key the first time.
+
+### focused_ssh_log
+
+<a id="method-focused_ssh_log"></a>
+
+```rust
+fn focused_ssh_log(&mut self) -> &mut ThinkLog
+```
+
+The function `focused_ssh_log` returns the focused SSH log, creating the seat once.
+
+### focused_ssh_chrome
+
+<a id="method-focused_ssh_chrome"></a>
+
+```rust
+fn focused_ssh_chrome(&mut self) -> &mut ThinkChrome
+```
+
+The function `focused_ssh_chrome` returns the focused SSH chrome, creating the seat once.
+
+### ensure_parked_ssh_key
+
+<a id="method-ensure_parked_ssh_key"></a>
+
+```rust
+fn ensure_parked_ssh_key(&mut self, index: usize)
+```
+
+The function `ensure_parked_ssh_key` stores a parked pane's key the first time.
+
+### parked_ssh_log
+
+<a id="method-parked_ssh_log"></a>
+
+```rust
+fn parked_ssh_log(&mut self, index: usize) -> &mut ThinkLog
+```
+
+The function `parked_ssh_log` returns one parked SSH log, creating the seat once.
+
+### parked_ssh_chrome
+
+<a id="method-parked_ssh_chrome"></a>
+
+```rust
+fn parked_ssh_chrome(&mut self, index: usize) -> &mut ThinkChrome
+```
+
+The function `parked_ssh_chrome` returns one parked SSH chrome, creating the seat once.
+
+### reveal_canvas
+
+<a id="method-reveal_canvas"></a>
+
+```rust
+fn reveal_canvas(&mut self)
+```
+
+The function `reveal_canvas` opens the showing canvas seat when it holds text.
+A fold stays folded. The saved file is written. The yaml opens when the seat was shut.
+
+### reveal_seat
+
+<a id="method-reveal_seat"></a>
+
+```rust
+fn reveal_seat(&mut self, key: &str)
+```
+
+The function `reveal_seat` opens the chrome for `key` when that log holds text.
+A fold stays folded. The showing file is not written.
+
 ### glass_pane
 
 <a id="method-glass_pane"></a>
@@ -2783,7 +2900,7 @@ fn land_focused_canvas(&mut self, glass: &str, pieces: &[ScopePiece]) -> bool
 Seat focused canvas pieces on the user who owns this pane.
 Showing returns false so the caller keeps the glass path.
 Parked updates that seat and does not paint. Hold waits on this pane.
-// @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1074 docs/specs/common/formal-plan.spec.md FINESSE:f-218
 
 ### note_replaced_run
 
@@ -2840,7 +2957,7 @@ The method `plant_showing` copies a parked canvas onto the showing fields.
 `deck` is that [`ParkedDeck`](struct.ParkedDeck.md). The `user` text on `deck` is not copied.
 
 `cards` becomes `deck.cards`. `focus` becomes `deck.focus`. `facts` becomes `deck.facts`. `scope_text` becomes `deck.scope_text`.
-`think` becomes `deck.think`. `vault` becomes `deck.vault`. `vault_canvas` becomes `deck.vault_canvas`. `vault_hold` becomes `deck.vault_hold`.
+The thinking log stays in the manager under that user's canvas key. `vault` becomes `deck.vault`. `vault_canvas` becomes `deck.vault_canvas`. `vault_hold` becomes `deck.vault_hold`.
 `edits` becomes `deck.edits`. `prompt_focus` becomes `deck.prompt_focus`. `group_live` becomes `deck.group_live`. `group_rest` becomes `deck.group_rest`.
 `pipe_live` becomes `deck.pipe_live`. `pipe_rest` becomes `deck.pipe_rest`. `join_from` becomes `deck.join_from`.
 `focus_prompt` becomes `deck.focus_prompt`. `land_newest` becomes `deck.land_newest`. `concealed` becomes `deck.concealed`. `conceal_armed` becomes `deck.conceal_armed`.
@@ -2961,7 +3078,9 @@ fn deliver_scope(
 ```
 
 Apply canvas pieces to the user who owns them.
-`pane` is the session that carried the pieces. `paint` writes the status line and the thinking file. A parked seat does not.
+`pane` is the session that carried the pieces. `paint` writes the status line.
+The thinking log is that user's canvas seat. The glass file is written when that user is showing and `paint` is true.
+A parked user opens that seat and leaves the glass file alone.
 
 ### close_vault
 
@@ -3039,7 +3158,7 @@ fn remember_live_expanded(&mut self)
 Checked cards join the file. An unchecked card is left as it was.
 Other ids stay. A nil id stays out. A blocked file stays.
 A memory door updates the seat and writes nothing.
-// @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md FINESSE:f-206
 
 ### keep_card_expanded
 
@@ -3126,7 +3245,7 @@ fn shell_status_facts(&self) -> String
 
 Vault, mode, air-gap, and engine. AMWP stays on the Aetheris strip.
 The engine is this pane's model. A canvas cell is not this word.
-// @aa-sdd PK-994 docs/specs/common/stages.spec.md
+// @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
 
 ### aetheris_status_face
 
@@ -3277,7 +3396,7 @@ If `mood_desk.last_size` holds a width and a height, `mood_size_on_close` receiv
 If `mood` is blocked, the stored size stays as it was. If the width is outside [`MOOD_WIDTH_MIN`](../chrome.md#constant-mood_width_min) through [`MOOD_WIDTH_MAX`](../chrome.md#constant-mood_width_max), the stored size stays as it was.
 If the height is outside [`MOOD_HEIGHT_MIN`](../chrome.md#constant-mood_height_min) through [`MOOD_HEIGHT_MAX`](../chrome.md#constant-mood_height_max), the stored size stays as it was.
 If both sides sit inside those ranges, the pair is stored.
-// @aa-sdd PK-994 docs/specs/common/stages.spec.md
+
 The method calls `store_mood_yaml`. If `mood` is blocked, if `mood_owner` is empty, or if the home directory is missing, that call writes nothing.
 `close_glass` then drops the chat and closes the dialog. The wire list stays. The generation stays. The saved mood line stays. The mood switch stays.
 
@@ -3290,7 +3409,7 @@ fn dismiss_mood(&mut self)
 ```
 
 The method `dismiss_mood` writes the last mood-dialog size and closes the glass.
-The size is `mood_desk.last_size`. `mood_size_on_close` stores that pair when it is present and inside the kept range. // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+The size is `mood_desk.last_size`. `mood_size_on_close` stores that pair when it is present and inside the kept range.
 A missing size leaves the stored pair alone. A size outside the kept range leaves the stored pair alone.
 When the stored pair changes, `store_mood_yaml` writes the record. `close_glass` then drops the chat and closes the dialog.
 The saved mood line stays. The mood switch stays.
@@ -3317,7 +3436,7 @@ fn paint_mood(&mut self, ctx: &egui::Context)
 The mood glass. The window stays inside the app. The center is the
 text window. The button row stays at the bottom of the claimed frame.
 That claim is the window frame, so the bottom edge is the vertical drag.
-Tests do not call this, so the OS window stays closed.
+The window sits above the pin strip. Tests do not call this, so the OS window stays closed.
 
 ### send_model_wires
 
@@ -3398,7 +3517,7 @@ fn ask_shell_once(&mut self)
 ```
 
 The mux asks once. The answer seats the family and the model. The modal stays shut.
-// @aa-sdd PK-994 docs/specs/common/stages.spec.md
+// @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
 
 ### seat_pane_engine
 
@@ -3411,7 +3530,7 @@ fn seat_pane_engine(&mut self, pane: u64, word: &str)
 The method `seat_pane_engine` stores one pane's model word.
 `pane` is that pane. `word` is the engine word. The focused pane stores it on `engine_label`.
 Any other pane stores it on that parked pane. A canvas cell is not this word.
-// @aa-sdd PK-994 docs/specs/common/stages.spec.md
+// @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
 
 ### sync_list_slide
 
@@ -3424,7 +3543,7 @@ fn sync_list_slide(&mut self)
 The method `sync_list_slide` copies a new model-list notice onto the error slide.
 A generation that was already copied returns. A notice opens a red slide.
 A cleared notice closes the slide only when the slide is still one of the two list sentences.
-// @aa-sdd PK-994 docs/specs/common/stages.spec.md
+// @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
 
 ### take_model_note
 
@@ -3607,7 +3726,7 @@ fn note_grid(&mut self)
 ```
 
 The grid changed. The cached console text is stale.
-// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 
 ### bump_heat
 
@@ -3671,7 +3790,7 @@ fn post_canvas_heat(
 ```
 
 Post the canvas beat when the seat changed. The frame paints the last integer.
-// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 
 ### post_vt_heat
 
@@ -3682,7 +3801,7 @@ fn post_vt_heat(&mut self, ctx: &egui::Context)
 ```
 
 Post the VT100 beat when the line or the grid changed. The key does not walk the grid.
-// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
 
 ### focused_pane_user
 
@@ -4044,7 +4163,7 @@ Each card paints a header. A merge card shows `Merge` as a selectable label. Any
 
 An open bar shows `Group` and `Join` when the group is 0, or `Ungroup` otherwise, plus the target field. A change calls `note_target_change`. A lost focus calls `note_target_leave`. A click keeps the caret. An unfolded card that is not a merge paints the prompt window. Focus, wheel ownership, and a click are recorded. An unfolded reply uses `paint_bounded_reply` when `group_pane_height` returns a height, and `paint_open_reply` otherwise. A non-empty fault is drawn under an unfolded card. A secondary click on the reply stores the status `import refused on output`. The context menu can import, transfer, or duplicate. A hover caption comes from `frame_caption`. The edge color comes from `pinned_edge`.
 
-A group block paints members in a horizontal scroller and then the merge card. `land_newest` scrolls to the bottom with no animation. A prompt or reply that owns the wheel clears the smooth scroll delta. The header plate covers the north band. An open thinking strip is `paint_think_strip`, and a clear, a close, or a kept height is recorded.
+A group block paints members in a horizontal scroller and then the merge card. The horizontal bar sits on the bottom of that member pane. Each group has its own bar. The canvas bar is not that bar. The member row does not take the wheel. `land_newest` scrolls to the bottom with no animation. A prompt or reply that owns the wheel clears the smooth scroll delta. The header plate covers the north band. An open thinking strip is `paint_think_strip`, and a clear, a close, or a kept height is recorded.
 
 The split bar can be dragged. The canvas arrow and the inspector arrow call `arrow_share`. A drag calls `drag_weight`. Hover text says which side will be hidden. When the pin bar is folded, `P` is painted on the bar. A click on that mark asks to open the bar. When no view is open, hovering that mark shows `PIN_SHOW_TIP`.
 
@@ -4114,11 +4233,11 @@ Tests do not call this, so the OS window stays closed.
 fn paint_vt_strip(&mut self, ui: &mut egui::Ui)
 ```
 
-The method `paint_vt_strip` paints the terminal thinking strip and stores a close or a height change. The parameter `ui` is the egui surface. The strip uses the current pane id as its salt. `seat_vt_chrome` builds the chrome from `vt_open`, `vt_slide`, `vt_folded`, and `vt_height`.
+The method `paint_vt_strip` paints the focused terminal thinking strip and stores a close or a height change. The parameter `ui` is the egui surface. The strip uses the current pane id as its salt.
 
-`paint_think_strip` draws `vt_think` blocks with the terminal flag true. A returned strip can clear the log, mark the strip closed, or keep a height. `keep_vt_session` writes the open, slide, folded, and height fields back.
+The log and the chrome come from the focused pane's seat. A missing seat paints closed and is not created. `paint_think_strip` draws that log with the terminal flag true. A returned strip can clear the log, mark the strip closed, or keep a height. The chrome is written back when the seat exists.
 
-A close is noted on `vt_yaml`. A kept height is noted there too, and a real change also sets `vt_chrome.height`. A dirty yaml file is stored with `store_vt_yaml`. A clear wipes `vt_think` and `vt_chrome` through `clear_think`.
+A close is noted on `vt_yaml`. A kept height is noted there too, and a real change also sets `vt_chrome.height`. A dirty yaml file is stored with `store_vt_yaml`. A clear wipes that seat.
 
 ### paint_shell
 
@@ -4144,7 +4263,7 @@ fn paint_parked(&mut self, ui: &mut egui::Ui, id: u64, rect: egui::Rect) -> Opti
 
 The method `paint_parked` paints one unfocused terminal pane and returns the click it saw. The parameter `ui` is the egui surface. The parameter `id` is the pane id. The parameter `rect` is that pane's rectangle. An unknown id returns `None`.
 
-The face is monospace at `term_font`. A glyph width at or below one half becomes 8. A row height at or below one half becomes 16. The thinking strip uses that pane's own chrome and blocks. A close or a kept height is written to the shared `vt_yaml`, and a dirty file is stored. A clear wipes that pane's think log. The grid is resized to the leftover columns and rows, and a live session is resized with it.
+The face is monospace at `term_font`. A glyph width at or below one half becomes 8. A row height at or below one half becomes 16. The thinking strip uses that pane's seat. A close or a kept height is written to the shared `vt_yaml`, and a dirty file is stored. A clear wipes that seat. The grid is resized to the leftover columns and rows, and a live session is resized with it.
 
 The scroll area sticks to the bottom and paints each visible history cell. A zero-width cell is skipped. `paint_colors` supplies the ink with selection false. A non-default background, or a reverse cell, fills the cell. Non-empty text is drawn. The cursor cell is stroked with `CURSOR`. `at_tail` becomes the result of `view_on_tail`.
 

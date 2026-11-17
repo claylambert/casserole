@@ -11,6 +11,10 @@ struct MoodTurn
 The struct `MoodTurn` is one line of the mood-glass chat.
 `role` is `user` or `assistant`, or any other role the frame carried. `text` is that turn's body.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

@@ -17,16 +17,16 @@ The focused pane keeps its grid and session on [`App`](struct.App.md). This stru
 
 `scope_stash` holds scope pieces waiting for the canvas. The bool is true once this pane offered the console thought. `paint_stash` holds paint bytes waiting for the grid. `osc_hold` holds the tail of a split model sequence. `last` is the [`ConnectSnap`](struct.ConnectSnap.md) from the last connect on this pane.
 
-`vt_think` is this session's thought text. `vt_open` is true when this session's strip is showing. `vt_slide` is the rise from the top. `0` starts shut. `-1` is settled. `vt_folded` is true when the strip is folded. `vt_height` is the dragged height. Zero uses the three-line view. `vt_think_on` is true when this session's thinking is on.
+`ssh_think_key` is this session's key in the thinking-pane manager. Empty means this pane has not taken a seat. The log and the chrome stay in the manager. `vt_think_on` is true when this session's thinking is on.
 
 `roux_used` is the Roux session count. `None` means the reply has not been held. `roux_chars` is the character count in those messages. `roux_blocks` is the stored message count. `tokens_asked` is true after the `session_tokens` ask has been sent. `live_line` is the text typed on this pane and not yet submitted.
 `engine_label` is the model this pane last reported. Empty prints as ollama. A canvas cell is not this word. `engine_asked` is true after this connection has been asked for that model. A disconnect clears the ask and leaves the word.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1104 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1103 docs/specs/common/formal-plan.spec.md |
-| **Specification** | PK-1102 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175 |
+| **Specification** | PK-1103 docs/specs/common/formal-plan.spec.md FINESSE:f-176 |
+| **Specification** | PK-1102 docs/specs/common/formal-plan.spec.md FINESSE:f-177 |
 
 ## Field Summary
 
@@ -46,11 +46,7 @@ The focused pane keeps its grid and session on [`App`](struct.App.md). This stru
 | VecDeque<Vec<u8>> | [`paint_stash`](#member-paint_stash) |  |
 | crate::model::OscHold | [`osc_hold`](#member-osc_hold) |  |
 | Option<ConnectSnap> | [`last`](#member-last) |  |
-| ThinkLog | [`vt_think`](#member-vt_think) | This session's thought text. The height stays on this session. |
-| bool | [`vt_open`](#member-vt_open) | This session's strip is on the plate. A thought opens it. |
-| f32 | [`vt_slide`](#member-vt_slide) | Rise from the top of this session. `0` starts shut. `-1` is settled. |
-| bool | [`vt_folded`](#member-vt_folded) | This session's strip is folded. Close returns the mark to `v` on this session. |
-| f32 | [`vt_height`](#member-vt_height) | This session's dragged height. Zero uses the three-line view. |
+| String | [`ssh_think_key`](#member-ssh_think_key) | Key of this pane's seat. Empty until the pane receives a thought. The log stays in the manager. |
 | bool | [`vt_think_on`](#member-vt_think_on) | This session's thinking is on. Another session's shell result does not clear it. |
 | Option<i32> | [`roux_used`](#member-roux_used) | Roux session count for this pane. None until the reply is held. |
 | i32 | [`roux_chars`](#member-roux_chars) | Characters in the held Roux messages. |
@@ -182,55 +178,15 @@ osc_hold: crate::model::OscHold
 last: Option<ConnectSnap>
 ```
 
-### vt_think
+### ssh_think_key
 
-<a id="member-vt_think"></a>
-
-```rust
-vt_think: ThinkLog
-```
-
-This session's thought text. The height stays on this session.
-
-### vt_open
-
-<a id="member-vt_open"></a>
+<a id="member-ssh_think_key"></a>
 
 ```rust
-vt_open: bool
+ssh_think_key: String
 ```
 
-This session's strip is on the plate. A thought opens it.
-
-### vt_slide
-
-<a id="member-vt_slide"></a>
-
-```rust
-vt_slide: f32
-```
-
-Rise from the top of this session. `0` starts shut. `-1` is settled.
-
-### vt_folded
-
-<a id="member-vt_folded"></a>
-
-```rust
-vt_folded: bool
-```
-
-This session's strip is folded. Close returns the mark to `v` on this session.
-
-### vt_height
-
-<a id="member-vt_height"></a>
-
-```rust
-vt_height: f32
-```
-
-This session's dragged height. Zero uses the three-line view.
+Key of this pane's seat. Empty until the pane receives a thought. The log stays in the manager.
 
 ### vt_think_on
 
@@ -251,6 +207,10 @@ roux_used: Option<i32>
 ```
 
 Roux session count for this pane. None until the reply is held.
+
+| | |
+| --- | --- |
+| **Specification** | L40 aa-sdd-source-prose.md FINESSE:f-163 |
 
 ### roux_chars
 

@@ -1002,3 +1002,8 @@ Import sits on the VT100 console menu and on the File menu. Both open the file d
 
 The SSH heatbar fills against the model already selected on the SSH pane. A canvas copy leaves that model in place. A later Model Config choice keeps the same rule. `feedComposerHeat` asks `heatBudget` for that model. The file is [SshClientApp.java](../../../../../../../../src/main/java/org/casserole/app/ui/ssh/SshClientApp.java).
 **semantic-key:** PK-1422
+
+## Closing an SSH pane releases that thinking pane
+
+One SSH pane keeps one thinking pane. Closing that pane releases it. A reply leaves the pane in place. The methods are `closeFocusedPane` and `releaseSessionThought`. The file is [SshClientApp.java](../../../../../../../../src/main/java/org/casserole/app/ui/ssh/SshClientApp.java).
+**semantic-key:** PK-1456

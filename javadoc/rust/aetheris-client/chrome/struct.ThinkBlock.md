@@ -11,6 +11,10 @@ struct ThinkBlock
 The struct `ThinkBlock` is one thought in the session log.
 The field `tag` is the model line. The field `body` is the thought text. The body is painted in the lighter sapphire blue.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

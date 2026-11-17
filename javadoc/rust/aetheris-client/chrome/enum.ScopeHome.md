@@ -13,7 +13,7 @@ Showing updates the glass. Parked updates that user's seat. Hold waits on the pa
 
 | | |
 | --- | --- |
-| **Specification** | PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215 |
 
 ## Enum Constant Summary
 

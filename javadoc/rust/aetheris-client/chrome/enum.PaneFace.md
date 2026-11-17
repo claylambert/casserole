@@ -13,7 +13,7 @@ The enum `PaneFace` names which canvas text pane wears the optional frame.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1097 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1097 docs/specs/common/formal-plan.spec.md FINESSE:f-182 |
 
 ## Enum Constant Summary
 

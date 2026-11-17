@@ -10,6 +10,10 @@ struct Halt
 
 The cell Stop cancels, and whether the next queued member should start.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

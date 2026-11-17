@@ -15,8 +15,8 @@ The count `line_chars` is the preview width. The option `debug` is a block index
 
 | | |
 | --- | --- |
-| **Specification** | PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
-| **Specification** | PK-1176 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209 |
+| **Specification** | PK-1176 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-222 |
 
 ## Field Summary
 

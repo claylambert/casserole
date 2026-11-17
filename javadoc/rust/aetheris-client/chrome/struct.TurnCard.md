@@ -14,7 +14,7 @@ A member is `group != 0` and `column > 0`.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1175 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1175 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-222 |
 
 ## Field Summary
 

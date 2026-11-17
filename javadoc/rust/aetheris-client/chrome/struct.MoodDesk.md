@@ -13,6 +13,10 @@ The struct `MoodDesk` is the mood glass for one selected card.
 `tries` counts replies that did not carry a mood line. `busy` is true while a reply is in flight. `current` is the wire id of that send. `wires` keeps every mood wire id. Those ids stay after the dialog closes so a late frame stays off the cell.
 `started` is the instant of the send that is in flight. `place` asks the next paint to center the dialog. `generation` changes each time the glass opens on a card. `arm_line` asks the next paint to focus the typed line. `last_size` is the width and height kept for the next open. `seen_size` is the outer size from the previous frame of this open. It is not the stored pair.
 
+| | |
+| --- | --- |
+| **Specification** | L40 aa-sdd-source-prose.md#MoodDesk |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

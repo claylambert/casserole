@@ -13,7 +13,7 @@ The option `pending` is the beat waiting to run. The number `current` is the seq
 
 | | |
 | --- | --- |
-| **Specification** | PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209 |
 
 ## Field Summary
 

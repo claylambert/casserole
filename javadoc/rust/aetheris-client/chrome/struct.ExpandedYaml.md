@@ -11,6 +11,10 @@ struct ExpandedYaml
 Version 1 of `~/.casserole/aetheris-expanded.yaml`. Checked cell ids only.
 A version other than 1 stays unread and is not overwritten. Not a vault column.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

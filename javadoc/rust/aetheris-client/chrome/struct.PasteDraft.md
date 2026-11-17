@@ -11,6 +11,10 @@ struct PasteDraft
 The `PasteDraft` struct is the text open in the paste editor.
 `text` is the body the editor shows. OK sends that body. Cancel drops the struct.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

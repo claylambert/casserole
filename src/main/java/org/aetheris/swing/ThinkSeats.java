@@ -31,12 +31,15 @@ import org.roux.session.RegionOwner;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-// @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1067 docs/specs/common/formal-plan.spec.md FINESSE:f-225
 /**
- * The {@code ThinkSeats} class keeps one thinking pane per user and per scope.
- * A scope with a group id is that user's merge group, and the group shares one pane.
- * A scope with no group id is that one cell, and the cell does not share.
- * The glass is still one strip. This seat decides which text that strip shows.
+ * The {@code ThinkSeats} class stores one thinking log per user and per canvas.
+ * The canvas token is {@code k:} plus the canvas id.
+ * Every cell on that canvas shares that log.
+ * An SSH pane does not use this store.
+ * Older {@code g:} and {@code c:} rows stay in the file.
+ * The strip instance is the pane.
+ * This store keeps that pane's text for the next open.
  * Each user is one file under {@code ~/.casserole/aetheris-thinking/}.
  * A clear of one user rewrites that file only.
  * The legacy {@code aetheris-thinking.txt} file is not read and not written here.
@@ -56,6 +59,7 @@ final class ThinkSeats {
     private final HashMap<String, ThinkPane> panes = new HashMap<String, ThinkPane>();
     private final HashMap<String, String> cellKey = new HashMap<String, String>();
     private final HashMap<String, String[]> faces = new HashMap<String, String[]>();
+    private final HashMap<String, String> canvasIds = new HashMap<String, String>();
     private final HashSet<String> loaded = new HashSet<String>();
     private final HashSet<String> blocked = new HashSet<String>();
 
@@ -98,6 +102,33 @@ final class ThinkSeats {
     static String key(String user, String groupId, String cellId) {
         String name = user == null ? "" : user;
         return name + SEP + scope(groupId, cellId);
+    }
+
+    /**
+     * The method returns the scope token for one canvas.
+     * The token is {@code k:} plus the canvas id.
+     * A null canvas id is stored as empty.
+     *
+     * @param canvasId the canvas id
+     * @return the scope token
+     */
+    static String canvasScope(String canvasId) {
+        String id = canvasId == null ? "" : canvasId;
+        return "k:" + id;
+    }
+
+    /**
+     * The method returns the map key for one user and one canvas.
+     * The user and the canvas scope are joined with {@link #SEP}.
+     * Every cell on that canvas uses this key.
+     *
+     * @param user the sanitized user
+     * @param canvasId the canvas id
+     * @return the key
+     */
+    static String canvasKey(String user, String canvasId) { // @aa-sdd PK-1455 docs/specs/java/org/aetheris/swing/swing.spec.md
+        String name = user == null ? "" : user;
+        return name + SEP + canvasScope(canvasId);
     }
 
     /**
@@ -223,6 +254,65 @@ final class ThinkSeats {
             return null;
         }
         return new String[] { held[0], held[1] };
+    }
+
+    /**
+     * The method stores the canvas that owns a cell.
+     * A later chunk can find that canvas when the cell is not on screen.
+     * An empty canvas id is not stored.
+     *
+     * @param user the sanitized user
+     * @param cellId the cell id
+     * @param canvasId the canvas id
+     */
+    synchronized void rememberCanvas(String user, String cellId, String canvasId) {
+        if (user == null || cellId == null || cellId.length() == 0) {
+            return;
+        }
+        if (canvasId == null || canvasId.length() == 0) {
+            return;
+        }
+        canvasIds.put(user + SEP + cellId, canvasId);
+    }
+
+    /**
+     * The method returns the canvas stored for a cell.
+     * A cell that was not stored returns an empty string.
+     *
+     * @param user the sanitized user
+     * @param cellId the cell id
+     * @return the canvas id, or empty
+     */
+    synchronized String canvasOf(String user, String cellId) {
+        if (user == null || cellId == null) {
+            return "";
+        }
+        String held = canvasIds.get(user + SEP + cellId);
+        if (held == null) {
+            return "";
+        }
+        return held;
+    }
+
+    /**
+     * The method returns the stored log for one canvas.
+     * The user's file loads on the first touch.
+     * Every cell on that canvas shares this log.
+     *
+     * @param user the sanitized user
+     * @param canvasId the canvas id
+     * @return the stored row
+     */
+    synchronized ThinkPane canvasLog(String user, String canvasId) {
+        String name = user == null ? "" : user;
+        load(name);
+        String mapKey = canvasKey(name, canvasId);
+        ThinkPane one = panes.get(mapKey);
+        if (one == null) {
+            one = new ThinkPane();
+            panes.put(mapKey, one);
+        }
+        return one;
     }
 
     /**
@@ -468,9 +558,25 @@ final class ThinkSeats {
         String cell = "";
         String word = "";
         boolean live;
+        /**
+         * The flag is true when the user folded this scope.
+         * A new thought does not change it.
+         */
+        boolean folded;
+        /**
+         * The flag is true when the user closed this scope.
+         * A new thought clears it.
+         * The end of a thought does not set it.
+         */
+        boolean shut;
+        /**
+         * The flag is true after this scope has taken its birth shut mark.
+         */
+        boolean seen;
 
         /**
          * The method drops the text and closes the open block.
+         * The shut flag and the fold stay as the user left them.
          */
         void clear() {
             text = "";

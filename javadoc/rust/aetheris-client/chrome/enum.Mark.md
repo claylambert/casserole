@@ -10,6 +10,10 @@ enum Mark
 
 One letter on a card. A new card starts Included.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

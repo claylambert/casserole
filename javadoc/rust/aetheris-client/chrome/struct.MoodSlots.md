@@ -12,6 +12,10 @@ The struct `MoodSlots` holds the pixel heights inside the mood glass.
 `glass` is the transcript height, and that region scrolls. `draft` is the rising mood field above the buttons. `buttons` is the button row, and that row stays.
 The draft stops at half the window. One gap is used when the draft is hidden. Two gaps are used when the draft shows.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

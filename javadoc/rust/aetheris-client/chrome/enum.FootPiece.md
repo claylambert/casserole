@@ -11,6 +11,10 @@ enum FootPiece
 The enum `FootPiece` is one item on a footer row.
 [`FootPiece::Word`](#member-word) is a label, including Mood. [`FootPiece::Gap`](#member-gap) is the separator. [`FootPiece::Switch`](#member-switch) is the mood switch. [`FootPiece::Rows`](#member-rows) is the row count.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

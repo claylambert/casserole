@@ -12,7 +12,7 @@ One cell from a version 1 file. The parent, the branch, and the status are parse
 
 | | |
 | --- | --- |
-| **Specification** | PK-1178 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1178 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-222 |
 
 ## Field Summary
 

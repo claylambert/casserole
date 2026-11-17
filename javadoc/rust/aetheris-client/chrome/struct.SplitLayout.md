@@ -11,6 +11,10 @@ struct SplitLayout
 The `SplitLayout` struct is the rectangles for one pane tree.
 `leaves` pairs each pane id with the rectangle it paints in. `bars` holds one [`SplitBar`](struct.SplitBar.md) for each split, in the order `walk_panes` visits them.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

@@ -13,7 +13,7 @@ The `PromptBytes` enum is the classified contents of a prompt file.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1016 docs/specs/common/formal-plan.spec.md |
+| **Specification** | PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79 |
 
 ## Enum Constant Summary
 

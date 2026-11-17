@@ -11,6 +11,10 @@ struct ParkedHit
 The `ParkedHit` struct is a click or menu choice on a pane that is not in front.
 `id` is that pane's id. `focus` is true when the pane should come to the front. `model` is true when the menu asked for Select model. `import` is true when the menu asked for Import.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

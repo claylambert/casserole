@@ -11,6 +11,10 @@ struct InspectPane
 The struct `InspectPane` is one measured inspector view.
 The string `body` is the painted text. The count `estimate` is the token estimate. The count `chars` is the UTF-16 length of the counted text. The count `blocks` is the number of blocks that were measured.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

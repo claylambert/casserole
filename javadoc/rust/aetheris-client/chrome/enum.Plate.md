@@ -9,7 +9,11 @@ enum Plate
 ```
 
 The enum `Plate` names which frame fills the window under the tab strip.
-`Ssh` is the terminal frame. `Aetheris` is the canvas frame. // @aa-sdd PK-1175 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+`Ssh` is the terminal frame. `Aetheris` is the canvas frame.
+
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
 
 ## Enum Constant Summary
 

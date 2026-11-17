@@ -10,6 +10,10 @@ enum ControlBeat
 
 A beat on the connection bar. Connecting is not a beat.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

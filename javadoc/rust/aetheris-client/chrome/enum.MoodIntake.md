@@ -11,6 +11,10 @@ enum MoodIntake
 The enum `MoodIntake` is what the mood glass does with one incoming frame.
 `Pass` means the frame is not a mood frame. `Quiet` means the glass consumed the frame and the cell path should not see it. `Slide` carries a notice body, a hard-failure flag, and a flag that closes the glass. `Resend` means the glass should ask again for a mood line.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |
