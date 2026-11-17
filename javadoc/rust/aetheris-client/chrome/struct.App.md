@@ -43,7 +43,7 @@ It holds the SSH client settings store, the connection fields, the focused termi
 
 `grok` is the shared `aetheris-grok.yaml`. A version other than 1 stays unread. `token_open` is the token window. `ring_used` is the integer the token paint shows. `heat_chars`, `heat_blocks`, and `heat_body` are the last seated canvas beat. `canvas_heat_sig` is the last value that decides whether the canvas heatbar posts a new beat. `canvas_sig_set` is true after that value has been stored. `vt_used`, `vt_chars`, and `vt_blocks` are the terminal heat counts. `vt_heat_sig` is the last value that decides whether the terminal heatbar posts a new beat. `vt_sig_set` is true after that value has been stored. `vt_memory` is the cached terminal text. `vt_memory_gen` is the `grid_gen` that cache was built from. `grid_gen` increases when the grid is fed, cleared, resized, or swapped. `heat_seq` is the heat sequence. `heat_kind` is 0 for none, 1 for the canvas, and 2 for the terminal. `heat` is the newest-only heatbar queue. `token_pick` is the combo label while the token window is open. Empty selects the focused turn.
 
-`model` is the one Model Config modal. `engine_label` is the focused pane's model word. `engine_asked` is true after this connection has been asked for that model. `list_slide_gen` is the model-list notice last copied onto the error slide. `shell_open` is true when the next shell answer should open the modal. `console_model_pane` is the pane that opened the console Model Config. `console_return` is the pane to focus after that modal closes. `osc_hold` holds the tail of a split `select-model` sequence. `pool_boot` is the pool boot id for this window.
+`model` is the one Model Config modal. `engine_label` is the focused pane's model word. `engine_asked` is true after this connection has been asked for that model. `list_slide_gen` is the model-list notice last copied onto the error slide. `shell_open` is true when the next shell answer should open the modal. `console_model_pane` is the pane that opened the console Model Config. `console_return` is the pane to focus after that modal closes. `osc_hold` holds the tail of a split `select-model` sequence. `canvas_pool_boot` is the canvas pool boot. `ssh_pool_boot` is the SSH pool boot. A canvas frame sends the canvas id.
 
 `pane_id` is the focused pane. `next_pane` is the next id to assign. `panes` holds every [`ParkedPane`](struct.ParkedPane.md). `decks` holds canvas decks that are not on the glass. `canvas_user` exists only in tests and is the glass user when a test has no vault file. `tree` is the [`PaneNode`](enum.PaneNode.md) layout. `term_font` is the live font size. `last_connect` is the last connect fields for the focused pane.
 
@@ -132,6 +132,9 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | i32 | [`roux_blocks`](#member-roux_blocks) | Stored Roux messages in the held count. |
 | bool | [`tokens_asked`](#member-tokens_asked) | The session_tokens ask has been sent for the focused pane. |
 | String | [`live_line`](#member-live_line) | Characters typed on the focused pane and not yet submitted. |
+| String | [`shell_line`](#member-shell_line) | The line the focused pane last submitted. An empty host reply sends it once. |
+| bool | [`shell_replayed`](#member-shell_replayed) | True after that line was sent again for one empty host reply. |
+| String | [`shell_window`](#member-shell_window) | Recent host bytes on the focused pane. |
 | ThinkChrome | [`vt_chrome`](#member-vt_chrome) | File seed for a new VT100 pane and the next open. Live height stays on the session. |
 | VtThinkYaml | [`vt_yaml`](#member-vt_yaml) | `aetheris-vt100-think.yaml`. A version other than 1 stays unread. |
 | MoodYaml | [`mood`](#member-mood) | The showing user's mood. A version other than 1 stays unread. |
@@ -228,7 +231,8 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | Option<u64> | [`console_model_pane`](#member-console_model_pane) | Pane that opened the console Model Config. The close returns the keyboard there. |
 | Option<u64> | [`console_return`](#member-console_return) | Pane to focus after that modal closes. Taken at the end of the frame. |
 | crate::model::OscHold | [`osc_hold`](#member-osc_hold) | Held tail of a split `select-model` sequence. |
-| String | [`pool_boot`](#member-pool_boot) | Pool boot id for this window. |
+| String | [`canvas_pool_boot`](#member-canvas_pool_boot) | Canvas pool boot. Canvas runs, pipes, and mood shaping send this id. |
+| String | [`ssh_pool_boot`](#member-ssh_pool_boot) | SSH pool boot. A canvas frame does not send this id. |
 | u64 | [`pane_id`](#member-pane_id) | Focused pane. Its grid and session stay on this struct. |
 | u64 | [`next_pane`](#member-next_pane) |  |
 | Vec<ParkedPane> | [`panes`](#member-panes) |  |
@@ -813,6 +817,36 @@ Characters typed on the focused pane and not yet submitted.
 | | |
 | --- | --- |
 | **Specification** | L40 aa-sdd-source-prose.md FINESSE:f-177 |
+
+### shell_line
+
+<a id="member-shell_line"></a>
+
+```rust
+shell_line: String
+```
+
+The line the focused pane last submitted. An empty host reply sends it once.
+
+### shell_replayed
+
+<a id="member-shell_replayed"></a>
+
+```rust
+shell_replayed: bool
+```
+
+True after that line was sent again for one empty host reply.
+
+### shell_window
+
+<a id="member-shell_window"></a>
+
+```rust
+shell_window: String
+```
+
+Recent host bytes on the focused pane.
 
 ### vt_chrome
 
@@ -1737,15 +1771,25 @@ osc_hold: crate::model::OscHold
 
 Held tail of a split `select-model` sequence.
 
-### pool_boot
+### canvas_pool_boot
 
-<a id="member-pool_boot"></a>
+<a id="member-canvas_pool_boot"></a>
 
 ```rust
-pool_boot: String
+canvas_pool_boot: String
 ```
 
-Pool boot id for this window.
+Canvas pool boot. Canvas runs, pipes, and mood shaping send this id.
+
+### ssh_pool_boot
+
+<a id="member-ssh_pool_boot"></a>
+
+```rust
+ssh_pool_boot: String
+```
+
+SSH pool boot. A canvas frame does not send this id.
 
 ### pane_id
 

@@ -11,7 +11,7 @@ struct ParkedPane
 The `ParkedPane` struct is one terminal that is not the pane in front.
 The focused pane keeps its grid and session on [`App`](struct.App.md). This struct keeps the same kind of state for every other pane.
 
-`id` is the pane id. `grid` is that pane's `Grid`. `session` is the SSH session, or `None` when the pane is down. `link` is the [`PaneLink`](enum.PaneLink.md). `at_tail` is true when the view sits on the tail. `anchor` is the selection start. `current` is the selection end. Either end is `None` when that end is absent.
+`id` is the pane id. `grid` is that pane's [`Grid`](../../aetheris-term/grid/struct.Grid.md). `session` is the SSH session, or `None` when the pane is down. `link` is the [`PaneLink`](enum.PaneLink.md). `at_tail` is true when the view sits on the tail. `anchor` is the selection start. `current` is the selection end. Either end is `None` when that end is absent.
 
 `scroll_lines` is a menu page or line motion that is still waiting. A positive count moves toward the tail. `scroll_base` is the offset that motion starts from. `None` uses the focused scroll area. `menu_jump` is true when Clear Buffer asked the next paint to sit on the tail.
 
@@ -53,6 +53,9 @@ The focused pane keeps its grid and session on [`App`](struct.App.md). This stru
 | i32 | [`roux_blocks`](#member-roux_blocks) | Stored Roux messages in the held count. |
 | bool | [`tokens_asked`](#member-tokens_asked) | The session_tokens ask has been sent for this pane. |
 | String | [`live_line`](#member-live_line) | Characters typed on this pane and not yet submitted. |
+| String | [`shell_line`](#member-shell_line) | The line this pane last submitted. An empty host reply sends it once. |
+| bool | [`shell_replayed`](#member-shell_replayed) | True after that line was sent again for one empty host reply. |
+| String | [`shell_window`](#member-shell_window) | Recent host bytes, kept so a split empty-reply sentence still matches. |
 | String | [`engine_label`](#member-engine_label) | This pane's selected model. Empty prints as ollama. A canvas cell is not this word. |
 | bool | [`engine_asked`](#member-engine_asked) | This connection has been asked for the saved model. A disconnect clears it. |
 
@@ -251,6 +254,36 @@ live_line: String
 ```
 
 Characters typed on this pane and not yet submitted.
+
+### shell_line
+
+<a id="member-shell_line"></a>
+
+```rust
+shell_line: String
+```
+
+The line this pane last submitted. An empty host reply sends it once.
+
+### shell_replayed
+
+<a id="member-shell_replayed"></a>
+
+```rust
+shell_replayed: bool
+```
+
+True after that line was sent again for one empty host reply.
+
+### shell_window
+
+<a id="member-shell_window"></a>
+
+```rust
+shell_window: String
+```
+
+Recent host bytes, kept so a split empty-reply sentence still matches.
 
 ### engine_label
 

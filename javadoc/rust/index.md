@@ -4,6 +4,7 @@ This tree is the Rust mirror of the Javadoc shape. Each page has a summary table
 
 | Crate | Version | Modules |
 | --- | --- | --- |
+| [aetheris-term](aetheris-term/index.md) | 1.0.0 | 4 |
 | [aetheris-client](aetheris-client/index.md) | 1.0.0 | 11 |
 
 ---

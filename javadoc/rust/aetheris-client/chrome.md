@@ -536,6 +536,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | const | [`MOOD_NO_TIP`](#constant-mood_no_tip) | `MOOD_NO_TIP` is the hover text on the No button in the clear-mood window. |
 | const | [`MOOD_SPIN_TIP`](#constant-mood_spin_tip) | `MOOD_SPIN_TIP` is the hover text on the spinner in the mood glass. |
 | const | [`SSH_MOOD_YAML_FILE`](#constant-ssh_mood_yaml_file) | `SSH_MOOD_YAML_FILE` is the file name of the SSH mood checkbox record. |
+| const | [`EMPTY_SHELL_REPLY`](#constant-empty_shell_reply) | The host sentence for a shell pool turn that finished with no assistant text. |
 | const | [`MARK_CLASS`](#constant-mark_class) | The constant `MARK_CLASS` is the egui class on the I, E, P, and O marks. |
 | const | [`CANVAS_WEIGHT`](#constant-canvas_weight) | Open canvas share. Swing `setResizeWeight(0.72)`. A drag moves the live share. |
 | const | [`SPLIT_BAR_PX`](#constant-split_bar_px) | Grab bar. Swing `DIVIDER_SIZE` is 11. |
@@ -807,9 +808,12 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`load_ssh_mood_file`](#function-load_ssh_mood_file) | The function `load_ssh_mood_file` reads the SSH mood checkbox file for this user. |
 | fn | [`write_ssh_mood`](#function-write_ssh_mood) | The function `write_ssh_mood` stores the SSH mood checkbox list. |
 | fn | [`load_grok_home`](#function-load_grok_home) | The function `load_grok_home` loads the Grok settings document for this user. |
+| fn | [`mint_pool_boot_kind`](#function-mint_pool_boot_kind) | The function `mint_pool_boot_kind` builds one boot id. |
 | fn | [`mint_canvas_pool_boot`](#function-mint_canvas_pool_boot) | The function `mint_canvas_pool_boot` builds the canvas pool boot. |
 | fn | [`mint_ssh_pool_boot`](#function-mint_ssh_pool_boot) | The function `mint_ssh_pool_boot` builds the SSH pool boot. |
 | fn | [`canvas_pool_boot_for_frame`](#function-canvas_pool_boot_for_frame) | The function `canvas_pool_boot_for_frame` returns the canvas pool boot. |
+| fn | [`roll_shell_window`](#function-roll_shell_window) | The function `roll_shell_window` keeps the recent host bytes for one pane. |
+| fn | [`empty_shell_replay`](#function-empty_shell_replay) | The function `empty_shell_replay` sends the shell line once when the host reports an empty reply. |
 | fn | [`mood_knob`](#function-mood_knob) | The function `mood_knob` returns the color and the side of the round mood button. |
 | fn | [`preview_chars`](#function-preview_chars) | The function `preview_chars` shortens one mood string for a single preview line. |
 | fn | [`mood_inspector_head`](#function-mood_inspector_head) | The function `mood_inspector_head` returns the inspector line for a mood that is not showing its yellow card. |
@@ -1463,6 +1467,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`view_on_tail`](#function-view_on_tail) | The view is on the tail when the offset sits on the bottom of the content. |
 | fn | [`shift_key`](#function-shift_key) | The function `shift_key` reports whether a key is a Shift key. The parameter `key` is the egui key. Left Shift returns true. Right Shift returns true. Every other key returns false. |
 | fn | [`shift_released_just_before`](#function-shift_released_just_before) | Shift went up, and no other key went down between that release and this event. |
+| fn | [`replay_shell_paint`](#function-replay_shell_paint) | The function `replay_shell_paint` rolls the host window and returns the one resend. |
 | fn | [`enter_stroke`](#function-enter_stroke) | Enter is CR. Shift-Enter is one LF. Command or Alt keeps the CR. |
 | fn | [`seat_paste_before_enter`](#function-seat_paste_before_enter) | A paste that arrives after Enter in the same frame is seated just before that Enter. |
 | fn | [`stroke_of`](#function-stroke_of) | The function `stroke_of` turns one egui event into a [`TermStroke`]. The parameter `event` is that event. A copy event becomes [`TermStroke::Key`] of `Key::CtrlC`. A paste event becomes [`TermStroke::Paste`] with the cloned text. |
@@ -5505,6 +5510,16 @@ const SSH_MOOD_YAML_FILE: &str = "aetheris-ssh-mood.yaml";
 The file sits in the `.casserole` directory under the user home directory.
 The shared mood file `aetheris-mood.yaml` is a different file.
 
+### EMPTY_SHELL_REPLY
+
+<a id="constant-empty_shell_reply"></a>
+
+```rust
+const EMPTY_SHELL_REPLY: &str = "The engine returned an empty reply.";
+```
+
+The host sentence for a shell pool turn that finished with no assistant text.
+
 ### MARK_CLASS
 
 <a id="constant-mark_class"></a>
@@ -8379,7 +8394,7 @@ fn session_memory_text(grid: &Grid) -> String
 ```
 
 The function `session_memory_text` returns the console text one pane holds.
-`grid` is that pane's `Grid`. The lines are the scrollback, then the visible rows, in that order. A trailing row that trims to empty is dropped.
+`grid` is that pane's [`Grid`](../aetheris-term/grid/struct.Grid.md). The lines are the scrollback, then the visible rows, in that order. A trailing row that trims to empty is dropped.
 The remaining lines are joined with a newline. An empty pane returns an empty string. `estimate_tokens` of that empty string is 1.
 
 ### session_memory_lines
@@ -8695,6 +8710,18 @@ The function `load_grok_home` loads the Grok settings document for this user.
 A missing home directory returns `crate::model::GrokDoc::memory`, which is a document with no file. Any other home loads `grok_path` through `crate::model::GrokDoc::load`.
 A missing file stays empty until a cell writes one.
 
+### mint_pool_boot_kind
+
+<a id="function-mint_pool_boot_kind"></a>
+
+```rust
+fn mint_pool_boot_kind(kind: u64) -> String
+```
+
+The function `mint_pool_boot_kind` builds one boot id.
+`kind` is `0` for the canvas seat and `1` for the SSH seat. The first eight bytes are the nanoseconds since the Unix epoch, as a big-endian `u64`. A clock before that epoch uses 1.
+The last eight bytes are that count multiplied, with wrap, by `0x9E3779B97F4A7C15`, then added to `kind`, also big-endian. The text is `cell_text` of those sixteen bytes. The two kinds differ even in the same tick.
+
 ### mint_canvas_pool_boot
 
 <a id="function-mint_canvas_pool_boot"></a>
@@ -8727,6 +8754,29 @@ fn canvas_pool_boot_for_frame<'a>(canvas: &'a str, ssh: &'a str) -> &'a str
 
 The function `canvas_pool_boot_for_frame` returns the canvas pool boot.
 `canvas` is the canvas id. `ssh` is the SSH id. A canvas frame sends `canvas`. It does not send `ssh`.
+
+### roll_shell_window
+
+<a id="function-roll_shell_window"></a>
+
+```rust
+fn roll_shell_window(tail: &mut String, paint: &[u8])
+```
+
+The function `roll_shell_window` keeps the recent host bytes for one pane.
+`tail` is that window. `paint` is the next terminal chunk. The window stays long enough to hold [`EMPTY_SHELL_REPLY`](#constant-empty_shell_reply) when the sentence is split across chunks.
+
+### empty_shell_replay
+
+<a id="function-empty_shell_replay"></a>
+
+```rust
+fn empty_shell_replay(line: &str, window: &str, already: bool) -> Option<Vec<u8>>
+```
+
+The function `empty_shell_replay` sends the shell line once when the host reports an empty reply.
+`line` is the line this pane submitted. `window` is the recent host text. `already` is true after this line was sent again.
+A line already sent again returns nothing. An empty line returns nothing. A window that holds [`EMPTY_SHELL_REPLY`](#constant-empty_shell_reply) returns that line and a carriage return.
 
 ### mood_knob
 
@@ -8825,7 +8875,7 @@ fn mood_glass_target(
 ```
 
 The function `mood_glass_target` returns the model the mood glass sends.
-`card` is the selected cell. `entry` is that cell's Grok settings, when the document has one. `pool_boot` is the boot id from `mint_pool_boot`. The Java client calls this `moodTarget`.
+`card` is the selected cell. `entry` is that cell's Grok settings, when the document has one. `pool_boot` is the canvas boot id. The Java client calls this `moodTarget`.
 The result is the `target` from `crate::model::mood_tune`. A pool card sends the word `pool`. A Grok card with no model id takes the model stored on `entry`.
 // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
 
@@ -12775,7 +12825,7 @@ Each flank is `flank_band` filled with [`EDGE_ARMED`](#constant-edge_armed). Tha
 <a id="function-prompt_caret_segment"></a>
 
 ```rust
-fn prompt_caret_segment(
+fn prompt_caret_segment( // @aa-sdd PK-1432 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     widget: egui::Rect,
     galley_pos: egui::Pos2,
     row_h: f32,
@@ -13577,7 +13627,7 @@ The rectangle `band` is the span under the columns. The bar is painted in its ow
 <a id="function-paint_bar_lane"></a>
 
 ```rust
-fn paint_bar_lane<R>(
+fn paint_bar_lane<R>( // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     ui: &mut egui::Ui,
     salt: &'static str,
     width: f32,
@@ -14184,7 +14234,7 @@ The merge card's stored reply. JOIN lines stay.
 <a id="function-seat_transferred"></a>
 
 ```rust
-fn seat_transferred(
+fn seat_transferred( // @aa-sdd PK-1419 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     cards: &mut Vec<TurnCard>,
     focus: &mut usize,
     seq: &mut u64,
@@ -17591,6 +17641,23 @@ fn shift_released_just_before(events: &[egui::Event], index: usize) -> bool
 
 Shift went up, and no other key went down between that release and this event.
 
+### replay_shell_paint
+
+<a id="function-replay_shell_paint"></a>
+
+```rust
+fn replay_shell_paint(
+    tail: &mut String,
+    line: &str,
+    already: &mut bool,
+    paint: &[u8],
+) -> Option<Vec<u8>>
+```
+
+The function `replay_shell_paint` rolls the host window and returns the one resend.
+`tail` is the pane window. `line` is the submitted line. `already` becomes true when this call returns bytes. `paint` is the new terminal chunk.
+The bytes are that line and a carriage return. A line that was already sent again returns nothing.
+
 ### enter_stroke
 
 <a id="function-enter_stroke"></a>
@@ -17889,7 +17956,7 @@ The row range and the column range include both ends, in either order. A cell in
 pub(crate) fn paint_colors(cell: &Cell, selected: bool) -> (egui::Color32, egui::Color32)
 ```
 
-The function `paint_colors` returns the foreground and background for one terminal cell. The parameter `cell` is that `Cell`. The parameter `selected` is true when the cell is inside the highlight. The result is `(foreground, background)`.
+The function `paint_colors` returns the foreground and background for one terminal cell. The parameter `cell` is that [`Cell`](../aetheris-term/grid/struct.Cell.md). The parameter `selected` is true when the cell is inside the highlight. The result is `(foreground, background)`.
 
 A selected cell returns `SELECT_FG` and `SELECT_BG` and ignores the cell colors. Otherwise the foreground comes from `color_of` with fallback `INK`. The background comes from `color_of` with fallback [`PLATE`](#constant-plate). A bold cell whose foreground is an index below 8 uses that index plus 8. A reverse cell swaps the two colors.
 
@@ -17901,9 +17968,9 @@ A selected cell returns `SELECT_FG` and `SELECT_BG` and ignores the cell colors.
 fn color_of(color: Color, fallback: egui::Color32) -> egui::Color32
 ```
 
-The function `color_of` turns a terminal `Color` into an egui color. The parameter `color` is that color. The parameter `fallback` is used for the default color. `Color::Default` returns `fallback`.
+The function `color_of` turns a terminal [`Color`](../aetheris-term/grid/enum.Color.md) into an egui color. The parameter `color` is that color. The parameter `fallback` is used for the default color. [`Color::Default`](../aetheris-term/grid/enum.Color.md#member-default) returns `fallback`.
 
-`Color::Index` returns the red, green, and blue bytes from `index_rgb`. `Color::Rgb` returns those three bytes directly.
+[`Color::Index`](../aetheris-term/grid/enum.Color.md#member-index) returns the red, green, and blue bytes from `index_rgb`. [`Color::Rgb`](../aetheris-term/grid/enum.Color.md#member-rgb) returns those three bytes directly.
 
 ### index_rgb
 

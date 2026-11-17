@@ -20,7 +20,7 @@ The script writes `aetheris.ico` in the Cargo `OUT_DIR` directory. It also write
 
 | Modifier and Type | Member | Description |
 | --- | --- | --- |
-| fn | [`main`](#function-main) | The `main` function embeds the window icons when the build target is Windows. |
+| fn | [`main`](#function-main) | The `main` function embeds the window icon when the build target is Windows. |
 | fn | [`write_same`](#function-write_same) | The function `write_same` writes `bytes` to `path` when the file is absent or the bytes differ. |
 | fn | [`find_rc`](#function-find_rc) | The `find_rc` function returns the newest `rc.exe` under the Windows SDK `bin` directory. |
 | fn | [`kits_root`](#function-kits_root) | The `kits_root` function reads `KitsRoot10` from the Windows registry. |
@@ -47,7 +47,7 @@ const EDGES: [u32; 4] = [16, 32, 48, 256];
 fn main()
 ```
 
-The `main` function embeds the window icons when the build target is Windows.
+The `main` function embeds the window icon when the build target is Windows.
 The JPEG path is `../../../src/main/resources/icons/aetheris.jpg` from `CARGO_MANIFEST_DIR`. Cargo reruns this script when that file changes. Any other target operating system returns after that rerun line.
 
 On Windows the function reads the JPEG. `icon_file` builds the icon bytes. The function writes `aetheris.ico` under `OUT_DIR`. It writes `aetheris.rc` in that same directory. It runs `rc.exe` with `/nologo`, `/fo`, `aetheris.res`, and `aetheris.rc`. A start failure panics with the tool path. A failed status panics with the tool's standard error. The link argument is the `aetheris.res` path with each backslash changed to a slash.
