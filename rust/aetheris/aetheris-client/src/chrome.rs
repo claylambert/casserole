@@ -1307,6 +1307,16 @@ impl ThinkPipe {
     }
 }
 
+/// One row kept from a user's thinking file that is not a canvas seat.
+/// `scope` is the file scope. `text` is the stored log. `cell` and `model` stay as read.
+#[derive(Clone)]
+struct KeptThink {
+    scope: String,
+    text: String,
+    cell: String,
+    model: String,
+}
+
 /// The struct `ThinkPaneManager` is the one store of thinking panes.
 /// A canvas key is the user, a separator, and `k:` plus the canvas id.
 /// An SSH key is the user, a separator, and `s:` plus the pane id.
@@ -1314,8 +1324,13 @@ impl ThinkPipe {
 /// `offer` writes that seat and opens it. A fold stays folded.
 /// `finish` ends the block and leaves the seat. `hide` closes the chrome and leaves the seat.
 /// `release` drops the seat. Close does not call `release`. A reply does not call `release`.
+/// `loaded` names users whose file was read. `blocked` names a file that is not version 1.
+/// `kept` holds the scopes in that file that are not canvas seats.
 struct ThinkPaneManager {
     seats: std::collections::HashMap<String, ThinkSeat>,
+    loaded: std::collections::HashSet<String>,
+    blocked: std::collections::HashSet<String>,
+    kept: std::collections::HashMap<String, Vec<KeptThink>>,
 }
 
 impl ThinkPaneManager {
@@ -1323,6 +1338,9 @@ impl ThinkPaneManager {
     fn new() -> Self {
         Self {
             seats: std::collections::HashMap::new(),
+            loaded: std::collections::HashSet::new(),
+            blocked: std::collections::HashSet::new(),
+            kept: std::collections::HashMap::new(),
         }
     }
 
@@ -1464,6 +1482,132 @@ impl ThinkPaneManager {
             Some(seat) => think_log_text(&seat.log.blocks),
             None => String::new(),
         }
+    }
+
+    /// The function `load_user` reads one user's thinking file the first time.
+    /// `user` is that user. `home` is the home directory. `yaml` supplies the shared height and the closed mark.
+    /// A user that is already loaded stays. A blocked file stays unread. A name that is not a safe file name loads nothing.
+    /// A missing file stays an empty seat. A version other than 1 blocks later writes.
+    /// A canvas scope loads only when that key is absent, so the session text wins. The loaded log is not live.
+    /// A scope that is not a canvas seat is kept for the next write. An SSH seat is not in this file.
+    fn load_user(&mut self, user: &str, home: &std::path::Path, yaml: &ThinkYaml) { // @aa-sdd PK-1458 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        if user.is_empty() || self.loaded.contains(user) || self.blocked.contains(user) {
+            return;
+        }
+        if !user_think_ok(user) {
+            self.loaded.insert(user.to_string());
+            return;
+        }
+        let path = user_think_path(home, user);
+        let text = match std::fs::read_to_string(&path) {
+            Ok(text) => text,
+            Err(_) => {
+                self.loaded.insert(user.to_string());
+                self.kept.insert(user.to_string(), Vec::new());
+                return;
+            }
+        };
+        let parsed: serde_yaml::Value = match serde_yaml::from_str(&text) {
+            Ok(parsed) => parsed,
+            Err(_) => {
+                self.blocked.insert(user.to_string());
+                return;
+            }
+        };
+        let Some(root) = parsed.as_mapping() else {
+            self.blocked.insert(user.to_string());
+            return;
+        };
+        if !user_file_version(yaml_key(root, "version")) {
+            self.blocked.insert(user.to_string());
+            return;
+        }
+        let mut kept = Vec::new();
+        if let Some(list) = yaml_key(root, "panes").and_then(serde_yaml::Value::as_sequence) {
+            for row in list {
+                let Some(map) = row.as_mapping() else {
+                    continue;
+                };
+                let scope = yaml_owned(yaml_key(map, "scope"));
+                if scope.is_empty() || scope.contains('\u{1}') {
+                    continue;
+                }
+                let text = yaml_owned(yaml_key(map, "text"));
+                let cell = yaml_owned(yaml_key(map, "cell"));
+                let model = yaml_owned(yaml_key(map, "model"));
+                if scope.starts_with("k:") {
+                    let key = format!("{user}\u{1}{scope}");
+                    if text.is_empty() || self.contains(&key) {
+                        continue;
+                    }
+                    let mut log = ThinkLog::new();
+                    log.blocks = parse_think_log(&text);
+                    log.live = false;
+                    log.cell = parse_cell_text(&cell).unwrap_or([0u8; 16]);
+                    let mut chrome = ThinkChrome::new();
+                    seat_think_home(&log, &mut chrome, yaml);
+                    self.insert_canvas(&key, log, chrome);
+                } else if !text.is_empty() {
+                    kept.push(KeptThink {
+                        scope,
+                        text,
+                        cell,
+                        model,
+                    });
+                }
+            }
+        }
+        self.kept.insert(user.to_string(), kept);
+        self.loaded.insert(user.to_string());
+    }
+
+    /// The function `store_user` writes one user's canvas seats.
+    /// `user` is that user. `home` is the home directory.
+    /// A name that is not a safe file name writes nothing. A blocked file writes nothing.
+    /// A user whose file was not read writes nothing, so a missing read does not wipe the file.
+    /// An empty log is omitted. Scopes that are not canvas seats stay. An SSH seat is not written.
+    fn store_user(&self, user: &str, home: &std::path::Path) {
+        if !user_think_ok(user) || self.blocked.contains(user) || !self.loaded.contains(user) {
+            return;
+        }
+        let mut rows = Vec::new();
+        if let Some(kept) = self.kept.get(user) {
+            rows.extend(kept.iter().cloned());
+        }
+        let prefix = format!("{user}\u{1}");
+        let mut keys: Vec<String> = self
+            .seats
+            .keys()
+            .filter(|key| key.starts_with(&prefix))
+            .cloned()
+            .collect();
+        keys.sort();
+        for key in keys {
+            let scope = &key[prefix.len()..];
+            if !scope.starts_with("k:") {
+                continue;
+            }
+            let Some(seat) = self.seats.get(&key) else {
+                continue;
+            };
+            let text = think_log_text(&seat.log.blocks);
+            if text.is_empty() {
+                continue;
+            }
+            let model = seat
+                .log
+                .blocks
+                .last()
+                .map(|block| think_word_of_tag(&block.tag))
+                .unwrap_or_default();
+            rows.push(KeptThink {
+                scope: scope.to_string(),
+                text,
+                cell: crate::amwp::cell_text(&seat.log.cell),
+                model,
+            });
+        }
+        let _ = write_user_think(&user_think_path(home, user), &rows);
     }
 }
 
@@ -1726,31 +1870,146 @@ fn read_think_log(path: &std::path::Path) -> Vec<ThinkBlock> {
     parse_think_log(&String::from_utf8_lossy(&bytes))
 }
 
-/// The function `load_think_file` loads the thought log, the pane state, and the yaml.
-/// The result is those three values. A missing home directory returns an empty [`ThinkLog`], a new [`ThinkChrome`], and a fresh [`ThinkYaml`].
-/// Otherwise the log file is read. A non-empty block list replaces the empty log. The yaml file is read. `seat_think_home` then applies that yaml to the pane.
+/// The function `load_think_file` loads the pane state and the yaml.
+/// The result is an empty [`ThinkLog`], a [`ThinkChrome`] for that yaml, and the [`ThinkYaml`].
+/// A missing home directory returns an empty log, a new chrome, and a fresh yaml.
+/// The legacy `aetheris-thinking.txt` file is not read. The height and the closed mark come from `aetheris-think.yaml`.
 fn load_think_file() -> (ThinkLog, ThinkChrome, ThinkYaml) {
-    let mut log = ThinkLog::new();
+    let log = ThinkLog::new();
     let mut chrome = ThinkChrome::new();
     let Some(home) = home_dir() else {
         return (log, chrome, ThinkYaml::fresh());
     };
-    let blocks = read_think_log(&think_log_path(&home));
-    if !blocks.is_empty() {
-        log.blocks = blocks;
-    }
     let yaml = read_think_yaml(&think_yaml_path(&home));
     seat_think_home(&log, &mut chrome, &yaml);
     (log, chrome, yaml)
 }
 
-/// The function `store_think_file` writes the thought log.
-/// `log` is the session log. A missing home directory writes nothing. Otherwise the blocks are rendered and written to the thought-log path. A failed write is ignored.
-fn store_think_file(log: &ThinkLog) {
-    let Some(home) = home_dir() else {
-        return;
+/// The function `user_think_ok` reports whether `user` is a safe thinking-file name.
+/// An empty name is not safe. `.` is not safe. `..` is not safe.
+/// A character outside ASCII letters, digits, `.`, `_`, and `-` is not safe.
+fn user_think_ok(user: &str) -> bool {
+    if user.is_empty() || user == "." || user == ".." {
+        return false;
+    }
+    user.chars()
+        .all(|ch| ch.is_ascii_alphanumeric() || ch == '.' || ch == '_' || ch == '-')
+}
+
+/// The function `user_think_path` builds one user's thinking file.
+/// `home` is the home directory. `user` is that user. The file is `home/.casserole/aetheris-thinking/{user}.yaml`.
+fn user_think_path(home: &std::path::Path, user: &str) -> std::path::PathBuf {
+    home.join(".casserole")
+        .join("aetheris-thinking")
+        .join(format!("{user}.yaml"))
+}
+
+/// The function `think_home` returns the directory that holds per-user thinking files.
+/// A test that sets `THINK_HOME` uses that directory. Any other test returns nothing, so the suite does not write the live files.
+/// A run that is not a test uses `home_dir`.
+fn think_home() -> Option<std::path::PathBuf> {
+    #[cfg(test)]
+    {
+        return THINK_HOME.with(|slot| slot.borrow().clone());
+    }
+    #[cfg(not(test))]
+    {
+        home_dir()
+    }
+}
+
+#[cfg(test)]
+thread_local! {
+    static THINK_HOME: std::cell::RefCell<Option<std::path::PathBuf>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// The function `think_version_one` reports whether a yaml version is 1.
+/// `value` is that field. A number 1 is version 1. The text `1` is version 1. Any other value is not.
+fn user_file_version(value: Option<&serde_yaml::Value>) -> bool {
+    match value {
+        Some(serde_yaml::Value::Number(number)) => number.as_i64() == Some(1),
+        Some(serde_yaml::Value::String(text)) => text.trim() == "1",
+        _ => false,
+    }
+}
+
+/// The function `yaml_owned` copies one yaml value as text.
+/// `value` is that field. A missing field is empty. A string is that string. Any other value is its display text.
+fn yaml_owned(value: Option<&serde_yaml::Value>) -> String {
+    match value {
+        Some(serde_yaml::Value::String(text)) => text.clone(),
+        Some(other) => serde_yaml::to_string(other)
+            .unwrap_or_default()
+            .trim()
+            .to_string(),
+        None => String::new(),
+    }
+}
+
+/// The function `think_word_of_tag` reads the model word out of a tag line.
+/// `tag` is that line. The box-drawing marks and the surrounding spaces leave. The word stays.
+fn think_word_of_tag(tag: &str) -> String {
+    tag.trim_matches(|ch: char| ch == '\u{2500}' || ch.is_whitespace())
+        .to_string()
+}
+
+/// The function `write_user_think` writes one user's thinking file.
+/// `path` is that file. `rows` are the panes. The file is version 1. A parent directory is created. A failed write returns false.
+fn write_user_think(path: &std::path::Path, rows: &[KeptThink]) -> bool {
+    let mut panes = serde_yaml::Sequence::new();
+    for row in rows {
+        let mut map = serde_yaml::Mapping::new();
+        map.insert(
+            serde_yaml::Value::String("scope".to_string()),
+            serde_yaml::Value::String(row.scope.clone()),
+        );
+        map.insert(
+            serde_yaml::Value::String("text".to_string()),
+            serde_yaml::Value::String(row.text.clone()),
+        );
+        map.insert(
+            serde_yaml::Value::String("cell".to_string()),
+            serde_yaml::Value::String(row.cell.clone()),
+        );
+        map.insert(
+            serde_yaml::Value::String("model".to_string()),
+            serde_yaml::Value::String(row.model.clone()),
+        );
+        panes.push(serde_yaml::Value::Mapping(map));
+    }
+    let mut root = serde_yaml::Mapping::new();
+    root.insert(
+        serde_yaml::Value::String("version".to_string()),
+        serde_yaml::Value::Number(serde_yaml::Number::from(1i64)),
+    );
+    root.insert(
+        serde_yaml::Value::String("panes".to_string()),
+        serde_yaml::Value::Sequence(panes),
+    );
+    let Ok(body) = serde_yaml::to_string(&serde_yaml::Value::Mapping(root)) else {
+        return false;
     };
-    let _ = write_think_log(&think_log_path(&home), &think_log_text(&log.blocks));
+    write_think_log(path, &body)
+}
+
+/// The function `bind_ssh_think_key` points one SSH pane at the user who is on it.
+/// `stored` is the key already held. `raw_user` is the pane user. `surface_id` is the pane id.
+/// An empty key takes the user and the pane id. `anon` leaves a key that already moved with the pane.
+/// A real user who differs from the stored user takes a new key. The old seat stays where it is.
+fn bind_ssh_think_key(stored: &mut String, raw_user: &str, surface_id: &str) { // @aa-sdd PK-1458 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    let user = crate::vault::sanitize_user(raw_user);
+    if stored.is_empty() {
+        *stored = ThinkPaneManager::ssh_key(&user, surface_id);
+        return;
+    }
+    if user == "anon" {
+        return;
+    }
+    let held = stored.split('\u{1}').next().unwrap_or("");
+    if held != user {
+        *stored = ThinkPaneManager::ssh_key(&user, surface_id);
+    }
 }
 
 /// @aa-sdd L37 rust-aetheris-client.draft.001.md
@@ -4409,11 +4668,25 @@ fn add_mood_choice(
 /// The function `seat_modal` puts one open modal above the pin strip.
 /// `ctx` is the egui context. `layer` is that modal's layer. The layer moves to the top of its order. That layer becomes the modal layer when it is the top one this frame.
 /// The pin strip stays on the foreground. It does not take this top. A modal on the middle order paints under that strip.
+/// An open menu of this modal is a child of the modal. The menu paints above the modal and takes the pointer. The pin strip stays under the modal.
 fn seat_modal(ctx: &egui::Context, layer: egui::LayerId) { // @aa-sdd PK-1454 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     ctx.move_to_top(layer);
     ctx.memory_mut(|mem| {
         mem.set_modal_layer(layer);
     });
+    let parent = ctx.memory(|mem| mem.top_modal_layer()).unwrap_or(layer);
+    if parent != layer {
+        return;
+    }
+    let layers: Vec<egui::LayerId> = ctx.memory(|mem| mem.layer_ids().collect());
+    for child in layers {
+        if child == parent || child.order != parent.order {
+            continue;
+        }
+        if egui::Popup::is_id_open(ctx, child.id) {
+            ctx.set_sublayer(parent, child); // @aa-sdd PK-1459 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+        }
+    }
 }
 
 /// The function `paint_clear_ask` paints the clear-mood question and returns the choice.
@@ -11728,6 +12001,10 @@ thread_local! {
     /// The slot is a thread-local cell, and it starts empty.
     /// The east capsule clears it, then stores the combo rectangle when the combo is painted.
     static USER_COMBO_RECT: std::cell::Cell<Option<egui::Rect>> = const { std::cell::Cell::new(None) };
+    /// `MODEL_FAMILY_RECT` is the test slot for the Model Config family pull-down.
+    /// The slot is a thread-local cell, and it starts empty.
+    /// The family combo stores its button rectangle.
+    static MODEL_FAMILY_RECT: std::cell::Cell<Option<egui::Rect>> = const { std::cell::Cell::new(None) };
     /// `USER_SPIN_RECT` is the test slot for a user spinner rectangle.
     /// The slot is a thread-local cell, and it starts empty.
     /// The east capsule clears it, because that capsule does not paint the spinner.
@@ -19930,9 +20207,8 @@ impl App {
         let view_rows = door.view_rows();
         let pin_bar_open = door.pin_bar_open();
         let opened = open_product_tab(door.product_tab_is_aetheris());
-        let (think, think_chrome, think_yaml) = load_think_file();
-        let mut think_panes = ThinkPaneManager::new();
-        think_panes.insert_canvas(&ThinkPaneManager::canvas_key("", ""), think, think_chrome);
+        let (_legacy, _legacy_chrome, think_yaml) = load_think_file();
+        let think_panes = ThinkPaneManager::new();
         let (vt_chrome, vt_yaml) = load_vt_think();
         let mood = MoodYaml::fresh();
         let mood_owner = String::new();
@@ -20635,10 +20911,8 @@ impl App {
                     }
                     continue;
                 }
-                if pane.ssh_think_key.is_empty() {
-                    pane.ssh_think_key =
-                        ThinkPaneManager::ssh_key(&pane_user, &pane.id.to_string());
-                }
+                let surface = pane.id.to_string();
+                bind_ssh_think_key(&mut pane.ssh_think_key, &pane_user, &surface);
                 ssh_jobs.push((index, pane.ssh_think_key.clone(), accept, piece.clone()));
                 kept.push(piece);
                 show = true;
@@ -20759,7 +21033,7 @@ impl App {
     ///
     /// `land_focused_canvas` clears the canvas list when this pane's user is not the user on the glass. A later body that is a model note calls `take_model_note`. A fault calls `seat_fault` and may open `slide`. `land_open_turn` may copy the prior card's Grok entry onto the new cell, keep that card's thought, and move focus onto the new card with `focus_prompt` and `land_newest`.
     ///
-    /// A changed notebook log reveals the strip and stores the yaml when the blocks are not empty, and `store_think_file` runs either way. A piece that `console_piece_opens` accepts sets `vt_think_on`. `route_console_thought` runs only for a piece whose offered flag is false. A terminal log that gains text opens the strip and may store the terminal yaml. `ask_shell_once` runs next.
+    /// A changed notebook log reveals the strip and stores the yaml when the blocks are not empty, and that user's thinking file is written either way. A piece that `console_piece_opens` accepts sets `vt_think_on`. `route_console_thought` runs only for a piece whose offered flag is false. A terminal log that gains text opens the strip and may store the terminal yaml. `ask_shell_once` runs next.
     ///
     /// `group_after` fails the merge and clears the group when the mux has not answered. A live mux wires the frame and calls `begin_run` on that cell. `seat_mood_canvas` runs, then `pipe_after_doc`. [`PipeWake::Quiet`] changes nothing. [`PipeWake::Status`] stores the status. [`PipeWake::Send`] clears the pipe when the mux is down, and otherwise wires the frame, pins the mood, and calls `begin_run`. A mood drop goes to `seat_mood_slide`. A remembered resend calls `fire_mood_send`.
     ///
@@ -22065,16 +22339,15 @@ impl App {
         ThinkPaneManager::canvas_key(&self.deck_key(), &self.vault_canvas)
     }
 
-    /// The function `claim_canvas` moves a startup seat onto the canvas that just opened.
+    /// The function `claim_canvas` moves one user's seat when that user's canvas id changes.
     /// `old_user` and `old_canvas` are the key from before the load.
-    /// The same user keeps the seat when the canvas id changes.
-    /// An empty old user is the file loaded at startup.
-    /// A different user keeps the old seat and starts a new one.
-    fn claim_canvas(&mut self, old_user: &str, old_canvas: &str) {
+    /// The same non-empty user keeps the seat when the canvas id changes.
+    /// An empty old user stays on the empty key. A different user keeps the old seat.
+    fn claim_canvas(&mut self, old_user: &str, old_canvas: &str) { // @aa-sdd PK-1458 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
         let new_user = self.deck_key();
         let new_key = self.showing_canvas_key();
         let old_key = ThinkPaneManager::canvas_key(old_user, old_canvas);
-        if old_user == new_user || old_user.is_empty() {
+        if !old_user.is_empty() && old_user == new_user {
             self.think_panes.rekey(&old_key, &new_key);
         }
     }
@@ -22129,11 +22402,19 @@ impl App {
         &mut self.think_panes.acquire_canvas(&key).chrome
     }
 
-    /// The function `ensure_focused_ssh_key` stores the focused pane's key the first time.
+    /// The function `ensure_focused_ssh_key` points the focused pane at its login.
+    /// A remembered connect supplies that user. A later login replaces an earlier user and leaves the old seat.
+    /// A key that already moved with the pane stays when this pane has no remembered connect.
     fn ensure_focused_ssh_key(&mut self) {
+        let id = self.pane_id.to_string();
+        if let Some(snap) = &self.last_connect {
+            let user = snap.user.clone();
+            bind_ssh_think_key(&mut self.ssh_think_key, &user, &id);
+            return;
+        }
         if self.ssh_think_key.is_empty() {
-            let user = crate::vault::sanitize_user(&self.user);
-            self.ssh_think_key = ThinkPaneManager::ssh_key(&user, &self.pane_id.to_string());
+            let user = self.user.clone();
+            bind_ssh_think_key(&mut self.ssh_think_key, &user, &id);
         }
     }
 
@@ -22153,17 +22434,16 @@ impl App {
         &mut self.think_panes.acquire_ssh(&key, seed).chrome
     }
 
-    /// The function `ensure_parked_ssh_key` stores a parked pane's key the first time.
+    /// The function `ensure_parked_ssh_key` points a parked pane at its user.
+    /// An empty key takes this pane. A later real user replaces an earlier user and leaves the old seat.
     fn ensure_parked_ssh_key(&mut self, index: usize) {
-        if self.panes[index].ssh_think_key.is_empty() {
-            let id = self.panes[index].id;
-            let user = self.panes[index]
-                .last
-                .as_ref()
-                .map(|snap| crate::vault::sanitize_user(&snap.user))
-                .unwrap_or_default();
-            self.panes[index].ssh_think_key = ThinkPaneManager::ssh_key(&user, &id.to_string());
-        }
+        let id = self.panes[index].id.to_string();
+        let user = self.panes[index]
+            .last
+            .as_ref()
+            .map(|snap| snap.user.clone())
+            .unwrap_or_default();
+        bind_ssh_think_key(&mut self.panes[index].ssh_think_key, &user, &id);
     }
 
     /// The function `parked_ssh_log` returns one parked SSH log, creating the seat once.
@@ -22183,7 +22463,7 @@ impl App {
     }
 
     /// The function `reveal_canvas` opens the showing canvas seat when it holds text.
-    /// A fold stays folded. The saved file is written. The yaml opens when the seat was shut.
+    /// A fold stays folded. That user's thinking file is written. The yaml opens when the seat was shut.
     fn reveal_canvas(&mut self) {
         let key = self.showing_canvas_key();
         let nonempty = self
@@ -22197,9 +22477,8 @@ impl App {
                 self.store_think_yaml();
             }
         }
-        if let Some(seat) = self.think_panes.seats.get(&key) {
-            store_think_file(&seat.log);
-        }
+        let user = self.deck_key();
+        self.store_named_think(&user);
     }
 
     /// The function `reveal_seat` opens the chrome for `key` when that log holds text.
@@ -22473,8 +22752,49 @@ impl App {
         })
     }
 
+    /// The method `store_named_think` writes one user's canvas seats.
+    /// `user` is that user. The file is read first when it has not been read, so a write does not wipe unread scopes.
+    /// A test with no `THINK_HOME` writes nothing.
+    fn store_named_think(&mut self, user: &str) {
+        let Some(home) = think_home() else {
+            return;
+        };
+        let App {
+            think_panes,
+            think_yaml,
+            ..
+        } = self;
+        think_panes.load_user(user, &home, think_yaml);
+        think_panes.store_user(user, &home);
+    }
+
+    /// The method `ensure_user_think` loads the showing user's file and seats the showing canvas.
+    /// A key that already holds session text keeps that text. A missing showing seat takes the shared height.
+    /// An empty user does not gain a seat. A test with no `THINK_HOME` loads nothing.
+    fn ensure_user_think(&mut self) {
+        let user = self.deck_key();
+        let key = self.showing_canvas_key();
+        let Some(home) = think_home() else {
+            return;
+        };
+        let App {
+            think_panes,
+            think_yaml,
+            ..
+        } = self;
+        think_panes.load_user(&user, &home, think_yaml);
+        if user.is_empty() || think_panes.contains(&key) {
+            return;
+        }
+        let mut chrome = ThinkChrome::new();
+        let log = ThinkLog::new();
+        seat_think_home(&log, &mut chrome, think_yaml);
+        think_panes.insert_canvas(&key, log, chrome);
+    }
+
     /// The method `adopt_loaded` replaces the showing canvas with a loaded vault canvas.
-    /// `loaded` is that [`LoadedCanvas`]. The canvas that was showing is not stored in `decks`.
+    /// `loaded` is that [`LoadedCanvas`]. `prior_user` and `prior_canvas` are the glass from before the lift.
+    /// The canvas that was showing is not stored in `decks`.
     ///
     /// The method reads `card_stamp`. If that result is negative, the method treats it as 0. The value is then a `u64`.
     /// If the value is greater than `cell_seq`, the value replaces `cell_seq`.
@@ -22491,9 +22811,7 @@ impl App {
     /// `vault` becomes the open [`crate::vault::Vault`] from `loaded`.
     ///
     /// `scroll_seat` becomes `None`. `canvas_sig_set` becomes false. `seat_mood_canvas` stores a clone of `vault_canvas` on `mood.canvas`.
-    fn adopt_loaded(&mut self, loaded: LoadedCanvas) {
-        let old_user = self.deck_key();
-        let old_canvas = self.vault_canvas.clone();
+    fn adopt_loaded(&mut self, loaded: LoadedCanvas, prior_user: &str, prior_canvas: &str) {
         let stamp = card_stamp().max(0) as u64;
         if stamp > self.cell_seq {
             self.cell_seq = stamp;
@@ -22520,7 +22838,7 @@ impl App {
         self.vault_canvas = loaded.canvas_id;
         self.vault_hold = loaded.hold;
         self.vault = Some(loaded.vault);
-        self.claim_canvas(&old_user, &old_canvas);
+        self.claim_canvas(prior_user, prior_canvas);
         self.scroll_seat = None;
         self.canvas_sig_set = false;
         self.seat_mood_canvas();
@@ -22536,28 +22854,34 @@ impl App {
             return;
         }
         let open = self.deck_key();
+        let open_canvas = self.vault_canvas.clone();
         if !open.is_empty() && open == want {
             self.seat_mood_canvas();
+            self.ensure_user_think();
             return;
         }
         if self.decks.iter().any(|deck| deck.user == want) {
             if !open.is_empty() {
+                self.store_named_think(&open);
                 self.store_vault();
                 let parked = self.lift_showing(open);
                 self.remember_deck(parked);
             }
             let _ = self.plant_user(&want);
+            self.ensure_user_think();
             return;
         }
         let Some(loaded) = self.load_user_canvas(&want) else {
             return;
         };
         if !open.is_empty() {
+            self.store_named_think(&open);
             self.store_vault();
-            let parked = self.lift_showing(open);
+            let parked = self.lift_showing(open.clone());
             self.remember_deck(parked);
         }
-        self.adopt_loaded(loaded);
+        self.adopt_loaded(loaded, &open, &open_canvas);
+        self.ensure_user_think();
     }
 
     /// The model snap for a cell on the glass or on a parked seat.
@@ -24165,7 +24489,7 @@ impl App {
         } else {
             label
         };
-        egui::ComboBox::from_id_salt("model-family")
+        let family_box = egui::ComboBox::from_id_salt("model-family")
             .icon(emerald_combo_arrow)
             .selected_text(shown)
             .show_ui(ui, |ui| {
@@ -24182,6 +24506,8 @@ impl App {
                     }
                 }
             });
+        #[cfg(test)]
+        MODEL_FAMILY_RECT.with(|slot| slot.set(Some(family_box.response.rect)));
         if let Some(family) = picked {
             let (stored, think, index) = self.model_card(console, cell);
             let earlier: Vec<String> = if console {
@@ -26178,6 +26504,7 @@ impl App {
         let last = prompts.len().saturating_sub(1);
         let focus_at_paint = self.focus;
         let mut focus_now = focus_at_paint;
+        self.ensure_user_think();
         let think_key = self.showing_canvas_key();
         let think_blocks = self.think_panes.blocks(&think_key);
         let mut think_chrome = self.think_panes.chrome_copy(&think_key);
@@ -27353,9 +27680,8 @@ impl App {
         }
         if clear_think_log {
             self.think_panes.clear_log(&think_key);
-            if let Some(seat) = self.think_panes.seats.get(&think_key) {
-                store_think_file(&seat.log);
-            }
+            let user = self.deck_key();
+            self.store_named_think(&user);
         }
         let view_modal = self.view.is_some();
         if !view_modal {
@@ -37854,6 +38180,91 @@ mod tests {
     }
 
     #[test]
+    /// The test `the_model_menu_sits_on_the_modal` checks the Model Config pull-down.
+    /// The plate is [`Plate::Aetheris`]. The console model opens. The screen is 900 by 700.
+    /// A click on the family button opens the menu. The menu layer sits above the modal.
+    /// The menu takes the pointer. A click in the menu stores a family.
+    fn the_model_menu_sits_on_the_modal() {
+        let mut app = super::App::new(crate::door::Door::memory_only(), None);
+        app.plate = super::Plate::Aetheris;
+        app.pin_bar_open = true;
+        app.model.open = true;
+        app.model.console = true;
+        let ctx = app.ctx.clone();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(900.0, 700.0));
+        let mut clock = 2.0_f64;
+        let mut paint = |app: &mut super::App, events: Vec<egui::Event>| {
+            clock += 0.05;
+            ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(screen),
+                    events,
+                    time: Some(clock),
+                    ..Default::default()
+                },
+                |ui| {
+                    egui::CentralPanel::default().show(ui, |ui| {
+                        app.ui(ui);
+                    });
+                },
+            )
+            .drop_without_applying_deltas();
+        };
+        let above = |upper: egui::LayerId, lower: egui::LayerId, label: &str| {
+            let ids: Vec<egui::LayerId> = ctx.memory(|mem| mem.layer_ids().collect());
+            let at = |layer: egui::LayerId| ids.iter().position(|item| *item == layer);
+            let up = at(upper).expect(label);
+            let down = at(lower).expect(label);
+            assert!(up > down, "{label} {up} under {down}");
+        };
+        paint(&mut app, Vec::new());
+        paint(&mut app, Vec::new());
+        let family = super::MODEL_FAMILY_RECT
+            .with(|slot| slot.get())
+            .expect("family button");
+        let modal = egui::LayerId::new(
+            egui::Order::Foreground,
+            egui::Id::unique("aetheris-model-config"),
+        );
+        let click = |pos: egui::Pos2, pressed: bool| egui::Event::PointerButton {
+            pos,
+            button: egui::PointerButton::Primary,
+            pressed,
+            modifiers: egui::Modifiers::NONE,
+        };
+        let at = family.center();
+        paint(&mut app, vec![egui::Event::PointerMoved(at)]);
+        paint(&mut app, vec![click(at, true)]);
+        paint(&mut app, vec![click(at, false)]);
+        let layers: Vec<egui::LayerId> = ctx.memory(|mem| mem.layer_ids().collect());
+        let menu = layers
+            .iter()
+            .copied()
+            .find(|layer| egui::Popup::is_id_open(&ctx, layer.id))
+            .expect("family menu");
+        above(menu, modal, "the menu is under the modal");
+        ctx.memory(|mem| {
+            assert!(mem.allows_interaction(menu));
+            assert_eq!(mem.top_modal_layer(), Some(modal));
+        });
+        let menu_rect = ctx.memory(|mem| mem.area_rect(menu.id)).expect("menu rect");
+        let word = menu_rect.center();
+        paint(&mut app, vec![egui::Event::PointerMoved(word)]);
+        let menu_rect = ctx.memory(|mem| mem.area_rect(menu.id)).unwrap_or(menu_rect);
+        let word = menu_rect.center();
+        assert_eq!(
+            ctx.layer_id_at(word),
+            Some(menu),
+            "pointer {:?} landed on {:?}",
+            word,
+            ctx.layer_id_at(word)
+        );
+        paint(&mut app, vec![click(word, true)]);
+        paint(&mut app, vec![click(word, false)]);
+        assert!(app.model.family.is_some(), "the menu click missed {menu_rect:?}");
+    }
+
+    #[test]
     /// The `the_view_window_keeps_the_reply` test checks the view text, the find bar, and the saved view rectangle.
     /// [`VIEW_LABEL`] is `View`. [`VIEW_CLOSE`] is `Close`. [`view_body`] of an empty string returns nothing. [`view_body`] of a space and a newline returns nothing. [`view_body`] of `  yo` returns that text.
     /// [`view_title`] of `Turn 3` is `View`, an em dash, and `Turn 3`. [`run_chord`] with Enter, Ctrl, no running card, and an open view returns false.
@@ -45393,5 +45804,113 @@ casserole:
         assert!(panes.contains(&ssh));
         assert!(panes.contains(&other));
         assert!(panes.contains(&bob));
+    }
+
+    /// A fresh user does not take another user's thinking pane.
+    /// An empty startup seat stays on the empty key. The same user still moves when the canvas id changes.
+    /// An SSH pane that logged in as anon takes the real user on the next login and leaves the old log.
+    /// Two user files keep two logs. A scope that is not a canvas seat stays in the file. The session text wins over the file.
+    #[test]
+    fn a_fresh_user_does_not_take_another_users_thinking() {
+        let mut app = super::App::new(crate::door::Door::memory_only(), None);
+        let startup = super::ThinkPaneManager::canvas_key("", "");
+        app.think_panes
+            .offer(&startup, [1u8; 16], "gemma", "other-user");
+        let ada = super::ThinkPaneManager::canvas_key("ada", "deck-ada");
+        app.think_panes
+            .offer(&ada, [2u8; 16], "llama", "ada-thought");
+        app.canvas_user = "bob".to_string();
+        app.vault_canvas = "deck-bob".to_string();
+        app.claim_canvas("", "");
+        let bob = super::ThinkPaneManager::canvas_key("bob", "deck-bob");
+        assert!(!app.think_panes.contains(&bob) || app.think_panes.log_text(&bob).is_empty());
+        assert!(app.think_panes.log_text(&startup).contains("other-user"));
+        assert!(app.think_panes.log_text(&ada).contains("ada-thought"));
+        app.canvas_user = "ada".to_string();
+        app.vault_canvas = "deck-next".to_string();
+        app.claim_canvas("ada", "deck-ada");
+        let next = super::ThinkPaneManager::canvas_key("ada", "deck-next");
+        assert!(app.think_panes.log_text(&next).contains("ada-thought"));
+        assert!(!app.think_panes.contains(&ada));
+        assert!(app.think_panes.log_text(&startup).contains("other-user"));
+
+        app.user.clear();
+        app.last_connect = None;
+        app.ensure_focused_ssh_key();
+        let anon = app.ssh_think_key.clone();
+        assert!(anon.contains("anon"));
+        app.think_panes
+            .offer(&anon, [5u8; 16], "ollama", "old-shell");
+        app.user = "ada".to_string();
+        app.last_connect = Some(super::ConnectSnap {
+            host: "127.0.0.1".to_string(),
+            port: "22".to_string(),
+            user: "ada".to_string(),
+            password: String::new(),
+        });
+        app.ensure_focused_ssh_key();
+        assert!(app.ssh_think_key.contains("ada"));
+        assert!(!app.ssh_think_key.contains('\u{1}' ) || !app.ssh_think_key.starts_with("anon"));
+        assert!(app.think_panes.log_text(&anon).contains("old-shell"));
+        let ada_ssh = app.ssh_think_key.clone();
+        assert!(app.think_panes.blocks(&ada_ssh).is_empty());
+        let kept = app.ssh_think_key.clone();
+        app.pane_id = 99;
+        app.ensure_focused_ssh_key();
+        assert_eq!(app.ssh_think_key, kept);
+        app.last_connect = None;
+        app.user = "bob".to_string();
+        app.ensure_focused_ssh_key();
+        assert_eq!(app.ssh_think_key, kept);
+
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("clock")
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!("aetheris-f259-{nanos}"));
+        std::fs::create_dir_all(&dir).expect("temp");
+        let yaml = super::ThinkYaml::fresh();
+        let mut panes = super::ThinkPaneManager::new();
+        let foreign = dir
+            .join(".casserole")
+            .join("aetheris-thinking")
+            .join("ada.yaml");
+        std::fs::create_dir_all(foreign.parent().expect("parent")).expect("dir");
+        let prior = "version: 1\npanes:\n  - scope: g:group\n    text: kept-group\n    cell: \"\"\n    model: gemma\n  - scope: \"k:c1\"\n    text: \"file-ada\"\n    cell: \"\"\n    model: gemma\n";
+        std::fs::write(&foreign, prior).expect("seed");
+        let ada_key = super::ThinkPaneManager::canvas_key("ada", "c1");
+        panes.offer(&ada_key, [3u8; 16], "gemma", "session-wins");
+        panes.load_user("ada", &dir, &yaml);
+        assert!(panes.log_text(&ada_key).contains("session-wins"));
+        assert!(!panes.log_text(&ada_key).contains("file-ada"));
+        assert!(panes.seats.get(&ada_key).expect("ada").log.live);
+        panes.store_user("ada", &dir);
+        let bob_key = super::ThinkPaneManager::canvas_key("bob", "c9");
+        panes.offer(&bob_key, [4u8; 16], "llama", "bob-text");
+        panes.finish(&bob_key);
+        panes.load_user("bob", &dir, &yaml);
+        panes.store_user("bob", &dir);
+        let ada_body = std::fs::read_to_string(&foreign).expect("ada file");
+        let bob_file = dir
+            .join(".casserole")
+            .join("aetheris-thinking")
+            .join("bob.yaml");
+        let bob_body = std::fs::read_to_string(&bob_file).expect("bob file");
+        assert!(ada_body.contains("session-wins"));
+        assert!(ada_body.contains("kept-group"));
+        assert!(!ada_body.contains("bob-text"));
+        assert!(bob_body.contains("bob-text"));
+        assert!(!bob_body.contains("session-wins"));
+        let mut fresh = super::ThinkPaneManager::new();
+        fresh.load_user("ada", &dir, &yaml);
+        assert!(fresh.log_text(&ada_key).contains("session-wins"));
+        assert!(!fresh.seats.get(&ada_key).expect("loaded").log.live);
+        assert!(!fresh.contains(&bob_key));
+        assert!(!super::user_think_ok(""));
+        assert!(!super::user_think_ok("."));
+        assert!(!super::user_think_ok(".."));
+        assert!(!super::user_think_ok("a/b"));
+        assert!(super::user_think_ok("ada"));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

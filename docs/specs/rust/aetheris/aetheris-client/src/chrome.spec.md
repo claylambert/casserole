@@ -338,3 +338,13 @@ An open modal sits above the pin strip. The pin strip stays on the foreground. A
 
 One manager holds the thinking panes. One canvas keeps one pane. Every cell on that canvas writes that pane. One SSH pane keeps one pane. Close hides the pane. The next thought opens that same pane. A fold stays folded. The manager drops a pane when that session ends. Closing an SSH pane is that end. A reply leaves the pane in place. The methods are `acquire_canvas`, `release`, and `close_focused_pane`. The file is [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs).
 **semantic-key:** PK-1457
+
+## A fresh user keeps their own thinking pane
+
+A fresh user keeps their own thinking pane. The canvas key is the user, a separator, and k: plus the canvas id. The SSH key is the user, a separator, and s: plus the pane id. An empty user stays on the empty key. The same user keeps the seat when the canvas id changes. Each user is one file under the thinking directory. A loaded log is not live. An SSH login that changes the user points the pane at the new key and leaves the old seat. The methods are `claim_canvas`, `load_user`, and `bind_ssh_think_key`. The file is [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs).
+**semantic-key:** PK-1458
+
+## A modal's menu sits on the modal
+
+A modal stays on top. A child of that modal sits on the modal. An open menu is a sublayer of the top modal. The menu paints above the modal and takes the pointer. The pin strip stays under the modal. The call is `set_sublayer`. The file is [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs).
+**semantic-key:** PK-1459

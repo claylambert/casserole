@@ -324,15 +324,15 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | fn | [`seat_control_status`](#method-seat_control_status) | A shell word moves the connection bar. A canvas line does not call this. |
 | fn | [`deck_key`](#method-deck_key) | The user whose canvas is on the glass. Empty until a vault is open. |
 | fn | [`showing_canvas_key`](#method-showing_canvas_key) | The key of the canvas pane on the glass. |
-| fn | [`claim_canvas`](#method-claim_canvas) | The function `claim_canvas` moves a startup seat onto the canvas that just opened. |
+| fn | [`claim_canvas`](#method-claim_canvas) | The function `claim_canvas` moves one user's seat when that user's canvas id changes. |
 | fn | [`finish_showing`](#method-finish_showing) | The function `finish_showing` ends the open block on the canvas that is showing. |
 | fn | [`land_showing_scope`](#method-land_showing_scope) | The function `land_showing_scope` applies one scope piece to the showing canvas. |
 | fn | [`canvas_log`](#method-canvas_log) | The function `canvas_log` returns the showing canvas log, creating the seat once. |
 | fn | [`canvas_chrome`](#method-canvas_chrome) | The function `canvas_chrome` returns the showing canvas chrome, creating the seat once. |
-| fn | [`ensure_focused_ssh_key`](#method-ensure_focused_ssh_key) | The function `ensure_focused_ssh_key` stores the focused pane's key the first time. |
+| fn | [`ensure_focused_ssh_key`](#method-ensure_focused_ssh_key) | The function `ensure_focused_ssh_key` points the focused pane at its login. |
 | fn | [`focused_ssh_log`](#method-focused_ssh_log) | The function `focused_ssh_log` returns the focused SSH log, creating the seat once. |
 | fn | [`focused_ssh_chrome`](#method-focused_ssh_chrome) | The function `focused_ssh_chrome` returns the focused SSH chrome, creating the seat once. |
-| fn | [`ensure_parked_ssh_key`](#method-ensure_parked_ssh_key) | The function `ensure_parked_ssh_key` stores a parked pane's key the first time. |
+| fn | [`ensure_parked_ssh_key`](#method-ensure_parked_ssh_key) | The function `ensure_parked_ssh_key` points a parked pane at its user. |
 | fn | [`parked_ssh_log`](#method-parked_ssh_log) | The function `parked_ssh_log` returns one parked SSH log, creating the seat once. |
 | fn | [`parked_ssh_chrome`](#method-parked_ssh_chrome) | The function `parked_ssh_chrome` returns one parked SSH chrome, creating the seat once. |
 | fn | [`reveal_canvas`](#method-reveal_canvas) | The function `reveal_canvas` opens the showing canvas seat when it holds text. |
@@ -348,6 +348,8 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | fn | [`remember_deck`](#method-remember_deck) | The method `remember_deck` stores one user's canvas in `decks`. |
 | fn | [`plant_user`](#method-plant_user) | Put a parked user back on the glass. False when that seat is absent. |
 | fn | [`load_user_canvas`](#method-load_user_canvas) | The method `load_user_canvas` reads one user's first canvas from the vault file. |
+| fn | [`store_named_think`](#method-store_named_think) | The method `store_named_think` writes one user's canvas seats. |
+| fn | [`ensure_user_think`](#method-ensure_user_think) | The method `ensure_user_think` loads the showing user's file and seats the showing canvas. |
 | fn | [`adopt_loaded`](#method-adopt_loaded) | The method `adopt_loaded` replaces the showing canvas with a loaded vault canvas. |
 | fn | [`seat_canvas_user`](#method-seat_canvas_user) | The named user takes the glass. The user who was showing keeps the seat and the run. |
 | fn | [`card_snap`](#method-card_snap) | The model snap for a cell on the glass or on a parked seat. |
@@ -2295,7 +2297,7 @@ A token reply stores the focused Roux counts. An export file calls `land_transfe
 
 `land_focused_canvas` clears the canvas list when this pane's user is not the user on the glass. A later body that is a model note calls `take_model_note`. A fault calls `seat_fault` and may open `slide`. `land_open_turn` may copy the prior card's Grok entry onto the new cell, keep that card's thought, and move focus onto the new card with `focus_prompt` and `land_newest`.
 
-A changed notebook log reveals the strip and stores the yaml when the blocks are not empty, and `store_think_file` runs either way. A piece that `console_piece_opens` accepts sets `vt_think_on`. `route_console_thought` runs only for a piece whose offered flag is false. A terminal log that gains text opens the strip and may store the terminal yaml. `ask_shell_once` runs next.
+A changed notebook log reveals the strip and stores the yaml when the blocks are not empty, and that user's thinking file is written either way. A piece that `console_piece_opens` accepts sets `vt_think_on`. `route_console_thought` runs only for a piece whose offered flag is false. A terminal log that gains text opens the strip and may store the terminal yaml. `ask_shell_once` runs next.
 
 `group_after` fails the merge and clears the group when the mux has not answered. A live mux wires the frame and calls `begin_run` on that cell. `seat_mood_canvas` runs, then `pipe_after_doc`. [`PipeWake::Quiet`](enum.PipeWake.md#member-quiet) changes nothing. [`PipeWake::Status`](enum.PipeWake.md#member-status) stores the status. [`PipeWake::Send`](enum.PipeWake.md#member-send) clears the pipe when the mux is down, and otherwise wires the frame, pins the mood, and calls `begin_run`. A mood drop goes to `seat_mood_slide`. A remembered resend calls `fire_mood_send`.
 
@@ -2739,11 +2741,10 @@ The user is `deck_key`. The canvas id is `vault_canvas`.
 fn claim_canvas(&mut self, old_user: &str, old_canvas: &str)
 ```
 
-The function `claim_canvas` moves a startup seat onto the canvas that just opened.
+The function `claim_canvas` moves one user's seat when that user's canvas id changes.
 `old_user` and `old_canvas` are the key from before the load.
-The same user keeps the seat when the canvas id changes.
-An empty old user is the file loaded at startup.
-A different user keeps the old seat and starts a new one.
+The same non-empty user keeps the seat when the canvas id changes.
+An empty old user stays on the empty key. A different user keeps the old seat.
 
 ### finish_showing
 
@@ -2795,7 +2796,9 @@ The function `canvas_chrome` returns the showing canvas chrome, creating the sea
 fn ensure_focused_ssh_key(&mut self)
 ```
 
-The function `ensure_focused_ssh_key` stores the focused pane's key the first time.
+The function `ensure_focused_ssh_key` points the focused pane at its login.
+A remembered connect supplies that user. A later login replaces an earlier user and leaves the old seat.
+A key that already moved with the pane stays when this pane has no remembered connect.
 
 ### focused_ssh_log
 
@@ -2825,7 +2828,8 @@ The function `focused_ssh_chrome` returns the focused SSH chrome, creating the s
 fn ensure_parked_ssh_key(&mut self, index: usize)
 ```
 
-The function `ensure_parked_ssh_key` stores a parked pane's key the first time.
+The function `ensure_parked_ssh_key` points a parked pane at its user.
+An empty key takes this pane. A later real user replaces an earlier user and leaves the old seat.
 
 ### parked_ssh_log
 
@@ -2856,7 +2860,7 @@ fn reveal_canvas(&mut self)
 ```
 
 The function `reveal_canvas` opens the showing canvas seat when it holds text.
-A fold stays folded. The saved file is written. The yaml opens when the seat was shut.
+A fold stays folded. That user's thinking file is written. The yaml opens when the seat was shut.
 
 ### reveal_seat
 
@@ -3013,16 +3017,41 @@ The first canvas is kept. If the canvas list is empty, the method returns `None`
 The held ids alone do not produce a [`LoadedCanvas`](struct.LoadedCanvas.md). If the card list is not empty, the method returns a [`LoadedCanvas`](struct.LoadedCanvas.md).
 `vault` is the open vault. `cards` and `hold` are that split. `canvas_id` is the canvas id.
 
+### store_named_think
+
+<a id="method-store_named_think"></a>
+
+```rust
+fn store_named_think(&mut self, user: &str)
+```
+
+The method `store_named_think` writes one user's canvas seats.
+`user` is that user. The file is read first when it has not been read, so a write does not wipe unread scopes.
+A test with no `THINK_HOME` writes nothing.
+
+### ensure_user_think
+
+<a id="method-ensure_user_think"></a>
+
+```rust
+fn ensure_user_think(&mut self)
+```
+
+The method `ensure_user_think` loads the showing user's file and seats the showing canvas.
+A key that already holds session text keeps that text. A missing showing seat takes the shared height.
+An empty user does not gain a seat. A test with no `THINK_HOME` loads nothing.
+
 ### adopt_loaded
 
 <a id="method-adopt_loaded"></a>
 
 ```rust
-fn adopt_loaded(&mut self, loaded: LoadedCanvas)
+fn adopt_loaded(&mut self, loaded: LoadedCanvas, prior_user: &str, prior_canvas: &str)
 ```
 
 The method `adopt_loaded` replaces the showing canvas with a loaded vault canvas.
-`loaded` is that [`LoadedCanvas`](struct.LoadedCanvas.md). The canvas that was showing is not stored in `decks`.
+`loaded` is that [`LoadedCanvas`](struct.LoadedCanvas.md). `prior_user` and `prior_canvas` are the glass from before the lift.
+The canvas that was showing is not stored in `decks`.
 
 The method reads `card_stamp`. If that result is negative, the method treats it as 0. The value is then a `u64`.
 If the value is greater than `cell_seq`, the value replaces `cell_seq`.

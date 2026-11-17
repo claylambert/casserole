@@ -15,6 +15,8 @@ The same key returns the same seat. A different user has a different seat.
 `offer` writes that seat and opens it. A fold stays folded.
 `finish` ends the block and leaves the seat. `hide` closes the chrome and leaves the seat.
 `release` drops the seat. Close does not call `release`. A reply does not call `release`.
+`loaded` names users whose file was read. `blocked` names a file that is not version 1.
+`kept` holds the scopes in that file that are not canvas seats.
 
 ## Field Summary
 
@@ -22,6 +24,10 @@ The same key returns the same seat. A different user has a different seat.
 | --- | --- | --- |
 | std::collections::HashMap<String | [`seats`](#member-seats) |  |
 | > | [`ThinkSeat`](#member-thinkseat) |  |
+| std::collections::HashSet<String> | [`loaded`](#member-loaded) |  |
+| std::collections::HashSet<String> | [`blocked`](#member-blocked) |  |
+| std::collections::HashMap<String | [`kept`](#member-kept) |  |
+| <KeptThink>> | [`Vec`](#member-vec) |  |
 
 ## Method Summary
 
@@ -44,6 +50,8 @@ The same key returns the same seat. A different user has a different seat.
 | fn | [`clear_log`](#method-clear_log) | The function `clear_log` wipes the text and leaves the strip open. |
 | fn | [`release`](#method-release) | The function `release` drops the seat for `key`. |
 | fn | [`log_text`](#method-log_text) | The function `log_text` renders the log for `key`. |
+| fn | [`load_user`](#method-load_user) | The function `load_user` reads one user's thinking file the first time. |
+| fn | [`store_user`](#method-store_user) | The function `store_user` writes one user's canvas seats. |
 
 ## Field Detail
 
@@ -61,6 +69,38 @@ seats: std::collections::HashMap<String
 
 ```rust
 ThinkSeat>
+```
+
+### loaded
+
+<a id="member-loaded"></a>
+
+```rust
+loaded: std::collections::HashSet<String>
+```
+
+### blocked
+
+<a id="member-blocked"></a>
+
+```rust
+blocked: std::collections::HashSet<String>
+```
+
+### kept
+
+<a id="member-kept"></a>
+
+```rust
+kept: std::collections::HashMap<String
+```
+
+### Vec
+
+<a id="member-vec"></a>
+
+```rust
+Vec<KeptThink>>
 ```
 
 ## Method Detail
@@ -252,6 +292,35 @@ fn log_text(&self, key: &str) -> String
 
 The function `log_text` renders the log for `key`.
 A missing key returns an empty string and does not create a seat.
+
+### load_user
+
+<a id="method-load_user"></a>
+
+```rust
+fn load_user(&mut self, user: &str, home: &std::path::Path, yaml: &ThinkYaml)
+```
+
+The function `load_user` reads one user's thinking file the first time.
+`user` is that user. `home` is the home directory. `yaml` supplies the shared height and the closed mark.
+A user that is already loaded stays. A blocked file stays unread. A name that is not a safe file name loads nothing.
+A missing file stays an empty seat. A version other than 1 blocks later writes.
+A canvas scope loads only when that key is absent, so the session text wins. The loaded log is not live.
+A scope that is not a canvas seat is kept for the next write. An SSH seat is not in this file.
+
+### store_user
+
+<a id="method-store_user"></a>
+
+```rust
+fn store_user(&self, user: &str, home: &std::path::Path)
+```
+
+The function `store_user` writes one user's canvas seats.
+`user` is that user. `home` is the home directory.
+A name that is not a safe file name writes nothing. A blocked file writes nothing.
+A user whose file was not read writes nothing, so a missing read does not wipe the file.
+An empty log is omitted. Scopes that are not canvas seats stay. An SSH seat is not written.
 
 ---
 

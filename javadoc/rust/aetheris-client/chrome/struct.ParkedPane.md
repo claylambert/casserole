@@ -11,7 +11,7 @@ struct ParkedPane
 The `ParkedPane` struct is one terminal that is not the pane in front.
 The focused pane keeps its grid and session on [`App`](struct.App.md). This struct keeps the same kind of state for every other pane.
 
-`id` is the pane id. `grid` is that pane's [`Grid`](../../aetheris-term/grid/struct.Grid.md). `session` is the SSH session, or `None` when the pane is down. `link` is the [`PaneLink`](enum.PaneLink.md). `at_tail` is true when the view sits on the tail. `anchor` is the selection start. `current` is the selection end. Either end is `None` when that end is absent.
+`id` is the pane id. `grid` is that pane's `Grid`. `session` is the SSH session, or `None` when the pane is down. `link` is the [`PaneLink`](enum.PaneLink.md). `at_tail` is true when the view sits on the tail. `anchor` is the selection start. `current` is the selection end. Either end is `None` when that end is absent.
 
 `scroll_lines` is a menu page or line motion that is still waiting. A positive count moves toward the tail. `scroll_base` is the offset that motion starts from. `None` uses the focused scroll area. `menu_jump` is true when Clear Buffer asked the next paint to sit on the tail.
 

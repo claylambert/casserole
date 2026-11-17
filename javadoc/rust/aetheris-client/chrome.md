@@ -80,6 +80,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | struct | [`ThinkChrome`](chrome/struct.ThinkChrome.md) | The struct `ThinkChrome` is the fold, the close, and the dragged height of a thought pane. |
 | struct | [`ThinkSeat`](chrome/struct.ThinkSeat.md) | The struct `ThinkSeat` is one thinking pane. |
 | struct | [`ThinkPipe`](chrome/struct.ThinkPipe.md) | The struct `ThinkPipe` writes one chunk on a pane the caller already holds. |
+| struct | [`KeptThink`](chrome/struct.KeptThink.md) | One row kept from a user's thinking file that is not a canvas seat. |
 | struct | [`ThinkPaneManager`](chrome/struct.ThinkPaneManager.md) | The struct `ThinkPaneManager` is the one store of thinking panes. |
 | struct | [`ThinkStrip`](chrome/struct.ThinkStrip.md) | The struct `ThinkStrip` is the result of painting one thought strip. |
 | struct | [`ThinkYaml`](chrome/struct.ThinkYaml.md) | The struct `ThinkYaml` is version 1 of the shared think file `aetheris-think.yaml`. |
@@ -481,6 +482,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | const | [`VT_CLEAR_TIP`](#constant-vt_clear_tip) | `VT_CLEAR_TIP` is the hover text on the Clear button of the terminal thinking strip. |
 | const | [`VT_GRIP_TIP`](#constant-vt_grip_tip) | `VT_GRIP_TIP` is the hover text on the drag row of the terminal thinking strip. |
 | const | [`VT_BELOW_CLEAR`](#constant-vt_below_clear) | The SSH console starts this far under the Clear button while the strip is open. |
+| static | [`THINK_HOME`](#constant-think_home) |  |
 | const | [`MOOD_YAML_FILE`](#constant-mood_yaml_file) | `MOOD_YAML_FILE` is the file name of the shared mood record. |
 | const | [`HOST_SYSTEM`](#constant-host_system) | Vestige host sentence. Tests lock that a new working set leaves it off the wire. |
 | const | [`MOOD_ACTIVATE`](#constant-mood_activate) | Legacy activate sentence. A new send leaves this row off. |
@@ -616,6 +618,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | static | [`CANVAS_NORTH_LAYER`](#constant-canvas_north_layer) | `CANVAS_NORTH_LAYER` is the test slot for the canvas header layer. |
 | static | [`CONTROL_MARK_RECT`](#constant-control_mark_rect) | `CONTROL_MARK_RECT` is the test slot for the connection-bar fold mark. |
 | static | [`USER_COMBO_RECT`](#constant-user_combo_rect) | `USER_COMBO_RECT` is the test slot for the user combo. |
+| static | [`MODEL_FAMILY_RECT`](#constant-model_family_rect) | `MODEL_FAMILY_RECT` is the test slot for the Model Config family pull-down. |
 | static | [`USER_SPIN_RECT`](#constant-user_spin_rect) | `USER_SPIN_RECT` is the test slot for a user spinner rectangle. |
 | const | [`USER_COMBO_W`](#constant-user_combo_w) | Preferred width of the connected-user pull-down. Java sets 160. |
 | const | [`USER_COMBO_MAX`](#constant-user_combo_max) | Ceiling so a long name stays off the master buttons. Java sets 180. |
@@ -718,8 +721,15 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`parse_think_log`](#function-parse_think_log) | The function `parse_think_log` reads a thought log back into blocks. |
 | fn | [`write_think_log`](#function-write_think_log) | The function `write_think_log` writes the thought log to disk. |
 | fn | [`read_think_log`](#function-read_think_log) | The function `read_think_log` loads the thought log from disk. |
-| fn | [`load_think_file`](#function-load_think_file) | The function `load_think_file` loads the thought log, the pane state, and the yaml. |
-| fn | [`store_think_file`](#function-store_think_file) | The function `store_think_file` writes the thought log. |
+| fn | [`load_think_file`](#function-load_think_file) | The function `load_think_file` loads the pane state and the yaml. |
+| fn | [`user_think_ok`](#function-user_think_ok) | The function `user_think_ok` reports whether `user` is a safe thinking-file name. |
+| fn | [`user_think_path`](#function-user_think_path) | The function `user_think_path` builds one user's thinking file. |
+| fn | [`think_home`](#function-think_home) | The function `think_home` returns the directory that holds per-user thinking files. |
+| fn | [`user_file_version`](#function-user_file_version) | The function `think_version_one` reports whether a yaml version is 1. |
+| fn | [`yaml_owned`](#function-yaml_owned) | The function `yaml_owned` copies one yaml value as text. |
+| fn | [`think_word_of_tag`](#function-think_word_of_tag) | The function `think_word_of_tag` reads the model word out of a tag line. |
+| fn | [`write_user_think`](#function-write_user_think) | The function `write_user_think` writes one user's thinking file. |
+| fn | [`bind_ssh_think_key`](#function-bind_ssh_think_key) | The function `bind_ssh_think_key` points one SSH pane at the user who is on it. |
 | fn | [`yaml_scalar`](#function-yaml_scalar) | The function `yaml_scalar` reads one plain value from the text after a colon. |
 | fn | [`split_yaml_key`](#function-split_yaml_key) | The function `split_yaml_key` splits one top-level yaml line into a key and the rest. |
 | fn | [`think_version_one`](#function-think_version_one) | The function `think_version_one` reports whether a yaml value is version 1. |
@@ -4801,6 +4811,15 @@ const VT_BELOW_CLEAR: f32 = 3.0;
 
 The SSH console starts this far under the Clear button while the strip is open.
 
+### THINK_HOME
+
+<a id="constant-think_home"></a>
+
+```rust
+static THINK_HOME: std::cell::RefCell<Option<std::path::PathBuf>> =
+const
+```
+
 ### MOOD_YAML_FILE
 
 <a id="constant-mood_yaml_file"></a>
@@ -6458,6 +6477,18 @@ static USER_COMBO_RECT: std::cell::Cell<Option<egui::Rect>> = const
 The slot is a thread-local cell, and it starts empty.
 The east capsule clears it, then stores the combo rectangle when the combo is painted.
 
+### MODEL_FAMILY_RECT
+
+<a id="constant-model_family_rect"></a>
+
+```rust
+static MODEL_FAMILY_RECT: std::cell::Cell<Option<egui::Rect>> = const
+```
+
+`MODEL_FAMILY_RECT` is the test slot for the Model Config family pull-down.
+The slot is a thread-local cell, and it starts empty.
+The family combo stores its button rectangle.
+
 ### USER_SPIN_RECT
 
 <a id="constant-user_spin_rect"></a>
@@ -7619,20 +7650,102 @@ Any other file is parsed as UTF-8 with lossy replacement, then passed to `parse_
 fn load_think_file() -> (ThinkLog, ThinkChrome, ThinkYaml)
 ```
 
-The function `load_think_file` loads the thought log, the pane state, and the yaml.
-The result is those three values. A missing home directory returns an empty [`ThinkLog`](chrome/struct.ThinkLog.md), a new [`ThinkChrome`](chrome/struct.ThinkChrome.md), and a fresh [`ThinkYaml`](chrome/struct.ThinkYaml.md).
-Otherwise the log file is read. A non-empty block list replaces the empty log. The yaml file is read. `seat_think_home` then applies that yaml to the pane.
+The function `load_think_file` loads the pane state and the yaml.
+The result is an empty [`ThinkLog`](chrome/struct.ThinkLog.md), a [`ThinkChrome`](chrome/struct.ThinkChrome.md) for that yaml, and the [`ThinkYaml`](chrome/struct.ThinkYaml.md).
+A missing home directory returns an empty log, a new chrome, and a fresh yaml.
+The legacy `aetheris-thinking.txt` file is not read. The height and the closed mark come from `aetheris-think.yaml`.
 
-### store_think_file
+### user_think_ok
 
-<a id="function-store_think_file"></a>
+<a id="function-user_think_ok"></a>
 
 ```rust
-fn store_think_file(log: &ThinkLog)
+fn user_think_ok(user: &str) -> bool
 ```
 
-The function `store_think_file` writes the thought log.
-`log` is the session log. A missing home directory writes nothing. Otherwise the blocks are rendered and written to the thought-log path. A failed write is ignored.
+The function `user_think_ok` reports whether `user` is a safe thinking-file name.
+An empty name is not safe. `.` is not safe. `..` is not safe.
+A character outside ASCII letters, digits, `.`, `_`, and `-` is not safe.
+
+### user_think_path
+
+<a id="function-user_think_path"></a>
+
+```rust
+fn user_think_path(home: &std::path::Path, user: &str) -> std::path::PathBuf
+```
+
+The function `user_think_path` builds one user's thinking file.
+`home` is the home directory. `user` is that user. The file is `home/.casserole/aetheris-thinking/{user}.yaml`.
+
+### think_home
+
+<a id="function-think_home"></a>
+
+```rust
+fn think_home() -> Option<std::path::PathBuf>
+```
+
+The function `think_home` returns the directory that holds per-user thinking files.
+A test that sets `THINK_HOME` uses that directory. Any other test returns nothing, so the suite does not write the live files.
+A run that is not a test uses `home_dir`.
+
+### user_file_version
+
+<a id="function-user_file_version"></a>
+
+```rust
+fn user_file_version(value: Option<&serde_yaml::Value>) -> bool
+```
+
+The function `think_version_one` reports whether a yaml version is 1.
+`value` is that field. A number 1 is version 1. The text `1` is version 1. Any other value is not.
+
+### yaml_owned
+
+<a id="function-yaml_owned"></a>
+
+```rust
+fn yaml_owned(value: Option<&serde_yaml::Value>) -> String
+```
+
+The function `yaml_owned` copies one yaml value as text.
+`value` is that field. A missing field is empty. A string is that string. Any other value is its display text.
+
+### think_word_of_tag
+
+<a id="function-think_word_of_tag"></a>
+
+```rust
+fn think_word_of_tag(tag: &str) -> String
+```
+
+The function `think_word_of_tag` reads the model word out of a tag line.
+`tag` is that line. The box-drawing marks and the surrounding spaces leave. The word stays.
+
+### write_user_think
+
+<a id="function-write_user_think"></a>
+
+```rust
+fn write_user_think(path: &std::path::Path, rows: &[KeptThink]) -> bool
+```
+
+The function `write_user_think` writes one user's thinking file.
+`path` is that file. `rows` are the panes. The file is version 1. A parent directory is created. A failed write returns false.
+
+### bind_ssh_think_key
+
+<a id="function-bind_ssh_think_key"></a>
+
+```rust
+fn bind_ssh_think_key(stored: &mut String, raw_user: &str, surface_id: &str)
+```
+
+The function `bind_ssh_think_key` points one SSH pane at the user who is on it.
+`stored` is the key already held. `raw_user` is the pane user. `surface_id` is the pane id.
+An empty key takes the user and the pane id. `anon` leaves a key that already moved with the pane.
+A real user who differs from the stored user takes a new key. The old seat stays where it is.
 
 ### yaml_scalar
 
@@ -8264,7 +8377,7 @@ fn session_memory_text(grid: &Grid) -> String
 ```
 
 The function `session_memory_text` returns the console text one pane holds.
-`grid` is that pane's [`Grid`](../aetheris-term/grid/struct.Grid.md). The lines are the scrollback, then the visible rows, in that order. A trailing row that trims to empty is dropped.
+`grid` is that pane's `Grid`. The lines are the scrollback, then the visible rows, in that order. A trailing row that trims to empty is dropped.
 The remaining lines are joined with a newline. An empty pane returns an empty string. `estimate_tokens` of that empty string is 1.
 
 ### session_memory_lines
@@ -9097,6 +9210,7 @@ fn seat_modal(ctx: &egui::Context, layer: egui::LayerId)
 The function `seat_modal` puts one open modal above the pin strip.
 `ctx` is the egui context. `layer` is that modal's layer. The layer moves to the top of its order. That layer becomes the modal layer when it is the top one this frame.
 The pin strip stays on the foreground. It does not take this top. A modal on the middle order paints under that strip.
+An open menu of this modal is a child of the modal. The menu paints above the modal and takes the pointer. The pin strip stays under the modal.
 
 ### paint_clear_ask
 
@@ -17752,7 +17866,7 @@ The row range and the column range include both ends, in either order. A cell in
 pub(crate) fn paint_colors(cell: &Cell, selected: bool) -> (egui::Color32, egui::Color32)
 ```
 
-The function `paint_colors` returns the foreground and background for one terminal cell. The parameter `cell` is that [`Cell`](../aetheris-term/grid/struct.Cell.md). The parameter `selected` is true when the cell is inside the highlight. The result is `(foreground, background)`.
+The function `paint_colors` returns the foreground and background for one terminal cell. The parameter `cell` is that `Cell`. The parameter `selected` is true when the cell is inside the highlight. The result is `(foreground, background)`.
 
 A selected cell returns `SELECT_FG` and `SELECT_BG` and ignores the cell colors. Otherwise the foreground comes from `color_of` with fallback `INK`. The background comes from `color_of` with fallback [`PLATE`](#constant-plate). A bold cell whose foreground is an index below 8 uses that index plus 8. A reverse cell swaps the two colors.
 
@@ -17764,9 +17878,9 @@ A selected cell returns `SELECT_FG` and `SELECT_BG` and ignores the cell colors.
 fn color_of(color: Color, fallback: egui::Color32) -> egui::Color32
 ```
 
-The function `color_of` turns a terminal [`Color`](../aetheris-term/grid/enum.Color.md) into an egui color. The parameter `color` is that color. The parameter `fallback` is used for the default color. [`Color::Default`](../aetheris-term/grid/enum.Color.md#member-default) returns `fallback`.
+The function `color_of` turns a terminal `Color` into an egui color. The parameter `color` is that color. The parameter `fallback` is used for the default color. `Color::Default` returns `fallback`.
 
-[`Color::Index`](../aetheris-term/grid/enum.Color.md#member-index) returns the red, green, and blue bytes from `index_rgb`. [`Color::Rgb`](../aetheris-term/grid/enum.Color.md#member-rgb) returns those three bytes directly.
+`Color::Index` returns the red, green, and blue bytes from `index_rgb`. `Color::Rgb` returns those three bytes directly.
 
 ### index_rgb
 
