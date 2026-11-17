@@ -1780,7 +1780,7 @@ public class SshClientApp extends JFrame
      *
      * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-160
      */
-    private void feedComposerHeat() {
+    private void feedComposerHeat() { // @aa-sdd PK-1422 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
         if (composerHeat == null || aetherisPanel == null || productTabs == null) {
             return;
         }
@@ -3603,7 +3603,7 @@ public class SshClientApp extends JFrame
      * @return The engine word, or an empty string.
      */
     @Override
-    public String focusedEngine() {
+    public String focusedEngine() { // @aa-sdd PK-1418 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
         return sshPaneEngine();
     }
 
@@ -3613,7 +3613,7 @@ public class SshClientApp extends JFrame
      * A missing pane returns.
      */
     @Override
-    public void noteTransferredSession() {
+    public void noteTransferredSession() { // @aa-sdd PK-1418 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
         if (focused == null) {
             return;
         }

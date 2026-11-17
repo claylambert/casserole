@@ -946,7 +946,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private int moodDialogWidth;
     private int moodDialogHeight;
     /** True after the open size is set and the dialog is showing. A resize before that is ignored. */
-    private boolean moodSizeArmed;
+    private boolean moodSizeArmed; // @aa-sdd PK-1437 docs/specs/java/org/aetheris/swing/swing.spec.md
     /** Air-gap and num-ctx. One line on its own panel. The font fits the column. */
     private FactsLine factsNote;
     /** T stays on the inspector. The estimate sits on the frame heatbar. */
@@ -2300,7 +2300,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param button a short chrome button
      */
-    private static void holdShortLabel(AbstractButton button) {
+    private static void holdShortLabel(AbstractButton button) { // @aa-sdd PK-1448 docs/specs/common/stages.spec.md
         if (button == null) {
             return;
         }
@@ -5184,7 +5184,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param collapsed {@code true} folds the cards, and {@code false} opens them
      */
-    private void setCanvasCollapsed(boolean collapsed) {
+    private void setCanvasCollapsed(boolean collapsed) { // @aa-sdd PK-1420 docs/specs/java/org/aetheris/swing/swing.spec.md
         CanvasRecord canvas = currentCanvas();
         if (canvas == null) {
             return;
@@ -5682,7 +5682,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param pairs prompt, reply, prompt, reply
      */
-    private void seatTransferred(final String[] pairs) {
+    private void seatTransferred(final String[] pairs) { // @aa-sdd PK-1416 docs/specs/java/org/aetheris/swing/swing.spec.md
         final CanvasRecord canvas = currentCanvas();
         if (canvas == null || vault == null) {
             host.aetherisStatus("replace failed: no canvas");
@@ -15425,7 +15425,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * @param hasResponse The flag is true when reply text is present.
          * @return The return value is the frame for that pane.
          */
-        private Border paneEdge(boolean input, boolean hasResponse) {
+        private Border paneEdge(boolean input, boolean hasResponse) { // @aa-sdd PK-1098 docs/specs/common/formal-plan.spec.md
             if (!paintedBorders) {
                 return roundEdge(new Color(0x3a, 0x3a, 0x3a), 1, PANE_ROUND, 0);
             }
@@ -16336,7 +16336,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The prompt document and the reply document stay.
          * The run stays. The thinking pane stays.
          */
-        private void seatFold() {
+        private void seatFold() { // @aa-sdd PK-1420 docs/specs/java/org/aetheris/swing/swing.spec.md
             if (cell.collapsed) {
                 collapseButton.setText("+");
                 collapseButton.setToolTipText(buttonTip(
@@ -18086,7 +18086,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param modelWord the selected model. The value may be null.
      * @return the context window, or 0 when that model has none
      */
-    public int heatBudget(String modelWord) {
+    public int heatBudget(String modelWord) { // @aa-sdd PK-1421 docs/specs/java/org/aetheris/swing/swing.spec.md
         int managed = managedTokens();
         if (managed > 0) {
             return managed;
@@ -18104,7 +18104,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param modelWord the selected model. The value may be null.
      * @return the context window, or 0 when that model has none
      */
-    private static int modelHeatWindow(String modelWord) {
+    private static int modelHeatWindow(String modelWord) { // @aa-sdd PK-1421 docs/specs/java/org/aetheris/swing/swing.spec.md
         String word = Vt100StatusLine.engineWord(modelWord);
         if (word.indexOf("ollama") >= 0) {
             return 131072;
@@ -18125,7 +18125,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @return the context window, or 0 when that model has none
      */
-    private int notebookWindow() {
+    private int notebookWindow() { // @aa-sdd PK-1421 docs/specs/java/org/aetheris/swing/swing.spec.md
         return heatBudget(focusedTargetText());
     }
 
@@ -18171,7 +18171,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param focusedTarget  the focused turn
      * @return that model's window, or 0 when it is unknown
      */
-    static int selectedHeatBudget(ArrayList<TokenModel> rows, String focusedTarget) {
+    static int selectedHeatBudget(ArrayList<TokenModel> rows, String focusedTarget) { // @aa-sdd PK-1451 docs/specs/java/org/aetheris/swing/swing.spec.md
         if (rows == null || rows.size() == 0) {
             return 0;
         }
@@ -19257,7 +19257,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * If {@link #moodHasLine} is true, the draft shows the trimmed saved line.
      * The window opens relative to this panel.
      */
-    private void openMood() {
+    private void openMood() { // @aa-sdd PK-1435 docs/specs/java/org/aetheris/swing/swing.spec.md
         CellRecord card = moodCard();
         if (card == null) {
             host.aetherisStatus(statusLine("no cell"));
@@ -19408,7 +19408,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-153
         Dimension cancelPref = cancel.getPreferredSize();
         Dimension cancelSized = new Dimension(cancelPref.width + approveExtra, cancelPref.height);
-        cancel.setPreferredSize(cancelSized);
+        cancel.setPreferredSize(cancelSized); // @aa-sdd PK-1446 docs/specs/common/stages.spec.md
         cancel.setMinimumSize(cancelSized);
         /**
          * The action listener asks before it clears the mood.
@@ -19858,7 +19858,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A size read while the window is not showing is not noted.
      * The write goes to this user's mood file.
      */
-    private void closeMoodDialog() {
+    private void closeMoodDialog() { // @aa-sdd PK-1435 docs/specs/java/org/aetheris/swing/swing.spec.md
         JDialog dialog = moodDialog;
         moodSizeArmed = false;
         if (dialog != null) {
@@ -20841,7 +20841,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param width dialog width
      * @param height dialog height
      */
-    private void noteMoodDialogSize(int width, int height) {
+    private void noteMoodDialogSize(int width, int height) { // @aa-sdd PK-1435 PK-1437 docs/specs/java/org/aetheris/swing/swing.spec.md
         if (moodPairKept(width, height)) {
             moodDialogWidth = width;
             moodDialogHeight = height;
@@ -21175,7 +21175,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * If the write throws {@code IOException}, the status shows {@code export failed: } plus the exception message.
      * The stream is closed, and an {@code IOException} from close is ignored.
      */
-    private void exportCanvas() {
+    private void exportCanvas() { // @aa-sdd PK-1411 docs/specs/java/org/aetheris/swing/swing.spec.md
         CanvasRecord canvas = currentCanvas();
         if (canvas == null) {
             return;
@@ -21401,7 +21401,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param imported The cells are the turns just read from the file.
      */
-    private void offerImportedMood(List<CellRecord> imported) {
+    private void offerImportedMood(List<CellRecord> imported) { // @aa-sdd PK-1411 docs/specs/java/org/aetheris/swing/swing.spec.md
         if (moodOn || imported == null) {
             return;
         }
@@ -23473,7 +23473,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                         && dialogGrokStream != null;
                 if (armStream) {
                     dialogAdjusting = true;
-                    dialogGrokStream.setSelectedItem("true");
+                    dialogGrokStream.setSelectedItem("true"); // @aa-sdd PK-1405 docs/specs/java/org/aetheris/swing/swing.spec.md
                     dialogAdjusting = false;
                 }
                 if (dialogConsole) {

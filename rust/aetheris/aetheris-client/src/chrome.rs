@@ -4013,7 +4013,7 @@ fn mood_open_px(yaml: &MoodYaml) -> (f32, f32) {
 /// The function `note_mood_size` stores the mood dialog size for the next open.
 /// `yaml` is the [`MoodYaml`] record. `width` and `height` are the pixel sizes. A blocked record returns false and leaves the stored pair alone.
 /// The width must sit from 480 through 4000. The height must sit from 320 through 4000. A size outside either range returns false and leaves the pair alone. A size inside both ranges is stored and the function returns true.
-fn note_mood_size(yaml: &mut MoodYaml, width: i32, height: i32) -> bool {
+fn note_mood_size(yaml: &mut MoodYaml, width: i32, height: i32) -> bool { // @aa-sdd PK-1406 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     if yaml.blocked {
         return false;
     }
@@ -4033,7 +4033,7 @@ fn note_mood_size(yaml: &mut MoodYaml, width: i32, height: i32) -> bool {
 /// A missing size leaves the stored pair alone and returns false.
 /// A size that `note_mood_size` refuses leaves the stored pair alone and returns false.
 /// A size inside the kept range is stored and the function returns true.
-fn mood_size_on_close(yaml: &mut MoodYaml, size: Option<(i32, i32)>) -> bool {
+fn mood_size_on_close(yaml: &mut MoodYaml, size: Option<(i32, i32)>) -> bool { // @aa-sdd PK-1436 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let Some((width, height)) = size else {
         return false;
     };
@@ -4176,7 +4176,7 @@ struct MoodBands {
 /// `frame` is the inner area the window claimed. `draft_px` is the wanted draft height. `button_px` is the wanted button height. `gap_px` is one gap.
 /// The heights come from `mood_slots`. The footer is pinned to the bottom of `frame`, so the vertical drag sits on that edge.
 /// The draft sits above the footer when it has height. The transcript fills the room above that. Each region stays inside `frame`.
-fn mood_bands(frame: egui::Rect, draft_px: i32, button_px: i32, gap_px: i32) -> MoodBands {
+fn mood_bands(frame: egui::Rect, draft_px: i32, button_px: i32, gap_px: i32) -> MoodBands { // @aa-sdd PK-1440 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let width = frame.width().max(0.0);
     let height = frame.height().round().max(0.0) as i32;
     let slots = mood_slots(height, draft_px, button_px, gap_px);
@@ -4215,7 +4215,7 @@ fn mood_bands(frame: egui::Rect, draft_px: i32, button_px: i32, gap_px: i32) -> 
 
 /// The function `mood_floor` returns the smallest size the mood glass may be dragged to.
 /// `screen` is the app window. The width is [`MOOD_WIDTH_MIN`], or the window width when that is smaller. The height is [`MOOD_HEIGHT_MIN`], or the window height when that is smaller. A negative window side is treated as 0 before that cut.
-fn mood_floor(screen: egui::Rect) -> egui::Vec2 {
+fn mood_floor(screen: egui::Rect) -> egui::Vec2 { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     egui::vec2(
         (MOOD_WIDTH_MIN as f32).min(screen.width().max(0.0)),
         (MOOD_HEIGHT_MIN as f32).min(screen.height().max(0.0)),
@@ -4247,7 +4247,7 @@ fn mood_resize_icon(icon: egui::CursorIcon) -> bool {
 /// The function `mood_user_resized` reports a drag that changed the dialog size.
 /// `prior` is the outer size from the previous frame of this open. `shown` is this frame. `drag` is true while the primary pointer button is down on a resize cursor.
 /// A missing prior returns false. A pointer that is not dragging a resize returns false. A size equal to the prior returns false. Any other pair returns true.
-fn mood_user_resized(prior: Option<(i32, i32)>, shown: (i32, i32), drag: bool) -> bool {
+fn mood_user_resized(prior: Option<(i32, i32)>, shown: (i32, i32), drag: bool) -> bool { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     if !drag {
         return false;
     }
@@ -4261,7 +4261,7 @@ fn mood_user_resized(prior: Option<(i32, i32)>, shown: (i32, i32), drag: bool) -
 /// `wanted_w` and `wanted_h` are the size the file asked to open. `shown` is the outer size this frame. `screen` is the app window.
 /// The fitted size comes from `mood_fit`. A fitted side that is at least 2 pixels under the wanted side, and a shown size that matches that fit, returns true.
 /// Any other shown size returns false. That cut is not written over the user's pair.
-fn mood_shown_cut(wanted_w: f32, wanted_h: f32, shown: (i32, i32), screen: egui::Rect) -> bool {
+fn mood_shown_cut(wanted_w: f32, wanted_h: f32, shown: (i32, i32), screen: egui::Rect) -> bool { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let (_, fit) = mood_fit(screen, wanted_w, wanted_h);
     let fit_w = fit.x.round() as i32;
     let fit_h = fit.y.round() as i32;
@@ -4274,7 +4274,7 @@ fn mood_shown_cut(wanted_w: f32, wanted_h: f32, shown: (i32, i32), screen: egui:
 /// The function `mood_press` paints one mood footer button at the Swing width.
 /// `ui` is the footer. `label` is the button word. The width is the label, the button padding, and three ems.
 /// The height is the label plus the button padding. The button is that minimum size.
-fn mood_press(ui: &mut egui::Ui, label: &str) -> egui::Response {
+fn mood_press(ui: &mut egui::Ui, label: &str) -> egui::Response { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let font = egui::TextStyle::Button.resolve(ui.style());
     let color = ui.visuals().text_color();
     let galley = ui
@@ -5689,7 +5689,7 @@ fn button_lane_clip(lane: egui::Rect, parent: egui::Rect) -> egui::Rect {
 /// @aa-sdd F-159
 /// @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183
 /// @aa-sdd PK-1286 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-fn folded_control_height(ui: &egui::Ui) -> f32 {
+fn folded_control_height(ui: &egui::Ui) -> f32 { // @aa-sdd PK-1443 PK-1444 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     button_lane_height(ui).max(THINK_GRIP + BUTTON_CLEAR_PX * 2.0)
 }
 
@@ -10962,7 +10962,7 @@ fn paint_input_edge(ui: &mut egui::Ui, rect: egui::Rect, caption: &str, salt: us
 /// A widget under 2 points wide or under 2 points tall returns none. A line height under 1 returns none.
 /// A text origin inside the widget keeps that x and that top. Any other origin uses the widget top and a point inside the left edge.
 /// The x stays one point inside the widget, so a two-point stroke is not clipped away. The bottom is one line down, and not past the widget.
-fn prompt_caret_segment(
+fn prompt_caret_segment( // @aa-sdd PK-1432 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     widget: egui::Rect,
     galley_pos: egui::Pos2,
     row_h: f32,
@@ -11076,7 +11076,7 @@ fn paint_prompt_window(
 /// The context `ctx` holds the edit state. The id `id` is the edit. The string `text` supplies the character count. The index `cursor` is the requested caret.
 ///
 /// A missing state starts from the default. The caret is `cursor` clamped to the character count. The undo buffer is cleared. The state is stored on `id`.
-fn seat_prompt_caret(ctx: &egui::Context, id: egui::Id, text: &str, cursor: usize) {
+fn seat_prompt_caret(ctx: &egui::Context, id: egui::Id, text: &str, cursor: usize) { // @aa-sdd PK-1432 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let mut state = egui::text_edit::TextEditState::load(ctx, id).unwrap_or_default();
     let at = cursor.min(text.chars().count());
     state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
@@ -12360,7 +12360,7 @@ fn user_combo_width(remain: f32, reserved: f32) -> f32 {
 ///
 /// @aa-sdd F-156
 /// The result is [`USER_COMBO_W`].
-fn east_reserve() -> f32 {
+fn east_reserve() -> f32 { // @aa-sdd PK-1447 docs/specs/common/stages.spec.md
     USER_COMBO_W
 }
 
@@ -12453,7 +12453,7 @@ fn footer_ceiling(ui: &egui::Ui, tools_open: bool, bars_open: bool) -> f32 {
 /// The band keeps the host left and the host right. Its bottom is the host bottom.
 /// A height above the host becomes the host height. A height below 0 becomes 0.
 /// An open bar and a folded bar use this same span. The folded bar is the shorter one.
-fn footer_span(host: egui::Rect, footer_h: f32) -> egui::Rect {
+fn footer_span(host: egui::Rect, footer_h: f32) -> egui::Rect { // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let h = footer_h.max(0.0).min(host.height().max(0.0));
     egui::Rect::from_min_max(
         egui::pos2(host.left(), host.bottom() - h),
@@ -12465,13 +12465,13 @@ fn footer_span(host: egui::Rect, footer_h: f32) -> egui::Rect {
 /// The value `body_h` is the host height. The value `footer_h` is the footer band.
 /// The result is `body_h` minus that band, and not below 0.
 /// A folded bar is shorter, so both columns grow by the height the fold returns.
-fn column_body_height(body_h: f32, footer_h: f32) -> f32 {
+fn column_body_height(body_h: f32, footer_h: f32) -> f32 { // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     (body_h - footer_h.max(0.0)).max(0.0)
 }
 
 /// The function `seat_footer_band` counts the button bar on this ui.
 /// The rectangle `band` is the span under the columns. The bar is painted in its own child, and that child does not move this cursor. This call does. The heat strip is the next plate band, so it starts under this span.
-fn seat_footer_band(ui: &mut egui::Ui, band: egui::Rect) {
+fn seat_footer_band(ui: &mut egui::Ui, band: egui::Rect) { // @aa-sdd PK-1445 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     if band.width() <= 0.0 || band.height() <= 0.0 {
         return;
     }
@@ -12481,7 +12481,7 @@ fn seat_footer_band(ui: &mut egui::Ui, band: egui::Rect) {
 /// The function `paint_bar_lane` paints one button row in a horizontal scroller.
 /// The surface `ui` is the parent. The salt `salt` is the scroll id. The value `width` is the view width. The value `height` is the view height. The closure `add` paints the buttons at their font size.
 /// The view stays the width it was given. The buttons do not shrink to that width. A row wider than the view scrolls on the horizontal Apple strip. A row that fits paints no strip.
-fn paint_bar_lane<R>(
+fn paint_bar_lane<R>( // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     ui: &mut egui::Ui,
     salt: &'static str,
     width: f32,
@@ -12527,7 +12527,7 @@ fn paint_bar_lane<R>(
 /// @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md FINESSE:f-223
 /// The height is `folded_control_height`. The width is the available width, and at least 1. The allocation senses hover.
 /// The mark is `bb_fold_mark` of false, so the glyph is `^`. The mark is the same button as the open fold mark. It sits on the left, inset by [`BUTTON_CLEAR_PX`]. Its height is `button_outer_height`. Its width is the glyph plus the button padding on the left and the right. The hover text is [`BB_SHOW_TIP`]. A click sets `bars_open` true. The line is reserved before the button, so the button face stays above the line. The line starts 6 pixels after the mark and ends 16 pixels before the right edge, at the mark's vertical center. It is drawn only when that span is positive, with a 1 pixel stroke from `bb_fold_line_ink`. `master_top` is the top of the row. `bar` is the outer rectangle.
-fn paint_bb_folded_line(ui: &mut egui::Ui, bars_open: &mut bool) -> FooterHit {
+fn paint_bb_folded_line(ui: &mut egui::Ui, bars_open: &mut bool) -> FooterHit { // @aa-sdd PK-1442 PK-1443 PK-1444 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let mut hit = FooterHit {
         make_run: false,
         make_stop: false,
@@ -13726,7 +13726,7 @@ fn transfer_reply(cards: &[TurnCard], group: u64) -> String {
 
 /// The copied cells replace the deck. An empty list leaves one empty card.
 /// Each born card stores `model` as its execution target. Focus becomes the first card.
-fn seat_transferred(
+fn seat_transferred( // @aa-sdd PK-1419 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     cards: &mut Vec<TurnCard>,
     focus: &mut usize,
     seq: &mut u64,
@@ -13802,7 +13802,7 @@ fn land_session_export(path: &std::path::Path, body: &str) -> String {
 
 /// One header cell. The user text is the invitation. The assistant text is the opener and the closer.
 /// A missing line, or a line that trims to empty, returns `body` unchanged. A body with no `cells:` line returns `body` unchanged.
-fn seat_canvas_mood(body: &str, line: Option<&str>) -> String {
+fn seat_canvas_mood(body: &str, line: Option<&str>) -> String { // @aa-sdd PK-1410 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let Some(line) = line.and_then(crate::mood::normalize) else {
         return body.to_string();
     };
@@ -13839,7 +13839,7 @@ fn seat_canvas_mood(body: &str, line: Option<&str>) -> String {
 /// The first two rows are the invitation and the directive when `line` is set.
 /// A table that already opens with that pair is returned unchanged. The rows after the header stay, including their timestamps.
 /// A table that does not parse is returned unchanged.
-fn seat_session_mood(table: &str, line: Option<&str>) -> String {
+fn seat_session_mood(table: &str, line: Option<&str>) -> String { // @aa-sdd PK-1410 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let Some(line) = line.and_then(crate::mood::normalize) else {
         return table.to_string();
     };
@@ -15810,7 +15810,7 @@ fn fault_card<'a>(cards: &'a [TurnCard], cell: &[u8; 16], focus: usize) -> Optio
 /// `model` is the selected target. `ssh` is true for an SSH session and false for a canvas cell.
 /// A blank model asks for the model selected for this SSH session, or for this cell.
 /// Any other model names that model in the same sentence.
-fn configuration_check(model: &str, ssh: bool) -> String {
+fn configuration_check(model: &str, ssh: bool) -> String { // @aa-sdd PK-1415 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let where_word = if ssh {
         "this SSH session"
     } else {
@@ -18738,7 +18738,7 @@ fn fact_line(facts: Option<&CanvasFacts>) -> String {
 }
 
 /// Empty stored target shows as `ollama`. Java `AetherisStage2.shownTarget`.
-fn shown_target(target: &str) -> String {
+fn shown_target(target: &str) -> String { // @aa-sdd PK-1415 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let trimmed = target.trim();
     if trimmed.is_empty() {
         "ollama".to_string()
@@ -18873,13 +18873,13 @@ fn status_bar_height(ui: &egui::Ui) -> f32 {
 }
 
 /// The heat strip is 9 pixels. The needle in that strip is the same height. The button bar does not use this height.
-const HEAT_STRIP_PX: f32 = 9.0;
+const HEAT_STRIP_PX: f32 = 9.0; // @aa-sdd PK-1445 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
 
 /// The function `frame_bands` splits one plate into three bands.
 /// The rectangle `host` is the room under the product tabs. The value `status_h` is the status text row.
 /// The first band is the notebook. The canvas, the inspector, and the button bar share it. The second band is the heat strip. It is [`HEAT_STRIP_PX`] tall and starts at the notebook bottom. The third band is the status text. It starts at the heat strip bottom.
 /// A short host keeps the notebook at zero and shortens the heat strip to the room that remains. The status text takes what is left under the heat strip.
-fn frame_bands(host: egui::Rect, status_h: f32) -> (egui::Rect, egui::Rect, egui::Rect) {
+fn frame_bands(host: egui::Rect, status_h: f32) -> (egui::Rect, egui::Rect, egui::Rect) { // @aa-sdd PK-1445 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
     let status_h = status_h.max(0.0);
     let width = host.width().max(0.0);
     let notebook_h = (host.height() - status_h - HEAT_STRIP_PX).max(0.0);
@@ -20735,7 +20735,7 @@ impl App {
     /// `result` is that reply. `transfer_roux` becomes false.
     ///
     /// `Ok` sets the status to [`TRANSFER_WORD`]. `Err` sets the status to `replace failed:` plus the reason.
-    fn land_transfer_replace(&mut self, result: Result<(), String>) {
+    fn land_transfer_replace(&mut self, result: Result<(), String>) { // @aa-sdd PK-1419 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
         self.transfer_roux = false;
         self.status = match result {
             Ok(()) => {
@@ -23570,7 +23570,7 @@ impl App {
     ///
     /// The method calls `store_mood_yaml`. If `mood` is blocked, if `mood_owner` is empty, or if the home directory is missing, that call writes nothing.
     /// `close_glass` then drops the chat and closes the dialog. The wire list stays. The generation stays. The saved mood line stays. The mood switch stays.
-    fn seal_mood(&mut self, keep_line: bool) {
+    fn seal_mood(&mut self, keep_line: bool) { // @aa-sdd PK-1436 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
         if keep_line {
             let draft = self.mood_desk.draft.clone();
             let _ = approve_mood_line(&mut self.mood, &draft);
@@ -23585,7 +23585,7 @@ impl App {
     /// A missing size leaves the stored pair alone. A size outside the kept range leaves the stored pair alone.
     /// When the stored pair changes, `store_mood_yaml` writes the record. `close_glass` then drops the chat and closes the dialog.
     /// The saved mood line stays. The mood switch stays.
-    fn dismiss_mood(&mut self) {
+    fn dismiss_mood(&mut self) { // @aa-sdd PK-1436 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
         let size = self.mood_desk.last_size;
         let prior = (self.mood.width, self.mood.height);
         if mood_size_on_close(&mut self.mood, size) && (self.mood.width, self.mood.height) != prior {
@@ -25088,7 +25088,7 @@ impl App {
     }
 
     /// Bracketed paste joins the unsent line. A newline inside the body stays on that line.
-    fn queue_live_paste(&mut self, text: &str, outgoing: &mut Vec<u8>) {
+    fn queue_live_paste(&mut self, text: &str, outgoing: &mut Vec<u8>) { // @aa-sdd PK-1407 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
         match paste_decision(text) {
             PasteDecision::Quiet => {}
             PasteDecision::Over => self.show_shell_notice("Paste", PASTE_OVER),
@@ -28952,7 +28952,7 @@ impl App {
     /// The icon `icon` is the icon the frame asked for.
     ///
     /// The text icon is a thin beam. On this plate the beam disappears, so a hover looks like the pointer left. The arrow stays. A resize icon stays. A hand stays. Any other icon stays.
-    fn pointer_icon(icon: egui::CursorIcon) -> egui::CursorIcon {
+    fn pointer_icon(icon: egui::CursorIcon) -> egui::CursorIcon { // @aa-sdd PK-1433 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
         if icon == egui::CursorIcon::Text {
             egui::CursorIcon::Default
         } else {
@@ -29520,7 +29520,7 @@ fn map_key(key: egui::Key, modifiers: egui::Modifiers) -> Option<TermStroke> {
         egui::Key::A if command => Key::CtrlA,
         egui::Key::C if command && modifiers.shift => {
             // Copy. Ctrl-C, with Shift up, is the interrupt.
-            return Some(TermStroke::Copy);
+            return Some(TermStroke::Copy); // @aa-sdd PK-1423 docs/specs/common/canvas.spec.md
         }
         egui::Key::C if command => Key::CtrlC,
         egui::Key::E if command => Key::CtrlE,
