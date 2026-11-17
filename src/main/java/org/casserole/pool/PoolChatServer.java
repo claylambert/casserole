@@ -39,7 +39,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 // @aa-sdd PK-1274 docs/specs/java/org/casserole/pool/pool.spec.md
 /**
  * The {@code PoolChatServer} class is the pool of ACP seats.
- * The class implements {@link PoolChat}. It keeps one child for each user. It keeps at most three children.
+ * The class implements {@link PoolChat}. It keeps one child for each user and each {@link PoolChat.Seat}. It keeps at most three children.
  * Stdout and stderr run on {@link Lane#POOL_IO}. {@link #prompt} blocks the caller until the turn finishes.
  * A blank {@code casserole.pool.host} keeps the local child. The working directory is {@code ~/.casserole/pool-cwd}. Windows starts {@code cmd.exe /c grok agent stdio}. Any other operating system starts {@code grok agent stdio}. The child environment does not receive {@code XAI_API_KEY}.
  * A set host dials {@code ws://host:port/ws} on {@code grok agent serve}. The JSON-RPC lines stay the same. The serve token is not logged.
@@ -102,8 +102,22 @@ public final class PoolChatServer implements PoolChat {
      * @throws Exception The method throws this exception when the child cannot be started.
      */
     @Override
-    public void start(String user) throws Exception {
-        ensure(user);
+    public void start(String user, PoolChat.Seat seat) throws Exception {
+        ensure(seatKey(user, seat));
+    }
+
+    /**
+     * The {@code seatKey} method names one child in the map.
+     * A null user is an empty name. A null seat is {@link PoolChat.Seat#SSH}. The key is the user, a NUL, and the seat name. An SSH child and a canvas child for the same user are two keys.
+     *
+     * @param user The user is the SSH user name.
+     * @param seat The seat is {@link PoolChat.Seat#SSH} or {@link PoolChat.Seat#CANVAS}.
+     * @return The return value is the map key.
+     */
+    static String seatKey(String user, PoolChat.Seat seat) { // @aa-sdd PK-1460 docs/specs/java/org/casserole/pool/pool.spec.md
+        String name = user == null ? "" : user;
+        PoolChat.Seat which = seat == null ? PoolChat.Seat.SSH : seat;
+        return name + "\0" + which.name();
     }
 
     /**
@@ -114,6 +128,7 @@ public final class PoolChatServer implements PoolChat {
      * The prompt flags are cleared when the call leaves the gate. The idle timer is armed after the turn.
      *
      * @param user The user is the user name.
+     * @param seat The seat is {@link PoolChat.Seat#SSH} or {@link PoolChat.Seat#CANVAS}.
      * @param text The text is the working-set string for this turn.
      * @param boot The boot is the boot id. An empty boot does not keep a hold.
      * @param think The flag is true when thought chunks are forwarded.
@@ -122,12 +137,12 @@ public final class PoolChatServer implements PoolChat {
      * @throws Exception The method throws this exception when the wait is interrupted.
      */
     @Override
-    public void prompt(String user, String text, String boot, boolean think, String rules, Sink sink)
-            throws Exception {
+    public void prompt(String user, PoolChat.Seat seat, String text, String boot, boolean think, String rules,
+            Sink sink) throws Exception {
         if (sink == null) {
             return;
         }
-        String key = user == null ? "" : user;
+        String key = seatKey(user, seat);
         if (shut) {
             sink.done("pool down", clip("pool down", "spawn", "", null));
             return;
@@ -192,10 +207,11 @@ public final class PoolChatServer implements PoolChat {
      * A null user is treated as an empty name. A missing child returns. The cancel flag is set and waiting readers are woken. {@link #sendCancel} writes {@code session/cancel} when a session is open.
      *
      * @param user The user is the user name.
+     * @param seat The seat is {@link PoolChat.Seat#SSH} or {@link PoolChat.Seat#CANVAS}.
      */
     @Override
-    public void cancel(String user) {
-        String key = user == null ? "" : user;
+    public void cancel(String user, PoolChat.Seat seat) {
+        String key = seatKey(user, seat);
         Child child = children.get(key);
         if (child == null) {
             return;
@@ -212,11 +228,12 @@ public final class PoolChatServer implements PoolChat {
      * A null user is treated as an empty name. A missing child or a child that is not alive returns {@link Health#DOWN}. A child that failed authentication returns {@link Health#AUTH}. Any other live child returns {@link Health#READY}.
      *
      * @param user The user is the user name.
+     * @param seat The seat is {@link PoolChat.Seat#SSH} or {@link PoolChat.Seat#CANVAS}.
      * @return The return value is the health value.
      */
     @Override
-    public Health health(String user) {
-        String key = user == null ? "" : user;
+    public Health health(String user, PoolChat.Seat seat) {
+        String key = seatKey(user, seat);
         Child child = children.get(key);
         if (child == null || !child.alive) {
             return Health.DOWN;

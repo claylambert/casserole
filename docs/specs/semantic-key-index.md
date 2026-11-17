@@ -2,7 +2,7 @@
 
 This index maps each public key to the specification that holds that requirement and to the source lines that cite it. A comment in the source uses the same key and the same specification path.
 
-This series holds 1459 public keys, PK-1 through PK-1459. The next key in this series is PK-1460.
+This series holds 1462 public keys, PK-1 through PK-1462. The next key in this series is PK-1463.
 
 | Public key | Spec | Source |
 | --- | --- | --- |
@@ -1465,3 +1465,6 @@ This series holds 1459 public keys, PK-1 through PK-1459. The next key in this s
 | PK-1457 | [rust/aetheris/aetheris-client/src/chrome.spec.md](rust/aetheris/aetheris-client/src/chrome.spec.md) | [rust/aetheris/aetheris-client/src/chrome.rs:1367](../../rust/aetheris/aetheris-client/src/chrome.rs) [rust/aetheris/aetheris-client/src/chrome.rs:1471](../../rust/aetheris/aetheris-client/src/chrome.rs) [rust/aetheris/aetheris-client/src/chrome.rs:22151](../../rust/aetheris/aetheris-client/src/chrome.rs) |
 | PK-1458 | [rust/aetheris/aetheris-client/src/chrome.spec.md](rust/aetheris/aetheris-client/src/chrome.spec.md) | [rust/aetheris/aetheris-client/src/chrome.rs:1493](../../rust/aetheris/aetheris-client/src/chrome.rs) [rust/aetheris/aetheris-client/src/chrome.rs:2000](../../rust/aetheris/aetheris-client/src/chrome.rs) [rust/aetheris/aetheris-client/src/chrome.rs:22363](../../rust/aetheris/aetheris-client/src/chrome.rs) |
 | PK-1459 | [rust/aetheris/aetheris-client/src/chrome.spec.md](rust/aetheris/aetheris-client/src/chrome.spec.md) | [rust/aetheris/aetheris-client/src/chrome.rs:4687](../../rust/aetheris/aetheris-client/src/chrome.rs) |
+| PK-1460 | [java/org/casserole/pool/pool.spec.md](java/org/casserole/pool/pool.spec.md) | [src/main/java/org/casserole/pool/PoolChatServer.java:117](../../src/main/java/org/casserole/pool/PoolChatServer.java) [src/main/java/org/aetheris/ssh/AmwpFacade.java:1320](../../src/main/java/org/aetheris/ssh/AmwpFacade.java) [src/main/java/org/aetheris/ssh/AmwpFacade.java:1885](../../src/main/java/org/aetheris/ssh/AmwpFacade.java) |
+| PK-1461 | [rust/aetheris/aetheris-client/src/chrome.spec.md](rust/aetheris/aetheris-client/src/chrome.spec.md) | [rust/aetheris/aetheris-client/src/chrome.rs:3882](../../rust/aetheris/aetheris-client/src/chrome.rs) [rust/aetheris/aetheris-client/src/chrome.rs:3888](../../rust/aetheris/aetheris-client/src/chrome.rs) [rust/aetheris/aetheris-client/src/chrome.rs:3894](../../rust/aetheris/aetheris-client/src/chrome.rs) |
+| PK-1462 | [common.spec.md](common.spec.md) | [README.md:3](../../../README.md) |

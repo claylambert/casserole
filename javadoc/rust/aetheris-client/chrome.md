@@ -807,7 +807,9 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`load_ssh_mood_file`](#function-load_ssh_mood_file) | The function `load_ssh_mood_file` reads the SSH mood checkbox file for this user. |
 | fn | [`write_ssh_mood`](#function-write_ssh_mood) | The function `write_ssh_mood` stores the SSH mood checkbox list. |
 | fn | [`load_grok_home`](#function-load_grok_home) | The function `load_grok_home` loads the Grok settings document for this user. |
-| fn | [`mint_pool_boot`](#function-mint_pool_boot) | The function `mint_pool_boot` builds one boot id for this window. |
+| fn | [`mint_canvas_pool_boot`](#function-mint_canvas_pool_boot) | The function `mint_canvas_pool_boot` builds the canvas pool boot. |
+| fn | [`mint_ssh_pool_boot`](#function-mint_ssh_pool_boot) | The function `mint_ssh_pool_boot` builds the SSH pool boot. |
+| fn | [`canvas_pool_boot_for_frame`](#function-canvas_pool_boot_for_frame) | The function `canvas_pool_boot_for_frame` returns the canvas pool boot. |
 | fn | [`mood_knob`](#function-mood_knob) | The function `mood_knob` returns the color and the side of the round mood button. |
 | fn | [`preview_chars`](#function-preview_chars) | The function `preview_chars` shortens one mood string for a single preview line. |
 | fn | [`mood_inspector_head`](#function-mood_inspector_head) | The function `mood_inspector_head` returns the inspector line for a mood that is not showing its yellow card. |
@@ -8693,17 +8695,38 @@ The function `load_grok_home` loads the Grok settings document for this user.
 A missing home directory returns `crate::model::GrokDoc::memory`, which is a document with no file. Any other home loads `grok_path` through `crate::model::GrokDoc::load`.
 A missing file stays empty until a cell writes one.
 
-### mint_pool_boot
+### mint_canvas_pool_boot
 
-<a id="function-mint_pool_boot"></a>
+<a id="function-mint_canvas_pool_boot"></a>
 
 ```rust
-fn mint_pool_boot() -> String
+fn mint_canvas_pool_boot() -> String
 ```
 
-The function `mint_pool_boot` builds one boot id for this window.
-Pool execute and pool mood send this id. The first eight bytes are the nanoseconds since the Unix epoch, as a big-endian `u64`. A clock before that epoch uses 1.
-The last eight bytes are that same count multiplied, with wrap, by `0x9E3779B97F4A7C15`, also big-endian. The text is `cell_text` of those sixteen bytes.
+The function `mint_canvas_pool_boot` builds the canvas pool boot.
+Canvas runs, pipes, and mood shaping send this id. It is not the SSH boot.
+
+### mint_ssh_pool_boot
+
+<a id="function-mint_ssh_pool_boot"></a>
+
+```rust
+fn mint_ssh_pool_boot() -> String
+```
+
+The function `mint_ssh_pool_boot` builds the SSH pool boot.
+The host shell keeps its own connection. This id is not written on a canvas frame.
+
+### canvas_pool_boot_for_frame
+
+<a id="function-canvas_pool_boot_for_frame"></a>
+
+```rust
+fn canvas_pool_boot_for_frame<'a>(canvas: &'a str, ssh: &'a str) -> &'a str
+```
+
+The function `canvas_pool_boot_for_frame` returns the canvas pool boot.
+`canvas` is the canvas id. `ssh` is the SSH id. A canvas frame sends `canvas`. It does not send `ssh`.
 
 ### mood_knob
 

@@ -1,5 +1,10 @@
 # org.casserole.pool
 
+## SSH and the canvas keep separate pool connections
+
+An SSH pool turn and a canvas pool turn for the same user open two children. The SSH seat is `PoolChat.Seat.SSH`. The canvas seat is `PoolChat.Seat.CANVAS`. Each child keeps its own session id and its own boot. Cancelling the shell does not cancel the canvas. Cancelling the cell does not cancel the shell. The map key is the user, a NUL, and the seat name. The method is `seatKey`. The shell prompt is `completeTurn`. The cell prompt is `runPool`.
+**semantic-key:** PK-1460
+
 ## Parallel lanes and a find bar on View
 
 1. clear and add stay inside the region lock, as one pair, so the region is the last writer's whole list. The lock is released before `runPool`, before the probe, and before `llmRouter.complete`. The wire body stays the Prompt already built. `stillMine` still drops a late reply. The semaphore of 3 stays. One pool prompt per user stays on that child's prompt gate, so two pool members of one group stay in order on that gate. A pool member and an Ollama member overlap. Two Ollama members overlap on this release. Ollama's own queue stays the operator's setting. `num-ctx` stays. A pipe chain stays sequential. No new mux channel. No new pool reason. `PoolChatServer` stays.

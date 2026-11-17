@@ -902,7 +902,7 @@ public class AmwpFacade {
         if (user == null || user.length() == 0) {
             return;
         }
-        poolChat.cancel(user);
+        poolChat.cancel(user, PoolChat.Seat.SSH);
     }
 
     /**
@@ -1317,12 +1317,12 @@ public class AmwpFacade {
             String poolThink = req.think == null ? "" : req.think;
             String boot = req.poolBoot == null ? "" : req.poolBoot;
             try {
-                poolChat.prompt(user, poolPromptText(messages), boot, "true".equals(poolThink),
-                        ChatSession.porchRules(messages), collected);
+                poolChat.prompt(user, PoolChat.Seat.SSH, poolPromptText(messages), boot, // @aa-sdd PK-1460 docs/specs/java/org/casserole/pool/pool.spec.md
+                        "true".equals(poolThink), ChatSession.porchRules(messages), collected);
             } catch (PoolChat.TooLarge ex) {
                 throw new Exception("too-large");
             } catch (InterruptedException ex) {
-                poolChat.cancel(user);
+                poolChat.cancel(user, PoolChat.Seat.SSH);
                 Thread.currentThread().interrupt();
                 throw new Exception("cancelled");
             } finally {
@@ -1882,11 +1882,12 @@ public class AmwpFacade {
             boot = req.poolBoot;
         }
         try {
-            poolChat.prompt(user, poolPromptText(messages), boot, thinkOn, ChatSession.porchRules(messages), sink);
+            poolChat.prompt(user, PoolChat.Seat.CANVAS, poolPromptText(messages), boot, thinkOn, // @aa-sdd PK-1460 docs/specs/java/org/casserole/pool/pool.spec.md
+                    ChatSession.porchRules(messages), sink);
         } catch (PoolChat.TooLarge ex) {
             return;
         } catch (InterruptedException ex) {
-            poolChat.cancel(user);
+            poolChat.cancel(user, PoolChat.Seat.CANVAS);
             Thread.currentThread().interrupt();
         } catch (Exception ex) {
             if (sink.sent() || !stillMine(cellKey, token)) {

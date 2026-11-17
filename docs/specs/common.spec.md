@@ -17,3 +17,8 @@ The map of the whole spine is [the spine map](README.md).
 - [Server](common/server.spec.md). The application capture, `application.yaml`, the core requirements, and pool chat.
 - [Roux](common/roux.spec.md). Reichenbach, identity, paging, the memory engine, and spill.
 - [Rust client and the desk](common/rust.spec.md). The Rust client serial, the terminal, and the locked multi-user desk.
+
+## The introduction plate is the reader size
+
+The introduction plate is the reader size. The file is `figures/casserole-01.jpg`. The plate is 3994 pixels wide and 2496 pixels tall. The root readme links that file. The two earlier readme plates stay at that size.
+**semantic-key:** PK-1462

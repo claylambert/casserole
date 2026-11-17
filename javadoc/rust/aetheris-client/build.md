@@ -4,18 +4,17 @@
 
 **Source** `rust/aetheris/aetheris-client/build.rs`
 
-The build script stores two window icons in the Windows executable.
+The build script stores the window icon in the Windows executable.
 
 The picture file is `aetheris.jpg` under `src/main/resources/icons`, three directories above this crate. The running window already uses that picture. The picture is the Eye of Horus. This step writes that picture into the binary so a taskbar pin keeps it. A target other than Windows returns before any file is written. A second Windows run leaves an icon file alone when the bytes already match.
 
-The small icon is `aetheris-taskbar.ico`. It holds the 16 and 32 pixel plates. The resource script names that file as icon 1, which is the icon the taskbar reads. The big icon is `aetheris-app.ico`. It holds the 48 and 256 pixel plates. The resource script names that file as icon 2. `rc.exe` from the Windows SDK compiles `aetheris.rc` into `aetheris.res`. Cargo then links `aetheris.res` into the binary.
+The script writes `aetheris.ico` in the Cargo `OUT_DIR` directory. It also writes `aetheris.rc` in that directory. The resource script is the line `1 ICON "aetheris.ico"`. `rc.exe` from the Windows SDK compiles that script into `aetheris.res`. Cargo then links `aetheris.res` into the binary.
 
 ## Constant Summary
 
 | Modifier and Type | Member | Description |
 | --- | --- | --- |
-| const | [`TASKBAR_EDGES`](#constant-taskbar_edges) |  |
-| const | [`APP_EDGES`](#constant-app_edges) |  |
+| const | [`EDGES`](#constant-edges) |  |
 
 ## Function Summary
 
@@ -30,20 +29,12 @@ The small icon is `aetheris-taskbar.ico`. It holds the 16 and 32 pixel plates. T
 
 ## Constant Detail
 
-### TASKBAR_EDGES
+### EDGES
 
-<a id="constant-taskbar_edges"></a>
-
-```rust
-const TASKBAR_EDGES: [u32; 2] = [16, 32];
-```
-
-### APP_EDGES
-
-<a id="constant-app_edges"></a>
+<a id="constant-edges"></a>
 
 ```rust
-const APP_EDGES: [u32; 2] = [48, 256];
+const EDGES: [u32; 4] = [16, 32, 48, 256];
 ```
 
 ## Function Detail
@@ -59,7 +50,7 @@ fn main()
 The `main` function embeds the window icons when the build target is Windows.
 The JPEG path is `../../../src/main/resources/icons/aetheris.jpg` from `CARGO_MANIFEST_DIR`. Cargo reruns this script when that file changes. Any other target operating system returns after that rerun line.
 
-On Windows the function reads the JPEG. `icon_file` builds each icon. The small file is `aetheris-taskbar.ico`. The big file is `aetheris-app.ico`. The resource script is icon 1 for the taskbar file and icon 2 for the app file. The function runs `rc.exe` with `/nologo`, `/fo`, `aetheris.res`, and `aetheris.rc`. A start failure panics with the tool path. A failed status panics with the tool's standard error. The link argument is the `aetheris.res` path with each backslash changed to a slash.
+On Windows the function reads the JPEG. `icon_file` builds the icon bytes. The function writes `aetheris.ico` under `OUT_DIR`. It writes `aetheris.rc` in that same directory. It runs `rc.exe` with `/nologo`, `/fo`, `aetheris.res`, and `aetheris.rc`. A start failure panics with the tool path. A failed status panics with the tool's standard error. The link argument is the `aetheris.res` path with each backslash changed to a slash.
 
 ### write_same
 

@@ -1,5 +1,10 @@
 # rust.aetheris.aetheris-client.src.chrome
 
+## The canvas pool boot is not the shell pool boot
+
+The canvas pool boot is not the shell pool boot. Canvas runs, pipes, and mood shaping send the canvas id. A canvas frame does not send the SSH id. The two ids differ. The private functions are `mint_canvas_pool_boot`, `mint_ssh_pool_boot`, and `canvas_pool_boot_for_frame`. The file is chrome.rs.
+**semantic-key:** PK-1461
+
 ## Button word
 
 No new package. No new public type. The private method is seatButtonHover. The private functions are button_ink and seat_button_hover. The private struct is ButtonHoverInk. No new vault column. No new channel. No new AMWP type. No new color key. No new library. The egui experimental feature is the button theme seat. No yaml edit. No side move on this plate. This land leaves the working set as it stands. The card-round hunks stay unstaged.
@@ -282,7 +287,7 @@ The pointer stays on a text pane. `pointer_icon` draws the text icon as the arro
 
 ## The shell icon stays on its host
 
-The shell icon stays on its host. Windows sends the Eye as the big icon. Linux sends the Eye as the window icon and names the window `aetheris`. macOS sets the Eye on the Dock. `write_same` leaves a matching icon file in place. The About mark stays at 64 pixels. The taskbar icon is 32 pixels. The Windows build writes two icons. `aetheris-taskbar.ico` holds the 16 and 32 pixel plates and is resource 1. `aetheris-app.ico` holds the 48 and 256 pixel plates and is resource 2. The functions are `shell_icon_seat`, `apply_taskbar`, `apply_class_name`, `seat_dock_icon`, `seat_shell_icon`, `taskbar_icon`, and `write_same`. The files are [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs) and [build.rs](../../../../../../rust/aetheris/aetheris-client/build.rs).
+The shell icon stays on its host. Windows sends the Eye as the big icon. Linux sends the Eye as the window icon and names the window `aetheris`. macOS sets the Eye on the Dock. `write_same` leaves a matching icon file in place. The functions are `shell_icon_seat`, `apply_taskbar`, `apply_class_name`, `seat_dock_icon`, `seat_shell_icon`, and `write_same`. The files are [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs) and [build.rs](../../../../../../rust/aetheris/aetheris-client/build.rs). The taskbar icon is the 64-pixel Eye. The Windows build writes one icon. `aetheris.ico` holds the 16, 32, 48, and 256 pixel plates and is resource 1. The About mark stays at 64 pixels.
 **semantic-key:** PK-1434
 
 ## The mood modal keeps the size it had when it closed

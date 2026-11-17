@@ -15,7 +15,7 @@ package org.casserole.pool;
 // @aa-sdd PK-1059 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-1283 docs/specs/java/org/casserole/pool/pool.spec.md
 /**
- * The {@code PoolChat} interface is the server-side contract for one pool seat per SSH user.
+ * The {@code PoolChat} interface is the server-side contract for one pool connection per SSH user and one seat.
  * A blank host keeps the local {@code grok agent stdio} child. A set host dials {@code grok agent serve}.
  * The contract has no SSH types and no Swing types.
  *
@@ -26,6 +26,21 @@ package org.casserole.pool;
 // @aa-sdd PK-965 docs/specs/java/org/casserole/pool/pool.spec.md
 // @aa-sdd PK-406 docs/specs/java/org/casserole/pool/pool.spec.md
 public interface PoolChat { // @aa-sdd PK-1101 docs/specs/common/formal-plan.spec.md
+
+    /**
+     * The {@code Seat} enum names which pool connection a turn uses.
+     * {@link #SSH} is the shell chat. {@link #CANVAS} is a canvas cell. Each seat keeps its own child, its own session id, and its own boot.
+     */
+    enum Seat {
+        /**
+         * The value is the SSH shell pool connection.
+         */
+        SSH,
+        /**
+         * The value is the canvas pool connection.
+         */
+        CANVAS
+    }
 
     /**
      * The {@code Health} enum says whether that user's child can take a prompt.
@@ -101,15 +116,17 @@ public interface PoolChat { // @aa-sdd PK-1101 docs/specs/common/formal-plan.spe
      * The method brings that user's child to a ready process.
      *
      * @param user The user is the SSH user name.
+     * @param seat The seat is {@link Seat#SSH} or {@link Seat#CANVAS}.
      * @throws Exception The method throws this exception when the process did not start.
      */
-    void start(String user) throws Exception;
+    void start(String user, Seat seat) throws Exception;
 
     /**
      * The method runs one prompt and blocks until {@link Sink#done} has run, or until the fit check stops the prompt.
      * A non-empty boot may reuse the session and send only the tail. The text is the whole working set of plain role lines.
      *
      * @param user The user is the SSH user name.
+     * @param seat The seat is {@link Seat#SSH} or {@link Seat#CANVAS}.
      * @param text The text is the whole working set of plain role lines.
      * @param boot The boot is the desktop boot id. An empty string means the client sent none.
      * @param think The flag is true when thought chunks are of interest.
@@ -117,24 +134,27 @@ public interface PoolChat { // @aa-sdd PK-1101 docs/specs/common/formal-plan.spe
      * @param sink The sink receives the frames.
      * @throws Exception The method throws this exception on interrupt, or for a failure the sink did not already take.
      */
-    void prompt(String user, String text, String boot, boolean think, String rules, Sink sink) throws Exception;
+    void prompt(String user, Seat seat, String text, String boot, boolean think, String rules, Sink sink)
+            throws Exception;
 
     /**
      * The method cancels the in-flight prompt for that user.
      * The child stays up. A second call is safe.
      *
      * @param user The user is the SSH user name.
+     * @param seat The seat is {@link Seat#SSH} or {@link Seat#CANVAS}.
      */
-    void cancel(String user);
+    void cancel(String user, Seat seat);
 
     /**
      * The method reports whether that user's child can take a prompt.
      * The result is ready, down, or auth. The result contains no secret.
      *
      * @param user The user is the SSH user name.
+     * @param seat The seat is {@link Seat#SSH} or {@link Seat#CANVAS}.
      * @return The return value is {@link Health#READY}, {@link Health#DOWN}, or {@link Health#AUTH}.
      */
-    Health health(String user);
+    Health health(String user, Seat seat);
 
     /**
      * The method destroys every child process.

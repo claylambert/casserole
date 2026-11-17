@@ -3862,19 +3862,40 @@ fn load_grok_home() -> crate::model::GrokDoc {
     crate::model::GrokDoc::load(crate::model::grok_path(&home))
 }
 
-/// The function `mint_pool_boot` builds one boot id for this window.
-/// Pool execute and pool mood send this id. The first eight bytes are the nanoseconds since the Unix epoch, as a big-endian `u64`. A clock before that epoch uses 1.
-/// The last eight bytes are that same count multiplied, with wrap, by `0x9E3779B97F4A7C15`, also big-endian. The text is `cell_text` of those sixteen bytes.
-fn mint_pool_boot() -> String {
+/// The function `mint_pool_boot_kind` builds one boot id.
+/// `kind` is `0` for the canvas seat and `1` for the SSH seat. The first eight bytes are the nanoseconds since the Unix epoch, as a big-endian `u64`. A clock before that epoch uses 1.
+/// The last eight bytes are that count multiplied, with wrap, by `0x9E3779B97F4A7C15`, then added to `kind`, also big-endian. The text is `cell_text` of those sixteen bytes. The two kinds differ even in the same tick.
+fn mint_pool_boot_kind(kind: u64) -> String {
     let ticks = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|span| span.as_nanos() as u64)
         .unwrap_or(1);
     let mut bytes = [0u8; 16];
     bytes[..8].copy_from_slice(&ticks.to_be_bytes());
-    let mixed = ticks.wrapping_mul(0x9E37_79B9_7F4A_7C15);
+    let mixed = ticks.wrapping_mul(0x9E37_79B9_7F4A_7C15).wrapping_add(kind);
     bytes[8..].copy_from_slice(&mixed.to_be_bytes());
     crate::amwp::cell_text(&bytes)
+}
+
+/// The function `mint_canvas_pool_boot` builds the canvas pool boot.
+/// Canvas runs, pipes, and mood shaping send this id. It is not the SSH boot.
+fn mint_canvas_pool_boot() -> String { // @aa-sdd PK-1461 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    mint_pool_boot_kind(0)
+}
+
+/// The function `mint_ssh_pool_boot` builds the SSH pool boot.
+/// The host shell keeps its own connection. This id is not written on a canvas frame.
+fn mint_ssh_pool_boot() -> String { // @aa-sdd PK-1461 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    mint_pool_boot_kind(1)
+}
+
+/// The function `canvas_pool_boot_for_frame` returns the canvas pool boot.
+/// `canvas` is the canvas id. `ssh` is the SSH id. A canvas frame sends `canvas`. It does not send `ssh`.
+fn canvas_pool_boot_for_frame<'a>(canvas: &'a str, ssh: &'a str) -> &'a str { // @aa-sdd PK-1461 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    if canvas == ssh {
+        return canvas;
+    }
+    canvas
 }
 
 /// The function `mood_knob` returns the color and the side of the round mood button.
@@ -3976,7 +3997,7 @@ fn mood_focus_card(cards: &[TurnCard], focus: usize) -> Option<usize> {
 }
 
 /// The function `mood_glass_target` returns the model the mood glass sends.
-/// `card` is the selected cell. `entry` is that cell's Grok settings, when the document has one. `pool_boot` is the boot id from `mint_pool_boot`. The Java client calls this `moodTarget`.
+/// `card` is the selected cell. `entry` is that cell's Grok settings, when the document has one. `pool_boot` is the canvas boot id. The Java client calls this `moodTarget`.
 /// The result is the `target` from [`crate::model::mood_tune`]. A pool card sends the word `pool`. A Grok card with no model id takes the model stored on `entry`.
 /// // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
 fn mood_glass_target(
@@ -6060,7 +6081,6 @@ pub const WINDOW_TITLE: &str = "Aetheris";
 pub const WINDOW_CAPTION: &str = "Aetheris Rust";
 /// Title-bar and taskbar icon edge. The art is the Java Eye of Horus jpeg.
 const WINDOW_ICON_PX: u32 = 64;
-const TASKBAR_ICON_PX: u32 = 32;
 
 /// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Keyboard focus for the console. The host still owns the line.
@@ -19032,22 +19052,6 @@ fn window_icon() -> Option<winit::window::Icon> {
     winit::window::Icon::from_rgba(rgba, width, height).ok()
 }
 
-/// Eye of Horus at [`TASKBAR_ICON_PX`]. The About mark does not use this plate.
-fn taskbar_icon_rgba() -> Option<(u32, u32, Vec<u8>)> {
-    let bytes = include_bytes!("../../../../src/main/resources/icons/aetheris.jpg");
-    decode_icon_rgba(bytes, TASKBAR_ICON_PX).or_else(|| {
-        let fallback = include_bytes!("../../../../src/main/resources/icons/casserole.jpg");
-        decode_icon_rgba(fallback, TASKBAR_ICON_PX)
-    })
-}
-
-/// The function `taskbar_icon` builds the taskbar icon.
-/// The pixels come from `taskbar_icon_rgba`. A missing image returns `None`. A failure inside `Icon::from_rgba` also returns `None`.
-fn taskbar_icon() -> Option<winit::window::Icon> {
-    let (width, height, rgba) = taskbar_icon_rgba()?;
-    winit::window::Icon::from_rgba(rgba, width, height).ok()
-}
-
 /// The seat `ShellIconSeat` names which icon slot a host uses.
 /// `window` is the small icon. On Linux that image is the dock mark. `taskbar` is the Windows big icon. `dock` is the macOS Dock. `class_name` is the Linux application id.
 struct ShellIconSeat {
@@ -19102,7 +19106,7 @@ fn apply_taskbar(
         return attributes;
     }
     use winit::platform::windows::WindowAttributesExtWindows;
-    attributes.with_taskbar_icon(taskbar_icon())
+    attributes.with_taskbar_icon(window_icon())
 }
 
 /// The function `apply_taskbar` is the host that is not Windows.
@@ -19897,7 +19901,7 @@ struct ShellNotice {
 ///
 /// `grok` is the shared `aetheris-grok.yaml`. A version other than 1 stays unread. `token_open` is the token window. `ring_used` is the integer the token paint shows. `heat_chars`, `heat_blocks`, and `heat_body` are the last seated canvas beat. `canvas_heat_sig` is the last value that decides whether the canvas heatbar posts a new beat. `canvas_sig_set` is true after that value has been stored. `vt_used`, `vt_chars`, and `vt_blocks` are the terminal heat counts. `vt_heat_sig` is the last value that decides whether the terminal heatbar posts a new beat. `vt_sig_set` is true after that value has been stored. `vt_memory` is the cached terminal text. `vt_memory_gen` is the `grid_gen` that cache was built from. `grid_gen` increases when the grid is fed, cleared, resized, or swapped. `heat_seq` is the heat sequence. `heat_kind` is 0 for none, 1 for the canvas, and 2 for the terminal. `heat` is the newest-only heatbar queue. `token_pick` is the combo label while the token window is open. Empty selects the focused turn.
 ///
-/// `model` is the one Model Config modal. `engine_label` is the focused pane's model word. `engine_asked` is true after this connection has been asked for that model. `list_slide_gen` is the model-list notice last copied onto the error slide. `shell_open` is true when the next shell answer should open the modal. `console_model_pane` is the pane that opened the console Model Config. `console_return` is the pane to focus after that modal closes. `osc_hold` holds the tail of a split `select-model` sequence. `pool_boot` is the pool boot id for this window.
+/// `model` is the one Model Config modal. `engine_label` is the focused pane's model word. `engine_asked` is true after this connection has been asked for that model. `list_slide_gen` is the model-list notice last copied onto the error slide. `shell_open` is true when the next shell answer should open the modal. `console_model_pane` is the pane that opened the console Model Config. `console_return` is the pane to focus after that modal closes. `osc_hold` holds the tail of a split `select-model` sequence. `canvas_pool_boot` is the canvas pool boot. `ssh_pool_boot` is the SSH pool boot. A canvas frame sends the canvas id.
 ///
 /// `pane_id` is the focused pane. `next_pane` is the next id to assign. `panes` holds every [`ParkedPane`]. `decks` holds canvas decks that are not on the glass. `canvas_user` exists only in tests and is the glass user when a test has no vault file. `tree` is the [`PaneNode`] layout. `term_font` is the live font size. `last_connect` is the last connect fields for the focused pane.
 ///
@@ -20142,8 +20146,10 @@ struct App {
     console_return: Option<u64>,
     /// Held tail of a split `select-model` sequence.
     osc_hold: crate::model::OscHold,
-    /// Pool boot id for this window.
-    pool_boot: String,
+    /// Canvas pool boot. Canvas runs, pipes, and mood shaping send this id.
+    canvas_pool_boot: String,
+    /// SSH pool boot. A canvas frame does not send this id.
+    ssh_pool_boot: String,
     /// Focused pane. Its grid and session stay on this struct.
     pane_id: u64,
     next_pane: u64,
@@ -20247,7 +20253,8 @@ impl App {
             SettingsYaml::fresh()
         };
         let grok = load_grok_home();
-        let pool_boot = mint_pool_boot();
+        let canvas_pool_boot = mint_canvas_pool_boot();
+        let ssh_pool_boot = mint_ssh_pool_boot();
         let term_font = door.font_size();
         let saved_frame = door.frame_bounds();
         let open_maximized = door.frame_maximized_word().unwrap_or(OPEN_MAXIMIZED);
@@ -20390,7 +20397,8 @@ impl App {
             console_model_pane: None,
             console_return: None,
             osc_hold: crate::model::OscHold::new(),
-            pool_boot,
+            canvas_pool_boot,
+            ssh_pool_boot,
             pane_id: 1,
             next_pane: 2,
             panes: Vec::new(),
@@ -21232,7 +21240,7 @@ impl App {
             &canvas_scope,
             &self.mood,
             &self.grok,
-            &self.pool_boot,
+            canvas_pool_boot_for_frame(&self.canvas_pool_boot, &self.ssh_pool_boot),
         );
         seat_mood_slide(&mut self.slide, mood_dropped);
         match pipe_wake {
@@ -22967,7 +22975,8 @@ impl App {
                 land_newest,
                 mood,
                 grok,
-                pool_boot,
+                canvas_pool_boot,
+                ssh_pool_boot,
                 ..
             } = self;
             let seat = think_panes.acquire_canvas(&key);
@@ -22989,7 +22998,7 @@ impl App {
                 pieces,
                 mood,
                 grok,
-                pool_boot.as_str(),
+                canvas_pool_boot_for_frame(canvas_pool_boot, ssh_pool_boot),
                 mux,
             )
         } else {
@@ -23002,7 +23011,8 @@ impl App {
                 cell_seq,
                 mood,
                 grok,
-                pool_boot,
+                canvas_pool_boot,
+                ssh_pool_boot,
                 ..
             } = self;
             let deck = &mut decks[index];
@@ -23025,7 +23035,7 @@ impl App {
                 pieces,
                 mood,
                 grok,
-                pool_boot.as_str(),
+                canvas_pool_boot_for_frame(canvas_pool_boot, ssh_pool_boot),
                 mux,
             )
         };
@@ -23532,7 +23542,7 @@ impl App {
             &session,
             &self.mood_desk.turns,
             entry.as_ref(),
-            &self.pool_boot,
+            canvas_pool_boot_for_frame(&self.canvas_pool_boot, &self.ssh_pool_boot),
         )
         else {
             self.mood_desk.busy = false;
@@ -23762,7 +23772,7 @@ impl App {
             Some(card) => {
                 let key = crate::amwp::cell_text(&card.cell);
                 let entry = self.grok.entry(&key);
-                let target = mood_glass_target(card, entry.as_ref(), &self.pool_boot);
+                let target = mood_glass_target(card, entry.as_ref(), canvas_pool_boot_for_frame(&self.canvas_pool_boot, &self.ssh_pool_boot));
                 mood_glass_title(&target)
             }
             None => MOOD_TITLE.to_string(),
@@ -25796,7 +25806,7 @@ impl App {
             self.focus,
             &self.mood,
             &self.grok,
-            &self.pool_boot,
+            canvas_pool_boot_for_frame(&self.canvas_pool_boot, &self.ssh_pool_boot),
         );
         seat_mood_slide(&mut self.slide, dropped);
         match ask {
@@ -25925,7 +25935,7 @@ impl App {
             self.focus,
             &self.mood,
             &self.grok,
-            &self.pool_boot,
+            canvas_pool_boot_for_frame(&self.canvas_pool_boot, &self.ssh_pool_boot),
         );
         seat_mood_slide(&mut self.slide, dropped);
         match ask {
@@ -29980,7 +29990,7 @@ mod tests {
 
     use super::{
         accept_end, accept_fault, accept_reply, accept_scope, append_scope, append_turn, ask_run,
-        ask_run_doc,
+        ask_run_doc, mint_canvas_pool_boot, mint_ssh_pool_boot, canvas_pool_boot_for_frame,
         reply_opens_turn, land_open_turn,
         begin_run, canvas_body, clamp_logical, clear_canvas, clear_deck, clear_plate, clear_turn,
         concat_join, connect_allowed, control_after_status, control_mark, control_tip,
@@ -38694,21 +38704,43 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
+    /// `the_canvas_pool_boot_is_not_the_ssh_boot` mints two boots.
+    /// The canvas boot and the SSH boot differ. A canvas frame sends the canvas boot. That frame does not carry the SSH boot.
+    #[test]
+    fn the_canvas_pool_boot_is_not_the_ssh_boot() {
+        let canvas = mint_canvas_pool_boot();
+        let ssh = mint_ssh_pool_boot();
+        assert_ne!(canvas, ssh);
+        assert_eq!(canvas_pool_boot_for_frame(&canvas, &ssh), canvas);
+        let mut card = TurnCard::fresh(1);
+        card.prompt = "keep".to_string();
+        card.target = "pool".to_string();
+        card.pool_on = true;
+        let doc = crate::model::GrokDoc::memory();
+        let (RunAsk::Send(frame), _) = ask_run_doc(
+            std::slice::from_ref(&card),
+            0,
+            &MoodYaml::fresh(),
+            &doc,
+            canvas_pool_boot_for_frame(&canvas, &ssh),
+        ) else {
+            panic!("pool sends");
+        };
+        let text = String::from_utf8_lossy(&frame);
+        assert!(text.contains(&format!("pool_boot: {canvas}\n")));
+        assert!(!text.contains(&ssh));
+    }
+
     #[test]
     /// The `the_window_caption_reads_aetheris_rust` test checks the window caption and the taskbar icon.
     /// [`super::WINDOW_CAPTION`] is `Aetheris Rust`. [`super::WINDOW_TITLE`] is `Aetheris`. [`super::WINDOW_ICON_PX`] is 64.
     /// [`super::window_icon_rgba`] returns width 64 and height 64. The byte length is 64 times 64 times 4. `Icon::from_rgba` accepts those bytes.
-    /// The icon file widths are 16, 32, 48, and 0. The 32-pixel plate has a byte other than 0. That plate also has a byte that differs from its first byte.
+    /// The icon file widths are 16, 32, 48, and 0. The 32-pixel plate has a byte other than 0. That plate also has a byte that differs from its first byte. The About mark stays at 64 pixels.
     fn the_window_caption_reads_aetheris_rust() {
         assert_eq!(super::WINDOW_CAPTION, "Aetheris Rust");
         assert_eq!(super::WINDOW_TITLE, "Aetheris");
         assert_eq!(super::WINDOW_ICON_PX, 64);
-        assert_eq!(super::TASKBAR_ICON_PX, 32);
         assert_eq!(super::ABOUT_APP_PX, 64);
-        let (task_w, task_h, task_rgba) = super::taskbar_icon_rgba().expect("taskbar");
-        assert_eq!(task_w, 32);
-        assert_eq!(task_h, 32);
-        assert_eq!(task_rgba.len(), 32 * 32 * 4);
         let (width, height, rgba) = super::window_icon_rgba().expect("icon");
         assert_eq!(width, 64);
         assert_eq!(height, 64);
@@ -38716,11 +38748,10 @@ mod tests {
         assert!(winit::window::Icon::from_rgba(rgba, width, height).is_ok());
         #[cfg(windows)]
         {
-            let taskbar = include_bytes!(concat!(env!("OUT_DIR"), "\\aetheris-taskbar.ico"));
-            let app = include_bytes!(concat!(env!("OUT_DIR"), "\\aetheris-app.ico"));
-            assert_eq!(taskbar_ico_widths(taskbar), vec![16, 32]);
-            assert_eq!(taskbar_ico_widths(app), vec![48, 0]);
-            let plate = taskbar_ico_xor(taskbar, 1);
+            let ico = include_bytes!(concat!(env!("OUT_DIR"), "\\aetheris.ico"));
+            let widths = taskbar_ico_widths(ico);
+            assert_eq!(widths, vec![16, 32, 48, 0]);
+            let plate = taskbar_ico_xor(ico, 1);
             assert!(plate.iter().any(|byte| *byte != 0));
             assert!(plate.iter().any(|byte| *byte != plate[0]));
         }
