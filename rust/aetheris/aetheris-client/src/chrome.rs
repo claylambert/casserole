@@ -3898,6 +3898,37 @@ fn canvas_pool_boot_for_frame<'a>(canvas: &'a str, ssh: &'a str) -> &'a str { //
     canvas
 }
 
+/// The host sentence for a shell pool turn that finished with no assistant text.
+const EMPTY_SHELL_REPLY: &str = "The engine returned an empty reply.";
+
+/// The function `roll_shell_window` keeps the recent host bytes for one pane.
+/// `tail` is that window. `paint` is the next terminal chunk. The window stays long enough to hold [`EMPTY_SHELL_REPLY`] when the sentence is split across chunks.
+fn roll_shell_window(tail: &mut String, paint: &[u8]) {
+    tail.push_str(&String::from_utf8_lossy(paint));
+    const KEEP: usize = 160;
+    if tail.len() <= KEEP {
+        return;
+    }
+    let mut cut = tail.len() - KEEP;
+    while cut < tail.len() && !tail.is_char_boundary(cut) {
+        cut += 1;
+    }
+    *tail = tail[cut..].to_string();
+}
+
+/// The function `empty_shell_replay` sends the shell line once when the host reports an empty reply.
+/// `line` is the line this pane submitted. `window` is the recent host text. `already` is true after this line was sent again.
+/// A line already sent again returns nothing. An empty line returns nothing. A window that holds [`EMPTY_SHELL_REPLY`] returns that line and a carriage return.
+fn empty_shell_replay(line: &str, window: &str, already: bool) -> Option<Vec<u8>> { // @aa-sdd PK-1464 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    if already || line.is_empty() || !window.contains(EMPTY_SHELL_REPLY) {
+        return None;
+    }
+    let mut out = Vec::with_capacity(line.len() + 1);
+    out.extend(line.as_bytes());
+    out.push(b'\r');
+    Some(out)
+}
+
 /// The function `mood_knob` returns the color and the side of the round mood button.
 /// `mood` is the [`MoodYaml`] record. A record with no mood string returns grey and false. False places the button on the left, which is off.
 /// A switch that is on returns the green ink and true. True places the button on the right. A saved string whose switch is off returns the red ink and false.
@@ -19529,6 +19560,12 @@ struct ParkedPane {
     tokens_asked: bool,
     /// Characters typed on this pane and not yet submitted.
     live_line: String,
+    /// The line this pane last submitted. An empty host reply sends it once.
+    shell_line: String,
+    /// True after that line was sent again for one empty host reply.
+    shell_replayed: bool,
+    /// Recent host bytes, kept so a split empty-reply sentence still matches.
+    shell_window: String,
     /// This pane's selected model. Empty prints as ollama. A canvas cell is not this word.
     engine_label: String,
     /// This connection has been asked for the saved model. A disconnect clears it.
@@ -19973,6 +20010,12 @@ struct App {
     /// Characters typed on the focused pane and not yet submitted.
     /// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-177
     live_line: String,
+    /// The line the focused pane last submitted. An empty host reply sends it once.
+    shell_line: String,
+    /// True after that line was sent again for one empty host reply.
+    shell_replayed: bool,
+    /// Recent host bytes on the focused pane.
+    shell_window: String,
     /// File seed for a new VT100 pane and the next open. Live height stays on the session.
     vt_chrome: ThinkChrome,
     /// `aetheris-vt100-think.yaml`. A version other than 1 stays unread.
@@ -20301,6 +20344,9 @@ impl App {
             roux_blocks: 0,
             tokens_asked: false,
             live_line: String::new(),
+            shell_line: String::new(),
+            shell_replayed: false,
+            shell_window: String::new(),
             vt_chrome,
             vt_yaml,
             mood,
@@ -20955,6 +21001,16 @@ impl App {
                     continue;
                 }
                 pane.grid.feed(&paint);
+                if let Some(bytes) = replay_shell_paint(
+                    &mut pane.shell_window,
+                    &pane.shell_line,
+                    &mut pane.shell_replayed,
+                    &paint,
+                ) {
+                    if let Some(session) = pane.session.as_ref() {
+                        session.write(&bytes);
+                    }
+                }
                 let reply = pane.grid.take_reply();
                 if !reply.is_empty() {
                     if let Some(session) = pane.session.as_ref() {
@@ -21287,6 +21343,16 @@ impl App {
             }
             self.grid.feed(&paint);
             self.note_grid();
+            if let Some(bytes) = replay_shell_paint(
+                &mut self.shell_window,
+                &self.shell_line,
+                &mut self.shell_replayed,
+                &paint,
+            ) {
+                if let Some(session) = self.session.as_ref() {
+                    session.write(&bytes);
+                }
+            }
             let reply = self.grid.take_reply();
             if !reply.is_empty() {
                 if let Some(session) = self.session.as_ref() {
@@ -22225,6 +22291,9 @@ impl App {
             roux_blocks: std::mem::replace(&mut self.roux_blocks, 0),
             tokens_asked: std::mem::replace(&mut self.tokens_asked, false),
             live_line: std::mem::take(&mut self.live_line),
+            shell_line: std::mem::take(&mut self.shell_line),
+            shell_replayed: std::mem::replace(&mut self.shell_replayed, false),
+            shell_window: std::mem::take(&mut self.shell_window),
             engine_label: std::mem::take(&mut self.engine_label),
             engine_asked: std::mem::replace(&mut self.engine_asked, false),
         }
@@ -22263,6 +22332,9 @@ impl App {
         self.roux_blocks = parked.roux_blocks;
         self.tokens_asked = parked.tokens_asked;
         self.live_line = parked.live_line;
+        self.shell_line = parked.shell_line;
+        self.shell_replayed = parked.shell_replayed;
+        self.shell_window = parked.shell_window;
         self.engine_label = parked.engine_label;
         self.engine_asked = parked.engine_asked;
         self.last_connect = parked.last.clone();
@@ -24903,7 +24975,14 @@ impl App {
     /// Enter submits the line. Backspace drops one character. Other keys stay on the wire only.
     fn note_live_key(&mut self, key: Key) {
         match key {
-            Key::Enter => self.live_line.clear(),
+            Key::Enter => {
+                if !self.live_line.is_empty() {
+                    self.shell_line = self.live_line.clone(); // @aa-sdd PK-1464 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                    self.shell_replayed = false;
+                    self.shell_window.clear();
+                }
+                self.live_line.clear();
+            }
             Key::Backspace => {
                 self.live_line.pop();
             }
@@ -29401,6 +29480,21 @@ fn shift_released_just_before(events: &[egui::Event], index: usize) -> bool {
     false
 }
 
+/// The function `replay_shell_paint` rolls the host window and returns the one resend.
+/// `tail` is the pane window. `line` is the submitted line. `already` becomes true when this call returns bytes. `paint` is the new terminal chunk.
+/// The bytes are that line and a carriage return. A line that was already sent again returns nothing.
+fn replay_shell_paint(
+    tail: &mut String,
+    line: &str,
+    already: &mut bool,
+    paint: &[u8],
+) -> Option<Vec<u8>> {
+    roll_shell_window(tail, paint);
+    let bytes = empty_shell_replay(line, tail, *already)?;
+    *already = true;
+    Some(bytes)
+}
+
 /// Enter is CR. Shift-Enter is one LF. Command or Alt keeps the CR.
 fn enter_stroke(shift: bool, command: bool, alt: bool) -> Key {
     if shift && !command && !alt {
@@ -29991,6 +30085,7 @@ mod tests {
     use super::{
         accept_end, accept_fault, accept_reply, accept_scope, append_scope, append_turn, ask_run,
         ask_run_doc, mint_canvas_pool_boot, mint_ssh_pool_boot, canvas_pool_boot_for_frame,
+        roll_shell_window, empty_shell_replay,
         reply_opens_turn, land_open_turn,
         begin_run, canvas_body, clamp_logical, clear_canvas, clear_deck, clear_plate, clear_turn,
         concat_join, connect_allowed, control_after_status, control_mark, control_tip,
@@ -38702,6 +38797,25 @@ mod tests {
         app.remember_live_expanded();
         assert!(super::expanded_on(&app.expanded, &kept));
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// `the_empty_shell_reply_is_sent_once` sends the submitted line one time.
+    /// The host sentence is `The engine returned an empty reply.` A split sentence still matches.
+    /// The bytes are the line and one carriage return. A second sighting sends nothing.
+    #[test]
+    fn the_empty_shell_reply_is_sent_once() {
+        let line = "hello radar";
+        let mut window = String::new();
+        roll_shell_window(&mut window, b"\x1b[31mThe engine returned an ");
+        assert!(empty_shell_replay(line, &window, false).is_none());
+        roll_shell_window(&mut window, b"empty reply. (ChatShell.java:899)\x1b[0m\r\n");
+        let once = empty_shell_replay(line, &window, false).expect("one send");
+        let mut expect = line.as_bytes().to_vec();
+        expect.push(b'\r');
+        assert_eq!(once, expect);
+        assert!(empty_shell_replay(line, &window, true).is_none());
+        assert!(empty_shell_replay("", &window, false).is_none());
+        assert!(empty_shell_replay(line, "pool down", false).is_none());
     }
 
     /// `the_canvas_pool_boot_is_not_the_ssh_boot` mints two boots.

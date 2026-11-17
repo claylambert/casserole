@@ -275,7 +275,7 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code runPrompt} method sends one working set to the child.
-     * A held session that {@link #canExtend} accepts sends only the tail after the held text. Every other prompt drops the hold, opens a session, and sends the whole working set.
+     * A held session that {@link #canExtend} accepts sends only the tail after the held text. Every other prompt cancels the held session, drops the hold, opens a session, and sends the whole working set.
      * {@link PoolChat.TooLarge} cancels the session and drops the hold. The sink done call is left to the forward path, which sets the skip flag. An interrupt cancels, drops the hold, and is thrown again.
      * An I/O failure drops the hold and, unless done is skipped or cancel was asked, calls the sink with {@code pool down}. Any other exception uses {@code pool payload}.
      *
@@ -296,12 +296,12 @@ public final class PoolChatServer implements PoolChat {
                 return;
             }
             if (!extend) {
-                dropHold(child);
+                releaseSession(child);
                 if (!openSession(child, full, safeBoot)) {
                     return;
                 }
             }
-            sendTurn(child, body, full, safeBoot);
+            sendTurn(child, body, full, safeBoot, extend);
         } catch (PoolChat.TooLarge ex) {
             sendCancel(child);
             dropHold(child);
@@ -394,14 +394,16 @@ public final class PoolChatServer implements PoolChat {
      * The {@code sendTurn} method sends {@code session/prompt} and finishes the sink.
      * {@link #stopHere} cancels and drops the hold. {@link Outcome#DEAD} retries when nothing was forwarded and this is the first try. Otherwise it drops the hold and, when a sink is present, calls it with {@code pool down}. {@link Outcome#FAIL} drops the hold and finishes the failure.
      * {@link Outcome#OK} calls the sink with an empty reason and the assembled answer, then {@link #align} stores the hold.
+     * An extension whose assembled answer is empty is not a reply. That path cancels the session, opens a new one, and sends the whole working set once.
      *
      * @param child The child is the live process.
      * @param body The body is the text sent on this prompt. It is the tail when the session extends.
      * @param full The full text is the whole working set stored on success.
      * @param boot The boot is the boot id stored on success.
+     * @param extend The flag is true when {@code body} is only the tail.
      * @throws Exception The method throws this exception when the child call fails.
      */
-    private void sendTurn(Child child, String body, String full, String boot) throws Exception {
+    private void sendTurn(Child child, String body, String full, String boot, boolean extend) throws Exception {
         child.step = "session/prompt";
         child.assembled = new StringBuilder();
         Outcome turn = call(child, "session/prompt", promptParams(child, body), true);
@@ -430,8 +432,28 @@ public final class PoolChatServer implements PoolChat {
         synchronized (child.io) {
             answer = child.assembled.toString();
         }
+        if (extend && answer.length() == 0) { // @aa-sdd PK-1463 docs/specs/java/org/casserole/pool/pool.spec.md
+            releaseSession(child);
+            if (!openSession(child, full, boot)) {
+                return;
+            }
+            sendTurn(child, full, full, boot, false);
+            return;
+        }
         child.sink.done("", answer);
         align(child, full, boot, answer);
+    }
+
+    /**
+     * The {@code releaseSession} method cancels the held remote session and clears the local hold.
+     * {@link #sendCancel} runs while the session id is still set. {@link #dropHold} then clears that id. The cancel-sent flag is cleared so a later turn can cancel the next session.
+     *
+     * @param child The child loses its remote session and its hold.
+     */
+    private void releaseSession(Child child) { // @aa-sdd PK-1463 docs/specs/java/org/casserole/pool/pool.spec.md
+        sendCancel(child);
+        dropHold(child);
+        child.cancelSent = false;
     }
 
     /**

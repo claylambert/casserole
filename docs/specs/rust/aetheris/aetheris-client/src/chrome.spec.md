@@ -1,5 +1,10 @@
 # rust.aetheris.aetheris-client.src.chrome
 
+## An empty shell reply sends the line once
+
+An empty shell reply sends the line once. The host sentence is `The engine returned an empty reply.` The pane keeps the line it submitted. That sentence sends the line and a carriage return one time. A second sighting sends nothing. The function is `empty_shell_replay`. The file is `chrome.rs`.
+**semantic-key:** PK-1464
+
 ## The canvas pool boot is not the shell pool boot
 
 The canvas pool boot is not the shell pool boot. Canvas runs, pipes, and mood shaping send the canvas id. A canvas frame does not send the SSH id. The two ids differ. The private functions are `mint_canvas_pool_boot`, `mint_ssh_pool_boot`, and `canvas_pool_boot_for_frame`. The file is chrome.rs.

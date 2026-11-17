@@ -1,5 +1,10 @@
 # org.casserole.pool
 
+## An empty extension opens a fresh pool session
+
+An extended pool prompt that finishes with no assistant text is not a reply. The method is `releaseSession`. It cancels the held session and clears the hold. The same turn then opens a session and sends the whole working set once. A prompt that does not extend cancels the held session before `session/new`. The file is `PoolChatServer.java`.
+**semantic-key:** PK-1463
+
 ## SSH and the canvas keep separate pool connections
 
 An SSH pool turn and a canvas pool turn for the same user open two children. The SSH seat is `PoolChat.Seat.SSH`. The canvas seat is `PoolChat.Seat.CANVAS`. Each child keeps its own session id and its own boot. Cancelling the shell does not cancel the canvas. Cancelling the cell does not cancel the shell. The map key is the user, a NUL, and the seat name. The method is `seatKey`. The shell prompt is `completeTurn`. The cell prompt is `runPool`.
