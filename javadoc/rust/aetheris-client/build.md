@@ -4,37 +4,46 @@
 
 **Source** `rust/aetheris/aetheris-client/build.rs`
 
-The build script stores the window icon in the Windows executable.
+The build script stores two window icons in the Windows executable.
 
 The picture file is `aetheris.jpg` under `src/main/resources/icons`, three directories above this crate. The running window already uses that picture. The picture is the Eye of Horus. This step writes that picture into the binary so a taskbar pin keeps it. A target other than Windows returns before any file is written. A second Windows run leaves an icon file alone when the bytes already match.
 
-The script writes `aetheris.ico` in the Cargo `OUT_DIR` directory. It also writes `aetheris.rc` in that directory. The resource script is the line `1 ICON "aetheris.ico"`. `rc.exe` from the Windows SDK compiles that script into `aetheris.res`. Cargo then links `aetheris.res` into the binary.
+The small icon is `aetheris-taskbar.ico`. It holds the 16 and 32 pixel plates. The resource script names that file as icon 1, which is the icon the taskbar reads. The big icon is `aetheris-app.ico`. It holds the 48 and 256 pixel plates. The resource script names that file as icon 2. `rc.exe` from the Windows SDK compiles `aetheris.rc` into `aetheris.res`. Cargo then links `aetheris.res` into the binary.
 
 ## Constant Summary
 
 | Modifier and Type | Member | Description |
 | --- | --- | --- |
-| const | [`EDGES`](#constant-edges) |  |
+| const | [`TASKBAR_EDGES`](#constant-taskbar_edges) |  |
+| const | [`APP_EDGES`](#constant-app_edges) |  |
 
 ## Function Summary
 
 | Modifier and Type | Member | Description |
 | --- | --- | --- |
-| fn | [`main`](#function-main) | The `main` function embeds the window icon when the build target is Windows. |
+| fn | [`main`](#function-main) | The `main` function embeds the window icons when the build target is Windows. |
 | fn | [`write_same`](#function-write_same) | The function `write_same` writes `bytes` to `path` when the file is absent or the bytes differ. |
 | fn | [`find_rc`](#function-find_rc) | The `find_rc` function returns the newest `rc.exe` under the Windows SDK `bin` directory. |
 | fn | [`kits_root`](#function-kits_root) | The `kits_root` function reads `KitsRoot10` from the Windows registry. |
-| fn | [`taskbar_ico`](#function-taskbar_ico) | The `taskbar_ico` function builds a classic icon file from the JPEG bytes. |
+| fn | [`icon_file`](#function-icon_file) | The `icon_file` function builds a classic icon file from one picture. |
 | fn | [`dib`](#function-dib) | The `dib` function builds one 32-bit device-independent bitmap for an icon image. |
 
 ## Constant Detail
 
-### EDGES
+### TASKBAR_EDGES
 
-<a id="constant-edges"></a>
+<a id="constant-taskbar_edges"></a>
 
 ```rust
-const EDGES: [u32; 4] = [16, 32, 48, 256];
+const TASKBAR_EDGES: [u32; 2] = [16, 32];
+```
+
+### APP_EDGES
+
+<a id="constant-app_edges"></a>
+
+```rust
+const APP_EDGES: [u32; 2] = [48, 256];
 ```
 
 ## Function Detail
@@ -47,10 +56,10 @@ const EDGES: [u32; 4] = [16, 32, 48, 256];
 fn main()
 ```
 
-The `main` function embeds the window icon when the build target is Windows.
+The `main` function embeds the window icons when the build target is Windows.
 The JPEG path is `../../../src/main/resources/icons/aetheris.jpg` from `CARGO_MANIFEST_DIR`. Cargo reruns this script when that file changes. Any other target operating system returns after that rerun line.
 
-On Windows the function reads the JPEG. `taskbar_ico` builds the icon bytes. The function writes `aetheris.ico` under `OUT_DIR`. It writes `aetheris.rc` in that same directory. It runs `rc.exe` with `/nologo`, `/fo`, `aetheris.res`, and `aetheris.rc`. A start failure panics with the tool path. A failed status panics with the tool's standard error. The link argument is the `aetheris.res` path with each backslash changed to a slash.
+On Windows the function reads the JPEG. `icon_file` builds each icon. The small file is `aetheris-taskbar.ico`. The big file is `aetheris-app.ico`. The resource script is icon 1 for the taskbar file and icon 2 for the app file. The function runs `rc.exe` with `/nologo`, `/fo`, `aetheris.res`, and `aetheris.rc`. A start failure panics with the tool path. A failed status panics with the tool's standard error. The link argument is the `aetheris.res` path with each backslash changed to a slash.
 
 ### write_same
 
@@ -85,18 +94,18 @@ fn kits_root() -> Option<PathBuf>
 The `kits_root` function reads `KitsRoot10` from the Windows registry.
 The first key is `HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows Kits\Installed Roots`. The second key is `HKLM\SOFTWARE\Microsoft\Windows Kits\Installed Roots`. A failed query skips that key. The path is the text after `REG_SZ` on the `KitsRoot10` line. An empty path is skipped. Both keys missing returns `None`.
 
-### taskbar_ico
+### icon_file
 
-<a id="function-taskbar_ico"></a>
+<a id="function-icon_file"></a>
 
 ```rust
-fn taskbar_ico(jpeg: &[u8]) -> Vec<u8>
+fn icon_file(picture: &image::DynamicImage, edges: &[u32]) -> Vec<u8>
 ```
 
-The `taskbar_ico` function builds a classic icon file from the JPEG bytes.
-Each image is a 32-bit device-independent bitmap, stored bottom-up. The mask height is folded into the bitmap header so the shell reads the alpha channel.
+The `icon_file` function builds a classic icon file from one picture.
+`picture` is the Eye. `edges` is the plate sizes for this file. Each image is a 32-bit device-independent bitmap, stored bottom-up. The mask height is folded into the bitmap header so the shell reads the alpha channel.
 
-The edges are 16, 32, 48, and 256 pixels. Each size is a triangle-filtered resize of the JPEG. An edge of 256 is stored as width 0 and height 0 in the directory entry. Every entry says one color plane and 32 bits. The file header is reserved 0, type 1, and the image count.
+Each size is a triangle-filtered resize of the picture. An edge of 256 is stored as width 0 and height 0 in the directory entry. Every entry says one color plane and 32 bits. The file header is reserved 0, type 1, and the image count.
 
 ### dib
 

@@ -1421,7 +1421,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`decode_icon_rgba`](#function-decode_icon_rgba) | The function `decode_icon_rgba` decodes an image and scales it to a square. |
 | fn | [`window_icon`](#function-window_icon) | The function `window_icon` builds the window icon for the client window. |
 | fn | [`shell_icon_seat`](#function-shell_icon_seat) | The function `shell_icon_seat` names the icon slots for one host. |
-| fn | [`apply_taskbar`](#function-apply_taskbar) | The function `apply_taskbar` sets the Windows big icon when this build is Windows and `taskbar` is true. |
+| fn | [`apply_taskbar`](#function-apply_taskbar) | The function `apply_taskbar` sets the Windows taskbar icon when this build is Windows and `taskbar` is true. |
 | fn | [`apply_taskbar`](#function-apply_taskbar) | The function `apply_taskbar` is the host that is not Windows. |
 | fn | [`apply_class_name`](#function-apply_class_name) | The function `apply_class_name` names the Linux window `aetheris` when `class_name` is true. |
 | fn | [`apply_class_name`](#function-apply_class_name) | The function `apply_class_name` is the host that is not Linux. |
@@ -17102,7 +17102,7 @@ fn apply_taskbar(
 ) -> winit::window::WindowAttributes
 ```
 
-The function `apply_taskbar` sets the Windows big icon when this build is Windows and `taskbar` is true.
+The function `apply_taskbar` sets the Windows taskbar icon when this build is Windows and `taskbar` is true.
 The attributes `attributes` are the window attributes. Another host returns those attributes unchanged. The Windows trait stays out of a Linux build and out of a macOS build.
 
 ### apply_taskbar
