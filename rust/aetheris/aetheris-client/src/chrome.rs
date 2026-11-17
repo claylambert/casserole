@@ -6060,6 +6060,7 @@ pub const WINDOW_TITLE: &str = "Aetheris";
 pub const WINDOW_CAPTION: &str = "Aetheris Rust";
 /// Title-bar and taskbar icon edge. The art is the Java Eye of Horus jpeg.
 const WINDOW_ICON_PX: u32 = 64;
+const TASKBAR_ICON_PX: u32 = 32;
 
 /// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// Keyboard focus for the console. The host still owns the line.
@@ -19031,6 +19032,22 @@ fn window_icon() -> Option<winit::window::Icon> {
     winit::window::Icon::from_rgba(rgba, width, height).ok()
 }
 
+/// Eye of Horus at [`TASKBAR_ICON_PX`]. The About mark does not use this plate.
+fn taskbar_icon_rgba() -> Option<(u32, u32, Vec<u8>)> {
+    let bytes = include_bytes!("../../../../src/main/resources/icons/aetheris.jpg");
+    decode_icon_rgba(bytes, TASKBAR_ICON_PX).or_else(|| {
+        let fallback = include_bytes!("../../../../src/main/resources/icons/casserole.jpg");
+        decode_icon_rgba(fallback, TASKBAR_ICON_PX)
+    })
+}
+
+/// The function `taskbar_icon` builds the taskbar icon.
+/// The pixels come from `taskbar_icon_rgba`. A missing image returns `None`. A failure inside `Icon::from_rgba` also returns `None`.
+fn taskbar_icon() -> Option<winit::window::Icon> {
+    let (width, height, rgba) = taskbar_icon_rgba()?;
+    winit::window::Icon::from_rgba(rgba, width, height).ok()
+}
+
 /// The seat `ShellIconSeat` names which icon slot a host uses.
 /// `window` is the small icon. On Linux that image is the dock mark. `taskbar` is the Windows big icon. `dock` is the macOS Dock. `class_name` is the Linux application id.
 struct ShellIconSeat {
@@ -19074,7 +19091,7 @@ fn shell_icon_seat(os: &str) -> ShellIconSeat {
     }
 }
 
-/// The function `apply_taskbar` sets the Windows big icon when this build is Windows and `taskbar` is true.
+/// The function `apply_taskbar` sets the Windows taskbar icon when this build is Windows and `taskbar` is true.
 /// The attributes `attributes` are the window attributes. Another host returns those attributes unchanged. The Windows trait stays out of a Linux build and out of a macOS build.
 #[cfg(windows)]
 fn apply_taskbar(
@@ -19085,7 +19102,7 @@ fn apply_taskbar(
         return attributes;
     }
     use winit::platform::windows::WindowAttributesExtWindows;
-    attributes.with_taskbar_icon(window_icon())
+    attributes.with_taskbar_icon(taskbar_icon())
 }
 
 /// The function `apply_taskbar` is the host that is not Windows.
@@ -38686,6 +38703,12 @@ mod tests {
         assert_eq!(super::WINDOW_CAPTION, "Aetheris Rust");
         assert_eq!(super::WINDOW_TITLE, "Aetheris");
         assert_eq!(super::WINDOW_ICON_PX, 64);
+        assert_eq!(super::TASKBAR_ICON_PX, 32);
+        assert_eq!(super::ABOUT_APP_PX, 64);
+        let (task_w, task_h, task_rgba) = super::taskbar_icon_rgba().expect("taskbar");
+        assert_eq!(task_w, 32);
+        assert_eq!(task_h, 32);
+        assert_eq!(task_rgba.len(), 32 * 32 * 4);
         let (width, height, rgba) = super::window_icon_rgba().expect("icon");
         assert_eq!(width, 64);
         assert_eq!(height, 64);
@@ -38693,10 +38716,11 @@ mod tests {
         assert!(winit::window::Icon::from_rgba(rgba, width, height).is_ok());
         #[cfg(windows)]
         {
-            let ico = include_bytes!(concat!(env!("OUT_DIR"), "\\aetheris.ico"));
-            let widths = taskbar_ico_widths(ico);
-            assert_eq!(widths, vec![16, 32, 48, 0]);
-            let plate = taskbar_ico_xor(ico, 1);
+            let taskbar = include_bytes!(concat!(env!("OUT_DIR"), "\\aetheris-taskbar.ico"));
+            let app = include_bytes!(concat!(env!("OUT_DIR"), "\\aetheris-app.ico"));
+            assert_eq!(taskbar_ico_widths(taskbar), vec![16, 32]);
+            assert_eq!(taskbar_ico_widths(app), vec![48, 0]);
+            let plate = taskbar_ico_xor(taskbar, 1);
             assert!(plate.iter().any(|byte| *byte != 0));
             assert!(plate.iter().any(|byte| *byte != plate[0]));
         }

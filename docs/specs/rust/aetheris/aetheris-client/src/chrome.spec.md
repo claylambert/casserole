@@ -282,7 +282,7 @@ The pointer stays on a text pane. `pointer_icon` draws the text icon as the arro
 
 ## The shell icon stays on its host
 
-The shell icon stays on its host. Windows sends the Eye as the big icon. Linux sends the Eye as the window icon and names the window `aetheris`. macOS sets the Eye on the Dock. `write_same` leaves a matching icon file in place. The functions are `shell_icon_seat`, `apply_taskbar`, `apply_class_name`, `seat_dock_icon`, `seat_shell_icon`, and `write_same`. The files are [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs) and [build.rs](../../../../../../rust/aetheris/aetheris-client/build.rs).
+The shell icon stays on its host. Windows sends the Eye as the big icon. Linux sends the Eye as the window icon and names the window `aetheris`. macOS sets the Eye on the Dock. `write_same` leaves a matching icon file in place. The About mark stays at 64 pixels. The taskbar icon is 32 pixels. The Windows build writes two icons. `aetheris-taskbar.ico` holds the 16 and 32 pixel plates and is resource 1. `aetheris-app.ico` holds the 48 and 256 pixel plates and is resource 2. The functions are `shell_icon_seat`, `apply_taskbar`, `apply_class_name`, `seat_dock_icon`, `seat_shell_icon`, `taskbar_icon`, and `write_same`. The files are [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs) and [build.rs](../../../../../../rust/aetheris/aetheris-client/build.rs).
 **semantic-key:** PK-1434
 
 ## The mood modal keeps the size it had when it closed

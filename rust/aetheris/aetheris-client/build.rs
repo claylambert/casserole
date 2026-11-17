@@ -8,23 +8,24 @@
 // and the MIT License permission notice in all copies or substantial portions
 // of the software, including modifications.
 
-//! The build script stores the window icon in the Windows executable.
+//! The build script stores two window icons in the Windows executable.
 //!
 //! The picture file is `aetheris.jpg` under `src/main/resources/icons`, three directories above this crate. The running window already uses that picture. The picture is the Eye of Horus. This step writes that picture into the binary so a taskbar pin keeps it. A target other than Windows returns before any file is written. A second Windows run leaves an icon file alone when the bytes already match.
 //!
-//! The script writes `aetheris.ico` in the Cargo `OUT_DIR` directory. It also writes `aetheris.rc` in that directory. The resource script is the line `1 ICON "aetheris.ico"`. `rc.exe` from the Windows SDK compiles that script into `aetheris.res`. Cargo then links `aetheris.res` into the binary.
+//! The small icon is `aetheris-taskbar.ico`. It holds the 16 and 32 pixel plates. The resource script names that file as icon 1, which is the icon the taskbar reads. The big icon is `aetheris-app.ico`. It holds the 48 and 256 pixel plates. The resource script names that file as icon 2. `rc.exe` from the Windows SDK compiles `aetheris.rc` into `aetheris.res`. Cargo then links `aetheris.res` into the binary.
 
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-const EDGES: [u32; 4] = [16, 32, 48, 256];
+const TASKBAR_EDGES: [u32; 2] = [16, 32];
+const APP_EDGES: [u32; 2] = [48, 256];
 
-/// The `main` function embeds the window icon when the build target is Windows.
+/// The `main` function embeds the window icons when the build target is Windows.
 /// The JPEG path is `../../../src/main/resources/icons/aetheris.jpg` from `CARGO_MANIFEST_DIR`. Cargo reruns this script when that file changes. Any other target operating system returns after that rerun line.
 ///
-/// On Windows the function reads the JPEG. `taskbar_ico` builds the icon bytes. The function writes `aetheris.ico` under `OUT_DIR`. It writes `aetheris.rc` in that same directory. It runs `rc.exe` with `/nologo`, `/fo`, `aetheris.res`, and `aetheris.rc`. A start failure panics with the tool path. A failed status panics with the tool's standard error. The link argument is the `aetheris.res` path with each backslash changed to a slash.
+/// On Windows the function reads the JPEG. `icon_file` builds each icon. The small file is `aetheris-taskbar.ico`. The big file is `aetheris-app.ico`. The resource script is icon 1 for the taskbar file and icon 2 for the app file. The function runs `rc.exe` with `/nologo`, `/fo`, `aetheris.res`, and `aetheris.rc`. A start failure panics with the tool path. A failed status panics with the tool's standard error. The link argument is the `aetheris.res` path with each backslash changed to a slash.
 fn main() {
     let jpeg = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("manifest"))
         .join("../../../src/main/resources/icons/aetheris.jpg");
@@ -34,14 +35,16 @@ fn main() {
     }
     let out = PathBuf::from(env::var("OUT_DIR").expect("out"));
     let jpeg_bytes = fs::read(&jpeg).unwrap_or_else(|_| panic!("missing {}", jpeg.display()));
-    let ico = taskbar_ico(&jpeg_bytes);
-    let ico_path = out.join("aetheris.ico");
+    let picture = image::load_from_memory(&jpeg_bytes).expect("eye");
+    let taskbar_path = out.join("aetheris-taskbar.ico");
+    let app_path = out.join("aetheris-app.ico");
     let rc_path = out.join("aetheris.rc");
     let res = out.join("aetheris.res");
-    let rc_bytes = b"1 ICON \"aetheris.ico\"\r\n";
-    let ico_changed = write_same(&ico_path, &ico);
+    let rc_bytes = b"1 ICON \"aetheris-taskbar.ico\"\r\n2 ICON \"aetheris-app.ico\"\r\n";
+    let taskbar_changed = write_same(&taskbar_path, &icon_file(&picture, &TASKBAR_EDGES));
+    let app_changed = write_same(&app_path, &icon_file(&picture, &APP_EDGES));
     let rc_changed = write_same(&rc_path, rc_bytes);
-    if ico_changed || rc_changed || !res.is_file() {
+    if taskbar_changed || app_changed || rc_changed || !res.is_file() {
         let rc = find_rc();
         let compiled = Command::new(&rc)
             .current_dir(&out)
@@ -124,17 +127,16 @@ fn kits_root() -> Option<PathBuf> {
     None
 }
 
-/// The `taskbar_ico` function builds a classic icon file from the JPEG bytes.
-/// Each image is a 32-bit device-independent bitmap, stored bottom-up. The mask height is folded into the bitmap header so the shell reads the alpha channel.
+/// The `icon_file` function builds a classic icon file from one picture.
+/// `picture` is the Eye. `edges` is the plate sizes for this file. Each image is a 32-bit device-independent bitmap, stored bottom-up. The mask height is folded into the bitmap header so the shell reads the alpha channel.
 ///
-/// The edges are 16, 32, 48, and 256 pixels. Each size is a triangle-filtered resize of the JPEG. An edge of 256 is stored as width 0 and height 0 in the directory entry. Every entry says one color plane and 32 bits. The file header is reserved 0, type 1, and the image count.
-fn taskbar_ico(jpeg: &[u8]) -> Vec<u8> {
-    let picture = image::load_from_memory(jpeg).expect("eye");
+/// Each size is a triangle-filtered resize of the picture. An edge of 256 is stored as width 0 and height 0 in the directory entry. Every entry says one color plane and 32 bits. The file header is reserved 0, type 1, and the image count.
+fn icon_file(picture: &image::DynamicImage, edges: &[u32]) -> Vec<u8> {
     let mut images = Vec::new();
-    for edge in EDGES {
-        let sized = picture.resize_exact(edge, edge, image::imageops::FilterType::Triangle);
+    for edge in edges {
+        let sized = picture.resize_exact(*edge, *edge, image::imageops::FilterType::Triangle);
         let rgba = sized.to_rgba8();
-        images.push((edge, dib(&rgba, edge)));
+        images.push((*edge, dib(&rgba, *edge)));
     }
     let count = images.len() as u16;
     let mut file = Vec::new();
