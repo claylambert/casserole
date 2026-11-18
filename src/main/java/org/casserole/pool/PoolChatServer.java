@@ -298,7 +298,6 @@ public final class PoolChatServer implements PoolChat {
                 return;
             }
             if (!extend) {
-                releaseIdleMate(child);
                 releaseSession(child);
                 if (!openSession(child, full, safeBoot)) {
                     return;
@@ -564,31 +563,6 @@ public final class PoolChatServer implements PoolChat {
     private int epochBump(Child child) {
         AtomicInteger clock = seatEpochs.computeIfAbsent(userOf(child), key -> new AtomicInteger());
         return clock.incrementAndGet();
-    }
-
-    /**
-     * The {@code releaseIdleMate} method drops the other seat's remote session when that seat is idle.
-     * The canvas seat and the SSH seat keep separate children. A mate with a prompt in flight stays up. A mate with no session id stays as it is. Any other mate is cancelled and its hold is cleared, so the next turn on that seat opens a session.
-     *
-     * @param child The child is the seat about to open a session. Its mate is the other seat for the same user.
-     */
-    private void releaseIdleMate(Child child) {
-        PoolChat.Seat mine = seatOf(child);
-        PoolChat.Seat other = mine == PoolChat.Seat.CANVAS ? PoolChat.Seat.SSH : PoolChat.Seat.CANVAS;
-        Child mate;
-        synchronized (capLock) {
-            mate = children.get(seatKey(userOf(child), other));
-        }
-        if (mate == null || mate == child) {
-            return;
-        }
-        if (mate.promptOpen || mate.inPrompt) {
-            return;
-        }
-        if (mate.sessionId == null || mate.sessionId.length() == 0) {
-            return;
-        }
-        releaseSession(mate);
     }
 
     /**
@@ -994,13 +968,13 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code sessionNewParams} method builds {@code session/new} parameters for this server.
-     * The working directory is that child's seat directory. The rules string is the child's porch rules.
+     * The working directory is the pool directory the agent already accepts. A per-user path is not sent. The rules string is the child's porch rules.
      *
      * @param child The child supplies the seat directory and the porch rules.
      * @return The return value is the parameters object from {@link #porchSessionParams}.
      */
     private ObjectNode sessionNewParams(Child child) {
-        return porchSessionParams(mapper, seatHome(child).getAbsolutePath(), child.porchRules);
+        return porchSessionParams(mapper, cwd.getAbsolutePath(), child.porchRules);
     }
 
     /**
@@ -1341,6 +1315,13 @@ public final class PoolChatServer implements PoolChat {
             detail = "code " + error.get("code").asInt();
             if (redacted.length() > 0) {
                 detail = detail + " " + redacted;
+            }
+        }
+        JsonNode data = error.get("data");
+        if (!auth && data != null && !data.isNull()) {
+            String extra = data.isTextual() ? data.asText("") : data.toString();
+            if (extra.length() > 0) {
+                detail = detail + " " + extra;
             }
         }
         failLocked(child, reason, child.step, detail);
