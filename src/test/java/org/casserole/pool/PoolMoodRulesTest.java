@@ -29,6 +29,7 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
@@ -193,6 +194,74 @@ class PoolMoodRulesTest { // @aa-sdd PK-1083 PK-1084 PK-1089 PK-1092 PK-1094 doc
         assertEquals(6, pool.getCap());
         pool.setCap(0);
         assertEquals(4, pool.getCap());
+        assertEquals(6, pool.getExecuteSlots());
+        pool.setExecuteSlots(8);
+        assertEquals(8, pool.getExecuteSlots());
+        pool.setExecuteSlots(0);
+        assertEquals(6, pool.getExecuteSlots());
+    }
+
+    /**
+     * The method checks when a pool prompt stays open after the result.
+     * A completed turn returns. A tool call stays open. A quiet tail with no tool call returns.
+     */
+    @Test
+    void thePoolTurnWaitsForTheToolReply() {
+        assertFalse(PoolChatServer.holdForTurnEnd(true, true, 0L));
+        assertFalse(PoolChatServer.holdForTurnEnd(true, false, 0L));
+        assertTrue(PoolChatServer.holdForTurnEnd(false, true, 5_000L));
+        assertTrue(PoolChatServer.holdForTurnEnd(false, false, 0L));
+        assertFalse(PoolChatServer.holdForTurnEnd(false, false, 1_000L));
+    }
+
+    /**
+     * The method checks the session update names.
+     * {@code session/update} and {@code _x.ai/session/update} are updates. Another method is not.
+     */
+    @Test
+    void aSessionUpdateKeepsEitherName() {
+        assertTrue(PoolChatServer.isSessionUpdate("session/update"));
+        assertTrue(PoolChatServer.isSessionUpdate("_x.ai/session/update"));
+        assertFalse(PoolChatServer.isSessionUpdate("session/prompt"));
+        assertFalse(PoolChatServer.isSessionUpdate("_x.ai/session_notification"));
+    }
+
+    /**
+     * The method checks the completion mark.
+     * {@code turn_completed} on a session update or on {@code _x.ai/session_notification} completes the turn. Another kind on that notification does not.
+     */
+    @Test
+    void aTurnMarkKeepsTheNotification() {
+        assertTrue(PoolChatServer.isTurnCompleted("session/update", "turn_completed"));
+        assertTrue(PoolChatServer.isTurnCompleted("_x.ai/session/update", "turn_completed"));
+        assertTrue(PoolChatServer.isTurnCompleted("_x.ai/session_notification", "turn_completed"));
+        assertFalse(PoolChatServer.isTurnCompleted("_x.ai/session_notification", "response_completed"));
+        assertFalse(PoolChatServer.isTurnCompleted("_x.ai/session_notification", "tool_call_delta_chunk"));
+        assertFalse(PoolChatServer.isTurnCompleted("session/prompt", "turn_completed"));
+    }
+
+    /**
+     * The method reads reply text from a string, one object, or a list.
+     */
+    @Test
+    void chunkTextReadsAList() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode listed = mapper.createObjectNode();
+        ArrayNode parts = mapper.createArrayNode();
+        ObjectNode one = mapper.createObjectNode();
+        one.put("text", "Hello ");
+        parts.add(one);
+        parts.add("there");
+        listed.set("content", parts);
+        assertEquals("Hello there", PoolChatServer.chunkText(listed));
+        ObjectNode single = mapper.createObjectNode();
+        ObjectNode body = mapper.createObjectNode();
+        body.put("text", "one");
+        single.set("content", body);
+        assertEquals("one", PoolChatServer.chunkText(single));
+        ObjectNode plain = mapper.createObjectNode();
+        plain.put("content", "plain");
+        assertEquals("plain", PoolChatServer.chunkText(plain));
     }
 
     /**

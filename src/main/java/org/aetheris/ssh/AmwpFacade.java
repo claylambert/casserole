@@ -194,7 +194,7 @@ public class AmwpFacade {
 
     /**
      * The constructor stores the collaborators and builds the maps.
-     * The execute semaphore starts with 3 permits.
+     * The execute semaphore starts with {@code casserole.pool.execute-slots} permits. The shipped count is 6. An absent pool stores 6.
      * A null Ollama model is stored as empty.
      * A model value is trimmed.
      * The base URL loses one trailing slash through {@link #trimSlash}.
@@ -224,7 +224,7 @@ public class AmwpFacade {
         this.inFlight = new ConcurrentHashMap<String, LaminaHandle>();
         this.liveToken = new ConcurrentHashMap<String, Long>();
         this.regionLocks = new ConcurrentHashMap<String, Object>();
-        this.executeSlots = new Semaphore(3);
+        this.executeSlots = new Semaphore(executePermits(properties));
         this.nextToken = new AtomicLong();
         this.cellHttp = new ConcurrentHashMap<String, GrokLlmService.HttpSlot>();
         this.consoleSinks = new ConcurrentHashMap<String, AmwpReplySink>();
@@ -232,6 +232,20 @@ public class AmwpFacade {
         this.grokLlm = grokLlm;
         // @aa-sdd PK-1276 docs/specs/java/org/aetheris/ssh/ssh.spec.md
         this.poolChat = new PoolChatServer(lamina, properties);
+    }
+
+    /**
+     * The {@code executePermits} method reads {@code casserole.pool.execute-slots}.
+     * A null properties object returns 6. A null pool returns 6.
+     *
+     * @param properties The properties hold the pool block.
+     * @return The return value is the permit count. It is at least 1.
+     */
+    private static int executePermits(CasseroleProperties properties) {
+        if (properties == null || properties.getPool() == null) {
+            return 6;
+        }
+        return properties.getPool().getExecuteSlots();
     }
 
     /**
@@ -318,6 +332,7 @@ public class AmwpFacade {
             byte[] id = AmwpCodec.cellIdOf(frame.getPayload());
             String key = uuidString(id);
             liveToken.remove(key);
+            poolChat.cancel(user, PoolChat.Seat.CANVAS);
             GrokLlmService.HttpSlot slot = cellHttp.remove(key);
             if (slot != null && slot.future != null) {
                 slot.future.cancel(true);
@@ -1734,6 +1749,7 @@ public class AmwpFacade {
      * The method is not a public method.
      * A null user returns without a change. // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
      * An empty user returns without a change. // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
+     *
      * // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
      * @param user The user is the sanitized SSH user.
      * @param sink The sink is the mux writer, or null to release.

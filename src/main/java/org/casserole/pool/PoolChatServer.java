@@ -81,6 +81,8 @@ public final class PoolChatServer implements PoolChat {
         }
     }
     private static final long IDLE_MS = 15L * 60L * 1000L;
+    /** The field is the quiet tail after the prompt result. A tool call inside it keeps the seat open. */
+    private static final long QUIET_MS = 1000L;
     private static final int LINE_CAP = 1024 * 1024;
     private static final int QUOTE_CAP = 80;
     private static final int MESSAGE_CAP = 240;
@@ -155,7 +157,6 @@ public final class PoolChatServer implements PoolChat {
      * The prompt flags are cleared when the call leaves the gate. The idle timer is armed after the turn.
      *
      * @param user The user is the user name.
-     * @param seat The seat is {@link PoolChat.Seat#SSH} or {@link PoolChat.Seat#CANVAS}.
      * @param text The text is the working-set string for this turn.
      * @param boot The boot is the boot id. An empty boot does not keep a hold.
      * @param think The flag is true when thought chunks are forwarded.
@@ -202,6 +203,8 @@ public final class PoolChatServer implements PoolChat {
             }
             child.inPrompt = true;
             child.promptOpen = true;
+            child.turnDone = false;
+            child.sawTool = false;
             child.forwarded = false;
             child.retried = false;
             child.cancelAsked = false;
@@ -234,10 +237,9 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code cancel} method asks the user's child to stop the current turn.
-     * A null user is treated as an empty name. A missing child returns. The cancel flag is set and waiting readers are woken. {@link #sendCancel} writes {@code session/cancel} when a session is open.
+     * A null user is treated as an empty name. A missing child returns. The cancel flag is set and waiting readers are woken. {@link #sendCancel} writes {@code session/cancel} when a session is open. An idle child then drops its hold.
      *
      * @param user The user is the user name.
-     * @param seat The seat is {@link PoolChat.Seat#SSH} or {@link PoolChat.Seat#CANVAS}.
      */
     @Override
     public void cancel(String user, PoolChat.Seat seat) {
@@ -246,11 +248,19 @@ public final class PoolChatServer implements PoolChat {
         if (child == null) {
             return;
         }
+        boolean busy;
         synchronized (child.io) {
             child.cancelAsked = true;
+            busy = child.inPrompt;
             child.io.notifyAll();
         }
         sendCancel(child);
+        if (!busy) {
+            dropHold(child);
+            synchronized (child.io) {
+                child.cancelAsked = false;
+            }
+        }
     }
 
     /**
@@ -258,7 +268,6 @@ public final class PoolChatServer implements PoolChat {
      * A null user is treated as an empty name. A missing child or a child that is not alive returns {@link Health#DOWN}. A child that failed authentication returns {@link Health#AUTH}. Any other live child returns {@link Health#READY}.
      *
      * @param user The user is the user name.
-     * @param seat The seat is {@link PoolChat.Seat#SSH} or {@link PoolChat.Seat#CANVAS}.
      * @return The return value is the health value.
      */
     @Override
@@ -427,7 +436,7 @@ public final class PoolChatServer implements PoolChat {
     /**
      * The {@code sendTurn} method sends {@code session/prompt} and finishes the sink.
      * {@link #stopHere} cancels and drops the hold. {@link Outcome#DEAD} retries when nothing was forwarded and this is the first try. Otherwise it drops the hold and, when a sink is present, calls it with {@code pool down}. {@link Outcome#FAIL} drops the hold and finishes the failure.
-     * {@link Outcome#OK} calls the sink with an empty reason and the assembled answer, then {@link #align} stores the hold.
+     * {@link Outcome#OK} keeps the prompt open for a quiet tail. A tool call inside that tail waits for {@code turn_completed}. A quiet tail with no tool call delivers the assembled reply. {@link #align} stores the hold when that reply is non-empty.
      * An extension whose assembled answer is empty is not a reply. That path cancels the session, opens a new one, and sends the whole working set once.
      *
      * @param child The child is the live process.
@@ -440,6 +449,10 @@ public final class PoolChatServer implements PoolChat {
     private void sendTurn(Child child, String body, String full, String boot, boolean extend) throws Exception {
         child.step = "session/prompt";
         child.assembled = new StringBuilder();
+        synchronized (child.io) {
+            child.turnDone = false;
+            child.sawTool = false;
+        }
         Outcome turn = call(child, "session/prompt", promptParams(child, body), true);
         if (stopHere(child, turn)) {
             sendCancel(child);
@@ -462,10 +475,19 @@ public final class PoolChatServer implements PoolChat {
             finishFail(child);
             return;
         }
-        String answer;
-        synchronized (child.io) {
-            answer = child.assembled.toString();
+        if (!awaitTurnEnd(child)) {
+            if (child.cancelAsked || child.skipDone || shut) {
+                sendCancel(child);
+                dropHold(child);
+                return;
+            }
+            dropHold(child);
+            if (child.sink != null) {
+                child.sink.done("pool down", deathMessage(child, false));
+            }
+            return;
         }
+        String answer = assembled(child);
         if (answer.length() == 0) { // @aa-sdd PK-1463 docs/specs/java/org/casserole/pool/pool.spec.md
             releaseSession(child);
             if (extend) {
@@ -480,6 +502,93 @@ public final class PoolChatServer implements PoolChat {
         }
         child.sink.done("", answer);
         align(child, full, boot, answer);
+    }
+
+    /**
+     * The {@code awaitTurnEnd} method keeps this prompt open through the quiet tail.
+     * The tail starts when the prompt result is in. A frame resets it. A tool call keeps the seat open until {@code turn_completed}. A quiet tail with no tool call returns true. Cancel, shutdown, and a dead child return false. Chunks that arrive during the wait are still forwarded.
+     *
+     * @param child The child owns the turn flags and the assembled reply.
+     * @return The return value is true when the reply can be delivered.
+     * @throws InterruptedException The method throws this exception when the wait is interrupted.
+     */
+    private boolean awaitTurnEnd(Child child) throws InterruptedException {
+        synchronized (child.io) {
+            child.lastFrameMs = System.currentTimeMillis();
+            while (holdForTurnEnd(child.turnDone, child.sawTool, System.currentTimeMillis() - child.lastFrameMs)) {
+                if (child.cancelAsked || child.skipDone || shut || !child.alive) {
+                    return false;
+                }
+                if (child.sawTool) {
+                    child.io.wait();
+                } else {
+                    long quiet = System.currentTimeMillis() - child.lastFrameMs;
+                    child.io.wait(Math.max(1L, QUIET_MS - quiet));
+                }
+            }
+            if (child.cancelAsked || child.skipDone || shut || !child.alive) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    /**
+     * The {@code assembled} method returns the reply text collected for this prompt.
+     * Thought text is not included.
+     *
+     * @param child The child owns the assembled reply.
+     * @return The return value is the reply text.
+     */
+    private static String assembled(Child child) {
+        synchronized (child.io) {
+            return child.assembled.toString();
+        }
+    }
+
+    /**
+     * The {@code holdForTurnEnd} method reports whether the prompt stays open after the result.
+     * A completed turn returns false. A tool call returns true until that completion. A quiet tail with no tool call returns false.
+     *
+     * @param turnDone The flag is true after {@code turn_completed}.
+     * @param sawTool The flag is true after {@code tool_call}.
+     * @param quietMs The count is how long the stream has been quiet since the last frame.
+     * @return The return value is true when the prompt stays open.
+     */
+    static boolean holdForTurnEnd(boolean turnDone, boolean sawTool, long quietMs) {
+        if (turnDone) {
+            return false;
+        }
+        if (sawTool) {
+            return true;
+        }
+        return quietMs < QUIET_MS;
+    }
+
+    /**
+     * The {@code isSessionUpdate} method reports a session update notice.
+     * The names are {@code session/update} and {@code _x.ai/session/update}.
+     *
+     * @param method The method is the JSON-RPC method name.
+     * @return The return value is true when the notice is a session update.
+     */
+    static boolean isSessionUpdate(String method) {
+        return "session/update".equals(method) || "_x.ai/session/update".equals(method);
+    }
+
+    /**
+     * The {@code isTurnCompleted} method reports the completion mark.
+     * The kind is {@code turn_completed}. The method is a session update, or {@code _x.ai/session_notification}.
+     *
+     * @param method The method is the JSON-RPC method name.
+     * @param kind The kind is the {@code sessionUpdate} value.
+     * @return The return value is true when this notice ends the tool wait.
+     */
+    static boolean isTurnCompleted(String method, String kind) {
+        if (!"turn_completed".equals(kind)) {
+            return false;
+        }
+        return isSessionUpdate(method) || "_x.ai/session_notification".equals(method);
     }
 
     /**
@@ -796,6 +905,10 @@ public final class PoolChatServer implements PoolChat {
         child.step = "session/prompt";
         child.assembled = new StringBuilder();
         child.forwarded = false;
+        synchronized (child.io) {
+            child.turnDone = false;
+            child.sawTool = false;
+        }
         Outcome turn = call(child, "session/prompt", promptParams(child, text), true);
         if (stopHere(child, turn)) {
             sendCancel(child);
@@ -812,9 +925,23 @@ public final class PoolChatServer implements PoolChat {
             child.sink.done("pool down", deathMessage(child, true));
             return false;
         }
-        String answer;
-        synchronized (child.io) {
-            answer = child.assembled.toString();
+        if (!awaitTurnEnd(child)) {
+            if (child.cancelAsked || child.skipDone || shut) {
+                sendCancel(child);
+                dropHold(child);
+                return false;
+            }
+            dropHold(child);
+            if (child.sink != null) {
+                child.sink.done("pool down", deathMessage(child, true));
+            }
+            return false;
+        }
+        String answer = assembled(child);
+        if (answer.length() == 0) {
+            releaseSession(child);
+            child.sink.done("", answer);
+            return false;
         }
         child.sink.done("", answer);
         align(child, text, boot, answer);
@@ -852,7 +979,7 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code call} method writes one request and waits for its id.
-     * The prompt flag is accepted and is not read by this method.
+     * The wait stays open until the result id matches. A live notice does not end it. The prompt flag is accepted and is not read by this method.
      *
      * @param child The child receives the request.
      * @param method The method is the JSON-RPC method name.
@@ -1476,12 +1603,13 @@ public final class PoolChatServer implements PoolChat {
         }
         failLocked(child, reason, child.step, detail);
     } // @aa-sdd PK-1089 docs/specs/common/formal-plan.spec.md
+
  // @aa-sdd PK-1059 docs/specs/common/formal-plan.spec.md
     /**
      * The {@code onMethod} method handles one child-initiated message.
      * A message with an id whose method name contains {@code permission} is refused by {@link #denyPermission}. Any other request fails with {@code pool payload} and then {@link #sendCancel} runs. The match ignores case.
-     * A notice that is not {@code session/update} only increments the note count. An update whose session id is non-empty and differs from the child session id only increments the note count.
-     * {@code tool_call} and {@code tool_call_update} do the same. {@code agent_message_chunk} and {@code agent_thought_chunk} go to {@link #forward}. Any other update only increments the note count.
+     * A notice that is not a session update only increments the note count, except a {@code turn_completed} notice on {@code _x.ai/session_notification}, which ends the tool wait. An update whose session id is non-empty and differs from the child session id only increments the note count.
+     * {@code tool_call} marks the turn and wakes the wait. {@code turn_completed} ends that wait. {@code tool_call_update} only increments the note count. {@code agent_message_chunk} and {@code agent_thought_chunk} go to {@link #forward}. Any other update only increments the note count.
      *
      * @param child The child receives the message.
      * @param node The node is the JSON object.
@@ -1498,27 +1626,35 @@ public final class PoolChatServer implements PoolChat {
             }
             return;
         }
-        if (!"session/update".equals(method)) {
+        if (!isSessionUpdate(method)) {
+            if (isTurnCompleted(method, updateKind(node)) && !otherSession(child, node)) {
+                markTurnDone(child);
+            } else {
+                note(child);
+            }
+            return;
+        }
+        if (otherSession(child, node)) {
             note(child);
             return;
         }
-        JsonNode params = node.get("params");
-        String foreign = text(params == null ? null : params.get("sessionId"));
-        String mine;
-        synchronized (child.io) {
-            mine = child.sessionId == null ? "" : child.sessionId;
-        }
-        if (foreign.length() > 0 && !foreign.equals(mine)) {
-            note(child);
-            return;
-        }
-        JsonNode update = params == null ? null : params.get("update");
-        if (update == null) {
-            update = params;
-        }
+        JsonNode update = updateNode(node);
         String kind = update == null ? "" : text(update.get("sessionUpdate"));
-        if ("tool_call".equals(kind) || "tool_call_update".equals(kind)) {
+        if ("tool_call".equals(kind)) {
+            synchronized (child.io) {
+                child.sawTool = true;
+                child.notes = child.notes + 1;
+                child.lastFrameMs = System.currentTimeMillis();
+                child.io.notifyAll();
+            }
+            return;
+        }
+        if ("tool_call_update".equals(kind)) {
             note(child);
+            return;
+        }
+        if (isTurnCompleted(method, kind)) {
+            markTurnDone(child);
             return;
         }
         if ("agent_message_chunk".equals(kind) || "agent_thought_chunk".equals(kind)) {
@@ -1554,7 +1690,9 @@ public final class PoolChatServer implements PoolChat {
                 child.assembled.append(chunk);
             }
             child.forwarded = true;
+            child.lastFrameMs = System.currentTimeMillis();
             sink = child.sink;
+            child.io.notifyAll();
         }
         try {
             if (thought) {
@@ -1575,6 +1713,69 @@ public final class PoolChatServer implements PoolChat {
     }
 
     /**
+     * The {@code updateNode} method reads the update object from one notice.
+     * A missing params object returns null. A missing update object returns the params object.
+     *
+     * @param node The node is the JSON-RPC notice.
+     * @return The return value is the update object, or null.
+     */
+    private static JsonNode updateNode(JsonNode node) {
+        JsonNode params = node == null ? null : node.get("params");
+        JsonNode update = params == null ? null : params.get("update");
+        if (update == null) {
+            return params;
+        }
+        return update;
+    }
+
+    /**
+     * The {@code updateKind} method reads {@code sessionUpdate} from one notice.
+     * A missing params object returns an empty string. A missing update object uses the params object. A missing kind returns an empty string.
+     *
+     * @param node The node is the JSON-RPC notice.
+     * @return The return value is the kind, or an empty string.
+     */
+    private static String updateKind(JsonNode node) {
+        JsonNode update = updateNode(node);
+        return update == null ? "" : text(update.get("sessionUpdate"));
+    }
+
+    /**
+     * The {@code otherSession} method reports a notice for a different session.
+     * An empty session id returns false. A session id equal to this child's id returns false.
+     *
+     * @param child The child owns the session id.
+     * @param node The node is the JSON-RPC notice.
+     * @return The return value is true when the notice names another session.
+     */
+    private boolean otherSession(Child child, JsonNode node) {
+        JsonNode params = node == null ? null : node.get("params");
+        String foreign = text(params == null ? null : params.get("sessionId"));
+        if (foreign.length() == 0) {
+            return false;
+        }
+        String mine;
+        synchronized (child.io) {
+            mine = child.sessionId == null ? "" : child.sessionId;
+        }
+        return !foreign.equals(mine);
+    }
+
+    /**
+     * The {@code markTurnDone} method ends the tool wait.
+     * The turn flag is set. The quiet clock is set to now. Waiting readers are woken.
+     *
+     * @param child The child owns the turn flag.
+     */
+    private void markTurnDone(Child child) {
+        synchronized (child.io) {
+            child.turnDone = true;
+            child.lastFrameMs = System.currentTimeMillis();
+            child.io.notifyAll();
+        }
+    }
+
+    /**
      * The {@code note} method counts one ignored child message.
      *
      * @param child The child owns the note count.
@@ -1582,6 +1783,8 @@ public final class PoolChatServer implements PoolChat {
     private void note(Child child) {
         synchronized (child.io) {
             child.notes = child.notes + 1;
+            child.lastFrameMs = System.currentTimeMillis();
+            child.io.notifyAll();
         }
     }
 
@@ -1651,12 +1854,12 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code chunkText} method reads the text from one session update.
-     * A null update returns an empty string. A null content node returns an empty string. Textual content is returned as text. Any other content uses its {@code text} field.
+     * A null update returns an empty string. A null content node returns an empty string. Textual content is returned as text. A list joins each string and each object's {@code text} field. Any other content uses its {@code text} field.
      *
      * @param update The update is the session update object.
      * @return The return value is the chunk text, or an empty string.
      */
-    private static String chunkText(JsonNode update) {
+    static String chunkText(JsonNode update) {
         if (update == null) {
             return "";
         }
@@ -1666,6 +1869,20 @@ public final class PoolChatServer implements PoolChat {
         }
         if (content.isTextual()) {
             return content.asText("");
+        }
+        if (content.isArray()) {
+            StringBuilder joined = new StringBuilder();
+            for (JsonNode one : content) {
+                if (one == null || one.isNull()) {
+                    continue;
+                }
+                if (one.isTextual()) {
+                    joined.append(one.asText(""));
+                } else {
+                    joined.append(text(one.get("text")));
+                }
+            }
+            return joined.toString();
         }
         return text(content.get("text"));
     }
@@ -1906,6 +2123,12 @@ public final class PoolChatServer implements PoolChat {
         private volatile boolean initialized;
         private volatile boolean inPrompt;
         private volatile boolean promptOpen;
+        /** The field is true after {@code turn_completed} for the prompt that is open. */
+        private volatile boolean turnDone;
+        /** The field is true after {@code tool_call} for the prompt that is open. */
+        private volatile boolean sawTool;
+        /** The field is the clock time of the last frame on this child. */
+        private long lastFrameMs;
         private volatile boolean think;
         private volatile boolean forwarded;
         private volatile boolean retried;

@@ -646,6 +646,8 @@ public class CasseroleProperties {
         private String secret = "";
         private String cwd = "";
         private int cap = 4;
+        /** The field is {@code casserole.pool.execute-slots}. A value below 1 is stored as 6. */
+        private int executeSlots = 6;
 
         /**
          * The {@code getContextWindow} method returns the pool context window.
@@ -789,6 +791,30 @@ public class CasseroleProperties {
                 this.cap = 4;
             } else {
                 this.cap = cap;
+            }
+        }
+
+        /**
+         * The {@code getExecuteSlots} method returns how many canvas executes may run at once.
+         * An SSH console turn does not take one of these permits.
+         *
+         * @return The permit count. The shipped value is {@code 6}.
+         */
+        public int getExecuteSlots() {
+            return executeSlots;
+        }
+
+        /**
+         * The {@code setExecuteSlots} method stores the canvas execute count.
+         * A value below {@code 1} is stored as {@code 6}. Any other value is stored as given.
+         *
+         * @param executeSlots The raw {@code casserole.pool.execute-slots}.
+         */
+        public void setExecuteSlots(int executeSlots) {
+            if (executeSlots < 1) {
+                this.executeSlots = 6;
+            } else {
+                this.executeSlots = executeSlots;
             }
         }
     }

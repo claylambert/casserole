@@ -459,7 +459,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
 
     /**
      * The {@code destroy} method closes this shell.
-     * The exit flag is set. A paste is cleared. The in-flight turn is cancelled. Bracketed paste is disabled. The session is closed. The spinner and the escape timer are stopped and cancelled. The read task is cancelled.
+     * The exit flag is set. The pool seat for this login is cancelled. A paste is cleared. The in-flight turn is cancelled. Bracketed paste is disabled. The session is closed. The spinner and the escape timer are stopped and cancelled. The read task is cancelled.
      *
      * @param channel The channel is the SSH channel being closed.
      */
@@ -468,6 +468,10 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
         exiting = true;
         pasting = false;
         turnCancelled.set(true);
+        if (amwpFacade != null) {
+            String name = sshUsername == null ? "" : sshUsername;
+            amwpFacade.cancelPool(RegionOwner.sanitize(name));
+        }
         LaminaHandle future = inFlight.getAndSet(null);
         if (future != null) {
             future.cancel(true);

@@ -39,6 +39,7 @@ casserole:
     context-window: 256000
     cwd: ""
     cap: 4
+    execute-slots: 6
 
 spring:
   datasource:
