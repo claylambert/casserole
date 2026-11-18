@@ -202,6 +202,8 @@ public final class PoolChatServer implements PoolChat {
             }
             child.inPrompt = true;
             child.promptOpen = true;
+            child.turnDone = false;
+            child.sawTool = false;
             child.forwarded = false;
             child.retried = false;
             child.cancelAsked = false;
@@ -462,6 +464,12 @@ public final class PoolChatServer implements PoolChat {
             finishFail(child);
             return;
         }
+        awaitTurnEnd(child);
+        if (child.cancelAsked || shut) {
+            sendCancel(child);
+            dropHold(child);
+            return;
+        }
         String answer;
         synchronized (child.io) {
             answer = child.assembled.toString();
@@ -480,6 +488,46 @@ public final class PoolChatServer implements PoolChat {
         }
         child.sink.done("", answer);
         align(child, full, boot, answer);
+    }
+
+    /**
+     * The {@code awaitTurnEnd} method keeps this prompt open until the agent's turn has ended.
+     * A turn that already ended returns at once. Any other turn waits for {@code turn_completed}.
+     * The wait is at most 20 seconds. A cancel, a dead child, or a shut server ends the wait.
+     * Message chunks that arrive during the wait are still assembled, because the prompt stays open.
+     *
+     * @param child The child is the live seat.
+     * @throws InterruptedException The method throws this exception when the wait is interrupted.
+     */
+    private void awaitTurnEnd(Child child) throws InterruptedException {
+        synchronized (child.io) {
+            long deadline = System.currentTimeMillis() + 20000L;
+            while (holdForTurnEnd(child.turnDone, child.sawTool, child.assembled.length())
+                    && child.alive && !child.cancelAsked && !shut) {
+                long left = deadline - System.currentTimeMillis();
+                if (left <= 0L) {
+                    return;
+                }
+                child.io.wait(left);
+            }
+        }
+    }
+
+    /**
+     * The {@code holdForTurnEnd} method reports whether the prompt should keep waiting.
+     * A completed turn returns false. Any other turn keeps waiting until that completion.
+     * The tool flag and the assembled count stay on the signature so a later seat can tell a short line from the real reply.
+     *
+     * @param turnDone The flag is true after {@code turn_completed}.
+     * @param sawTool The flag is true after a {@code tool_call} update on this prompt.
+     * @param assembled The count is the reply characters assembled so far.
+     * @return The return value is true when the prompt should keep waiting.
+     */
+    static boolean holdForTurnEnd(boolean turnDone, boolean sawTool, int assembled) {
+        if (turnDone) {
+            return false;
+        }
+        return sawTool || assembled >= 0;
     }
 
     /**
@@ -1480,8 +1528,8 @@ public final class PoolChatServer implements PoolChat {
     /**
      * The {@code onMethod} method handles one child-initiated message.
      * A message with an id whose method name contains {@code permission} is refused by {@link #denyPermission}. Any other request fails with {@code pool payload} and then {@link #sendCancel} runs. The match ignores case.
-     * A notice that is not {@code session/update} only increments the note count. An update whose session id is non-empty and differs from the child session id only increments the note count.
-     * {@code tool_call} and {@code tool_call_update} do the same. {@code agent_message_chunk} and {@code agent_thought_chunk} go to {@link #forward}. Any other update only increments the note count.
+     * A notice that is not {@code session/update} or {@code _x.ai/session/update} only increments the note count. An update whose session id is non-empty and differs from the child session id only increments the note count.
+     * {@code tool_call} marks the prompt as waiting for the real reply. {@code tool_call_update} only increments the note count. {@code turn_completed} ends that wait. {@code agent_message_chunk} and {@code agent_thought_chunk} go to {@link #forward}. Any other update only increments the note count.
      *
      * @param child The child receives the message.
      * @param node The node is the JSON object.
@@ -1497,6 +1545,9 @@ public final class PoolChatServer implements PoolChat {
                 sendCancel(child);
             }
             return;
+        }
+        if ("_x.ai/session/update".equals(method)) {
+            method = "session/update";
         }
         if (!"session/update".equals(method)) {
             note(child);
@@ -1517,7 +1568,22 @@ public final class PoolChatServer implements PoolChat {
             update = params;
         }
         String kind = update == null ? "" : text(update.get("sessionUpdate"));
-        if ("tool_call".equals(kind) || "tool_call_update".equals(kind)) {
+        if ("turn_completed".equals(kind)) {
+            synchronized (child.io) {
+                child.turnDone = true;
+                child.io.notifyAll();
+            }
+            return;
+        }
+        if ("tool_call".equals(kind)) {
+            synchronized (child.io) {
+                child.sawTool = true;
+                child.io.notifyAll();
+            }
+            note(child);
+            return;
+        }
+        if ("tool_call_update".equals(kind)) {
             note(child);
             return;
         }
@@ -1554,6 +1620,7 @@ public final class PoolChatServer implements PoolChat {
                 child.assembled.append(chunk);
             }
             child.forwarded = true;
+            child.io.notifyAll();
             sink = child.sink;
         }
         try {
@@ -1906,6 +1973,10 @@ public final class PoolChatServer implements PoolChat {
         private volatile boolean initialized;
         private volatile boolean inPrompt;
         private volatile boolean promptOpen;
+        /** The field is true after {@code turn_completed} for the prompt that is open. */
+        private volatile boolean turnDone;
+        /** The field is true after a {@code tool_call} update on the prompt that is open. */
+        private volatile boolean sawTool;
         private volatile boolean think;
         private volatile boolean forwarded;
         private volatile boolean retried;

@@ -196,6 +196,17 @@ class PoolMoodRulesTest { // @aa-sdd PK-1083 PK-1084 PK-1089 PK-1092 PK-1094 doc
     }
 
     /**
+     * The method keeps a tool turn open until the agent says the turn ended.
+     * A finished turn does not wait. A tool call waits even when a short line is already assembled. An empty assembly waits.
+     */
+    @Test
+    void thePoolTurnWaitsForTheToolReply() {
+        assertFalse(PoolChatServer.holdForTurnEnd(true, true, 0));
+        assertTrue(PoolChatServer.holdForTurnEnd(false, true, 100));
+        assertTrue(PoolChatServer.holdForTurnEnd(false, false, 0));
+    }
+
+    /**
      * The method creates the one directory the agent accepts.
      * The directory is created when it is missing. A second call creates nothing. No login folder is created under it.
      *
