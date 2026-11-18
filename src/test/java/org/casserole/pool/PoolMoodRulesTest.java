@@ -16,6 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -180,5 +183,50 @@ class PoolMoodRulesTest { // @aa-sdd PK-1083 PK-1084 PK-1089 PK-1092 PK-1094 doc
         assertEquals("C:\\pool\\bob\\SSH", PoolChatServer.seatWorkspace("C:\\pool\\", "bob", "SSH"));
         assertEquals("/pool/anon/SSH", PoolChatServer.seatWorkspace("/pool", "ada bob", "SSH"));
         assertTrue(PoolChatServer.rulesHold("", null));
+    }
+
+    /**
+     * The method creates a temporary pool root and calls {@link PoolChatServer#prepareUser}.
+     * A missing user directory, both seat directories, and each {@code prompt_history.jsonl} are created. A second call creates nothing. Bytes already in the SSH history file stay.
+     *
+     * @throws Exception The method throws this exception when the temporary directory cannot be prepared.
+     */
+    @Test
+    void aMissingUserFileIsCreated() throws Exception {
+        File root = Files.createTempDirectory("pool-user").toFile();
+        try {
+            assertTrue(PoolChatServer.prepareUser(root.getAbsolutePath(), "ada"));
+            File user = new File(root, "ada");
+            File ssh = new File(user, "SSH");
+            File canvas = new File(user, "CANVAS");
+            File sshHistory = new File(ssh, "prompt_history.jsonl");
+            assertTrue(user.isDirectory());
+            assertTrue(ssh.isDirectory());
+            assertTrue(canvas.isDirectory());
+            assertTrue(new File(user, "prompt_history.jsonl").isFile());
+            assertTrue(sshHistory.isFile());
+            assertTrue(new File(canvas, "prompt_history.jsonl").isFile());
+            Files.write(sshHistory.toPath(), "keep".getBytes(StandardCharsets.UTF_8));
+            assertFalse(PoolChatServer.prepareUser(root.getAbsolutePath(), "ada"));
+            assertEquals("keep", new String(Files.readAllBytes(sshHistory.toPath()), StandardCharsets.UTF_8));
+        } finally {
+            deleteTree(root);
+        }
+    }
+
+    /**
+     * The method deletes a temporary tree.
+     * A file is deleted. A directory is deleted after its children.
+     *
+     * @param file The file is the tree to remove.
+     */
+    private static void deleteTree(File file) {
+        File[] kids = file.listFiles();
+        if (kids != null) {
+            for (int i = 0; i < kids.length; i++) {
+                deleteTree(kids[i]);
+            }
+        }
+        file.delete();
     }
 }

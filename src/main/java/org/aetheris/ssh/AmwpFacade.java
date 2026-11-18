@@ -906,6 +906,19 @@ public class AmwpFacade {
     }
 
     /**
+     * The {@code ensurePoolUser} method creates the pool files for one SSH user.
+     * A missing user directory, a missing seat directory, or a missing {@code prompt_history.jsonl} is created. An existing file stays. A first login and a later pool turn share this path.
+     *
+     * @param user The user is the SSH user name.
+     * @throws IOException The method throws this exception when a directory or the history file cannot be created.
+     */
+    public void ensurePoolUser(String user) throws java.io.IOException {
+        if (poolChat instanceof PoolChatServer) {
+            ((PoolChatServer) poolChat).ensureUser(user);
+        }
+    }
+
+    /**
      * The {@code doorBanner} method returns the banner that stops a turn.
      * Null means the turn may run.
      * A null request returns {@code failed}.

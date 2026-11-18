@@ -142,6 +142,11 @@ public class ChatShellFactory implements ShellFactory {
                     throw ex;
                 }
             }
+            try {
+                amwpFacade.ensurePoolUser(user);
+            } catch (Exception ignored) {
+                // a missed pool file is created again on the next pool turn
+            }
             CommandProcessor processor = commandProcessorFactory.create();
             FormatRouter router = formatRouterFactory.create(properties.getChat().isSmartFormat());
             ChatShell shell = new ChatShell(session, processor, llmService, properties, modelName, router, lamina,

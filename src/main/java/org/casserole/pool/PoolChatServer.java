@@ -14,6 +14,7 @@ package org.casserole.pool;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
@@ -1083,20 +1084,56 @@ public final class PoolChatServer implements PoolChat {
     }
 
     /**
+     * The {@code ensureUser} method creates one user's pool workspace when any part is missing.
+     * The chain is the pool root, then {@code pool-cwd/user}, then {@code SSH} and {@code CANVAS}. A directory that is already there stays. Each of those three directories receives {@code prompt_history.jsonl} when that file is missing. An existing file stays byte for byte. A first SSH login and a later pool turn call this same method.
+     *
+     * @param user The user is the SSH user name. An unsafe name uses {@code anon}.
+     * @throws IOException The method throws this exception when a directory or the history file cannot be created.
+     */
+    public void ensureUser(String user) throws IOException {
+        prepareUser(workspaceRootPath(), user);
+    }
+
+    /**
+     * The {@code prepareUser} method creates one user's directories and history files.
+     * The pool root is created when it is missing. The user directory, the SSH seat, and the canvas seat each receive an empty {@code prompt_history.jsonl} when that file is missing. An existing file is not opened for write. The method returns true when this call created a directory or a file.
+     *
+     * @param root The root is the agent workspace parent.
+     * @param user The user is the SSH user name.
+     * @return The return value is true when this call created a directory or a file.
+     * @throws IOException The method throws this exception when a directory or the history file cannot be created.
+     */
+    static boolean prepareUser(String root, String user) throws IOException {
+        boolean created = ensureDir(new File(root));
+        created = ensureWorkspaceFiles(new File(userWorkspace(root, user))) || created;
+        created = ensureWorkspaceFiles(new File(seatWorkspace(root, user, PoolChat.Seat.SSH.name()))) || created;
+        created = ensureWorkspaceFiles(new File(seatWorkspace(root, user, PoolChat.Seat.CANVAS.name()))) || created;
+        return created;
+    }
+
+    /**
+     * The {@code ensureWorkspaceFiles} method keeps one workspace directory and its history file.
+     * A missing directory is created. A missing {@code prompt_history.jsonl} is created empty. An existing file stays. The method returns true when this call created the directory or the file.
+     *
+     * @param dir The dir is the user directory or one seat directory.
+     * @return The return value is true when this call created a directory or a file.
+     * @throws IOException The method throws this exception when the directory or the file cannot be created.
+     */
+    static boolean ensureWorkspaceFiles(File dir) throws IOException {
+        boolean created = ensureDir(dir);
+        return ensureEmptyFile(new File(dir, "prompt_history.jsonl")) || created;
+    }
+
+    /**
      * The {@code ensureSeatHome} method creates the workspace chain when any part is missing.
-     * The chain is the pool root, then {@code pool-cwd/user}, then the seat directory. A directory that is already there is left as it is. A missing directory is created. The method returns true when this call created any directory in the chain. A directory that still does not exist after the create throws {@code spawn}.
+     * The chain is the pool root, then {@code pool-cwd/user}, then both seat directories. A directory that is already there is left as it is. A missing {@code prompt_history.jsonl} is created empty in the user directory and in each seat. An existing file stays. The method returns true when this call created any directory or file. A directory or file that still does not exist after the create throws {@code spawn}.
      *
      * @param child The child supplies the user and the seat.
-     * @return The return value is true when this call created a directory.
-     * @throws IOException The method throws this exception when a directory cannot be created.
+     * @return The return value is true when this call created a directory or a file.
+     * @throws IOException The method throws this exception when a directory or the history file cannot be created.
      */
     private boolean ensureSeatHome(Child child) throws IOException {
-        String root = workspaceRootPath();
-        boolean created = false;
-        created = ensureDir(new File(root)) || created;
-        created = ensureDir(new File(userWorkspace(root, userOf(child)))) || created;
-        created = ensureDir(seatHome(child)) || created;
-        return created;
+        return prepareUser(workspaceRootPath(), userOf(child));
     }
 
     /**
@@ -1112,6 +1149,30 @@ public final class PoolChatServer implements PoolChat {
             return false;
         }
         if (!dir.mkdirs() && !dir.isDirectory()) {
+            throw new IOException("spawn");
+        }
+        return true;
+    }
+
+    /**
+     * The {@code ensureEmptyFile} method creates one empty file when it is missing.
+     * A file that is already there returns false and is not opened. A missing file is created with no bytes. A path that still is not a file after the create throws {@code spawn}.
+     *
+     * @param file The file is the history file to keep.
+     * @return The return value is true when this call created the file.
+     * @throws IOException The method throws this exception when the file cannot be created.
+     */
+    private static boolean ensureEmptyFile(File file) throws IOException {
+        if (file.isFile()) {
+            return false;
+        }
+        FileOutputStream out = new FileOutputStream(file);
+        try {
+            out.flush();
+        } finally {
+            out.close();
+        }
+        if (!file.isFile()) {
             throw new IOException("spawn");
         }
         return true;
