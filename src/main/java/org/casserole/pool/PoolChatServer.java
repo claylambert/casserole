@@ -290,7 +290,8 @@ public final class PoolChatServer implements PoolChat {
      */
     private void runPrompt(Child child, String full, String boot) throws Exception {
         String safeBoot = boot == null ? "" : boot;
-        boolean extend = canExtend(child, full, safeBoot);
+        boolean created = ensureSeatHome(child);
+        boolean extend = !created && canExtend(child, full, safeBoot);
         String body = full;
         if (extend) {
             body = full.substring(child.flatHeld.length());
@@ -1055,24 +1056,22 @@ public final class PoolChatServer implements PoolChat {
     }
 
     /**
-     * The {@code ensureSeatHome} method creates the child's working directory.
-     * A directory that cannot be created throws {@code spawn}.
+     * The {@code ensureSeatHome} method creates the child's working directory when it is missing.
+     * A directory that is already there is left as it is. The method returns false in that case. A missing directory is created, including any missing parent, and the method returns true. A directory that still does not exist after the create throws {@code spawn}.
      *
      * @param child The child supplies the directory.
+     * @return The return value is true when this call created the directory.
      * @throws IOException The method throws this exception when the directory cannot be created.
      */
-    private void ensureSeatHome(Child child) throws IOException {
+    private boolean ensureSeatHome(Child child) throws IOException {
         File dir = seatHome(child);
-        File root = new File(workspaceRootPath());
-        if (address != null && address.remote && !root.isDirectory()) {
-            return;
+        if (dir.isDirectory()) {
+            return false;
         }
-        if (!dir.isDirectory() && !dir.mkdirs()) {
-            if (address != null && address.remote) {
-                return;
-            }
+        if (!dir.mkdirs() && !dir.isDirectory()) {
             throw new IOException("spawn");
         }
+        return true;
     }
 
     /**
