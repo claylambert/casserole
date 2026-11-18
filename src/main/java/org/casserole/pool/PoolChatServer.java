@@ -67,6 +67,7 @@ public final class PoolChatServer implements PoolChat {
     private final Lamina lamina;
     private final ObjectMapper mapper;
     private final File cwd;
+    private final String agentCwd;
     private final PoolAddress address;
     private final ConcurrentHashMap<String, Child> children;
     private final Object capLock;
@@ -90,6 +91,7 @@ public final class PoolChatServer implements PoolChat {
         this.address = PoolAddress.from(pool);
         String home = System.getProperty("user.home", "");
         this.cwd = new File(new File(home, ".casserole"), "pool-cwd");
+        this.agentCwd = pool == null || pool.getCwd() == null ? "" : pool.getCwd().trim();
         this.children = new ConcurrentHashMap<String, Child>();
         this.capLock = new Object();
         this.idleTimer = new java.util.Timer("pool-idle", true);
@@ -968,13 +970,13 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code sessionNewParams} method builds {@code session/new} parameters for this server.
-     * The working directory is the pool directory the agent already accepts. A per-user path is not sent. The rules string is the child's porch rules.
+     * The working directory is that child's seat directory under the agent workspace root. The rules string is the child's porch rules.
      *
      * @param child The child supplies the seat directory and the porch rules.
      * @return The return value is the parameters object from {@link #porchSessionParams}.
      */
     private ObjectNode sessionNewParams(Child child) {
-        return porchSessionParams(mapper, cwd.getAbsolutePath(), child.porchRules);
+        return porchSessionParams(mapper, sessionCwd(child), child.porchRules);
     }
 
     /**
@@ -985,7 +987,49 @@ public final class PoolChatServer implements PoolChat {
      * @return The return value is that directory.
      */
     private File seatHome(Child child) {
-        return new File(new File(cwd, seatFolder(userOf(child))), seatOf(child).name());
+        return new File(sessionCwd(child));
+    }
+
+    /**
+     * The {@code workspaceRootPath} method returns the directory the agent uses as the parent of every seat.
+     * A set {@code casserole.pool.cwd} is that directory, on the machine that runs the agent. An empty value is {@code ~/.casserole/pool-cwd} on this machine.
+     *
+     * @return The return value is the root path, without a trailing separator.
+     */
+    private String workspaceRootPath() {
+        if (agentCwd.length() > 0) {
+            return agentCwd;
+        }
+        return cwd.getAbsolutePath();
+    }
+
+    /**
+     * The {@code sessionCwd} method names one seat workspace.
+     * The path is the agent root, the safe user name, and the seat name.
+     *
+     * @param child The child supplies the user and the seat.
+     * @return The return value is the path sent as {@code cwd}.
+     */
+    private String sessionCwd(Child child) {
+        return seatWorkspace(workspaceRootPath(), userOf(child), seatOf(child).name());
+    }
+
+    /**
+     * The {@code seatWorkspace} method joins a root, a user, and a seat.
+     * A root that uses backslashes and no forward slash keeps the backslash. Any other root uses a forward slash. A trailing separator on the root is removed. An unsafe user name becomes {@code anon}.
+     *
+     * @param root The root is the agent workspace parent.
+     * @param user The user is the SSH user name.
+     * @param seat The seat is {@code SSH} or {@code CANVAS}.
+     * @return The return value is the seat path.
+     */
+    static String seatWorkspace(String root, String user, String seat) {
+        String base = root == null ? "" : root;
+        while (base.endsWith("/") || base.endsWith("\\")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        char sep = base.indexOf('\\') >= 0 && base.indexOf('/') < 0 ? '\\' : '/';
+        return base + sep + seatFolder(user) + sep + seat;
     }
 
     /**
@@ -1019,7 +1063,14 @@ public final class PoolChatServer implements PoolChat {
      */
     private void ensureSeatHome(Child child) throws IOException {
         File dir = seatHome(child);
+        File root = new File(workspaceRootPath());
+        if (address != null && address.remote && !root.isDirectory()) {
+            return;
+        }
         if (!dir.isDirectory() && !dir.mkdirs()) {
+            if (address != null && address.remote) {
+                return;
+            }
             throw new IOException("spawn");
         }
     }

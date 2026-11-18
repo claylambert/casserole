@@ -644,6 +644,7 @@ public class CasseroleProperties {
         private String host = "";
         private int port = 0;
         private String secret = "";
+        private String cwd = "";
 
         /**
          * The {@code getContextWindow} method returns the pool context window.
@@ -738,6 +739,31 @@ public class CasseroleProperties {
                 this.secret = "";
             } else {
                 this.secret = secret.trim();
+            }
+        }
+
+        /**
+         * The {@code getCwd} method returns the workspace root the agent uses.
+         * An empty string means {@code ~/.casserole/pool-cwd} on this machine.
+         *
+         * @return The trimmed root, or the empty string when the yaml key is absent.
+         */
+        public String getCwd() {
+            return cwd;
+        }
+
+        /**
+         * The {@code setCwd} method stores the workspace root the agent uses.
+         * A {@code null} value is stored as the empty string. Any other value is stored with surrounding spaces removed.
+         * A remote agent needs this path to be a directory on the machine that runs {@code grok agent serve}.
+         *
+         * @param cwd The raw {@code casserole.pool.cwd}, or {@code null}.
+         */
+        public void setCwd(String cwd) {
+            if (cwd == null) {
+                this.cwd = "";
+            } else {
+                this.cwd = cwd.trim();
             }
         }
     }

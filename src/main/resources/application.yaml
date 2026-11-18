@@ -37,6 +37,7 @@ casserole:
     port: 0
     secret: ""
     context-window: 256000
+    cwd: ""
 
 spring:
   datasource:

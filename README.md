@@ -407,6 +407,8 @@ A set host dials `ws://host:port/ws`. The host is an address the casserole machi
 
 `casserole.pool.context-window` is the context size a pool card shows beside its token estimate. The published example is `256000`. The desktops read that number. They do not read the host, the port, or the token.
 
+`casserole.pool.cwd` is the workspace root the agent uses. An empty value is `~/.casserole/pool-cwd` on the casserole machine. A remote agent needs this value to be a directory on the machine that runs `grok agent serve`. Each user and each seat gets a directory under that root. The SSH seat is `root/user/SSH`. The canvas seat is `root/user/CANVAS`.
+
 ```yaml
 casserole:
   pool:
@@ -414,6 +416,7 @@ casserole:
     port: 2419
     secret: your-pool-token
     context-window: 256000
+    cwd: /home/agent/.casserole/pool-cwd
 ```
 
 Replace `your-pool-token` with a token you choose. Use the same token in the agent command below. Ollama and the Grok API key are separate settings. They are under [Model settings](casserole-server/README.md#model-settings).
