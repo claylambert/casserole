@@ -105,6 +105,30 @@ That line means the release binary was copied into `app`.
 
 Read the Cargo text. The binary name is `aetheris-client.exe` on Windows. The binary name is `aetheris-client` on Linux. The binary name is `aetheris-client` on macOS. On Windows a missing [aetheris.jpg](../../../../src/main/resources/icons/aetheris.jpg) stops the build. [build.rs](../../aetheris-client/build.rs) is the file that reads it.
 
+## reset
+
+Reset removes the installed binary and the compiled dependencies so the next install builds them again. [reset.ps1](../reset.ps1), [reset.sh](../reset.sh), and [reset.zsh](../reset.zsh) remove `aetheris-client` and `aetheris-client.exe` from `rust/aetheris/app/`. They remove `rust/aetheris/target`, which holds the debug binary, the release binary, and the compiled dependencies. They also remove `aetheris-client/target` and `aetheris-term/target` when those directories exist. When Cargo can be selected, they run `cargo clean` in the workspace. The Rust compiler, rustup, and the downloaded crate cache stay on the machine. `Cargo.lock` stays.
+
+Windows:
+
+```powershell
+powershell -File rust\aetheris\bin\reset.ps1
+```
+
+Linux:
+
+```bash
+bash rust/aetheris/bin/reset.sh
+```
+
+macOS:
+
+```zsh
+zsh rust/aetheris/bin/reset.zsh
+```
+
+The script prints `aetheris-client reset finished`. A missing binary is already reset. Run [install.ps1](../install.ps1), [install.sh](../install.sh), or [install.zsh](../install.zsh) for the next build.
+
 ## start
 
 Start prints the crate version and opens the window. When the binary is not in `app/` yet, start installs it, then opens the window. [start.ps1](../../app/start.ps1) and [start.sh](../../app/start.sh) print `aetheris-client 1.0.0`. On macOS [start.zsh](../../app/start.zsh) loads the Rust toolchain and launches `aetheris-client`. The install script prints `aetheris-client 1.0.0` when it copies the binary. They then launch the binary in the same directory. When that binary is absent, start runs [install.ps1](../install.ps1) or [install.sh](../install.sh), then opens the window. The installer still runs alone when you call it by itself, and that call only installs.
