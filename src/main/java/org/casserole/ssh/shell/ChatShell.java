@@ -920,6 +920,8 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
                     stopSpinner();
                     if ("engine-down".equals(ex.getMessage())) {
                         write(Ansi.yellow(configurationCheck()) + "\r\n"); // @aa-sdd PK-1413 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
+                    } else if (ex.getMessage() != null && ex.getMessage().startsWith("pool ceiling")) {
+                        write(Ansi.yellow(ex.getMessage()) + "\r\n");
                     } else {
                         writeError(formatError(ex));
                     }

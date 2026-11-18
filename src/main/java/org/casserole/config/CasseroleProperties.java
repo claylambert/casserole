@@ -645,6 +645,7 @@ public class CasseroleProperties {
         private int port = 0;
         private String secret = "";
         private String cwd = "";
+        private int cap = 4;
 
         /**
          * The {@code getContextWindow} method returns the pool context window.
@@ -764,6 +765,30 @@ public class CasseroleProperties {
                 this.cwd = "";
             } else {
                 this.cwd = cwd.trim();
+            }
+        }
+
+        /**
+         * The {@code getCap} method returns the number of live pool logins.
+         * Each login may hold an SSH session and a canvas session inside that count.
+         *
+         * @return The ceiling. The shipped value is {@code 4}.
+         */
+        public int getCap() {
+            return cap;
+        }
+
+        /**
+         * The {@code setCap} method stores the pool login ceiling.
+         * A value below {@code 1} is stored as {@code 4}. Any other value is stored as given.
+         *
+         * @param cap The raw {@code casserole.pool.cap}.
+         */
+        public void setCap(int cap) {
+            if (cap < 1) {
+                this.cap = 4;
+            } else {
+                this.cap = cap;
             }
         }
     }

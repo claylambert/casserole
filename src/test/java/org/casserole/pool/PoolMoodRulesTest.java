@@ -177,6 +177,22 @@ class PoolMoodRulesTest { // @aa-sdd PK-1083 PK-1084 PK-1089 PK-1092 PK-1094 doc
         assertFalse(PoolChatServer.cwdHolds("/pool", "/pool/alice/CANVAS"));
         assertFalse(PoolChatServer.cwdHolds(null, "/pool"));
         assertFalse(PoolChatServer.cwdHolds("/pool", ""));
+        java.util.ArrayList<String> live = new java.util.ArrayList<String>();
+        live.add(PoolChatServer.seatKey("clay", PoolChat.Seat.SSH));
+        live.add(PoolChatServer.seatKey("alice", PoolChat.Seat.SSH));
+        live.add(PoolChatServer.seatKey("bob", PoolChat.Seat.CANVAS));
+        live.add(PoolChatServer.seatKey("joe", PoolChat.Seat.SSH));
+        assertTrue(PoolChatServer.admitsLogin(live, PoolChatServer.seatKey("clay", PoolChat.Seat.CANVAS), 4));
+        assertFalse(PoolChatServer.admitsLogin(live, PoolChatServer.seatKey("ada", PoolChat.Seat.SSH), 4));
+        assertTrue(PoolChatServer.admitsLogin(live, PoolChatServer.seatKey("ada", PoolChat.Seat.SSH), 6));
+        assertTrue(PoolChatServer.ceilingLine(4).startsWith("pool ceiling"));
+        assertTrue(PoolChatServer.ceilingLine(6).contains("6"));
+        org.casserole.config.CasseroleProperties.Pool pool = new org.casserole.config.CasseroleProperties.Pool();
+        assertEquals(4, pool.getCap());
+        pool.setCap(6);
+        assertEquals(6, pool.getCap());
+        pool.setCap(0);
+        assertEquals(4, pool.getCap());
     }
 
     /**

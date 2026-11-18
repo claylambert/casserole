@@ -40,7 +40,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 // @aa-sdd PK-1274 docs/specs/java/org/casserole/pool/pool.spec.md
 /**
  * The {@code PoolChatServer} class is the pool of ACP seats.
- * The class implements {@link PoolChat}. It keeps one child for each user and each {@link PoolChat.Seat}. It keeps at most three children.
+ * The class implements {@link PoolChat}. It keeps one child for each user and each {@link PoolChat.Seat}. The number of live logins is {@code casserole.pool.cap}. Each login may hold an SSH session and a canvas session. A login past that ceiling is refused.
  * Stdout and stderr run on {@link Lane#POOL_IO}. {@link #prompt} blocks the caller until the turn finishes.
  * A blank {@code casserole.pool.host} keeps the local child. The working directory is {@code ~/.casserole/pool-cwd}. Windows starts {@code cmd.exe /c grok agent stdio}. Any other operating system starts {@code grok agent stdio}. The child environment does not receive {@code XAI_API_KEY}.
  * A set host dials {@code ws://host:port/ws} on {@code grok agent serve}. The JSON-RPC lines stay the same. The serve token is not logged.
@@ -58,7 +58,28 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 // @aa-sdd PK-728 PK-1089 docs/specs/common/server.spec.md docs/specs/common/formal-plan.spec.md
 public final class PoolChatServer implements PoolChat {
 
-    private static final int CAP = 3;
+    /** The field is the ceiling used when {@code casserole.pool.cap} is absent. */
+    static final int DEFAULT_CAP = 4;
+
+    /**
+     * The {@code Ceiling} class is the refusal for a login past {@code casserole.pool.cap}.
+     * The message is the yellow sentence.
+     */
+    static final class Ceiling extends Exception {
+
+        /** The field is the ceiling that was full. */
+        final int cap;
+
+        /**
+         * The constructor stores the ceiling and the yellow sentence.
+         *
+         * @param cap The cap is the login ceiling.
+         */
+        Ceiling(int cap) {
+            super(ceilingLine(cap));
+            this.cap = cap;
+        }
+    }
     private static final long IDLE_MS = 15L * 60L * 1000L;
     private static final int LINE_CAP = 1024 * 1024;
     private static final int QUOTE_CAP = 80;
@@ -70,6 +91,7 @@ public final class PoolChatServer implements PoolChat {
     private final String agentCwd;
     private final PoolAddress address;
     private final ConcurrentHashMap<String, Child> children;
+    private final int loginCap;
     private final Object capLock;
     private final ConcurrentHashMap<String, AtomicInteger> seatEpochs = new ConcurrentHashMap<String, AtomicInteger>();
     private final java.util.Timer idleTimer;
@@ -92,6 +114,7 @@ public final class PoolChatServer implements PoolChat {
         String home = System.getProperty("user.home", "");
         this.cwd = new File(new File(home, ".casserole"), "pool-cwd");
         this.agentCwd = pool == null || pool.getCwd() == null ? "" : pool.getCwd().trim();
+        this.loginCap = pool == null ? DEFAULT_CAP : pool.getCap();
         this.children = new ConcurrentHashMap<String, Child>();
         this.capLock = new Object();
         this.idleTimer = new java.util.Timer("pool-idle", true);
@@ -154,6 +177,9 @@ public final class PoolChatServer implements PoolChat {
         Child child;
         try {
             child = ensure(key);
+        } catch (Ceiling ex) {
+            sink.done("pool ceiling", ex.getMessage());
+            return;
         } catch (IOException ex) {
             sink.done("pool down", clip("pool down", "spawn", ex.getClass().getSimpleName(), null));
             return;
@@ -619,6 +645,60 @@ public final class PoolChatServer implements PoolChat {
      */
     static boolean epochAllows(int seen, int now) {
         return seen == now;
+    }
+
+    /**
+     * The {@code loginOf} method reads the login from a child key.
+     * The text before the NUL is the login. A key with no NUL is the whole key. A null key is empty.
+     *
+     * @param key The key is the child map key.
+     * @return The return value is the login.
+     */
+    static String loginOf(String key) {
+        if (key == null || key.length() == 0) {
+            return "";
+        }
+        int cut = key.indexOf('\0');
+        if (cut < 0) {
+            return key;
+        }
+        return key.substring(0, cut);
+    }
+
+    /**
+     * The {@code admitsLogin} method reports whether this key may open a child.
+     * A login that already has a key is admitted. A new login is admitted when the number of distinct logins is below the ceiling. A ceiling below one admits nobody new.
+     *
+     * @param keys The keys are the live child keys.
+     * @param key The key is the child that wants to open.
+     * @param cap The cap is the login ceiling.
+     * @return The return value is true when the child may open.
+     */
+    static boolean admitsLogin(java.util.Collection<String> keys, String key, int cap) {
+        String login = loginOf(key);
+        java.util.HashSet<String> names = new java.util.HashSet<String>();
+        if (keys != null) {
+            java.util.Iterator<String> it = keys.iterator();
+            while (it.hasNext()) {
+                String name = loginOf(it.next());
+                names.add(name);
+                if (name.equals(login)) {
+                    return true;
+                }
+            }
+        }
+        return names.size() < cap;
+    }
+
+    /**
+     * The {@code ceilingLine} method writes the yellow refusal.
+     * The sentence names the ceiling.
+     *
+     * @param cap The cap is the login ceiling.
+     * @return The return value is the sentence.
+     */
+    static String ceilingLine(int cap) {
+        return "pool ceiling. The pool allows " + cap + " live logins at once. Close one login and try again.";
     }
 
     /**
@@ -1136,15 +1216,16 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code ensure} method returns a live child for the user, creating one when needed.
-     * An existing live process is returned. A dead entry is destroyed and removed. When three children already exist, the method waits. The pool directory is created when it is missing. A failed create throws an I/O exception with the message {@code spawn}.
+     * An existing live process is returned. A dead entry is destroyed and removed. A new login is refused when the live-login count is already {@code casserole.pool.cap}. A login that already holds a seat may open the other seat. The pool directory is created when it is missing. A failed create throws an I/O exception with the message {@code spawn}.
      * The new child starts at generation {@code 1}, and its pumps are submitted. After shutdown the method throws {@code spawn}.
      *
      * @param user The user is the map key.
      * @return The return value is the live child.
      * @throws IOException The method throws this exception when the directory or the process cannot be started.
-     * @throws InterruptedException The method throws this exception when the cap wait is interrupted.
+     * @throws InterruptedException The method throws this exception when the wait is interrupted.
+     * @throws Ceiling The method throws this exception when a new login is past the ceiling.
      */
-    private Child ensure(String user) throws IOException, InterruptedException {
+    private Child ensure(String user) throws IOException, InterruptedException, Ceiling {
         synchronized (capLock) {
             while (!shut) {
                 Child existing = children.get(user);
@@ -1155,9 +1236,8 @@ public final class PoolChatServer implements PoolChat {
                     destroyProcess(existing);
                     children.remove(user, existing);
                 }
-                if (children.size() >= CAP) {
-                    capLock.wait();
-                    continue;
+                if (!admitsLogin(children.keySet(), user, loginCap)) {
+                    throw new Ceiling(loginCap);
                 }
                 Child created = new Child(user);
                 ensureSeatHome(created);

@@ -22737,7 +22737,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * If the message equals {@code no tool is invocable}, the method returns true.
      * If the message equals {@code the cell is still waiting and no answer arrived}, the method returns true.
      * If the reason equals {@code pool auth} or {@code pool tool refused}, the method returns true.
-     * If the message starts with {@code pool auth} or {@code pool tool refused}, the method returns true.
+     * If the reason equals {@code pool ceiling}, the method returns true.
+     * If the message starts with {@code pool auth}, {@code pool tool refused}, or {@code pool ceiling}, the method returns true.
      * If the message starts with {@code Grok HTTP}, the method returns true.
      * Any other pair returns false.
      *
@@ -22772,10 +22773,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if ("no tool is invocable".equals(text) || F19_WORDS.equals(text)) {
             return true;
         }
-        if ("pool auth".equals(token) || "pool tool refused".equals(token)) {
+        if ("pool auth".equals(token) || "pool tool refused".equals(token) || "pool ceiling".equals(token)) {
             return true;
         }
-        if (text.startsWith("pool auth") || text.startsWith("pool tool refused")) {
+        if (text.startsWith("pool auth") || text.startsWith("pool tool refused") || text.startsWith("pool ceiling")) {
             return true;
         }
         return text.startsWith("Grok HTTP");
