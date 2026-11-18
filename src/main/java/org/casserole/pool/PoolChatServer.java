@@ -14,7 +14,6 @@ package org.casserole.pool;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
@@ -1029,130 +1028,51 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code sessionCwd} method names one seat workspace.
-     * The path is the agent root, the SSH login, and the seat name. The agent keeps its own session files for this exact path. This server does not write those files.
+     * The path is the one directory the agent already accepts. A set {@code casserole.pool.cwd} is that directory. An empty value is {@code ~/.casserole/pool-cwd}. The login and the seat are not appended. The agent keeps one workspace for this path and tells the sessions apart by session id.
      *
-     * @param child The child supplies the user and the seat.
+     * @param child The child is the seat whose session is opening. The path does not include the login or the seat.
      * @return The return value is the path sent as {@code cwd}.
      */
     private String sessionCwd(Child child) {
-        return seatWorkspace(workspaceRootPath(), userOf(child), seatOf(child).name());
+        return workspaceRootPath();
     }
 
     /**
-     * The {@code userWorkspace} method joins a root and a user.
-     * The path is {@code pool-cwd/} plus the SSH login. An unsafe login becomes {@code anon}.
+     * The {@code ensureUser} method keeps the one pool directory a local agent uses.
+     * A remote agent is left alone, because that directory is on the agent machine. A local agent gets {@code ~/.casserole/pool-cwd} when it is missing. The login is not a directory under that path.
      *
-     * @param root The root is the agent workspace parent.
-     * @param user The user is the SSH user name.
-     * @return The return value is the user directory.
-     */
-    static String userWorkspace(String root, String user) {
-        return joinWorkspace(root, seatFolder(user));
-    }
-
-    /**
-     * The {@code seatWorkspace} method joins a root, a user, and a seat.
-     * A root that uses backslashes and no forward slash keeps the backslash. Any other root uses a forward slash. A trailing separator on the root is removed. An unsafe user name becomes {@code anon}.
-     *
-     * @param root The root is the agent workspace parent.
-     * @param user The user is the SSH user name.
-     * @param seat The seat is {@code SSH} or {@code CANVAS}.
-     * @return The return value is the seat path.
-     */
-    static String seatWorkspace(String root, String user, String seat) {
-        return joinWorkspace(userWorkspace(root, user), seat);
-    }
-
-    /**
-     * The {@code joinWorkspace} method joins a parent path and one child name.
-     * A parent that uses backslashes and no forward slash keeps the backslash. Any other parent uses a forward slash. A trailing separator on the parent is removed.
-     *
-     * @param parent The parent is the directory above the child.
-     * @param child The child is one path segment.
-     * @return The return value is the joined path.
-     */
-    static String joinWorkspace(String parent, String child) {
-        String base = parent == null ? "" : parent;
-        while (base.endsWith("/") || base.endsWith("\\")) {
-            base = base.substring(0, base.length() - 1);
-        }
-        char sep = base.indexOf('\\') >= 0 && base.indexOf('/') < 0 ? '\\' : '/';
-        return base + sep + child;
-    }
-
-    /**
-     * The {@code seatFolder} method returns a path-safe user name.
-     * Empty text, {@code .}, {@code ..}, and any other character than an ASCII letter, a digit, {@code .}, {@code _}, or {@code -} become {@code anon}. Any other text is kept.
-     *
-     * @param user The user is the SSH user name.
-     * @return The return value is the folder name.
-     */
-    static String seatFolder(String user) {
-        if (user == null || user.length() == 0 || ".".equals(user) || "..".equals(user)) {
-            return "anon";
-        }
-        for (int i = 0; i < user.length(); i++) {
-            char ch = user.charAt(i);
-            boolean ok = (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')
-                    || ch == '.' || ch == '_' || ch == '-';
-            if (!ok) {
-                return "anon";
-            }
-        }
-        return user;
-    }
-
-    /**
-     * The {@code ensureUser} method creates one user's pool workspace when any part is missing.
-     * The chain is the pool root, then {@code pool-cwd/<login>}, then empty {@code SSH} and {@code CANVAS} directories. The login directory receives {@code prompt_history.jsonl} when that file is missing. An existing history file stays byte for byte. The seat directories receive no file. A first SSH login and a later pool turn call this same method.
-     *
-     * @param user The user is the SSH user name. An unsafe name uses {@code anon}.
-     * @throws IOException The method throws this exception when a directory or the history file cannot be created.
+     * @param user The user is the SSH login. The directory does not include this name.
+     * @throws IOException The method throws this exception when the local directory cannot be created.
      */
     public void ensureUser(String user) throws IOException {
-        prepareUser(workspaceRootPath(), user);
+        ensureSeatHome(null);
     }
 
     /**
-     * The {@code prepareUser} method creates one user's directories and history files.
-     * The pool root is created when it is missing. The login directory receives an empty {@code prompt_history.jsonl} when that file is missing. The SSH directory and the canvas directory are created empty. An existing history file is not opened for write. The method returns true when this call created a directory or the history file.
+     * The {@code ensureAcceptedDirectory} method creates the one directory the agent accepts.
+     * A directory that is already there stays. No login folder is created under it. The method returns true when this call created the directory.
      *
-     * @param root The root is the agent workspace parent.
-     * @param user The user is the SSH user name.
-     * @return The return value is true when this call created a directory or a file.
-     * @throws IOException The method throws this exception when a directory or the history file cannot be created.
+     * @param root The root is the pool directory.
+     * @return The return value is true when this call created the directory.
+     * @throws IOException The method throws this exception when the directory cannot be created.
      */
-    static boolean prepareUser(String root, String user) throws IOException {
-        boolean created = ensureDir(new File(root));
-        created = ensureWorkspaceFiles(new File(userWorkspace(root, user))) || created;
-        created = ensureDir(new File(seatWorkspace(root, user, PoolChat.Seat.SSH.name()))) || created;
-        created = ensureDir(new File(seatWorkspace(root, user, PoolChat.Seat.CANVAS.name()))) || created;
-        return created;
+    static boolean ensureAcceptedDirectory(String root) throws IOException {
+        return ensureDir(new File(root));
     }
 
     /**
-     * The {@code ensureWorkspaceFiles} method keeps one workspace directory and its history file.
-     * A missing directory is created. A missing {@code prompt_history.jsonl} is created empty. An existing file stays. The method returns true when this call created the directory or the file.
+     * The {@code ensureSeatHome} method keeps the one directory sent as {@code cwd}.
+     * A remote pool does not create the directory here. A local pool creates {@code ~/.casserole/pool-cwd} when it is missing. The method returns true when this call created that directory.
      *
-     * @param dir The dir is the user directory or one seat directory.
-     * @return The return value is true when this call created a directory or a file.
-     * @throws IOException The method throws this exception when the directory or the file cannot be created.
-     */
-    static boolean ensureWorkspaceFiles(File dir) throws IOException {
-        boolean created = ensureDir(dir);
-        return ensureEmptyFile(new File(dir, "prompt_history.jsonl")) || created;
-    }
-
-    /**
-     * The {@code ensureSeatHome} method creates the workspace chain when any part is missing.
-     * The chain is the pool root, then {@code pool-cwd/<login>}, then both seat directories. A directory that is already there is left as it is. A missing {@code prompt_history.jsonl} is created empty in the login directory only. The seat directories stay empty of files. An existing history file stays. The method returns true when this call created any directory or the history file. A directory or the history file that still does not exist after the create throws {@code spawn}.
-     *
-     * @param child The child supplies the user and the seat.
-     * @return The return value is true when this call created a directory or a file.
-     * @throws IOException The method throws this exception when a directory or the history file cannot be created.
+     * @param child The child is unused. The directory is the same for every seat.
+     * @return The return value is true when this call created the directory.
+     * @throws IOException The method throws this exception when the local directory cannot be created.
      */
     private boolean ensureSeatHome(Child child) throws IOException {
-        return prepareUser(workspaceRootPath(), userOf(child));
+        if (address != null && address.remote) {
+            return false;
+        }
+        return ensureAcceptedDirectory(workspaceRootPath());
     }
 
     /**
@@ -1168,30 +1088,6 @@ public final class PoolChatServer implements PoolChat {
             return false;
         }
         if (!dir.mkdirs() && !dir.isDirectory()) {
-            throw new IOException("spawn");
-        }
-        return true;
-    }
-
-    /**
-     * The {@code ensureEmptyFile} method creates one empty file when it is missing.
-     * A file that is already there returns false and is not opened. A missing file is created with no bytes. A path that still is not a file after the create throws {@code spawn}.
-     *
-     * @param file The file is the history file to keep.
-     * @return The return value is true when this call created the file.
-     * @throws IOException The method throws this exception when the file cannot be created.
-     */
-    private static boolean ensureEmptyFile(File file) throws IOException {
-        if (file.isFile()) {
-            return false;
-        }
-        FileOutputStream out = new FileOutputStream(file);
-        try {
-            out.flush();
-        } finally {
-            out.close();
-        }
-        if (!file.isFile()) {
             throw new IOException("spawn");
         }
         return true;
