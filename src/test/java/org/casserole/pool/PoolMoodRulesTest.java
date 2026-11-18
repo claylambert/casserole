@@ -183,32 +183,97 @@ class PoolMoodRulesTest { // @aa-sdd PK-1083 PK-1084 PK-1089 PK-1092 PK-1094 doc
         assertEquals("C:\\pool\\bob\\SSH", PoolChatServer.seatWorkspace("C:\\pool\\", "bob", "SSH"));
         assertEquals("/pool/anon/SSH", PoolChatServer.seatWorkspace("/pool", "ada bob", "SSH"));
         assertTrue(PoolChatServer.rulesHold("", null));
+        assertTrue(PoolChatServer.cwdHolds("/pool/clay/SSH", "/pool/clay/SSH"));
+        assertFalse(PoolChatServer.cwdHolds("/pool/clay/SSH", "/pool/clay/CANVAS"));
+        assertFalse(PoolChatServer.cwdHolds("/pool/clay/SSH", "/pool/alice/SSH"));
+        assertFalse(PoolChatServer.cwdHolds(null, "/pool/clay/SSH"));
+        assertFalse(PoolChatServer.cwdHolds("/pool/clay/SSH", ""));
     }
 
     /**
-     * The method creates a temporary pool root and calls {@link PoolChatServer#prepareUser}.
-     * A missing user directory, both seat directories, and each {@code prompt_history.jsonl} are created. A second call creates nothing. Bytes already in the SSH history file stay.
+     * The method prepares two logins under one temporary pool root.
+     * Each login receives its own directory and its own history file. One login's history bytes stay when the other login is prepared. The pool root itself has no history file.
      *
      * @throws Exception The method throws this exception when the temporary directory cannot be prepared.
      */
     @Test
-    void aMissingUserFileIsCreated() throws Exception {
-        File root = Files.createTempDirectory("pool-user").toFile();
+    void eachLoginKeepsItsOwnHistory() throws Exception {
+        File root = Files.createTempDirectory("pool-logins").toFile();
         try {
-            assertTrue(PoolChatServer.prepareUser(root.getAbsolutePath(), "ada"));
-            File user = new File(root, "ada");
-            File ssh = new File(user, "SSH");
-            File canvas = new File(user, "CANVAS");
-            File sshHistory = new File(ssh, "prompt_history.jsonl");
-            assertTrue(user.isDirectory());
+            assertTrue(PoolChatServer.prepareUser(root.getAbsolutePath(), "clay"));
+            File clayHistory = new File(new File(root, "clay"), "prompt_history.jsonl");
+            Files.write(clayHistory.toPath(), "clay".getBytes(StandardCharsets.UTF_8));
+            assertTrue(PoolChatServer.prepareUser(root.getAbsolutePath(), "alice"));
+            File aliceHistory = new File(new File(root, "alice"), "prompt_history.jsonl");
+            assertEquals("clay", new String(Files.readAllBytes(clayHistory.toPath()), StandardCharsets.UTF_8));
+            assertEquals("", new String(Files.readAllBytes(aliceHistory.toPath()), StandardCharsets.UTF_8));
+            assertFalse(new File(root, "prompt_history.jsonl").exists());
+        } finally {
+            deleteTree(root);
+        }
+    }
+
+    /**
+     * The method prepares one login and lists both seat directories.
+     * Each seat directory exists and contains no file. The history file is in the login directory.
+     *
+     * @throws Exception The method throws this exception when the temporary directory cannot be prepared.
+     */
+    @Test
+    void seatDirectoriesStayEmpty() throws Exception {
+        File root = Files.createTempDirectory("pool-seats").toFile();
+        try {
+            assertTrue(PoolChatServer.prepareUser(root.getAbsolutePath(), "clay"));
+            File ssh = new File(new File(root, "clay"), "SSH");
+            File canvas = new File(new File(root, "clay"), "CANVAS");
             assertTrue(ssh.isDirectory());
             assertTrue(canvas.isDirectory());
-            assertTrue(new File(user, "prompt_history.jsonl").isFile());
-            assertTrue(sshHistory.isFile());
-            assertTrue(new File(canvas, "prompt_history.jsonl").isFile());
-            Files.write(sshHistory.toPath(), "keep".getBytes(StandardCharsets.UTF_8));
-            assertFalse(PoolChatServer.prepareUser(root.getAbsolutePath(), "ada"));
-            assertEquals("keep", new String(Files.readAllBytes(sshHistory.toPath()), StandardCharsets.UTF_8));
+            assertEquals(0, ssh.list().length);
+            assertEquals(0, canvas.list().length);
+            assertTrue(new File(new File(root, "clay"), "prompt_history.jsonl").isFile());
+            assertFalse(new File(ssh, "prompt_history.jsonl").exists());
+            assertFalse(new File(canvas, "prompt_history.jsonl").exists());
+        } finally {
+            deleteTree(root);
+        }
+    }
+
+    /**
+     * The method prepares one login twice.
+     * The second call creates nothing. Bytes already in the history file stay.
+     *
+     * @throws Exception The method throws this exception when the temporary directory cannot be prepared.
+     */
+    @Test
+    void anExistingHistoryStays() throws Exception {
+        File root = Files.createTempDirectory("pool-keep").toFile();
+        try {
+            assertTrue(PoolChatServer.prepareUser(root.getAbsolutePath(), "clay"));
+            File history = new File(new File(root, "clay"), "prompt_history.jsonl");
+            Files.write(history.toPath(), "keep".getBytes(StandardCharsets.UTF_8));
+            assertFalse(PoolChatServer.prepareUser(root.getAbsolutePath(), "clay"));
+            assertEquals("keep", new String(Files.readAllBytes(history.toPath()), StandardCharsets.UTF_8));
+        } finally {
+            deleteTree(root);
+        }
+    }
+
+    /**
+     * The method prepares an unsafe login and a real login.
+     * The unsafe login lands in {@code anon}. The real login keeps its own directory and its own history file.
+     *
+     * @throws Exception The method throws this exception when the temporary directory cannot be prepared.
+     */
+    @Test
+    void anUnsafeNameIsItsOwnDirectory() throws Exception {
+        File root = Files.createTempDirectory("pool-anon").toFile();
+        try {
+            assertTrue(PoolChatServer.prepareUser(root.getAbsolutePath(), "ada bob"));
+            assertTrue(PoolChatServer.prepareUser(root.getAbsolutePath(), "ada"));
+            assertTrue(new File(new File(root, "anon"), "prompt_history.jsonl").isFile());
+            assertTrue(new File(new File(root, "ada"), "prompt_history.jsonl").isFile());
+            assertTrue(new File(new File(root, "anon"), "SSH").isDirectory());
+            assertTrue(new File(new File(root, "ada"), "CANVAS").isDirectory());
         } finally {
             deleteTree(root);
         }

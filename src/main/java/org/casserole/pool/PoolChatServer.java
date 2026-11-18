@@ -471,7 +471,7 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code canExtend} method reports whether this prompt may send only the tail.
-     * The hold must be valid. The boot must be non-empty and equal the held boot. {@link #rulesHold} must match. The process must be initialized, alive, and still running. The session id must be set. The held text must be non-empty. The full text must start with that held text and be longer.
+     * The hold must be valid. The boot must be non-empty and equal the held boot. {@link #rulesHold} must match. The process must be initialized, alive, and still running. The session id must be set. {@link #cwdHolds} must match the directory that session id was opened in. The held text must be non-empty. The full text must start with that held text and be longer.
      * A different rules string, including a change to empty, returns false, so the whole working set is sent once. The next success with the same rules may send the tail again.
      // @aa-sdd PK-1089 docs/specs/common/formal-plan.spec.md
      *
@@ -491,6 +491,9 @@ public final class PoolChatServer implements PoolChat {
             return false;
         }
         if (child.sessionId == null || child.sessionId.length() == 0) {
+            return false;
+        }
+        if (!cwdHolds(child.openedCwd, sessionCwd(child))) {
             return false;
         }
         if (child.seenEpoch != epochNow(child)) {
@@ -620,6 +623,21 @@ public final class PoolChatServer implements PoolChat {
     }
 
     /**
+     * The {@code cwdHolds} method reports whether a session id still belongs to this working directory.
+     * The opened value is the directory sent with that session id. The next value is the directory for this prompt. Equal values may extend. A different directory, or an empty value, does not extend.
+     *
+     * @param opened The opened value is the cwd stored with the session id.
+     * @param next The next value is the cwd for this prompt.
+     * @return The return value is true when both values are present and equal.
+     */
+    static boolean cwdHolds(String opened, String next) {
+        if (opened == null || next == null || opened.length() == 0 || next.length() == 0) {
+            return false;
+        }
+        return opened.equals(next);
+    }
+
+    /**
      * The {@code dropHold} method clears the held session.
      * The next prompt opens a session. The process stays up. The hold flag, the held text, the held boot, the held rules, and the session id are cleared.
      *
@@ -631,6 +649,7 @@ public final class PoolChatServer implements PoolChat {
         child.heldBoot = null;
         child.heldRules = null;
         child.sessionId = null;
+        child.openedCwd = null;
     }
 
     /**
@@ -1010,7 +1029,7 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code sessionCwd} method names one seat workspace.
-     * The path is the agent root, the safe user name, and the seat name.
+     * The path is the agent root, the SSH login, and the seat name. The agent keeps its own session files for this exact path. This server does not write those files.
      *
      * @param child The child supplies the user and the seat.
      * @return The return value is the path sent as {@code cwd}.
@@ -1021,7 +1040,7 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code userWorkspace} method joins a root and a user.
-     * The path is {@code pool-cwd/user}. An unsafe user name becomes {@code anon}.
+     * The path is {@code pool-cwd/} plus the SSH login. An unsafe login becomes {@code anon}.
      *
      * @param root The root is the agent workspace parent.
      * @param user The user is the SSH user name.
@@ -1085,7 +1104,7 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code ensureUser} method creates one user's pool workspace when any part is missing.
-     * The chain is the pool root, then {@code pool-cwd/user}, then {@code SSH} and {@code CANVAS}. A directory that is already there stays. Each of those three directories receives {@code prompt_history.jsonl} when that file is missing. An existing file stays byte for byte. A first SSH login and a later pool turn call this same method.
+     * The chain is the pool root, then {@code pool-cwd/<login>}, then empty {@code SSH} and {@code CANVAS} directories. The login directory receives {@code prompt_history.jsonl} when that file is missing. An existing history file stays byte for byte. The seat directories receive no file. A first SSH login and a later pool turn call this same method.
      *
      * @param user The user is the SSH user name. An unsafe name uses {@code anon}.
      * @throws IOException The method throws this exception when a directory or the history file cannot be created.
@@ -1096,7 +1115,7 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code prepareUser} method creates one user's directories and history files.
-     * The pool root is created when it is missing. The user directory, the SSH seat, and the canvas seat each receive an empty {@code prompt_history.jsonl} when that file is missing. An existing file is not opened for write. The method returns true when this call created a directory or a file.
+     * The pool root is created when it is missing. The login directory receives an empty {@code prompt_history.jsonl} when that file is missing. The SSH directory and the canvas directory are created empty. An existing history file is not opened for write. The method returns true when this call created a directory or the history file.
      *
      * @param root The root is the agent workspace parent.
      * @param user The user is the SSH user name.
@@ -1106,8 +1125,8 @@ public final class PoolChatServer implements PoolChat {
     static boolean prepareUser(String root, String user) throws IOException {
         boolean created = ensureDir(new File(root));
         created = ensureWorkspaceFiles(new File(userWorkspace(root, user))) || created;
-        created = ensureWorkspaceFiles(new File(seatWorkspace(root, user, PoolChat.Seat.SSH.name()))) || created;
-        created = ensureWorkspaceFiles(new File(seatWorkspace(root, user, PoolChat.Seat.CANVAS.name()))) || created;
+        created = ensureDir(new File(seatWorkspace(root, user, PoolChat.Seat.SSH.name()))) || created;
+        created = ensureDir(new File(seatWorkspace(root, user, PoolChat.Seat.CANVAS.name()))) || created;
         return created;
     }
 
@@ -1126,7 +1145,7 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code ensureSeatHome} method creates the workspace chain when any part is missing.
-     * The chain is the pool root, then {@code pool-cwd/user}, then both seat directories. A directory that is already there is left as it is. A missing {@code prompt_history.jsonl} is created empty in the user directory and in each seat. An existing file stays. The method returns true when this call created any directory or file. A directory or file that still does not exist after the create throws {@code spawn}.
+     * The chain is the pool root, then {@code pool-cwd/<login>}, then both seat directories. A directory that is already there is left as it is. A missing {@code prompt_history.jsonl} is created empty in the login directory only. The seat directories stay empty of files. An existing history file stays. The method returns true when this call created any directory or the history file. A directory or the history file that still does not exist after the create throws {@code spawn}.
      *
      * @param child The child supplies the user and the seat.
      * @return The return value is true when this call created a directory or a file.
@@ -1441,6 +1460,7 @@ public final class PoolChatServer implements PoolChat {
                     return;
                 }
                 child.sessionId = session;
+                child.openedCwd = sessionCwd(child);
             }
             child.outcome = Outcome.OK;
             child.outcomeId = id;
@@ -1924,6 +1944,8 @@ public final class PoolChatServer implements PoolChat {
         private volatile int idleToken;
         private volatile Sink sink;
         private String sessionId;
+        /** The field is the working directory sent with {@link #sessionId}. A different directory does not extend. */
+        private String openedCwd;
         /** The field is the boot id this hold belongs to. */
         private String heldBoot;
         /** The field is the working set already in the session, plus the stored reply block. */

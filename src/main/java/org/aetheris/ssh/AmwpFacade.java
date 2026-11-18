@@ -907,7 +907,7 @@ public class AmwpFacade {
 
     /**
      * The {@code ensurePoolUser} method creates the pool files for one SSH user.
-     * A missing user directory, a missing seat directory, or a missing {@code prompt_history.jsonl} is created. An existing file stays. A first login and a later pool turn share this path.
+     * A missing login directory, a missing seat directory, or a missing {@code prompt_history.jsonl} in the login directory is created. The seat directories are created with no file. An existing history file stays. A first login and a later pool turn share this path.
      *
      * @param user The user is the SSH user name.
      * @throws IOException The method throws this exception when a directory or the history file cannot be created.
