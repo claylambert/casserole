@@ -173,6 +173,8 @@ class PoolMoodRulesTest { // @aa-sdd PK-1083 PK-1084 PK-1089 PK-1092 PK-1094 doc
         assertEquals("bob", PoolChatServer.seatFolder("bob"));
         assertEquals("anon", PoolChatServer.seatFolder(""));
         assertEquals("anon", PoolChatServer.seatFolder("ada bob"));
+        assertEquals("/pool/ada", PoolChatServer.userWorkspace("/pool", "ada"));
+        assertEquals("C:\\pool\\bob", PoolChatServer.userWorkspace("C:\\pool\\", "bob"));
         assertEquals("/pool/ada/SSH", PoolChatServer.seatWorkspace("/pool", "ada", "SSH"));
         assertEquals("/pool/ada/CANVAS", PoolChatServer.seatWorkspace("/pool/", "ada", "CANVAS"));
         assertEquals("C:\\pool\\bob\\SSH", PoolChatServer.seatWorkspace("C:\\pool\\", "bob", "SSH"));

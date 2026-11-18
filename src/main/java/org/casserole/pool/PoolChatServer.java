@@ -291,6 +291,9 @@ public final class PoolChatServer implements PoolChat {
     private void runPrompt(Child child, String full, String boot) throws Exception {
         String safeBoot = boot == null ? "" : boot;
         boolean created = ensureSeatHome(child);
+        if (created && child.alive && child.link != null) {
+            respawn(child);
+        }
         boolean extend = !created && canExtend(child, full, safeBoot);
         String body = full;
         if (extend) {
@@ -1016,6 +1019,18 @@ public final class PoolChatServer implements PoolChat {
     }
 
     /**
+     * The {@code userWorkspace} method joins a root and a user.
+     * The path is {@code pool-cwd/user}. An unsafe user name becomes {@code anon}.
+     *
+     * @param root The root is the agent workspace parent.
+     * @param user The user is the SSH user name.
+     * @return The return value is the user directory.
+     */
+    static String userWorkspace(String root, String user) {
+        return joinWorkspace(root, seatFolder(user));
+    }
+
+    /**
      * The {@code seatWorkspace} method joins a root, a user, and a seat.
      * A root that uses backslashes and no forward slash keeps the backslash. Any other root uses a forward slash. A trailing separator on the root is removed. An unsafe user name becomes {@code anon}.
      *
@@ -1025,12 +1040,24 @@ public final class PoolChatServer implements PoolChat {
      * @return The return value is the seat path.
      */
     static String seatWorkspace(String root, String user, String seat) {
-        String base = root == null ? "" : root;
+        return joinWorkspace(userWorkspace(root, user), seat);
+    }
+
+    /**
+     * The {@code joinWorkspace} method joins a parent path and one child name.
+     * A parent that uses backslashes and no forward slash keeps the backslash. Any other parent uses a forward slash. A trailing separator on the parent is removed.
+     *
+     * @param parent The parent is the directory above the child.
+     * @param child The child is one path segment.
+     * @return The return value is the joined path.
+     */
+    static String joinWorkspace(String parent, String child) {
+        String base = parent == null ? "" : parent;
         while (base.endsWith("/") || base.endsWith("\\")) {
             base = base.substring(0, base.length() - 1);
         }
         char sep = base.indexOf('\\') >= 0 && base.indexOf('/') < 0 ? '\\' : '/';
-        return base + sep + seatFolder(user) + sep + seat;
+        return base + sep + child;
     }
 
     /**
@@ -1056,15 +1083,31 @@ public final class PoolChatServer implements PoolChat {
     }
 
     /**
-     * The {@code ensureSeatHome} method creates the child's working directory when it is missing.
-     * A directory that is already there is left as it is. The method returns false in that case. A missing directory is created, including any missing parent, and the method returns true. A directory that still does not exist after the create throws {@code spawn}.
+     * The {@code ensureSeatHome} method creates the workspace chain when any part is missing.
+     * The chain is the pool root, then {@code pool-cwd/user}, then the seat directory. A directory that is already there is left as it is. A missing directory is created. The method returns true when this call created any directory in the chain. A directory that still does not exist after the create throws {@code spawn}.
      *
-     * @param child The child supplies the directory.
+     * @param child The child supplies the user and the seat.
+     * @return The return value is true when this call created a directory.
+     * @throws IOException The method throws this exception when a directory cannot be created.
+     */
+    private boolean ensureSeatHome(Child child) throws IOException {
+        String root = workspaceRootPath();
+        boolean created = false;
+        created = ensureDir(new File(root)) || created;
+        created = ensureDir(new File(userWorkspace(root, userOf(child)))) || created;
+        created = ensureDir(seatHome(child)) || created;
+        return created;
+    }
+
+    /**
+     * The {@code ensureDir} method creates one directory when it is missing.
+     * A directory that is already there returns false. A missing directory is created and returns true. A directory that still does not exist after the create throws {@code spawn}.
+     *
+     * @param dir The dir is the directory to keep.
      * @return The return value is true when this call created the directory.
      * @throws IOException The method throws this exception when the directory cannot be created.
      */
-    private boolean ensureSeatHome(Child child) throws IOException {
-        File dir = seatHome(child);
+    private static boolean ensureDir(File dir) throws IOException {
         if (dir.isDirectory()) {
             return false;
         }
