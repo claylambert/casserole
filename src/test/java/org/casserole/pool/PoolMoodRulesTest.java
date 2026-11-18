@@ -166,6 +166,13 @@ class PoolMoodRulesTest { // @aa-sdd PK-1083 PK-1084 PK-1089 PK-1092 PK-1094 doc
         assertFalse(PoolChatServer.rulesHold("", RULES));
         assertTrue(PoolChatServer.rulesHold(RULES, RULES));
         assertTrue(PoolChatServer.rulesHold("", ""));
+        assertTrue(PoolChatServer.epochAllows(0, 0));
+        assertTrue(PoolChatServer.epochAllows(2, 2));
+        assertFalse(PoolChatServer.epochAllows(1, 2));
+        assertEquals("ada", PoolChatServer.seatFolder("ada"));
+        assertEquals("bob", PoolChatServer.seatFolder("bob"));
+        assertEquals("anon", PoolChatServer.seatFolder(""));
+        assertEquals("anon", PoolChatServer.seatFolder("ada bob"));
         assertTrue(PoolChatServer.rulesHold("", null));
     }
 }

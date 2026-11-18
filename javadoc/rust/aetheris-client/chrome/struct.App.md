@@ -127,6 +127,7 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | String | [`ssh_think_key`](#member-ssh_think_key) | Key of the focused SSH pane. Empty until that pane takes a seat. |
 | ThinkYaml | [`think_yaml`](#member-think_yaml) | Shared `aetheris-think.yaml`. A version other than 1 stays unread. |
 | bool | [`vt_think_on`](#member-vt_think_on) | The focused session's thinking is on. Each parked session keeps its own. |
+| String | [`vt_think_tag`](#member-vt_think_tag) | The name on the focused session's thought strip. A parked session keeps its own. |
 | Option<i32> | [`roux_used`](#member-roux_used) | Roux session count for the focused pane. None until the reply is held. |
 | i32 | [`roux_chars`](#member-roux_chars) | Characters in the held Roux messages. |
 | i32 | [`roux_blocks`](#member-roux_blocks) | Stored Roux messages in the held count. |
@@ -759,6 +760,16 @@ vt_think_on: bool
 
 The focused session's thinking is on. Each parked session keeps its own.
 The shared gate stays. Another session's empty `think:` line does not clear this.
+
+### vt_think_tag
+
+<a id="member-vt_think_tag"></a>
+
+```rust
+vt_think_tag: String
+```
+
+The name on the focused session's thought strip. A parked session keeps its own.
 
 ### roux_used
 

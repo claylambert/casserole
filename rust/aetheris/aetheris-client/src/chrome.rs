@@ -1697,6 +1697,18 @@ fn console_piece_opens(piece: &crate::amwp::ScopePiece) -> bool {
     crate::model::console_result_open(&text) == Some(true)
 }
 
+/// The function `console_piece_tag` reads the thought-strip name from one scope piece.
+/// `piece` is one [`ScopePiece`]. A piece that is not a nil-cell model result returns nothing. The name comes from [`crate::model::console_result_tag`].
+fn console_piece_tag(piece: &crate::amwp::ScopePiece) -> Option<String> {
+    let crate::amwp::ScopePiece::Later { cell, body } = piece else {
+        return None;
+    };
+    if !nil_cell(cell) {
+        return None;
+    }
+    crate::model::console_result_tag(&String::from_utf8_lossy(body))
+}
+
 /// The function `seat_vt_chrome` builds the thought strip for one SSH session.
 /// `open` is the open flag. `slide` is the rise. `folded` is the fold. `height` is the dragged height.
 /// The result is a [`ThinkChrome`] that holds those four values. The function does not read a file.
@@ -19549,6 +19561,8 @@ struct ParkedPane {
     ssh_think_key: String,
     /// This session's thinking is on. Another session's shell result does not clear it.
     vt_think_on: bool,
+    /// The name on this session's thought strip. Empty reads as ollama. Another session's result does not replace it.
+    vt_think_tag: String,
     /// Roux session count for this pane. None until the reply is held.
     /// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
     roux_used: Option<i32>,
@@ -19998,6 +20012,8 @@ struct App {
     /// The focused session's thinking is on. Each parked session keeps its own.
     /// The shared gate stays. Another session's empty `think:` line does not clear this.
     vt_think_on: bool,
+    /// The name on the focused session's thought strip. A parked session keeps its own.
+    vt_think_tag: String,
     /// Roux session count for the focused pane. None until the reply is held.
     /// @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
     roux_used: Option<i32>,
@@ -20339,6 +20355,7 @@ impl App {
             ssh_think_key: String::new(),
             think_yaml,
             vt_think_on: false,
+            vt_think_tag: String::new(),
             roux_used: None,
             roux_chars: 0,
             roux_blocks: 0,
@@ -20873,9 +20890,7 @@ impl App {
         let mut show = false;
         let mut reveal = false;
         let mut pending: Vec<(u64, String, Vec<ScopePiece>, bool)> = Vec::new();
-        let mut ssh_jobs: Vec<(usize, String, bool, ScopePiece)> = Vec::new();
-        let shared_open = self.model.console_thought_open();
-        let thought_tag = self.model.console_thought_tag();
+        let mut ssh_jobs: Vec<(usize, String, bool, String, ScopePiece)> = Vec::new();
         for (index, pane) in self.panes.iter_mut().enumerate() {
             if let Some(session) = pane.session.as_ref() {
                 session.flush_outbound();
@@ -20947,7 +20962,17 @@ impl App {
             if burst.iter().any(console_piece_opens) {
                 pane.vt_think_on = true;
             }
-            let accept = pane.vt_think_on || shared_open;
+            for piece in &burst {
+                if let Some(tag) = console_piece_tag(piece) {
+                    pane.vt_think_tag = tag;
+                }
+            }
+            let accept = pane.vt_think_on;
+            let thought_tag = if pane.vt_think_tag.is_empty() {
+                "ollama".to_string()
+            } else {
+                pane.vt_think_tag.clone()
+            };
             let pane_id = pane.id;
             let pane_user = pane
                 .last
@@ -20984,7 +21009,13 @@ impl App {
                 }
                 let surface = pane.id.to_string();
                 bind_ssh_think_key(&mut pane.ssh_think_key, &pane_user, &surface);
-                ssh_jobs.push((index, pane.ssh_think_key.clone(), accept, piece.clone()));
+                ssh_jobs.push((
+                    index,
+                    pane.ssh_think_key.clone(),
+                    accept,
+                    thought_tag.clone(),
+                    piece.clone(),
+                ));
                 kept.push(piece);
                 show = true;
             }
@@ -21025,7 +21056,7 @@ impl App {
             }
         }
         let seed = self.vt_chrome.height;
-        for (index, key, accept, piece) in ssh_jobs {
+        for (index, key, accept, thought_tag, piece) in ssh_jobs {
             let grew = {
                 let seat = self.think_panes.acquire_ssh(&key, seed);
                 let before = think_log_text(&seat.log.blocks);
@@ -21240,8 +21271,17 @@ impl App {
         if scope.iter().any(|(piece, _)| console_piece_opens(piece)) {
             self.vt_think_on = true;
         }
-        let accept = self.vt_think_on || self.model.console_thought_open();
-        let thought_tag = self.model.console_thought_tag();
+        for (piece, _) in &scope {
+            if let Some(tag) = console_piece_tag(piece) {
+                self.vt_think_tag = tag;
+            }
+        }
+        let accept = self.vt_think_on;
+        let thought_tag = if self.vt_think_tag.is_empty() {
+            "ollama".to_string()
+        } else {
+            self.vt_think_tag.clone()
+        };
         let seed = self.vt_chrome.height;
         for (piece, offered) in &scope {
             if !*offered {
@@ -22286,6 +22326,7 @@ impl App {
             last: self.last_connect.take(),
             ssh_think_key: std::mem::take(&mut self.ssh_think_key),
             vt_think_on: std::mem::replace(&mut self.vt_think_on, false),
+            vt_think_tag: std::mem::take(&mut self.vt_think_tag),
             roux_used: std::mem::replace(&mut self.roux_used, None),
             roux_chars: std::mem::replace(&mut self.roux_chars, 0),
             roux_blocks: std::mem::replace(&mut self.roux_blocks, 0),
@@ -22327,6 +22368,7 @@ impl App {
         self.osc_hold = parked.osc_hold;
         self.ssh_think_key = parked.ssh_think_key;
         self.vt_think_on = parked.vt_think_on;
+        self.vt_think_tag = parked.vt_think_tag;
         self.roux_used = parked.roux_used;
         self.roux_chars = parked.roux_chars;
         self.roux_blocks = parked.roux_blocks;

@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.casserole.config.CasseroleProperties;
 import org.casserole.lamina.Lamina;
@@ -69,6 +70,7 @@ public final class PoolChatServer implements PoolChat {
     private final PoolAddress address;
     private final ConcurrentHashMap<String, Child> children;
     private final Object capLock;
+    private final ConcurrentHashMap<String, AtomicInteger> seatEpochs = new ConcurrentHashMap<String, AtomicInteger>();
     private final java.util.Timer idleTimer;
     private final Thread hook;
     private volatile boolean shut;
@@ -296,6 +298,7 @@ public final class PoolChatServer implements PoolChat {
                 return;
             }
             if (!extend) {
+                releaseIdleMate(child);
                 releaseSession(child);
                 if (!openSession(child, full, safeBoot)) {
                     return;
@@ -368,7 +371,7 @@ public final class PoolChatServer implements PoolChat {
      */
     private boolean openSession(Child child, String full, String boot) throws Exception {
         child.step = "session/new";
-        Outcome newer = call(child, "session/new", sessionNewParams(child.porchRules), false);
+        Outcome newer = call(child, "session/new", sessionNewParams(child), false);
         if (stopHere(child, newer)) {
             sendCancel(child);
             dropHold(child);
@@ -432,12 +435,16 @@ public final class PoolChatServer implements PoolChat {
         synchronized (child.io) {
             answer = child.assembled.toString();
         }
-        if (extend && answer.length() == 0) { // @aa-sdd PK-1463 docs/specs/java/org/casserole/pool/pool.spec.md
+        if (answer.length() == 0) { // @aa-sdd PK-1463 docs/specs/java/org/casserole/pool/pool.spec.md
             releaseSession(child);
-            if (!openSession(child, full, boot)) {
+            if (extend) {
+                if (!openSession(child, full, boot)) {
+                    return;
+                }
+                sendTurn(child, full, full, boot, false);
                 return;
             }
-            sendTurn(child, full, full, boot, false);
+            child.sink.done("", answer);
             return;
         }
         child.sink.done("", answer);
@@ -478,6 +485,9 @@ public final class PoolChatServer implements PoolChat {
             return false;
         }
         if (child.sessionId == null || child.sessionId.length() == 0) {
+            return false;
+        }
+        if (child.seenEpoch != epochNow(child)) {
             return false;
         }
         if (child.flatHeld == null || child.flatHeld.length() == 0 || full == null) {
@@ -525,6 +535,107 @@ public final class PoolChatServer implements PoolChat {
         child.flatHeld = full + block;
         child.heldRules = child.porchRules == null ? "" : child.porchRules;
         child.holdValid = true;
+        int now = epochBump(child);
+        child.seenEpoch = now;
+    }
+
+    /**
+     * The {@code epochNow} method reads the epoch for this child's user.
+     * A user who has not stored a hold yet reads zero. Another user's turn does not advance this value.
+     *
+     * @param child The child supplies the user.
+     * @return The return value is that user's epoch.
+     */
+    private int epochNow(Child child) {
+        AtomicInteger clock = seatEpochs.get(userOf(child));
+        if (clock == null) {
+            return 0;
+        }
+        return clock.get();
+    }
+
+    /**
+     * The {@code epochBump} method advances the epoch for this child's user.
+     * The canvas seat and the SSH seat of that user share the clock. Another user keeps a different clock.
+     *
+     * @param child The child supplies the user.
+     * @return The return value is the new epoch.
+     */
+    private int epochBump(Child child) {
+        AtomicInteger clock = seatEpochs.computeIfAbsent(userOf(child), key -> new AtomicInteger());
+        return clock.incrementAndGet();
+    }
+
+    /**
+     * The {@code releaseIdleMate} method drops the other seat's remote session when that seat is idle.
+     * The canvas seat and the SSH seat keep separate children. A mate with a prompt in flight stays up. A mate with no session id stays as it is. Any other mate is cancelled and its hold is cleared, so the next turn on that seat opens a session.
+     *
+     * @param child The child is the seat about to open a session. Its mate is the other seat for the same user.
+     */
+    private void releaseIdleMate(Child child) {
+        PoolChat.Seat mine = seatOf(child);
+        PoolChat.Seat other = mine == PoolChat.Seat.CANVAS ? PoolChat.Seat.SSH : PoolChat.Seat.CANVAS;
+        Child mate;
+        synchronized (capLock) {
+            mate = children.get(seatKey(userOf(child), other));
+        }
+        if (mate == null || mate == child) {
+            return;
+        }
+        if (mate.promptOpen || mate.inPrompt) {
+            return;
+        }
+        if (mate.sessionId == null || mate.sessionId.length() == 0) {
+            return;
+        }
+        releaseSession(mate);
+    }
+
+    /**
+     * The {@code seatOf} method reads the seat stored in the child key.
+     * A key without a seat name is the SSH seat.
+     *
+     * @param child The child carries the map key.
+     * @return The return value is the seat.
+     */
+    private static PoolChat.Seat seatOf(Child child) {
+        String key = child.user == null ? "" : child.user;
+        int cut = key.lastIndexOf('\0');
+        if (cut < 0 || cut + 1 >= key.length()) {
+            return PoolChat.Seat.SSH;
+        }
+        if ("CANVAS".equals(key.substring(cut + 1))) {
+            return PoolChat.Seat.CANVAS;
+        }
+        return PoolChat.Seat.SSH;
+    }
+
+    /**
+     * The {@code userOf} method reads the user stored in the child key.
+     * A key without a separator is the whole key.
+     *
+     * @param child The child carries the map key.
+     * @return The return value is the user name.
+     */
+    private static String userOf(Child child) {
+        String key = child.user == null ? "" : child.user;
+        int cut = key.indexOf('\0');
+        if (cut < 0) {
+            return key;
+        }
+        return key.substring(0, cut);
+    }
+
+    /**
+     * The {@code epochAllows} method reports whether a hold may still extend.
+     * The seen value is the epoch stored when that hold was written. The current value is the server epoch. Equal values may extend. A later turn on the other seat advances the current value.
+     *
+     * @param seen The seen value is the epoch on the hold.
+     * @param now The current value is the server epoch.
+     * @return The return value is true when the hold is still the latest seat turn.
+     */
+    static boolean epochAllows(int seen, int now) {
+        return seen == now;
     }
 
     /**
@@ -588,7 +699,7 @@ public final class PoolChatServer implements PoolChat {
         }
         child.initialized = true;
         child.step = "session/new";
-        Outcome newer = call(child, "session/new", sessionNewParams(child.porchRules), false);
+        Outcome newer = call(child, "session/new", sessionNewParams(child), false);
         if (stopHere(child, newer)) {
             sendCancel(child);
             dropHold(child);
@@ -883,13 +994,60 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code sessionNewParams} method builds {@code session/new} parameters for this server.
-     * The working directory is the absolute pool directory. The rules string is passed through.
+     * The working directory is that child's seat directory. The rules string is the child's porch rules.
      *
-     * @param rules The rules are placed in {@code _meta.rules} when the trimmed text is non-empty.
+     * @param child The child supplies the seat directory and the porch rules.
      * @return The return value is the parameters object from {@link #porchSessionParams}.
      */
-    private ObjectNode sessionNewParams(String rules) {
-        return porchSessionParams(mapper, cwd.getAbsolutePath(), rules);
+    private ObjectNode sessionNewParams(Child child) {
+        return porchSessionParams(mapper, seatHome(child).getAbsolutePath(), child.porchRules);
+    }
+
+    /**
+     * The {@code seatHome} method names the working directory for one child.
+     * The directory is the pool directory, then the safe user name, then the seat name. Two users do not share a directory. The SSH seat and the canvas seat of one user do not share a directory.
+     *
+     * @param child The child supplies the user and the seat.
+     * @return The return value is that directory.
+     */
+    private File seatHome(Child child) {
+        return new File(new File(cwd, seatFolder(userOf(child))), seatOf(child).name());
+    }
+
+    /**
+     * The {@code seatFolder} method returns a path-safe user name.
+     * Empty text, {@code .}, {@code ..}, and any other character than an ASCII letter, a digit, {@code .}, {@code _}, or {@code -} become {@code anon}. Any other text is kept.
+     *
+     * @param user The user is the SSH user name.
+     * @return The return value is the folder name.
+     */
+    static String seatFolder(String user) {
+        if (user == null || user.length() == 0 || ".".equals(user) || "..".equals(user)) {
+            return "anon";
+        }
+        for (int i = 0; i < user.length(); i++) {
+            char ch = user.charAt(i);
+            boolean ok = (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')
+                    || ch == '.' || ch == '_' || ch == '-';
+            if (!ok) {
+                return "anon";
+            }
+        }
+        return user;
+    }
+
+    /**
+     * The {@code ensureSeatHome} method creates the child's working directory.
+     * A directory that cannot be created throws {@code spawn}.
+     *
+     * @param child The child supplies the directory.
+     * @throws IOException The method throws this exception when the directory cannot be created.
+     */
+    private void ensureSeatHome(Child child) throws IOException {
+        File dir = seatHome(child);
+        if (!dir.isDirectory() && !dir.mkdirs()) {
+            throw new IOException("spawn");
+        }
     }
 
     /**
@@ -958,11 +1116,9 @@ public final class PoolChatServer implements PoolChat {
                     capLock.wait();
                     continue;
                 }
-                if (!cwd.isDirectory() && !cwd.mkdirs()) {
-                    throw new IOException("spawn");
-                }
                 Child created = new Child(user);
-                created.link = openLink();
+                ensureSeatHome(created);
+                created.link = openLink(seatHome(created));
                 created.writer = new OutputStreamWriter(created.link.output(), StandardCharsets.UTF_8);
                 created.alive = true;
                 created.generation = 1;
@@ -983,10 +1139,8 @@ public final class PoolChatServer implements PoolChat {
      */
     private void respawn(Child child) throws IOException {
         destroyProcess(child);
-        if (!cwd.isDirectory() && !cwd.mkdirs()) {
-            throw new IOException("spawn");
-        }
-        PoolLink link = openLink();
+        ensureSeatHome(child);
+        PoolLink link = openLink(seatHome(child));
         child.generation = child.generation + 1;
         child.link = link;
         child.writer = new OutputStreamWriter(link.output(), StandardCharsets.UTF_8);
@@ -1006,11 +1160,11 @@ public final class PoolChatServer implements PoolChat {
      * @return The return value is the open link.
      * @throws IOException The method throws this exception when the process or the socket cannot start.
      */
-    private PoolLink openLink() throws IOException {
+    private PoolLink openLink(File dir) throws IOException {
         if (address != null && address.remote) {
             return PoolLink.remote(address.websocketUrl, address.secret);
         }
-        return PoolLink.local(startProcess());
+        return PoolLink.local(startProcess(dir));
     }
 
     /**
@@ -1020,7 +1174,7 @@ public final class PoolChatServer implements PoolChat {
      * @return The return value is the started process.
      * @throws IOException The method throws this exception when the process cannot start.
      */
-    private Process startProcess() throws IOException {
+    private Process startProcess(File dir) throws IOException {
         String os = System.getProperty("os.name", "");
         ProcessBuilder builder;
         if (os.toLowerCase().startsWith("windows")) {
@@ -1028,7 +1182,7 @@ public final class PoolChatServer implements PoolChat {
         } else {
             builder = new ProcessBuilder("grok", "agent", "stdio");
         }
-        builder.directory(cwd);
+        builder.directory(dir);
         builder.redirectInput(ProcessBuilder.Redirect.PIPE);
         builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
         builder.redirectError(ProcessBuilder.Redirect.PIPE);
@@ -1643,6 +1797,8 @@ public final class PoolChatServer implements PoolChat {
         private String heldRules;
         /** The field is true when a later prompt may send only the tail. */
         private boolean holdValid;
+        /** The field is the server epoch when this hold was stored. A later other-seat turn makes an extend refuse. */
+        private int seenEpoch;
         /** The field is the rules string for the next {@code session/new}. An empty string leaves {@code _meta} off. */
         private String porchRules = "";
         private String step = "spawn";

@@ -708,6 +708,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`show_thinking`](#function-show_thinking) | The function `show_thinking` is the Tools command Show Thinking. |
 | fn | [`track_focused_think`](#function-track_focused_think) | The function `track_focused_think` chooses which think flag is in force. |
 | fn | [`console_piece_opens`](#function-console_piece_opens) | The function `console_piece_opens` reports whether a scope piece turns thinking on. |
+| fn | [`console_piece_tag`](#function-console_piece_tag) | The function `console_piece_tag` reads the thought-strip name from one scope piece. |
 | fn | [`seat_vt_chrome`](#function-seat_vt_chrome) | The function `seat_vt_chrome` builds the thought strip for one SSH session. |
 | fn | [`keep_vt_session`](#function-keep_vt_session) | The function `keep_vt_session` copies one session strip back out of [`ThinkChrome`]. |
 | fn | [`clear_think`](#function-clear_think) | The function `clear_think` empties the thought pane. |
@@ -7486,6 +7487,17 @@ fn console_piece_opens(piece: &crate::amwp::ScopePiece) -> bool
 The function `console_piece_opens` reports whether a scope piece turns thinking on.
 `piece` is one [`ScopePiece`](amwp/enum.ScopePiece.md). A piece that is not `Later` returns false. A cell that is not the nil cell returns false.
 The body is read as text and passed to `console_result_open`. The function returns true only when that call returns `Some(true)`. That true result means the `shell_model_result:` body says thinking is on.
+
+### console_piece_tag
+
+<a id="function-console_piece_tag"></a>
+
+```rust
+fn console_piece_tag(piece: &crate::amwp::ScopePiece) -> Option<String>
+```
+
+The function `console_piece_tag` reads the thought-strip name from one scope piece.
+`piece` is one [`ScopePiece`](amwp/enum.ScopePiece.md). A piece that is not a nil-cell model result returns nothing. The name comes from `crate::model::console_result_tag`.
 
 ### seat_vt_chrome
 

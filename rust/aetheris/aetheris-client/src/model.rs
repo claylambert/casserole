@@ -2273,6 +2273,34 @@ pub fn console_result_open(text: &str) -> Option<bool> {
     Some(!level.is_empty() && level != "false")
 }
 
+/// The `console_result_tag` function reads the thought-strip name from one console result.
+/// `Some` is returned when `text` starts with `shell_model_result:`. Pool returns `pool`. Grok returns the Grok model, or `grok` when that line is empty. Ollama returns the model, or `ollama` when that line is empty. Any other provider returns `ollama`. Text that is not a result returns `None`.
+pub fn console_result_tag(text: &str) -> Option<String> {
+    if !text.starts_with("shell_model_result:") {
+        return None;
+    }
+    let mut provider = shell_line(text, "provider:");
+    if provider.is_empty() {
+        provider = "ollama".to_string();
+    }
+    if provider == "pool" {
+        return Some("pool".to_string());
+    }
+    if provider == "grok" {
+        let id = shell_line(text, "grok_model:").trim().to_string();
+        if id.is_empty() {
+            return Some("grok".to_string());
+        }
+        return Some(id);
+    }
+    let id = shell_line(text, "ollama_model:").trim().to_string();
+    if id.is_empty() {
+        Some("ollama".to_string())
+    } else {
+        Some(id)
+    }
+}
+
 /// The `model_note` function reports a model reply the dialog keeps.
 /// The prefixes are `effort_off:`, `show_result:`, `tags_result:`, `grok_models_result:`, and `shell_model_result:`.
 pub fn model_note(body: &[u8]) -> bool {
@@ -2956,6 +2984,17 @@ mod tests {
             Some(false),
         );
         assert_eq!(console_result_open("tags_result:\n"), None);
+        assert_eq!(
+            console_result_tag("shell_model_result:\nprovider: pool\npool_think: true\n"),
+            Some("pool".to_string())
+        );
+        assert_eq!(
+            console_result_tag(
+                "shell_model_result:\nprovider: grok\ngrok_model: grok-4.3\ngrok_think: true\n"
+            ),
+            Some("grok-4.3".to_string())
+        );
+        assert_eq!(console_result_tag("tags_result:\n"), None);
         let mut kept = ModelSession::shut();
         assert!(kept.seat_console_result(
             CONSOLE_CELL,

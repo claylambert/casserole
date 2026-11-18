@@ -48,6 +48,7 @@ The focused pane keeps its grid and session on [`App`](struct.App.md). This stru
 | Option<ConnectSnap> | [`last`](#member-last) |  |
 | String | [`ssh_think_key`](#member-ssh_think_key) | Key of this pane's seat. Empty until the pane receives a thought. The log stays in the manager. |
 | bool | [`vt_think_on`](#member-vt_think_on) | This session's thinking is on. Another session's shell result does not clear it. |
+| String | [`vt_think_tag`](#member-vt_think_tag) | The name on this session's thought strip. Empty reads as ollama. Another session's result does not replace it. |
 | Option<i32> | [`roux_used`](#member-roux_used) | Roux session count for this pane. None until the reply is held. |
 | i32 | [`roux_chars`](#member-roux_chars) | Characters in the held Roux messages. |
 | i32 | [`roux_blocks`](#member-roux_blocks) | Stored Roux messages in the held count. |
@@ -200,6 +201,16 @@ vt_think_on: bool
 ```
 
 This session's thinking is on. Another session's shell result does not clear it.
+
+### vt_think_tag
+
+<a id="member-vt_think_tag"></a>
+
+```rust
+vt_think_tag: String
+```
+
+The name on this session's thought strip. Empty reads as ollama. Another session's result does not replace it.
 
 ### roux_used
 
