@@ -399,7 +399,7 @@ The machine that runs casserole holds the settings below. The machine that runs 
 
 ### The Casserole Server file
 
-The Casserole Server file is [application.yaml](src/main/resources/application.yaml). The **Casserole Server** run configuration loads that file from the `casserole` module. A gutter run of the Casserole Server class loads that same file. A start script runs the jar built from that module. That jar carries the copy from the build that produced it. Edit the copy the process you started actually loads. Build again when that process is the jar. Restart casserole after you change the host, the port, or the token. Those three are read when casserole starts.
+The Casserole Server file is [application.yaml](src/main/resources/application.yaml). The **Casserole Server** run configuration loads that file from the `casserole` module. A gutter run of the Casserole Server class loads that same file. A start script runs the jar built from that module. That jar carries the copy from the build that produced it. Edit the copy the process you started actually loads. Build again when that process is the jar. Restart casserole after you change the host, the port, the token, or the ceiling. Those values are read when casserole starts.
 
 A set host dials `ws://host:port/ws`. The host is an address the casserole machine can reach. The example below uses `192.0.2.10`. That address is a documentation address. Replace it with the address of the machine that runs the agent. Write an IPv6 address as the host, without brackets. Casserole adds the brackets. The port stays a separate field.
 
@@ -407,7 +407,9 @@ A set host dials `ws://host:port/ws`. The host is an address the casserole machi
 
 `casserole.pool.context-window` is the context size a pool card shows beside its token estimate. The published example is `256000`. The desktops read that number. They do not read the host, the port, or the token.
 
-`casserole.pool.cwd` is the workspace root the agent uses. An empty value is `~/.casserole/pool-cwd` on the casserole machine. A remote agent needs this value to be a directory on the machine that runs `grok agent serve`. Each user and each seat gets a directory under that root. The SSH seat is `root/user/SSH`. The canvas seat is `root/user/CANVAS`.
+`casserole.pool.cwd` is the one directory the agent uses. An empty value is `~/.casserole/pool-cwd` on the casserole machine. A remote agent needs this value to be a directory that already exists on the machine that runs `grok agent serve`. Casserole sends that directory as the working directory. The login and the seat are not added to the path.
+
+`casserole.pool.cap` is the number of live logins. The shipped value is `4`. Each of those logins may hold an SSH session and a canvas session. A login past that number does not open a session. The SSH pane writes the reason in yellow. The canvas opens the yellow slide. A value below 1 is read as `4`.
 
 ```yaml
 casserole:
@@ -417,6 +419,7 @@ casserole:
     secret: your-pool-token
     context-window: 256000
     cwd: /home/agent/.casserole/pool-cwd
+    cap: 4
 ```
 
 Replace `your-pool-token` with a token you choose. Use the same token in the agent command below. Ollama and the Grok API key are separate settings. They are under [Model settings](casserole-server/README.md#model-settings).
@@ -458,6 +461,12 @@ Leave the burner box unchecked and send the turn again.
 > `pool down` means casserole could not keep the agent connection.
 
 Confirm the host, the port, and the token. Confirm the agent window is still open. Allow inbound TCP `2419` on the agent machine when the other machine cannot connect.
+
+> **Failed line**
+>
+> `pool ceiling` means this login would pass the number in `casserole.pool.cap`.
+
+Close one live login and try again. The sentence names that number.
 
 ### Start the agent on Windows
 
