@@ -442,6 +442,10 @@ public final class PoolChatServer implements PoolChat {
     private void sendTurn(Child child, String body, String full, String boot, boolean extend) throws Exception {
         child.step = "session/prompt";
         child.assembled = new StringBuilder();
+        synchronized (child.io) {
+            child.turnDone = false;
+            child.sawTool = false;
+        }
         Outcome turn = call(child, "session/prompt", promptParams(child, body), true);
         if (stopHere(child, turn)) {
             sendCancel(child);
@@ -492,9 +496,10 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code awaitTurnEnd} method keeps this prompt open until the agent's turn has ended.
-     * A turn that already ended returns at once. Any other turn waits for {@code turn_completed}.
+     * A turn that already ended returns at once. A reply that is already assembled, with no tool call, returns at once. Thought chunks for that reply were already forwarded.
+     * A tool call, or a prompt that has not yet assembled any reply text, waits for {@code turn_completed}.
      * The wait is at most 20 seconds. A cancel, a dead child, or a shut server ends the wait.
-     * Message chunks that arrive during the wait are still assembled, because the prompt stays open.
+     * Message chunks and thought chunks that arrive during the wait are still forwarded, because the prompt stays open.
      *
      * @param child The child is the live seat.
      * @throws InterruptedException The method throws this exception when the wait is interrupted.
@@ -515,8 +520,8 @@ public final class PoolChatServer implements PoolChat {
 
     /**
      * The {@code holdForTurnEnd} method reports whether the prompt should keep waiting.
-     * A completed turn returns false. Any other turn keeps waiting until that completion.
-     * The tool flag and the assembled count stay on the signature so a later seat can tell a short line from the real reply.
+     * A completed turn returns false. A tool call keeps waiting even when a short line is already assembled.
+     * An empty assembly keeps waiting. A reply that is already assembled, with no tool call, returns false so an SSH thought stream is not held.
      *
      * @param turnDone The flag is true after {@code turn_completed}.
      * @param sawTool The flag is true after a {@code tool_call} update on this prompt.
@@ -527,7 +532,7 @@ public final class PoolChatServer implements PoolChat {
         if (turnDone) {
             return false;
         }
-        return sawTool || assembled >= 0;
+        return sawTool || assembled == 0;
     }
 
     /**

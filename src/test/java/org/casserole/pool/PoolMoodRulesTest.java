@@ -204,6 +204,7 @@ class PoolMoodRulesTest { // @aa-sdd PK-1083 PK-1084 PK-1089 PK-1092 PK-1094 doc
         assertFalse(PoolChatServer.holdForTurnEnd(true, true, 0));
         assertTrue(PoolChatServer.holdForTurnEnd(false, true, 100));
         assertTrue(PoolChatServer.holdForTurnEnd(false, false, 0));
+        assertFalse(PoolChatServer.holdForTurnEnd(false, false, 100));
     }
 
     /**
