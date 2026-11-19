@@ -395,7 +395,7 @@ A model reply can come from the Grok API, from Grok Build ACP via the pool, or f
 
 A remote Grok agent is a `grok agent serve` process on another machine on your network. Casserole dials that process when a card uses the pool. The desktop does not dial it. The Java Aetheris Client sends the pool turn to casserole. The Rust Aetheris Client sends that same turn. Casserole opens the connection.
 
-The machine that runs casserole holds the settings below. The machine that runs the agent starts the agent. Leave that window open. A blank `casserole.pool.host` does not dial the other machine. A blank host makes casserole start a local `grok agent stdio` child on the casserole machine. On Windows that child is `cmd.exe /c grok agent stdio`. On any other system that child is `grok agent stdio`. You do not type that line for this setup.
+The machine that runs casserole holds the settings below. The machine that runs the agent starts the agent. Leave that window open. A blank `casserole.pool.host` does not dial the other machine. A blank host makes casserole start one local `grok agent stdio` child for each seat on the casserole machine. On Windows that child is `cmd.exe /c grok agent stdio`. On any other system that child is `grok agent stdio`. You do not type that line for this setup.
 
 ### The Casserole Server file
 
@@ -409,7 +409,9 @@ A set host dials `ws://host:port/ws`. The host is an address the casserole machi
 
 `casserole.pool.cwd` is the one directory the agent uses. An empty value is `~/.casserole/pool-cwd` on the casserole machine. A remote agent needs this value to be a directory that already exists on the machine that runs `grok agent serve`. Casserole sends that directory as the working directory. The login and the seat are not added to the path.
 
-`casserole.pool.cap` is the number of live logins. The shipped value is `4`. Each of those logins may hold an SSH session and a canvas session. A login past that number does not open a session. The SSH pane writes the reason in yellow. The canvas opens the yellow slide. A value below 1 is read as `4`.
+`casserole.pool.cap` is the number of live logins. The shipped value is `4`. Each of those logins may hold an SSH session and a canvas session when the host is blank. A login past that number does not open a session. The SSH pane writes the reason in yellow. The canvas opens the yellow slide. A value below 1 is read as `4`.
+
+The remote pool option is experimental. A blank host starts one local `grok agent stdio` process for each seat. An SSH seat and a canvas seat are two connections when the host is blank. A set host dials one `grok agent serve` process. That process is one connection. Only one connection is allowed until a remote spawner is built. The person using that connection remembers which login already holds it. That person also remembers which pane that login opened.
 
 ```yaml
 casserole:
