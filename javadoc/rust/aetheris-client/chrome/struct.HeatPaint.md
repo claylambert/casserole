@@ -25,6 +25,9 @@ The number `seq` is the beat sequence number. The flag `canvas` is true for a ca
 | i32 | [`chars`](#member-chars) |  |
 | i32 | [`blocks`](#member-blocks) |  |
 | String | [`body`](#member-body) |  |
+| bool | [`llama_memo`](#member-llama_memo) | True when a llama beat stored a new memo. Canvas leaves this false. |
+| String | [`llama_payload`](#member-llama_payload) |  |
+| Option<i32> | [`llama_count`](#member-llama_count) |  |
 
 ## Field Detail
 
@@ -74,6 +77,32 @@ blocks: i32
 
 ```rust
 body: String
+```
+
+### llama_memo
+
+<a id="member-llama_memo"></a>
+
+```rust
+llama_memo: bool
+```
+
+True when a llama beat stored a new memo. Canvas leaves this false.
+
+### llama_payload
+
+<a id="member-llama_payload"></a>
+
+```rust
+llama_payload: String
+```
+
+### llama_count
+
+<a id="member-llama_count"></a>
+
+```rust
+llama_count: Option<i32>
 ```
 
 ---

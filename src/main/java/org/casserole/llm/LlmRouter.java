@@ -19,11 +19,12 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Component;
 
-// @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+// @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
 /**
  * The {@code LlmRouter} class is the map from a provider id to a {@link LlmProvider}.
  * The caller supplies the prompt. The complete methods do not take a cell record. The router does not read stored chat memory. The router does not add a mood line.
+ * // @aa-sdd G-05 aetheris-stages-1-3.finalize.md
  *
  * @author clayl (2026-10-20)
  */
@@ -57,20 +58,24 @@ public class LlmRouter {
     private final HashMap<String, LlmProvider> providers;
     private final SpringAiOllamaLlmService ollama;
     private final GrokLlmService grok;
+    private final LlamaCppLlmService llama;
 
     /**
-     * The constructor stores the Ollama provider and the Grok provider in the map.
+     * The constructor stores the Ollama provider, the Grok provider, and the llama-openapi provider in the map.
      * The map key is each provider's id.
      *
      * @param ollama The Ollama argument is the local provider.
      * @param grok The Grok argument is the cloud provider.
+     * @param llama The llama argument is the local llama.cpp provider.
      */
-    public LlmRouter(SpringAiOllamaLlmService ollama, GrokLlmService grok) {
+    public LlmRouter(SpringAiOllamaLlmService ollama, GrokLlmService grok, LlamaCppLlmService llama) {
         this.providers = new HashMap<String, LlmProvider>();
         this.providers.put(ollama.getId(), ollama);
         this.providers.put(grok.getId(), grok);
+        this.providers.put(llama.getId(), llama);
         this.ollama = ollama;
         this.grok = grok;
+        this.llama = llama;
     }
 
     /**
@@ -110,11 +115,38 @@ public class LlmRouter {
         if ("ollama".equals(id)) {
             return ollama.complete(prompt, modelAfterSlash(target), think == null ? "" : think, sink);
         }
+        if ("llama-openapi".equals(id)) {
+            return llama.completeFor(modelAfterSlash(target), prompt, new LlamaCppCallOptions(), slot, sink);
+        }
         LlmProvider provider = providers.get(id);
         if (provider == null) {
             throw new UnknownProviderException(id);
         }
         return provider.complete(prompt);
+    }
+
+    // @aa-sdd aetheris-plan-f-278.001.md
+    /**
+     * The method sends the prompt to the llama-openapi provider.
+     * Any other id throws {@link UnknownProviderException}.
+     * Temperature and the cap stay on the supplied options.
+     * The Grok factory pair is not copied.
+     *
+     * @param target The target is {@code llama-openapi/} plus the model id.
+     * @param prompt The prompt is the caller-built prompt.
+     * @param options The options are the llama body fields. A null value sends no extra fields.
+     * @param slot The slot receives the chat HTTP future.
+     * @param sink The sink receives reply chunks. A null sink keeps the one-shot call.
+     * @return The return value is the completion.
+     * @throws Exception The method throws this exception for another provider or a backend failure.
+     */
+    public ChatResponse complete(String target, Prompt prompt, LlamaCppCallOptions options,
+            GrokLlmService.HttpSlot slot, GrokLlmService.DeltaSink sink) throws Exception {
+        String id = providerId(target);
+        if (!"llama-openapi".equals(id)) {
+            throw new UnknownProviderException(id);
+        }
+        return llama.completeFor(modelAfterSlash(target), prompt, options, slot, sink);
     }
 
     /**
@@ -179,6 +211,7 @@ public class LlmRouter {
         return id.toLowerCase();
     }
 
+    // @aa-sdd L40 app-design.md
     /**
      * The {@code UnknownProviderException} class is the failure for a provider id that is not in the map.
      * The message is {@code unknown provider}. The facade turns this failure into {@code TYPE_ERROR} with reason {@code failed}.

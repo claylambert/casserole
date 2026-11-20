@@ -13,7 +13,7 @@ The [`SendTurn`](struct.SendTurn.md) struct is one turn the send may carry.
 
 | | |
 | --- | --- |
-| **Specification** | PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-200 |
 
 ## Field Summary
 

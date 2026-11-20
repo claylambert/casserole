@@ -16,7 +16,7 @@
 //!
 //! The console takes the keyboard on the first paint. The console takes the keyboard when a session opens. A click on the console takes the keyboard. A drag on the console takes the keyboard. Closing the console Model Config returns the keyboard to the pane that opened the modal. That return runs once. A later click in a login field keeps that field.
 //!
-//! Esc is the byte `0x1B` on its own key. The host times that bare Esc. The host owns the prompt `cmd>`. The client sends the typed line and a CR. CR is the carriage-return byte. The command `select-model` stays on the host. The family word is `grok`, `ollama`, or `pool`.
+//! Esc is the byte `0x1B` on its own key. The host times that bare Esc. The host owns the prompt `cmd>`. The client sends the typed line and a CR. CR is the carriage-return byte. The command `select-model` stays on the host. The family word is `grok`, `ollama`, `pool`, or `llama-openapi`.
 //!
 //! While the console holds the keyboard, Escape stays on the console. While the console holds the keyboard, the arrow keys stay on the console. Tab still leaves the console. That lock is what lets the family word follow Esc.
 //!
@@ -494,7 +494,7 @@ const SHOW_THINKING: &str = "Show Thinking";
 /// `TOKEN_COMBO_TIP` is the hover text on the model combo in the token window. The estimate stays. The ring uses this model's context window.
 /// Ollama rows share the session num-ctx. Num-ctx is the context-size setting for that session. Grok and pool windows come from application.yaml.
 /// A grok row shows the completion cap. That cap is the reply limit. This open does not ask the connected machine.
-const TOKEN_COMBO_TIP: &str = "The estimate stays. The ring uses this model's context window. Ollama rows share the session num-ctx. Grok and pool windows come from application.yaml. A grok row shows the completion cap. That cap is the reply limit. This open does not ask the host.";
+const TOKEN_COMBO_TIP: &str = "The estimate stays. The ring uses this model's context window. Ollama rows share the session num-ctx. Grok and pool windows come from application.yaml. A llama-openapi row uses num-ctx from application.yaml. A grok row shows the completion cap. That cap is the reply limit. This open does not ask the host.";
 /// `TOKEN_OK_TIP` is the hover text on the OK button in the token window. OK closes the token window. The estimate is left as it was.
 const TOKEN_OK_TIP: &str = "Close the token window.";
 /// `RING_TRACK` is the color of the token ring track. The color is a dark blue-gray. An unknown fill and a fill that is not positive also use this color.
@@ -1121,6 +1121,10 @@ fn short_model_name(target: &str) -> String {
             if id.is_empty() { provider } else { id }
         }
         "pool" => "pool".to_string(),
+        "llama-openapi" => {
+            let id = model_after_slash(target);
+            if id.is_empty() { "llama-openapi".to_string() } else { id }
+        }
         _ => String::new(),
     }
 }
@@ -1364,7 +1368,7 @@ impl ThinkPaneManager {
     }
 
     /// The function `acquire_canvas` returns the canvas seat for `key`, creating it once.
-    fn acquire_canvas(&mut self, key: &str) -> &mut ThinkSeat { // @aa-sdd PK-1457 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    fn acquire_canvas(&mut self, key: &str) -> &mut ThinkSeat {
         self.seats.entry(key.to_string()).or_insert_with(|| ThinkSeat {
             log: ThinkLog::new(),
             chrome: ThinkChrome::new(),
@@ -1468,7 +1472,7 @@ impl ThinkPaneManager {
 
     /// The function `release` drops the seat for `key`.
     /// A missing key returns. This is the session end.
-    fn release(&mut self, key: &str) { // @aa-sdd PK-1457 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    fn release(&mut self, key: &str) {
         if key.is_empty() {
             return;
         }
@@ -1490,7 +1494,7 @@ impl ThinkPaneManager {
     /// A missing file stays an empty seat. A version other than 1 blocks later writes.
     /// A canvas scope loads only when that key is absent, so the session text wins. The loaded log is not live.
     /// A scope that is not a canvas seat is kept for the next write. An SSH seat is not in this file.
-    fn load_user(&mut self, user: &str, home: &std::path::Path, yaml: &ThinkYaml) { // @aa-sdd PK-1458 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    fn load_user(&mut self, user: &str, home: &std::path::Path, yaml: &ThinkYaml) {
         if user.is_empty() || self.loaded.contains(user) || self.blocked.contains(user) {
             return;
         }
@@ -2009,7 +2013,7 @@ fn write_user_think(path: &std::path::Path, rows: &[KeptThink]) -> bool {
 /// `stored` is the key already held. `raw_user` is the pane user. `surface_id` is the pane id.
 /// An empty key takes the user and the pane id. `anon` leaves a key that already moved with the pane.
 /// A real user who differs from the stored user takes a new key. The old seat stays where it is.
-fn bind_ssh_think_key(stored: &mut String, raw_user: &str, surface_id: &str) { // @aa-sdd PK-1458 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn bind_ssh_think_key(stored: &mut String, raw_user: &str, surface_id: &str) {
     let user = crate::vault::sanitize_user(raw_user);
     if stored.is_empty() {
         *stored = ThinkPaneManager::ssh_key(&user, surface_id);
@@ -2678,6 +2682,9 @@ fn think_snap_of_block(block: &ThinkCellBlock) -> crate::model::ThinkSnap {
             "ollama_id" => snap.ollama_id = value,
             "grok_on" => snap.grok_on = think_flag(&value),
             "pool_on" => snap.pool_on = think_flag(&value),
+            "llama_id" => snap.llama_id = value,
+            "llama_temperature" => snap.llama_temperature = value,
+            "llama_cap" => snap.llama_cap = value,
             _ => {}
         }
     }
@@ -2759,6 +2766,27 @@ fn patch_think_block(block: &mut ThinkCellBlock, snap: &crate::model::ThinkSnap)
         let word = if snap.pool_on { "true" } else { "false" };
         changed |= put_think_field(&mut block.lines, "pool_on", word);
     }
+    if have.llama_id != snap.llama_id {
+        changed |= put_think_field(
+            &mut block.lines,
+            "llama_id",
+            &think_scalar_text(&snap.llama_id),
+        );
+    }
+    if have.llama_temperature != snap.llama_temperature {
+        changed |= put_think_field(
+            &mut block.lines,
+            "llama_temperature",
+            &think_scalar_text(&snap.llama_temperature),
+        );
+    }
+    if have.llama_cap != snap.llama_cap {
+        changed |= put_think_field(
+            &mut block.lines,
+            "llama_cap",
+            &think_scalar_text(&snap.llama_cap),
+        );
+    }
     changed
 }
 
@@ -2790,6 +2818,9 @@ fn seat_cell_think(cards: &mut [TurnCard], yaml: &ThinkYaml) {
         card.ollama_id = snap.ollama_id;
         card.grok_on = snap.grok_on;
         card.pool_on = snap.pool_on;
+        card.llama_id = snap.llama_id;
+        card.llama_temperature = snap.llama_temperature;
+        card.llama_cap = snap.llama_cap;
     }
 }
 
@@ -2807,6 +2838,9 @@ fn think_open_echo(
         && prior.ollama_level == next.ollama_level
         && prior.grok_on == next.grok_on
         && prior.pool_on == next.pool_on
+        && prior.llama_id == next.llama_id
+        && prior.llama_temperature == next.llama_temperature
+        && prior.llama_cap == next.llama_cap
 }
 
 /// The function `note_cell_think` writes one cell's five think fields into the yaml.
@@ -3891,19 +3925,19 @@ fn mint_pool_boot_kind(kind: u64) -> String {
 
 /// The function `mint_canvas_pool_boot` builds the canvas pool boot.
 /// Canvas runs, pipes, and mood shaping send this id. It is not the SSH boot.
-fn mint_canvas_pool_boot() -> String { // @aa-sdd PK-1461 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mint_canvas_pool_boot() -> String {
     mint_pool_boot_kind(0)
 }
 
 /// The function `mint_ssh_pool_boot` builds the SSH pool boot.
 /// The host shell keeps its own connection. This id is not written on a canvas frame.
-fn mint_ssh_pool_boot() -> String { // @aa-sdd PK-1461 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mint_ssh_pool_boot() -> String {
     mint_pool_boot_kind(1)
 }
 
 /// The function `canvas_pool_boot_for_frame` returns the canvas pool boot.
 /// `canvas` is the canvas id. `ssh` is the SSH id. A canvas frame sends `canvas`. It does not send `ssh`.
-fn canvas_pool_boot_for_frame<'a>(canvas: &'a str, ssh: &'a str) -> &'a str { // @aa-sdd PK-1461 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn canvas_pool_boot_for_frame<'a>(canvas: &'a str, ssh: &'a str) -> &'a str {
     if canvas == ssh {
         return canvas;
     }
@@ -3931,7 +3965,7 @@ fn roll_shell_window(tail: &mut String, paint: &[u8]) {
 /// The function `empty_shell_replay` sends the shell line once when the host reports an empty reply.
 /// `line` is the line this pane submitted. `window` is the recent host text. `already` is true after this line was sent again.
 /// A line already sent again returns nothing. An empty line returns nothing. A window that holds [`EMPTY_SHELL_REPLY`] returns that line and a carriage return.
-fn empty_shell_replay(line: &str, window: &str, already: bool) -> Option<Vec<u8>> { // @aa-sdd PK-1464 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn empty_shell_replay(line: &str, window: &str, already: bool) -> Option<Vec<u8>> {
     if already || line.is_empty() || !window.contains(EMPTY_SHELL_REPLY) {
         return None;
     }
@@ -4040,7 +4074,7 @@ fn mood_focus_card(cards: &[TurnCard], focus: usize) -> Option<usize> {
 }
 
 /// The function `mood_glass_target` returns the model the mood glass sends.
-/// `card` is the selected cell. `entry` is that cell's Grok settings, when the document has one. `pool_boot` is the canvas boot id. The Java client calls this `moodTarget`.
+/// `card` is the selected cell. `entry` is that cell's Grok settings, when the document has one. `pool_boot` is the boot id from `mint_pool_boot`. The Java client calls this `moodTarget`.
 /// The result is the `target` from [`crate::model::mood_tune`]. A pool card sends the word `pool`. A Grok card with no model id takes the model stored on `entry`.
 /// // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
 fn mood_glass_target(
@@ -4077,7 +4111,7 @@ fn mood_open_px(yaml: &MoodYaml) -> (f32, f32) {
 /// The function `note_mood_size` stores the mood dialog size for the next open.
 /// `yaml` is the [`MoodYaml`] record. `width` and `height` are the pixel sizes. A blocked record returns false and leaves the stored pair alone.
 /// The width must sit from 480 through 4000. The height must sit from 320 through 4000. A size outside either range returns false and leaves the pair alone. A size inside both ranges is stored and the function returns true.
-fn note_mood_size(yaml: &mut MoodYaml, width: i32, height: i32) -> bool { // @aa-sdd PK-1406 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn note_mood_size(yaml: &mut MoodYaml, width: i32, height: i32) -> bool {
     if yaml.blocked {
         return false;
     }
@@ -4097,7 +4131,7 @@ fn note_mood_size(yaml: &mut MoodYaml, width: i32, height: i32) -> bool { // @aa
 /// A missing size leaves the stored pair alone and returns false.
 /// A size that `note_mood_size` refuses leaves the stored pair alone and returns false.
 /// A size inside the kept range is stored and the function returns true.
-fn mood_size_on_close(yaml: &mut MoodYaml, size: Option<(i32, i32)>) -> bool { // @aa-sdd PK-1436 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_size_on_close(yaml: &mut MoodYaml, size: Option<(i32, i32)>) -> bool {
     let Some((width, height)) = size else {
         return false;
     };
@@ -4240,7 +4274,7 @@ struct MoodBands {
 /// `frame` is the inner area the window claimed. `draft_px` is the wanted draft height. `button_px` is the wanted button height. `gap_px` is one gap.
 /// The heights come from `mood_slots`. The footer is pinned to the bottom of `frame`, so the vertical drag sits on that edge.
 /// The draft sits above the footer when it has height. The transcript fills the room above that. Each region stays inside `frame`.
-fn mood_bands(frame: egui::Rect, draft_px: i32, button_px: i32, gap_px: i32) -> MoodBands { // @aa-sdd PK-1440 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_bands(frame: egui::Rect, draft_px: i32, button_px: i32, gap_px: i32) -> MoodBands {
     let width = frame.width().max(0.0);
     let height = frame.height().round().max(0.0) as i32;
     let slots = mood_slots(height, draft_px, button_px, gap_px);
@@ -4279,7 +4313,7 @@ fn mood_bands(frame: egui::Rect, draft_px: i32, button_px: i32, gap_px: i32) -> 
 
 /// The function `mood_floor` returns the smallest size the mood glass may be dragged to.
 /// `screen` is the app window. The width is [`MOOD_WIDTH_MIN`], or the window width when that is smaller. The height is [`MOOD_HEIGHT_MIN`], or the window height when that is smaller. A negative window side is treated as 0 before that cut.
-fn mood_floor(screen: egui::Rect) -> egui::Vec2 { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_floor(screen: egui::Rect) -> egui::Vec2 {
     egui::vec2(
         (MOOD_WIDTH_MIN as f32).min(screen.width().max(0.0)),
         (MOOD_HEIGHT_MIN as f32).min(screen.height().max(0.0)),
@@ -4311,7 +4345,7 @@ fn mood_resize_icon(icon: egui::CursorIcon) -> bool {
 /// The function `mood_user_resized` reports a drag that changed the dialog size.
 /// `prior` is the outer size from the previous frame of this open. `shown` is this frame. `drag` is true while the primary pointer button is down on a resize cursor.
 /// A missing prior returns false. A pointer that is not dragging a resize returns false. A size equal to the prior returns false. Any other pair returns true.
-fn mood_user_resized(prior: Option<(i32, i32)>, shown: (i32, i32), drag: bool) -> bool { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_user_resized(prior: Option<(i32, i32)>, shown: (i32, i32), drag: bool) -> bool {
     if !drag {
         return false;
     }
@@ -4325,7 +4359,7 @@ fn mood_user_resized(prior: Option<(i32, i32)>, shown: (i32, i32), drag: bool) -
 /// `wanted_w` and `wanted_h` are the size the file asked to open. `shown` is the outer size this frame. `screen` is the app window.
 /// The fitted size comes from `mood_fit`. A fitted side that is at least 2 pixels under the wanted side, and a shown size that matches that fit, returns true.
 /// Any other shown size returns false. That cut is not written over the user's pair.
-fn mood_shown_cut(wanted_w: f32, wanted_h: f32, shown: (i32, i32), screen: egui::Rect) -> bool { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_shown_cut(wanted_w: f32, wanted_h: f32, shown: (i32, i32), screen: egui::Rect) -> bool {
     let (_, fit) = mood_fit(screen, wanted_w, wanted_h);
     let fit_w = fit.x.round() as i32;
     let fit_h = fit.y.round() as i32;
@@ -4338,7 +4372,7 @@ fn mood_shown_cut(wanted_w: f32, wanted_h: f32, shown: (i32, i32), screen: egui:
 /// The function `mood_press` paints one mood footer button at the Swing width.
 /// `ui` is the footer. `label` is the button word. The width is the label, the button padding, and three ems.
 /// The height is the label plus the button padding. The button is that minimum size.
-fn mood_press(ui: &mut egui::Ui, label: &str) -> egui::Response { // @aa-sdd PK-1438 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn mood_press(ui: &mut egui::Ui, label: &str) -> egui::Response {
     let font = egui::TextStyle::Button.resolve(ui.style());
     let color = ui.visuals().text_color();
     let galley = ui
@@ -4733,7 +4767,7 @@ fn add_mood_choice(
 /// `ctx` is the egui context. `layer` is that modal's layer. The layer moves to the top of its order. That layer becomes the modal layer when it is the top one this frame.
 /// The pin strip stays on the foreground. It does not take this top. A modal on the middle order paints under that strip.
 /// An open menu of this modal is a child of the modal. The menu paints above the modal and takes the pointer. The pin strip stays under the modal.
-fn seat_modal(ctx: &egui::Context, layer: egui::LayerId) { // @aa-sdd PK-1454 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn seat_modal(ctx: &egui::Context, layer: egui::LayerId) {
     ctx.move_to_top(layer);
     ctx.memory_mut(|mem| {
         mem.set_modal_layer(layer);
@@ -4748,7 +4782,7 @@ fn seat_modal(ctx: &egui::Context, layer: egui::LayerId) { // @aa-sdd PK-1454 do
             continue;
         }
         if egui::Popup::is_id_open(ctx, child.id) {
-            ctx.set_sublayer(parent, child); // @aa-sdd PK-1459 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+            ctx.set_sublayer(parent, child);
         }
     }
 }
@@ -5753,7 +5787,7 @@ fn button_lane_clip(lane: egui::Rect, parent: egui::Rect) -> egui::Rect {
 /// @aa-sdd F-159
 /// @aa-sdd PK-1096 docs/specs/common/formal-plan.spec.md FINESSE:f-183
 /// @aa-sdd PK-1286 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
-fn folded_control_height(ui: &egui::Ui) -> f32 { // @aa-sdd PK-1443 PK-1444 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn folded_control_height(ui: &egui::Ui) -> f32 {
     button_lane_height(ui).max(THINK_GRIP + BUTTON_CLEAR_PX * 2.0)
 }
 
@@ -6351,6 +6385,12 @@ struct TurnCard {
     grok_on: bool,
     /// Pool Thinking for this window.
     pool_on: bool,
+    /// Llama model id for this window. A blank id stores the family word.
+    llama_id: String,
+    /// Llama temperature text. Blank leaves temperature off the body.
+    llama_temperature: String,
+    /// Llama completion cap text. Blank leaves the cap off the body.
+    llama_cap: String,
     /// The group row is open for this window. It starts closed.
     bar_open: bool,
     /// The reply shows in full. Unchecked, the reply window matches the prompt window. A fresh canvas and Clear start unchecked. New keeps the prior card's choice. A real cell id is saved.
@@ -6407,6 +6447,9 @@ impl TurnCard {
             ollama_id: String::new(),
             grok_on: false,
             pool_on: false,
+            llama_id: String::new(),
+            llama_temperature: String::new(),
+            llama_cap: String::new(),
             bar_open: false,
             expanded: false,
             parent_cell_id: String::new(),
@@ -6480,7 +6523,7 @@ fn member_width(bar: f32) -> f32 {
 /// The value `content_h` is the height of the member cards. The value `content_w` is the width of those cards. The value `pane_w` is the width of the member pane. The value `bar_h` is the horizontal bar thickness.
 ///
 /// A content height below 1 becomes 1. The bar thickness is added only when the pane width is positive and the cards are wider than that pane. A width that is still not positive skips the bar. The added thickness puts the bar under the cards. The bar belongs to that pane.
-fn member_pane_height(content_h: f32, content_w: f32, pane_w: f32, bar_h: f32) -> f32 { // @aa-sdd PK-1453 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn member_pane_height(content_h: f32, content_w: f32, pane_w: f32, bar_h: f32) -> f32 {
     let h = if content_h < 1.0 { 1.0 } else { content_h };
     if pane_w > 0.0 && content_w > pane_w {
         h + bar_h.max(0.0)
@@ -7113,11 +7156,23 @@ fn push_kept(block: &mut Vec<(&'static str, String)>, mark: Mark, prompt: &str, 
 }
 
 /// The function `join_word` returns the short name the cell caption already paints.
-/// The string `target` is the stored model word. `short_model_name` is tried first. A non-empty short name is returned.
+/// The string `target` is the stored model word. A llama-openapi target shows the alias when the id is a path. `short_model_name` is tried for every other family. A non-empty short name is returned.
 ///
-/// An empty short name falls back to `target` trimmed. An empty trimmed target returns `ollama`. Any other trimmed target is returned as it is.
+/// An empty llama id returns `llama-openapi`. An empty short name falls back to `target` trimmed. An empty trimmed target returns `ollama`. Any other trimmed target is returned as it is.
 // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-168
 fn join_word(target: &str) -> String {
+    if provider_id(target) == "llama-openapi" {
+        let id = model_after_slash(target);
+        if id.is_empty() {
+            return "llama-openapi".to_string();
+        }
+        let alias = application_yaml_budgets().llama_alias;
+        let shown = crate::llama::shown_id(&id, &alias);
+        if shown.is_empty() {
+            return "llama-openapi".to_string();
+        }
+        return shown;
+    }
     let short = short_model_name(target);
     if !short.is_empty() {
         return short;
@@ -7549,6 +7604,16 @@ struct VtHeat {
     held: Option<i32>,
     memory: std::sync::Arc<str>,
     live: String,
+    /// Engine word for this pane. A llama-openapi word tokenizes. Any other word keeps the character guess.
+    engine: String,
+    /// Last tokenize payload for this pane.
+    memo_payload: String,
+    /// Last painted tokenize count. None means no tokenize count has landed.
+    memo_count: Option<i32>,
+    /// Tokenize base URL. Blank uses the local default inside `tokenize_url`.
+    llama_base: String,
+    /// API key for the tokenize post. Blank omits Authorization. The key is not logged.
+    llama_key: String,
 }
 
 /// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
@@ -7561,6 +7626,10 @@ struct HeatPaint {
     chars: i32,
     blocks: i32,
     body: String,
+    /// True when a llama beat stored a new memo. Canvas leaves this false.
+    llama_memo: bool,
+    llama_payload: String,
+    llama_count: Option<i32>,
 }
 
 /// @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
@@ -7669,10 +7738,14 @@ fn run_heat(beat: &HeatBeat) -> HeatPaint {
                 chars: count_i32(pane.chars),
                 blocks: count_i32(pane.blocks),
                 body: pane.body,
+                llama_memo: false,
+                llama_payload: String::new(),
+                llama_count: None,
             }
         }
         HeatKind::Vt(seat) => {
-            let used = ssh_live_count(seat.held, &seat.memory, &seat.live);
+            let fallback = ssh_live_count(seat.held, &seat.memory, &seat.live);
+            let (used, llama_memo, llama_payload, llama_count) = llama_vt_count(seat, fallback);
             let chars = if seat.held.is_some() {
                 0
             } else {
@@ -7690,7 +7763,42 @@ fn run_heat(beat: &HeatBeat) -> HeatPaint {
                 chars,
                 blocks,
                 body: String::new(),
+                llama_memo,
+                llama_payload,
+                llama_count,
             }
+        }
+    }
+}
+
+/// The function `llama_vt_count` counts one terminal beat.
+/// A word that does not start with `llama-openapi` returns the character guess. A held empty draft returns that guess and does not post. A new payload posts. A miss keeps the stored tokenize count, or the character guess when no tokenize count has landed. A held success adds the draft length to the base.
+fn llama_vt_count(seat: &VtHeat, fallback: i32) -> (i32, bool, String, Option<i32>) {
+    if !seat.engine.starts_with("llama-openapi") {
+        return (fallback, false, String::new(), None);
+    }
+    let prompt = crate::llama::shell_prompt(seat.held.is_some(), &seat.memory, &seat.live);
+    let memo = crate::llama::LlamaMemo {
+        payload: seat.memo_payload.clone(),
+        count: seat.memo_count,
+    };
+    match crate::llama::llama_step(prompt.as_deref(), &memo, fallback) {
+        crate::llama::LlamaBeat::Keep(count) => (count, false, String::new(), None),
+        crate::llama::LlamaBeat::Post { body } => {
+            let prompt = prompt.unwrap_or_default();
+            let tokens = crate::llama::post_tokenize(
+                &crate::llama::tokenize_url(&seat.llama_base),
+                &seat.llama_key,
+                &body,
+            );
+            let (painted, next) = crate::llama::finish_post(
+                tokens,
+                &prompt,
+                seat.memo_count,
+                fallback,
+                seat.held,
+            );
+            (painted, true, next.payload, next.count)
         }
     }
 }
@@ -8828,11 +8936,15 @@ impl TokenModel {
 }
 
 /// @aa-sdd L37 rust-aetheris-client.draft.001.md
-/// The struct `TokenBudgets` holds the two context windows read from `application.yaml`.
-/// The integer `pool` is the pool window. The vector `grok` pairs each Grok model id with its window. Every other key in the document is dropped.
+/// The struct `TokenBudgets` holds the context windows read from `application.yaml`.
+/// The integer `pool` is the pool window. The vector `grok` pairs each Grok model id with its window. `llama` is `num-ctx`, or 0 when that key is absent. `llama_alias` is the alias. `llama_base` is the base URL. `llama_key` is the API key. The key is not written to a log.
 struct TokenBudgets {
     pool: i32,
     grok: Vec<(String, i32)>,
+    llama: i32,
+    llama_alias: String,
+    llama_base: String,
+    llama_key: String,
 }
 
 impl TokenBudgets {
@@ -8842,6 +8954,10 @@ impl TokenBudgets {
         Self {
             pool: 0,
             grok: Vec::new(),
+            llama: 0,
+            llama_alias: String::new(),
+            llama_base: String::new(),
+            llama_key: String::new(),
         }
     }
 }
@@ -8889,7 +9005,7 @@ fn yaml_window(value: &serde_yaml::Value) -> i32 {
 /// The string `yaml` is that document. A bad document returns [`TokenBudgets::empty`]. The text is not logged.
 ///
 /// Empty text, after trim, returns empty budgets. A parse error returns empty budgets. A root that is not a mapping returns empty budgets. A missing `casserole` mapping returns empty budgets.
-/// `casserole.grok.context-windows` supplies the Grok pairs. A key that is not a string is skipped. A window of 0 is skipped. `casserole.pool.context-window` supplies `pool` through `yaml_window`. Every other key is dropped.
+/// `casserole.grok.context-windows` supplies the Grok pairs. A key that is not a string is skipped. A window of 0 is skipped. `casserole.pool.context-window` supplies `pool` through `yaml_window`. `spring.ai.llama-openapi` supplies the llama window, the alias, the base, and the key.
 fn token_budgets_from_yaml(yaml: &str) -> TokenBudgets {
     let mut budgets = TokenBudgets::empty();
     if yaml.trim().is_empty() {
@@ -8925,6 +9041,11 @@ fn token_budgets_from_yaml(yaml: &str) -> TokenBudgets {
             budgets.pool = yaml_window(value);
         }
     }
+    let llama = crate::llama::llama_yaml(yaml);
+    budgets.llama = llama.window;
+    budgets.llama_alias = llama.alias;
+    budgets.llama_base = llama.base;
+    budgets.llama_key = llama.key;
     budgets
 }
 
@@ -9000,7 +9121,7 @@ fn add_grok_row(
 /// The string `target` is that model word. `provider_id` reads the family. `model_after_slash` reads the id. A label already in `seen` is not added again.
 ///
 /// An Ollama target with an empty id returns without a change. Any other Ollama target uses the label `ollama/` plus the id, the session `window`, and the session `known` flag. Its completion cap is 0 and is not known.
-/// A Grok target with an empty id returns without a change. Any other Grok target is passed to `add_grok_row`. A pool target adds one row labeled `pool` when that label is new. The pool window is `pool_window` when that value is above 0, and otherwise 0. Its completion cap is 0 and is not known. Any other provider adds nothing.
+/// A Grok target with an empty id returns without a change. Any other Grok target is passed to `add_grok_row`. A pool target adds one row labeled `pool` when that label is new. The pool window is `pool_window` when that value is above 0, and otherwise 0. Its completion cap is 0 and is not known. A llama-openapi target adds one row. The label is `heat_label`. The window is `llama_window` of the stored count. A repeated label is skipped. Any other provider adds nothing.
 fn add_token_target(
     rows: &mut Vec<TokenModel>,
     seen: &mut Vec<String>,
@@ -9012,6 +9133,8 @@ fn add_token_target(
     factory: i32,
     pool_window: i32,
     grok_windows: &[(String, i32)],
+    llama_window: i32,
+    llama_alias: &str,
 ) {
     let provider = provider_id(target);
     let id = model_after_slash(target);
@@ -9046,6 +9169,23 @@ fn add_token_target(
         let pool = if pool_window > 0 { pool_window } else { 0 };
         rows.push(TokenModel::new("pool", "pool", pool, pool > 0, 0, false));
         seen.push("pool".to_string());
+        return;
+    }
+    if provider == "llama-openapi" {
+        let label = crate::llama::heat_label(&id, llama_alias);
+        if token_seen(seen, &label) {
+            return;
+        }
+        let window = crate::llama::llama_window(llama_window);
+        rows.push(TokenModel::new(
+            &label,
+            "llama-openapi",
+            window,
+            true,
+            0,
+            false,
+        ));
+        seen.push(label);
     }
 }
 
@@ -9054,7 +9194,7 @@ fn add_token_target(
 ///
 /// The session window is kept only when `window_known` is true and the window is above 0. Otherwise the stored window is 0 and the known flag is false. The factory cap is `GrokEntry::factory` and its `max_completion_tokens`.
 /// The first row is always `Ollama session` in the `ollama` family, using that session window. Its completion cap is 0 and is not known. Each target is then offered to `add_token_target`. The focused target is offered after that list. A Grok row is a canvas target or the focused turn.
-/// A pool row labeled `pool` is appended when none was added yet. Its window is `pool_window` when that value is above 0, and otherwise 0.
+/// A pool row labeled `pool` is appended when none was added yet. Its window is `pool_window` when that value is above 0, and otherwise 0. `llama_window` is the stored llama count. `llama_alias` replaces a path-shaped llama id on the label.
 fn token_models(
     window_known: bool,
     session_window: i32,
@@ -9063,6 +9203,8 @@ fn token_models(
     focused_cap: i32,
     pool_window: i32,
     grok_windows: &[(String, i32)],
+    llama_window: i32,
+    llama_alias: &str,
 ) -> Vec<TokenModel> {
     let window = if window_known && session_window > 0 {
         session_window
@@ -9095,6 +9237,8 @@ fn token_models(
             factory,
             pool,
             grok_windows,
+            llama_window,
+            llama_alias,
         );
     }
     add_token_target(
@@ -9108,6 +9252,8 @@ fn token_models(
         factory,
         pool,
         grok_windows,
+        llama_window,
+        llama_alias,
     );
     if !token_seen(&seen, "pool") {
         rows.push(TokenModel::new("pool", "pool", pool, pool > 0, 0, false));
@@ -9128,6 +9274,8 @@ fn selected_heat_budget(
     focused_cap: i32,
     pool_window: i32,
     grok_windows: &[(String, i32)],
+    llama_window: i32,
+    llama_alias: &str,
 ) -> i32 {
     let rows = token_models(
         window_known,
@@ -9137,6 +9285,8 @@ fn selected_heat_budget(
         focused_cap,
         pool_window,
         grok_windows,
+        llama_window,
+        llama_alias,
     );
     let index = token_model_index(&rows, focused_target);
     match rows.get(index) {
@@ -9148,13 +9298,19 @@ fn selected_heat_budget(
 /// The function `token_model_index` returns the row to select for the focused target.
 /// The slice `rows` is the token-window rows. The string `focused_target` is the model word. An empty slice returns 0.
 ///
-/// A pool target looks for the label `pool`. A Grok target with an id looks for `grok/` plus that id. An Ollama target with an id looks for `ollama/` plus that id. A turn that names no model looks for `Ollama session`. The returned index is the first matching label. A missing label returns 0.
+/// A pool target looks for the label `pool`. A Grok target with an id looks for `grok/` plus that id. An Ollama target with an id looks for `ollama/` plus that id. A llama-openapi target selects the first llama row. A turn that names no model looks for `Ollama session`. The returned index is the first matching label. A missing label returns 0.
 fn token_model_index(rows: &[TokenModel], focused_target: &str) -> usize {
     if rows.is_empty() {
         return 0;
     }
     let provider = provider_id(focused_target);
     let id = model_after_slash(focused_target);
+    if provider == "llama-openapi" {
+        return rows
+            .iter()
+            .position(|row| row.family == "llama-openapi")
+            .unwrap_or(0);
+    }
     let want = if provider == "pool" {
         "pool".to_string()
     } else if provider == "grok" && !id.is_empty() {
@@ -9168,9 +9324,9 @@ fn token_model_index(rows: &[TokenModel], focused_target: &str) -> usize {
 }
 
 /// The function `token_source` returns the words that name where the context window came from.
-/// The model `model` is the selected row. A family of `grok` or `pool` returns `application.yaml`. Any other family returns `session num-ctx`.
+/// The model `model` is the selected row. A family of `grok`, `pool`, or `llama-openapi` returns `application.yaml`. Any other family returns `session num-ctx`.
 fn token_source(model: &TokenModel) -> &'static str {
-    if model.family == "grok" || model.family == "pool" {
+    if model.family == "grok" || model.family == "pool" || model.family == "llama-openapi" {
         "application.yaml"
     } else {
         "session num-ctx"
@@ -9757,7 +9913,8 @@ fn provider_id(target: &str) -> String {
 ///
 /// The function returns false when `provider_id` is `ollama`. Every other provider returns true. An empty target is `ollama` through `provider_id`, so it returns false.
 fn cloud_target(target: &str) -> bool {
-    provider_id(target) != "ollama"
+    let id = provider_id(target);
+    id != "ollama" && id != "llama-openapi"
 }
 
 /// The function `burner_denied` reports a burner card aimed at a cloud target.
@@ -9779,6 +9936,9 @@ fn snap_of(card: &TurnCard) -> crate::model::ThinkSnap {
         ollama_id: card.ollama_id.clone(),
         grok_on: card.grok_on,
         pool_on: card.pool_on,
+        llama_id: card.llama_id.clone(),
+        llama_temperature: card.llama_temperature.clone(),
+        llama_cap: card.llama_cap.clone(),
     }
 }
 
@@ -9792,6 +9952,9 @@ fn apply_snap(card: &mut TurnCard, think: &crate::model::ThinkSnap) {
     card.ollama_id = think.ollama_id.clone();
     card.grok_on = think.grok_on;
     card.pool_on = think.pool_on;
+    card.llama_id = think.llama_id.clone();
+    card.llama_temperature = think.llama_temperature.clone();
+    card.llama_cap = think.llama_cap.clone();
 }
 
 /// The function `card_tune` builds the execute tune for one card.
@@ -10032,7 +10195,7 @@ fn add_cell(cards: &mut Vec<TurnCard>, merge_at: usize, seq: &mut u64) -> bool {
             donor = Some(index);
         }
     }
-    let (expanded, target, ollama_on, ollama_level, ollama_id, grok_on, pool_on) =
+    let (expanded, target, ollama_on, ollama_level, ollama_id, grok_on, pool_on, llama_id, llama_temperature, llama_cap) =
         if let Some(index) = donor {
             let prior = &cards[index];
             (
@@ -10043,6 +10206,9 @@ fn add_cell(cards: &mut Vec<TurnCard>, merge_at: usize, seq: &mut u64) -> bool {
                 prior.ollama_id.clone(),
                 prior.grok_on,
                 prior.pool_on,
+                prior.llama_id.clone(),
+                prior.llama_temperature.clone(),
+                prior.llama_cap.clone(),
             )
         } else {
             (
@@ -10053,6 +10219,9 @@ fn add_cell(cards: &mut Vec<TurnCard>, merge_at: usize, seq: &mut u64) -> bool {
                 String::new(),
                 false,
                 false,
+                String::new(),
+                String::new(),
+                String::new(),
             )
         };
     let n = next_number(seq, |id| {
@@ -10069,6 +10238,9 @@ fn add_cell(cards: &mut Vec<TurnCard>, merge_at: usize, seq: &mut u64) -> bool {
     born.ollama_id = ollama_id;
     born.grok_on = grok_on;
     born.pool_on = pool_on;
+    born.llama_id = llama_id;
+    born.llama_temperature = llama_temperature;
+    born.llama_cap = llama_cap;
     cards.insert(merge_at, born);
     true
 }
@@ -10111,6 +10283,9 @@ fn blank_like(source: &TurnCard, n: u64, group: u64) -> TurnCard {
         ollama_id: source.ollama_id.clone(),
         grok_on: source.grok_on,
         pool_on: source.pool_on,
+        llama_id: source.llama_id.clone(),
+        llama_temperature: source.llama_temperature.clone(),
+        llama_cap: source.llama_cap.clone(),
         bar_open: false,
         expanded: true,
         parent_cell_id: String::new(),
@@ -11026,7 +11201,7 @@ fn paint_input_edge(ui: &mut egui::Ui, rect: egui::Rect, caption: &str, salt: us
 /// A widget under 2 points wide or under 2 points tall returns none. A line height under 1 returns none.
 /// A text origin inside the widget keeps that x and that top. Any other origin uses the widget top and a point inside the left edge.
 /// The x stays one point inside the widget, so a two-point stroke is not clipped away. The bottom is one line down, and not past the widget.
-fn prompt_caret_segment( // @aa-sdd PK-1432 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn prompt_caret_segment(
     widget: egui::Rect,
     galley_pos: egui::Pos2,
     row_h: f32,
@@ -11140,7 +11315,7 @@ fn paint_prompt_window(
 /// The context `ctx` holds the edit state. The id `id` is the edit. The string `text` supplies the character count. The index `cursor` is the requested caret.
 ///
 /// A missing state starts from the default. The caret is `cursor` clamped to the character count. The undo buffer is cleared. The state is stored on `id`.
-fn seat_prompt_caret(ctx: &egui::Context, id: egui::Id, text: &str, cursor: usize) { // @aa-sdd PK-1432 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn seat_prompt_caret(ctx: &egui::Context, id: egui::Id, text: &str, cursor: usize) {
     let mut state = egui::text_edit::TextEditState::load(ctx, id).unwrap_or_default();
     let at = cursor.min(text.chars().count());
     state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
@@ -12424,7 +12599,7 @@ fn user_combo_width(remain: f32, reserved: f32) -> f32 {
 ///
 /// @aa-sdd F-156
 /// The result is [`USER_COMBO_W`].
-fn east_reserve() -> f32 { // @aa-sdd PK-1447 docs/specs/common/stages.spec.md
+fn east_reserve() -> f32 {
     USER_COMBO_W
 }
 
@@ -12517,7 +12692,7 @@ fn footer_ceiling(ui: &egui::Ui, tools_open: bool, bars_open: bool) -> f32 {
 /// The band keeps the host left and the host right. Its bottom is the host bottom.
 /// A height above the host becomes the host height. A height below 0 becomes 0.
 /// An open bar and a folded bar use this same span. The folded bar is the shorter one.
-fn footer_span(host: egui::Rect, footer_h: f32) -> egui::Rect { // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn footer_span(host: egui::Rect, footer_h: f32) -> egui::Rect {
     let h = footer_h.max(0.0).min(host.height().max(0.0));
     egui::Rect::from_min_max(
         egui::pos2(host.left(), host.bottom() - h),
@@ -12529,13 +12704,13 @@ fn footer_span(host: egui::Rect, footer_h: f32) -> egui::Rect { // @aa-sdd PK-14
 /// The value `body_h` is the host height. The value `footer_h` is the footer band.
 /// The result is `body_h` minus that band, and not below 0.
 /// A folded bar is shorter, so both columns grow by the height the fold returns.
-fn column_body_height(body_h: f32, footer_h: f32) -> f32 { // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn column_body_height(body_h: f32, footer_h: f32) -> f32 {
     (body_h - footer_h.max(0.0)).max(0.0)
 }
 
 /// The function `seat_footer_band` counts the button bar on this ui.
 /// The rectangle `band` is the span under the columns. The bar is painted in its own child, and that child does not move this cursor. This call does. The heat strip is the next plate band, so it starts under this span.
-fn seat_footer_band(ui: &mut egui::Ui, band: egui::Rect) { // @aa-sdd PK-1445 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn seat_footer_band(ui: &mut egui::Ui, band: egui::Rect) {
     if band.width() <= 0.0 || band.height() <= 0.0 {
         return;
     }
@@ -12545,7 +12720,7 @@ fn seat_footer_band(ui: &mut egui::Ui, band: egui::Rect) { // @aa-sdd PK-1445 do
 /// The function `paint_bar_lane` paints one button row in a horizontal scroller.
 /// The surface `ui` is the parent. The salt `salt` is the scroll id. The value `width` is the view width. The value `height` is the view height. The closure `add` paints the buttons at their font size.
 /// The view stays the width it was given. The buttons do not shrink to that width. A row wider than the view scrolls on the horizontal Apple strip. A row that fits paints no strip.
-fn paint_bar_lane<R>( // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn paint_bar_lane<R>(
     ui: &mut egui::Ui,
     salt: &'static str,
     width: f32,
@@ -12591,7 +12766,7 @@ fn paint_bar_lane<R>( // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-clien
 /// @aa-sdd PK-1069 docs/specs/common/formal-plan.spec.md FINESSE:f-223
 /// The height is `folded_control_height`. The width is the available width, and at least 1. The allocation senses hover.
 /// The mark is `bb_fold_mark` of false, so the glyph is `^`. The mark is the same button as the open fold mark. It sits on the left, inset by [`BUTTON_CLEAR_PX`]. Its height is `button_outer_height`. Its width is the glyph plus the button padding on the left and the right. The hover text is [`BB_SHOW_TIP`]. A click sets `bars_open` true. The line is reserved before the button, so the button face stays above the line. The line starts 6 pixels after the mark and ends 16 pixels before the right edge, at the mark's vertical center. It is drawn only when that span is positive, with a 1 pixel stroke from `bb_fold_line_ink`. `master_top` is the top of the row. `bar` is the outer rectangle.
-fn paint_bb_folded_line(ui: &mut egui::Ui, bars_open: &mut bool) -> FooterHit { // @aa-sdd PK-1442 PK-1443 PK-1444 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn paint_bb_folded_line(ui: &mut egui::Ui, bars_open: &mut bool) -> FooterHit {
     let mut hit = FooterHit {
         make_run: false,
         make_stop: false,
@@ -13211,6 +13386,9 @@ fn card_from_cell(cell: &crate::vault::CellRow) -> Option<TurnCard> {
         ollama_id: String::new(),
         grok_on: false,
         pool_on: false,
+        llama_id: String::new(),
+        llama_temperature: String::new(),
+        llama_cap: String::new(),
         bar_open: false,
         expanded: false,
         parent_cell_id: cell.parent_cell_id.clone(),
@@ -13790,7 +13968,7 @@ fn transfer_reply(cards: &[TurnCard], group: u64) -> String {
 
 /// The copied cells replace the deck. An empty list leaves one empty card.
 /// Each born card stores `model` as its execution target. Focus becomes the first card.
-fn seat_transferred( // @aa-sdd PK-1419 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn seat_transferred(
     cards: &mut Vec<TurnCard>,
     focus: &mut usize,
     seq: &mut u64,
@@ -13866,7 +14044,7 @@ fn land_session_export(path: &std::path::Path, body: &str) -> String {
 
 /// One header cell. The user text is the invitation. The assistant text is the opener and the closer.
 /// A missing line, or a line that trims to empty, returns `body` unchanged. A body with no `cells:` line returns `body` unchanged.
-fn seat_canvas_mood(body: &str, line: Option<&str>) -> String { // @aa-sdd PK-1410 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn seat_canvas_mood(body: &str, line: Option<&str>) -> String {
     let Some(line) = line.and_then(crate::mood::normalize) else {
         return body.to_string();
     };
@@ -13903,7 +14081,7 @@ fn seat_canvas_mood(body: &str, line: Option<&str>) -> String { // @aa-sdd PK-14
 /// The first two rows are the invitation and the directive when `line` is set.
 /// A table that already opens with that pair is returned unchanged. The rows after the header stay, including their timestamps.
 /// A table that does not parse is returned unchanged.
-fn seat_session_mood(table: &str, line: Option<&str>) -> String { // @aa-sdd PK-1410 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn seat_session_mood(table: &str, line: Option<&str>) -> String {
     let Some(line) = line.and_then(crate::mood::normalize) else {
         return table.to_string();
     };
@@ -15874,7 +16052,7 @@ fn fault_card<'a>(cards: &'a [TurnCard], cell: &[u8; 16], focus: usize) -> Optio
 /// `model` is the selected target. `ssh` is true for an SSH session and false for a canvas cell.
 /// A blank model asks for the model selected for this SSH session, or for this cell.
 /// Any other model names that model in the same sentence.
-fn configuration_check(model: &str, ssh: bool) -> String { // @aa-sdd PK-1415 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn configuration_check(model: &str, ssh: bool) -> String {
     let where_word = if ssh {
         "this SSH session"
     } else {
@@ -18802,7 +18980,7 @@ fn fact_line(facts: Option<&CanvasFacts>) -> String {
 }
 
 /// Empty stored target shows as `ollama`. Java `AetherisStage2.shownTarget`.
-fn shown_target(target: &str) -> String { // @aa-sdd PK-1415 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn shown_target(target: &str) -> String {
     let trimmed = target.trim();
     if trimmed.is_empty() {
         "ollama".to_string()
@@ -18812,6 +18990,7 @@ fn shown_target(target: &str) -> String { // @aa-sdd PK-1415 docs/specs/rust/aet
 }
 
 /// The SSH heat budget. A managed count above zero is that count.
+/// A word that starts with `llama-openapi` uses `num-ctx`, or 4096 when that key is absent or 0.
 /// A blank engine counts as ollama. An engine that contains ollama uses 131072.
 /// Any other engine uses zero. A canvas window is not this number.
 /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
@@ -18819,7 +18998,11 @@ fn ssh_heat_budget(managed: i32, engine: &str) -> i32 {
     if managed > 0 {
         return managed;
     }
-    if shown_target(engine).contains("ollama") {
+    let shown = shown_target(engine);
+    if shown.starts_with("llama-openapi") {
+        return crate::llama::llama_window(application_yaml_budgets().llama);
+    }
+    if shown.contains("ollama") {
         131072
     } else {
         0
@@ -18882,10 +19065,16 @@ fn shell_status_line(mode: &str, air: &str, mismatch: bool, engine: &str, extra:
 /// The line is `vault: disk`, the wire word, `air-gap:`, the word from `air_gap_word`, and `engine:`. A true `mismatch` inserts ` mismatch` after the air-gap word. A non-empty `extra` is appended after two spaces. An empty `extra` adds nothing.
 fn status_facts_line(wire: &str, air: &str, mismatch: bool, engine: &str, extra: &str) -> String {
     let gap = if mismatch { " mismatch" } else { "" };
+    let stored = shown_target(engine);
+    let engine_word = if stored.starts_with("llama-openapi") {
+        let alias = application_yaml_budgets().llama_alias;
+        crate::llama::shown_engine(&stored, &alias)
+    } else {
+        stored
+    };
     let mut line = format!(
-        "vault: disk  {wire}  air-gap: {}{gap}  engine: {}",
+        "vault: disk  {wire}  air-gap: {}{gap}  engine: {engine_word}",
         air_gap_word(air),
-        shown_target(engine)
     );
     if !extra.is_empty() {
         line.push_str("  ");
@@ -18937,13 +19126,13 @@ fn status_bar_height(ui: &egui::Ui) -> f32 {
 }
 
 /// The heat strip is 9 pixels. The needle in that strip is the same height. The button bar does not use this height.
-const HEAT_STRIP_PX: f32 = 9.0; // @aa-sdd PK-1445 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+const HEAT_STRIP_PX: f32 = 9.0;
 
 /// The function `frame_bands` splits one plate into three bands.
 /// The rectangle `host` is the room under the product tabs. The value `status_h` is the status text row.
 /// The first band is the notebook. The canvas, the inspector, and the button bar share it. The second band is the heat strip. It is [`HEAT_STRIP_PX`] tall and starts at the notebook bottom. The third band is the status text. It starts at the heat strip bottom.
 /// A short host keeps the notebook at zero and shortens the heat strip to the room that remains. The status text takes what is left under the heat strip.
-fn frame_bands(host: egui::Rect, status_h: f32) -> (egui::Rect, egui::Rect, egui::Rect) { // @aa-sdd PK-1445 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn frame_bands(host: egui::Rect, status_h: f32) -> (egui::Rect, egui::Rect, egui::Rect) {
     let status_h = status_h.max(0.0);
     let width = host.width().max(0.0);
     let notebook_h = (host.height() - status_h - HEAT_STRIP_PX).max(0.0);
@@ -19138,7 +19327,7 @@ fn shell_icon_seat(os: &str) -> ShellIconSeat {
     }
 }
 
-/// The function `apply_taskbar` sets the Windows taskbar icon when this build is Windows and `taskbar` is true.
+/// The function `apply_taskbar` sets the Windows big icon when this build is Windows and `taskbar` is true.
 /// The attributes `attributes` are the window attributes. Another host returns those attributes unchanged. The Windows trait stays out of a Linux build and out of a macOS build.
 #[cfg(windows)]
 fn apply_taskbar(
@@ -19584,6 +19773,10 @@ struct ParkedPane {
     engine_label: String,
     /// This connection has been asked for the saved model. A disconnect clears it.
     engine_asked: bool,
+    /// Last llama tokenize payload on this pane. Empty until a post lands.
+    llama_payload: String,
+    /// Last painted llama tokenize count. None means no tokenize count has landed.
+    llama_count: Option<i32>,
 }
 
 /// @aa-sdd PK-578 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-215
@@ -20171,6 +20364,10 @@ struct App {
     vt_used: i32,
     vt_chars: i32,
     vt_blocks: i32,
+    /// Last llama tokenize payload on the focused pane. Empty until a post lands.
+    llama_payload: String,
+    /// Last painted llama tokenize count. None means no tokenize count has landed.
+    llama_count: Option<i32>,
     vt_heat_sig: u64,
     vt_sig_set: bool,
     vt_memory: std::sync::Arc<str>,
@@ -20441,6 +20638,8 @@ impl App {
             vt_used: 0,
             vt_chars: 0,
             vt_blocks: 0,
+            llama_payload: String::new(),
+            llama_count: None,
             vt_heat_sig: 0,
             vt_sig_set: false,
             vt_memory: std::sync::Arc::from(""),
@@ -20823,7 +21022,7 @@ impl App {
     /// `result` is that reply. `transfer_roux` becomes false.
     ///
     /// `Ok` sets the status to [`TRANSFER_WORD`]. `Err` sets the status to `replace failed:` plus the reason.
-    fn land_transfer_replace(&mut self, result: Result<(), String>) { // @aa-sdd PK-1419 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    fn land_transfer_replace(&mut self, result: Result<(), String>) {
         self.transfer_roux = false;
         self.status = match result {
             Ok(()) => {
@@ -21428,6 +21627,8 @@ impl App {
                 self.roux_chars = 0;
                 self.roux_blocks = 0;
                 self.tokens_asked = false;
+                self.llama_payload.clear();
+                self.llama_count = None;
                 // The ask clears after any shell ask in this frame. The word stays.
                 // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
                 self.engine_asked = false;
@@ -21531,6 +21732,8 @@ impl App {
             self.roux_chars = 0;
             self.roux_blocks = 0;
             self.tokens_asked = false;
+            self.llama_payload.clear();
+            self.llama_count = None;
             // The new socket asks again. The word already on the strip stays.
             // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
             self.engine_asked = false;
@@ -22262,7 +22465,7 @@ impl App {
     /// A `pane_count` of 1 or less returns with the tree unchanged. `detach_leaf` removes the focused id. A [`Detach::Miss`] returns while the tree is the temporary leaf whose id is 0. A [`Detach::Hit`] stores the sibling as the tree.
     ///
     /// A focused session is shut down. The Roux counts and `tokens_asked` are cleared. The grid becomes 80 by 24 and `note_grid` runs. Both stashes are cleared. `install_pane` then brings the hit's focus id forward.
-    fn close_focused_pane(&mut self) { // @aa-sdd PK-1457 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    fn close_focused_pane(&mut self) {
         if self.pane_count() <= 1 {
             return;
         }
@@ -22280,6 +22483,8 @@ impl App {
         self.roux_chars = 0;
         self.roux_blocks = 0;
         self.tokens_asked = false;
+        self.llama_payload.clear();
+        self.llama_count = None;
         self.grid = Grid::new(80, 24);
         self.note_grid();
         self.scope_stash.clear();
@@ -22337,6 +22542,8 @@ impl App {
             shell_window: std::mem::take(&mut self.shell_window),
             engine_label: std::mem::take(&mut self.engine_label),
             engine_asked: std::mem::replace(&mut self.engine_asked, false),
+            llama_payload: std::mem::take(&mut self.llama_payload),
+            llama_count: std::mem::replace(&mut self.llama_count, None),
         }
     }
 
@@ -22379,6 +22586,8 @@ impl App {
         self.shell_window = parked.shell_window;
         self.engine_label = parked.engine_label;
         self.engine_asked = parked.engine_asked;
+        self.llama_payload = parked.llama_payload;
+        self.llama_count = parked.llama_count;
         self.last_connect = parked.last.clone();
         if let Some(snap) = &parked.last {
             self.host = snap.host.clone();
@@ -22482,7 +22691,7 @@ impl App {
     /// `old_user` and `old_canvas` are the key from before the load.
     /// The same non-empty user keeps the seat when the canvas id changes.
     /// An empty old user stays on the empty key. A different user keeps the old seat.
-    fn claim_canvas(&mut self, old_user: &str, old_canvas: &str) { // @aa-sdd PK-1458 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    fn claim_canvas(&mut self, old_user: &str, old_canvas: &str) {
         let new_user = self.deck_key();
         let new_key = self.showing_canvas_key();
         let old_key = ThinkPaneManager::canvas_key(old_user, old_canvas);
@@ -23711,7 +23920,7 @@ impl App {
     ///
     /// The method calls `store_mood_yaml`. If `mood` is blocked, if `mood_owner` is empty, or if the home directory is missing, that call writes nothing.
     /// `close_glass` then drops the chat and closes the dialog. The wire list stays. The generation stays. The saved mood line stays. The mood switch stays.
-    fn seal_mood(&mut self, keep_line: bool) { // @aa-sdd PK-1436 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    fn seal_mood(&mut self, keep_line: bool) {
         if keep_line {
             let draft = self.mood_desk.draft.clone();
             let _ = approve_mood_line(&mut self.mood, &draft);
@@ -23726,7 +23935,7 @@ impl App {
     /// A missing size leaves the stored pair alone. A size outside the kept range leaves the stored pair alone.
     /// When the stored pair changes, `store_mood_yaml` writes the record. `close_glass` then drops the chat and closes the dialog.
     /// The saved mood line stays. The mood switch stays.
-    fn dismiss_mood(&mut self) { // @aa-sdd PK-1436 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    fn dismiss_mood(&mut self) {
         let size = self.mood_desk.last_size;
         let prior = (self.mood.width, self.mood.height);
         if mood_size_on_close(&mut self.mood, size) && (self.mood.width, self.mood.height) != prior {
@@ -23744,11 +23953,16 @@ impl App {
         let (known, window) = session_window(self.facts.as_ref());
         let budgets = application_yaml_budgets();
         let targets = canvas_token_targets(&self.cards);
-        let focused = self
-            .cards
-            .get(self.focus)
-            .map(|card| card.target.clone())
-            .unwrap_or_default();
+        let focused = if self.plate == Plate::Aetheris {
+            self.cards
+                .get(self.focus)
+                .map(|card| card.target.clone())
+                .unwrap_or_default()
+        } else if let Some(model) = &self.transfer_heat_model {
+            model.clone()
+        } else {
+            self.engine_label.clone()
+        };
         let cap = self
             .cards
             .get(self.focus)
@@ -23762,6 +23976,8 @@ impl App {
             cap,
             budgets.pool,
             &budgets.grok,
+            budgets.llama,
+            &budgets.llama_alias,
         );
         if self.token_pick.is_empty() || rows.iter().all(|row| row.label != self.token_pick) {
             let index = token_model_index(&rows, &focused);
@@ -23886,7 +24102,11 @@ impl App {
             Some(card) => {
                 let key = crate::amwp::cell_text(&card.cell);
                 let entry = self.grok.entry(&key);
-                let target = mood_glass_target(card, entry.as_ref(), canvas_pool_boot_for_frame(&self.canvas_pool_boot, &self.ssh_pool_boot));
+                let target = mood_glass_target(
+                    card,
+                    entry.as_ref(),
+                    canvas_pool_boot_for_frame(&self.canvas_pool_boot, &self.ssh_pool_boot),
+                );
                 mood_glass_title(&target)
             }
             None => MOOD_TITLE.to_string(),
@@ -24199,6 +24419,11 @@ impl App {
             {
                 self.model.show_list_miss(crate::model::OLLAMA_LIST_MISS);
             }
+            if wires.iter().any(|wire| {
+                matches!(wire, crate::model::ModelWire::LlamaModels { .. })
+            }) {
+                self.model.show_list_miss(crate::model::LLAMA_LIST_MISS);
+            }
             return;
         }
         for wire in wires {
@@ -24209,6 +24434,9 @@ impl App {
                 crate::model::ModelWire::GrokModels { cell } => {
                     // @aa-sdd PK-1282 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
                     crate::amwp::text_frame(cell, crate::model::grok_models_body())
+                }
+                crate::model::ModelWire::LlamaModels { cell } => {
+                    crate::amwp::text_frame(cell, crate::model::llama_models_body())
                 }
                 crate::model::ModelWire::Show { cell, id } => {
                     crate::amwp::text_frame(cell, &crate::model::show_body(id))
@@ -24390,6 +24618,7 @@ impl App {
                 if let Some(notice) = &self.slide {
                     if notice.body == crate::model::GROK_LIST_MISS
                         || notice.body == crate::model::OLLAMA_LIST_MISS
+                        || notice.body == crate::model::LLAMA_LIST_MISS
                     {
                         self.slide = None;
                     }
@@ -24436,7 +24665,9 @@ impl App {
             return;
         }
         if pane != self.pane_id
-            && (text.starts_with("tags_result:") || text.starts_with("grok_models_result:"))
+            && (text.starts_with("tags_result:")
+                || text.starts_with("grok_models_result:")
+                || text.starts_with("llama_models_result:"))
         {
             return;
         }
@@ -24448,6 +24679,11 @@ impl App {
         if text.starts_with("grok_models_result:") {
             // @aa-sdd PK-1282 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
             self.model.apply_grok_models(&key, &text);
+            self.sync_list_slide();
+            return;
+        }
+        if text.starts_with("llama_models_result:") {
+            self.model.apply_llama_models(&key, &text);
             self.sync_list_slide();
             return;
         }
@@ -24615,11 +24851,11 @@ impl App {
 
     /// The method `paint_model_body` paints the family picker and the pane for the open model dialog. The parameter `ui` is the egui surface. The parameter `session` is the [`ModelSession`] being edited.
     ///
-    /// The family combo shows `family_label`, or a single space when that label is empty. The choices are [`Family::Ollama`], [`Family::Grok`], and [`Family::Pool`]. A click stores that family.
+    /// The family combo shows `family_label`, or a single space when that label is empty. The choices are [`Family::Ollama`], [`Family::Grok`], [`Family::Pool`], and [`Family::Llama`]. A click stores that family.
     ///
     /// A picked family reads the stored target, the think snap, and the index from `model_card`. A console session passes an empty earlier-id list. A card session passes the text id of every card before that index. The flag list pairs every card's text id with that card's `grok_on`. `choose_family` builds the effect. `land_model` applies it.
     ///
-    /// The method then paints the matching pane. [`Family::Ollama`] calls `paint_ollama_pane`. [`Family::Grok`] calls `paint_grok_pane`. [`Family::Pool`] calls `paint_pool_pane`. A session with no family paints nothing more. A list miss paints its sentence in red.
+    /// The method then paints the matching pane. [`Family::Ollama`] calls `paint_ollama_pane`. [`Family::Grok`] calls `paint_grok_pane`. [`Family::Pool`] calls `paint_pool_pane`. [`Family::Llama`] calls `paint_llama_pane`. A session with no family paints nothing more. A list miss paints its sentence in red.
     fn paint_model_body(&mut self, ui: &mut egui::Ui, session: &mut crate::model::ModelSession) {
         let console = session.console;
         let cell = session.cell;
@@ -24638,6 +24874,7 @@ impl App {
                     crate::model::Family::Ollama,
                     crate::model::Family::Grok,
                     crate::model::Family::Pool,
+                    crate::model::Family::Llama,
                 ] {
                     if ui
                         .selectable_label(session.family == Some(family), family.label())
@@ -24680,6 +24917,7 @@ impl App {
             Some(crate::model::Family::Ollama) => self.paint_ollama_pane(ui, session),
             Some(crate::model::Family::Grok) => self.paint_grok_pane(ui, session),
             Some(crate::model::Family::Pool) => self.paint_pool_pane(ui, session),
+            Some(crate::model::Family::Llama) => self.paint_llama_pane(ui, session),
             None => {}
         }
         if let Some(words) = session.list_miss {
@@ -24961,6 +25199,94 @@ impl App {
         }
     }
 
+    /// The method `paint_llama_pane` paints the llama-openapi model, temperature, and cap. The parameter `ui` is the egui surface. The parameter `session` is the [`ModelSession`]. The card has no think box.
+    ///
+    /// The row labeled `Model` is a single-line editor of width 220. The hover text is `LLAMA_MODEL_TIP`. A change calls `type_llama`. A lost focus calls `commit_llama`. The combo lists `shown_rows` of `llama_tags`. A click stores the first raw id whose shown label matches.
+    ///
+    /// The temperature field is width 80. A lost focus calls `set_llama_temperature`. The cap field is labeled `Max tokens` and is width 100. A lost focus calls `set_llama_cap`. A blank field leaves that key off the body.
+    fn paint_llama_pane(&mut self, ui: &mut egui::Ui, session: &mut crate::model::ModelSession) {
+        let console = session.console;
+        let cell = session.cell;
+        let alias = application_yaml_budgets().llama_alias;
+        ui.horizontal(|ui| {
+            ui.label("Model");
+            let mut id = session.llama_id.clone();
+            let edit = ui
+                .add(egui::TextEdit::singleline(&mut id).desired_width(220.0))
+                .on_hover_text(crate::model::LLAMA_MODEL_TIP);
+            let changed = edit.changed();
+            let left = edit.lost_focus();
+            if changed {
+                let (_, think, _) = self.model_card(console, cell);
+                let effect = session.type_llama(&id, &think);
+                self.land_model(console, cell, &effect);
+            }
+            if left {
+                session.llama_id = id.trim().to_string();
+                let (_, think, _) = self.model_card(console, cell);
+                let effect = session.commit_llama(&think);
+                self.land_model(console, cell, &effect);
+            }
+            let tags = session.llama_tags.clone();
+            let current = crate::llama::shown_id(&session.llama_id, &alias);
+            let rows = crate::llama::shown_rows(&tags, &alias);
+            let mut choice = None;
+            egui::ComboBox::from_id_salt("llama-models")
+                .icon(emerald_combo_arrow)
+                .selected_text(if current.is_empty() {
+                    " ".to_string()
+                } else {
+                    current.clone()
+                })
+                .show_ui(ui, |ui| {
+                    for name in &rows {
+                        if ui.selectable_label(current == *name, name).clicked() {
+                            choice = Some(name.clone());
+                        }
+                    }
+                })
+                .response
+                .on_hover_text(crate::model::LLAMA_MODEL_TIP);
+            if let Some(name) = choice {
+                let raw = tags
+                    .iter()
+                    .find(|row| crate::llama::shown_id(row, &alias) == name)
+                    .cloned()
+                    .unwrap_or(name);
+                let (_, think, _) = self.model_card(console, cell);
+                let typed = session.type_llama(&raw, &think);
+                self.land_model(console, cell, &typed);
+                let (_, think, _) = self.model_card(console, cell);
+                let effect = session.commit_llama(&think);
+                self.land_model(console, cell, &effect);
+            }
+        });
+        ui.horizontal(|ui| {
+            ui.label("Temperature");
+            let mut text = session.llama_temperature.clone();
+            let edit = ui
+                .add(egui::TextEdit::singleline(&mut text).desired_width(80.0))
+                .on_hover_text(crate::model::LLAMA_TEMPERATURE_TIP);
+            if edit.lost_focus() {
+                let (_, think, _) = self.model_card(console, cell);
+                let effect = session.set_llama_temperature(&text, &think);
+                self.land_model(console, cell, &effect);
+            }
+        });
+        ui.horizontal(|ui| {
+            ui.label("Max tokens");
+            let mut text = session.llama_cap.clone();
+            let edit = ui
+                .add(egui::TextEdit::singleline(&mut text).desired_width(100.0))
+                .on_hover_text(crate::model::LLAMA_CAP_TIP);
+            if edit.lost_focus() {
+                let (_, think, _) = self.model_card(console, cell);
+                let effect = session.set_llama_cap(&text, &think);
+                self.land_model(console, cell, &effect);
+            }
+        });
+    }
+
     /// The method `disconnect` stores the account file, closes it, and drops the live session. `store_vault` runs first. `close_vault` runs next. `clear_canvas` clears the facts and the scope text. `drop_plate_docs` forgets the card model records. `clear_deck` clears the cards and the focus.
     ///
     /// The edit history is cleared. Prompt focus is cleared. The group remainder is cleared and `group_live` becomes 0. The pipe remainder is cleared and `pipe_live` becomes false. `join_from` becomes absent. `run_pane` becomes absent. The mood glass is closed. `focus_prompt` becomes false. `land_newest` becomes false.
@@ -24990,6 +25316,8 @@ impl App {
             self.roux_chars = 0;
             self.roux_blocks = 0;
             self.tokens_asked = false;
+            self.llama_payload.clear();
+            self.llama_count = None;
             // The ask clears. The pane word stays.
             // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
             self.engine_asked = false;
@@ -25015,11 +25343,12 @@ impl App {
     }
 
     /// Enter submits the line. Backspace drops one character. Other keys stay on the wire only.
+    /// A non-empty line is kept so one empty host reply can send it again.
     fn note_live_key(&mut self, key: Key) {
         match key {
             Key::Enter => {
                 if !self.live_line.is_empty() {
-                    self.shell_line = self.live_line.clone(); // @aa-sdd PK-1464 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+                    self.shell_line = self.live_line.clone();
                     self.shell_replayed = false;
                     self.shell_window.clear();
                 }
@@ -25070,6 +25399,10 @@ impl App {
         self.vt_used = paint.estimate;
         self.vt_chars = paint.chars;
         self.vt_blocks = paint.blocks;
+        if paint.llama_memo {
+            self.llama_payload = paint.llama_payload;
+            self.llama_count = paint.llama_count;
+        }
     }
 
     /// The method `take_heat` applies one finished heat result or asks for another paint. The parameter `ctx` is the egui context. The parameter `posted` is true when this frame offered a new beat.
@@ -25173,12 +25506,18 @@ impl App {
             } else {
                 std::sync::Arc::clone(&self.vt_memory)
             };
+            let budgets = application_yaml_budgets();
             self.heat.offer(HeatBeat {
                 seq,
                 kind: HeatKind::Vt(VtHeat {
                     held: self.roux_used,
                     memory,
                     live: self.live_line.clone(),
+                    engine: self.engine_label.clone(),
+                    memo_payload: self.llama_payload.clone(),
+                    memo_count: self.llama_count,
+                    llama_base: budgets.llama_base,
+                    llama_key: budgets.llama_key,
                 }),
             });
         }
@@ -25236,7 +25575,7 @@ impl App {
     }
 
     /// Bracketed paste joins the unsent line. A newline inside the body stays on that line.
-    fn queue_live_paste(&mut self, text: &str, outgoing: &mut Vec<u8>) { // @aa-sdd PK-1407 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    fn queue_live_paste(&mut self, text: &str, outgoing: &mut Vec<u8>) {
         match paste_decision(text) {
             PasteDecision::Quiet => {}
             PasteDecision::Over => self.show_shell_notice("Paste", PASTE_OVER),
@@ -25671,6 +26010,8 @@ impl App {
                         cap,
                         budgets.pool,
                         &budgets.grok,
+                        budgets.llama,
+                        &budgets.llama_alias,
                     )
                 };
                 #[cfg(test)]
@@ -25728,6 +26069,8 @@ impl App {
                             cap,
                             budgets.pool,
                             &budgets.grok,
+                            budgets.llama,
+                            &budgets.llama_alias,
                         )
                     }
                 } else {
@@ -29100,7 +29443,7 @@ impl App {
     /// The icon `icon` is the icon the frame asked for.
     ///
     /// The text icon is a thin beam. On this plate the beam disappears, so a hover looks like the pointer left. The arrow stays. A resize icon stays. A hand stays. Any other icon stays.
-    fn pointer_icon(icon: egui::CursorIcon) -> egui::CursorIcon { // @aa-sdd PK-1433 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    fn pointer_icon(icon: egui::CursorIcon) -> egui::CursorIcon {
         if icon == egui::CursorIcon::Text {
             egui::CursorIcon::Default
         } else {
@@ -29683,7 +30026,7 @@ fn map_key(key: egui::Key, modifiers: egui::Modifiers) -> Option<TermStroke> {
         egui::Key::A if command => Key::CtrlA,
         egui::Key::C if command && modifiers.shift => {
             // Copy. Ctrl-C, with Shift up, is the interrupt.
-            return Some(TermStroke::Copy); // @aa-sdd PK-1423 docs/specs/common/canvas.spec.md
+            return Some(TermStroke::Copy);
         }
         egui::Key::C if command => Key::CtrlC,
         egui::Key::E if command => Key::CtrlE,
@@ -33505,6 +33848,11 @@ mod tests {
                 held: None,
                 memory: std::sync::Arc::from(""),
                 live: live.to_string(),
+                engine: String::new(),
+                memo_payload: String::new(),
+                memo_count: None,
+                llama_base: String::new(),
+                llama_key: String::new(),
             }),
         }
     }
@@ -38841,52 +39189,6 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// `the_empty_shell_reply_is_sent_once` sends the submitted line one time.
-    /// The host sentence is `The engine returned an empty reply.` A split sentence still matches.
-    /// The bytes are the line and one carriage return. A second sighting sends nothing.
-    #[test]
-    fn the_empty_shell_reply_is_sent_once() {
-        let line = "hello radar";
-        let mut window = String::new();
-        roll_shell_window(&mut window, b"\x1b[31mThe engine returned an ");
-        assert!(empty_shell_replay(line, &window, false).is_none());
-        roll_shell_window(&mut window, b"empty reply. (ChatShell.java:899)\x1b[0m\r\n");
-        let once = empty_shell_replay(line, &window, false).expect("one send");
-        let mut expect = line.as_bytes().to_vec();
-        expect.push(b'\r');
-        assert_eq!(once, expect);
-        assert!(empty_shell_replay(line, &window, true).is_none());
-        assert!(empty_shell_replay("", &window, false).is_none());
-        assert!(empty_shell_replay(line, "pool down", false).is_none());
-    }
-
-    /// `the_canvas_pool_boot_is_not_the_ssh_boot` mints two boots.
-    /// The canvas boot and the SSH boot differ. A canvas frame sends the canvas boot. That frame does not carry the SSH boot.
-    #[test]
-    fn the_canvas_pool_boot_is_not_the_ssh_boot() {
-        let canvas = mint_canvas_pool_boot();
-        let ssh = mint_ssh_pool_boot();
-        assert_ne!(canvas, ssh);
-        assert_eq!(canvas_pool_boot_for_frame(&canvas, &ssh), canvas);
-        let mut card = TurnCard::fresh(1);
-        card.prompt = "keep".to_string();
-        card.target = "pool".to_string();
-        card.pool_on = true;
-        let doc = crate::model::GrokDoc::memory();
-        let (RunAsk::Send(frame), _) = ask_run_doc(
-            std::slice::from_ref(&card),
-            0,
-            &MoodYaml::fresh(),
-            &doc,
-            canvas_pool_boot_for_frame(&canvas, &ssh),
-        ) else {
-            panic!("pool sends");
-        };
-        let text = String::from_utf8_lossy(&frame);
-        assert!(text.contains(&format!("pool_boot: {canvas}\n")));
-        assert!(!text.contains(&ssh));
-    }
-
     #[test]
     /// The `the_window_caption_reads_aetheris_rust` test checks the window caption and the taskbar icon.
     /// [`super::WINDOW_CAPTION`] is `Aetheris Rust`. [`super::WINDOW_TITLE`] is `Aetheris`. [`super::WINDOW_ICON_PX`] is 64.
@@ -40185,6 +40487,62 @@ mod tests {
         assert!(!copy.collapsed);
         assert_eq!(deck[0].prompt, "one");
         assert_eq!(deck[0].reply, "a");
+    }
+
+    /// `the_empty_shell_reply_is_sent_once` sends the submitted line one time.
+    /// The host sentence is `The engine returned an empty reply.` A split sentence still matches.
+    /// The bytes are the line and one carriage return. A second sighting sends nothing.
+    /// An empty line sends nothing. A different host sentence sends nothing.
+    #[test]
+    fn the_empty_shell_reply_is_sent_once() {
+        let line = "hello radar";
+        let mut window = String::new();
+        roll_shell_window(&mut window, b"\x1b[31mThe engine returned an ");
+        assert!(empty_shell_replay(line, &window, false).is_none());
+        roll_shell_window(&mut window, b"empty reply. (ChatShell.java:899)\x1b[0m\r\n");
+        let once = empty_shell_replay(line, &window, false).expect("one send");
+        let mut expect = line.as_bytes().to_vec();
+        expect.push(b'\r');
+        assert_eq!(once, expect);
+        assert!(empty_shell_replay(line, &window, true).is_none());
+        assert!(empty_shell_replay("", &window, false).is_none());
+        assert!(empty_shell_replay(line, "pool down", false).is_none());
+    }
+
+    /// `the_canvas_pool_boot_is_not_the_ssh_boot` mints two boots.
+    /// The canvas boot and the SSH boot differ. A canvas frame sends the canvas boot. That frame does not carry the SSH boot.
+    /// A pool tune stores the canvas boot. A mood tune stores the canvas boot.
+    #[test]
+    fn the_canvas_pool_boot_is_not_the_ssh_boot() {
+        let canvas = mint_canvas_pool_boot();
+        let ssh = mint_ssh_pool_boot();
+        assert_ne!(canvas, ssh);
+        assert_eq!(canvas_pool_boot_for_frame(&canvas, &ssh), canvas);
+        let mut card = TurnCard::fresh(1);
+        card.prompt = "keep".to_string();
+        card.target = "pool".to_string();
+        card.pool_on = true;
+        let doc = crate::model::GrokDoc::memory();
+        let (RunAsk::Send(frame), _) = ask_run_doc(
+            std::slice::from_ref(&card),
+            0,
+            &MoodYaml::fresh(),
+            &doc,
+            canvas_pool_boot_for_frame(&canvas, &ssh),
+        ) else {
+            panic!("pool sends");
+        };
+        let text = String::from_utf8_lossy(&frame);
+        assert!(text.contains(&format!("pool_boot: {canvas}\n")));
+        assert!(!text.contains(&ssh));
+        let mut think = crate::model::ThinkSnap::off();
+        think.pool_on = true;
+        let tune = crate::model::canvas_tune("pool", false, &think, None, &canvas);
+        assert_eq!(tune.pool_boot, canvas);
+        assert_ne!(tune.pool_boot, ssh);
+        let mood = crate::model::mood_tune("pool", false, None, &canvas);
+        assert_eq!(mood.pool_boot, canvas);
+        assert_ne!(mood.pool_boot, ssh);
     }
 
     /// `the_model_config_follows_the_cell` puts the cell's model row on the send and on the next card.
@@ -45293,7 +45651,7 @@ cells:
             "grok/grok-4.3".to_string(),
             "pool".to_string(),
         ];
-        let rows = token_models(true, 131072, &targets, "grok/grok-4.3", 64000, 0, &[]);
+        let rows = token_models(true, 131072, &targets, "grok/grok-4.3", 64000, 0, &[], 0, "");
         assert_eq!(rows[0].label, "Ollama session");
         assert!(rows[0].window_known);
         assert_eq!(rows[0].window, 131072);
@@ -45327,7 +45685,7 @@ cells:
         assert_eq!(token_model_index(&rows, "pool"), pool);
         assert_eq!(token_model_index(&rows, ""), 0);
         assert_eq!(
-            selected_heat_budget(true, 131072, &targets, "grok/grok-4.3", 64000, 0, &[]),
+            selected_heat_budget(true, 131072, &targets, "grok/grok-4.3", 64000, 0, &[], 0, ""),
             0
         );
         assert_eq!(
@@ -45338,11 +45696,13 @@ cells:
                 "ollama/qwen2.5-coder:7b",
                 0,
                 0,
-                &[]
+                &[],
+                0,
+                ""
             ),
             131072
         );
-        assert_eq!(selected_heat_budget(true, 131072, &targets, "", 0, 0, &[]), 131072);
+        assert_eq!(selected_heat_budget(true, 131072, &targets, "", 0, 0, &[], 0, ""), 131072);
         let grok = [("grok-4.3".to_string(), 1_000_000)];
         assert_eq!(
             selected_heat_budget(
@@ -45352,15 +45712,17 @@ cells:
                 "grok/grok-4.3",
                 64000,
                 256000,
-                &grok
+                &grok,
+                0,
+                ""
             ),
             1_000_000
         );
         assert_eq!(
-            selected_heat_budget(true, 131072, &targets, "pool", 0, 256000, &grok),
+            selected_heat_budget(true, 131072, &targets, "pool", 0, 256000, &grok, 0, ""),
             256000
         );
-        let quiet = token_models(false, 0, &[], "", 0, 0, &[]);
+        let quiet = token_models(false, 0, &[], "", 0, 0, &[], 0, "");
         assert!(!quiet[0].window_known);
         assert!(quiet.iter().all(|row| row.label != "grok/grok-4.3"));
         assert!(quiet.iter().all(|row| row.label != "grok/grok-4.7"));
@@ -45373,6 +45735,8 @@ cells:
             0,
             0,
             &[],
+            0,
+            "",
         );
         let ollama = seated
             .iter()
@@ -45540,6 +45904,8 @@ casserole:
             64000,
             256000,
             &windows,
+            0,
+            "",
         );
         let focused = named
             .iter()

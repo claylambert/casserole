@@ -33,10 +33,11 @@ import org.roux.spring.RouxChatMemory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-// @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
 /**
  * The {@code ChatShellFactory} class builds one {@link ChatShell} for each SSH connection.
  * That shell gets its own {@link org.casserole.chat.ChatSession} and its own {@link org.casserole.chat.cmd.CommandProcessor}. A refused login does not open stored chat memory for the user.
+ * // @aa-sdd L40 aa-sdd-source-prose.md#ChatShellFactory
  *
  * @author clayl (2026-08-24)
  */
@@ -103,7 +104,7 @@ public class ChatShellFactory implements ShellFactory {
      *
      * Ram-only memory builds a {@link org.casserole.chat.ChatSession} without opening a stored region. Any other memory opens the user. A refused open returns {@link RejectShell} with that reason. A failure while building the session closes the open and throws again.
      *
-     * The method then builds a command processor and a format router. The router follows the smart-format setting. The return value is an {@link org.aetheris.ssh.AmwpAwareShell} around the new {@link ChatShell}. A runtime failure prints its stack and throws again.
+     * The method then builds a command processor and a format router. The router follows the smart-format setting. The new {@link ChatShell} is seated for that user. The return value is an {@link org.aetheris.ssh.AmwpAwareShell} around the new {@link ChatShell}. A runtime failure prints its stack and throws again.
      *
      * @param channel The channel is the SSH channel that needs a shell.
      * @return The return value is the shell command for that channel.
@@ -151,6 +152,7 @@ public class ChatShellFactory implements ShellFactory {
             FormatRouter router = formatRouterFactory.create(properties.getChat().isSmartFormat());
             ChatShell shell = new ChatShell(session, processor, llmService, properties, modelName, router, lamina,
                     llmRouter, amwpFacade);
+            ChatShell.seat(user, shell);
             return new AmwpAwareShell(shell, amwpFacade, lamina, user);
         } catch (RuntimeException ex) {
             ex.printStackTrace();

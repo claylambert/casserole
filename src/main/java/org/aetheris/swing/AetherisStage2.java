@@ -20,13 +20,14 @@ import java.util.UUID;
 import org.aetheris.vault.CellRecord;
 import org.aetheris.vault.CellState;
 
-// @aa-sdd PK-1191 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1191 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-14
 /**
  * The {@code AetherisStage2} class holds the notebook rules the canvas shares.
  * A pin search splits text into tokens and matches every token.
  * A pipe replaces {@code {{cell[k].output}}} from an earlier cell.
  * CONCAT joins member replies under a {@code JOIN} line.
  * The version-1 exchange writes and reads a canvas as line text.
+ * // @aa-sdd S1-09 G-12 aetheris-stages-1-3.finalize.md
  *
  * @author clayl (2026-10-20)
  */
@@ -179,15 +180,19 @@ public final class AetherisStage2 {
         return target.substring(slash + 1).trim();
     }
 
+    // @aa-sdd aetheris-plan-f-278.001.md
     /**
-     * The method reports whether the provider is not local Ollama.
+     * The method reports whether the provider is not a local family.
      * The provider comes from {@link #providerId}.
+     * {@code ollama} is local.
+     * {@code llama-openapi} is local.
      *
      * @param target The target is the stored execution target.
-     * @return The return value is true when the provider id is not {@code ollama}.
+     * @return The return value is true when the provider id is neither {@code ollama} nor {@code llama-openapi}.
      */
     public static boolean cloudTarget(String target) {
-        return !"ollama".equals(providerId(target));
+        String id = providerId(target);
+        return !"ollama".equals(id) && !"llama-openapi".equals(id);
     }
 
     /**
@@ -199,7 +204,7 @@ public final class AetherisStage2 {
      * @param cell The cell is the member, and it may be null.
      * @return The return value is the label text.
      */
-    public static String shownTarget(CellRecord cell) { // @aa-sdd PK-1414 docs/specs/java/org/aetheris/swing/swing.spec.md
+    public static String shownTarget(CellRecord cell) {
         if (cell == null || cell.executionTarget == null || cell.executionTarget.trim().length() == 0) {
             return "ollama";
         }
@@ -217,6 +222,7 @@ public final class AetherisStage2 {
      * @param cell The cell is the member, and it may be null.
      * @return The return value is the model word on the join line.
      */
+    // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-168
     private static String joinWord(CellRecord cell) {
         String target = cell == null ? null : cell.executionTarget;
         String provider = providerId(target);
@@ -247,6 +253,7 @@ public final class AetherisStage2 {
      * @param line The line is one stored line, and it may be null.
      * @return The return value is true when the line is a join banner.
      */
+    // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-168
     private static boolean joinBannerLine(String line) {
         if (line == null || !line.startsWith("JOIN ")) {
             return false;

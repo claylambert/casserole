@@ -18,7 +18,7 @@
 
     bin/java-env.ps1 is dot-sourced, so the JDK it selects stays in this
     process. The launch runs the java inside that home. The script prints
-    aetheris-java 1.0.0. A missing jar runs
+    aetheris-java 1.0.1. A missing jar runs
     bin/install.ps1 once, which builds and copies the jar. A jar that is
     already present is not rebuilt. This start does not install Ollama and
     does not pull a model.
@@ -46,7 +46,7 @@ Set-Location $root
 # Dot-source. An ordinary call would drop JAVA_HOME when that call returned.
 . (Join-Path $root "bin\java-env.ps1")
 
-Write-Output "aetheris-java 1.0.0"
+Write-Output "aetheris-java 1.0.1"
 
 $jar = Join-Path $root "app\casserole.jar"
 

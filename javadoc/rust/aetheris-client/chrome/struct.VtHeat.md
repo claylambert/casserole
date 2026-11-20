@@ -22,6 +22,11 @@ The option `held` is the stored integer for the focused pane. The string `memory
 | Option<i32> | [`held`](#member-held) |  |
 | std::sync::Arc<str> | [`memory`](#member-memory) |  |
 | String | [`live`](#member-live) |  |
+| String | [`engine`](#member-engine) | Engine word for this pane. A llama-openapi word tokenizes. Any other word keeps the character guess. |
+| String | [`memo_payload`](#member-memo_payload) | Last tokenize payload for this pane. |
+| Option<i32> | [`memo_count`](#member-memo_count) | Last painted tokenize count. None means no tokenize count has landed. |
+| String | [`llama_base`](#member-llama_base) | Tokenize base URL. Blank uses the local default inside `tokenize_url`. |
+| String | [`llama_key`](#member-llama_key) | API key for the tokenize post. Blank omits Authorization. The key is not logged. |
 
 ## Field Detail
 
@@ -48,6 +53,56 @@ memory: std::sync::Arc<str>
 ```rust
 live: String
 ```
+
+### engine
+
+<a id="member-engine"></a>
+
+```rust
+engine: String
+```
+
+Engine word for this pane. A llama-openapi word tokenizes. Any other word keeps the character guess.
+
+### memo_payload
+
+<a id="member-memo_payload"></a>
+
+```rust
+memo_payload: String
+```
+
+Last tokenize payload for this pane.
+
+### memo_count
+
+<a id="member-memo_count"></a>
+
+```rust
+memo_count: Option<i32>
+```
+
+Last painted tokenize count. None means no tokenize count has landed.
+
+### llama_base
+
+<a id="member-llama_base"></a>
+
+```rust
+llama_base: String
+```
+
+Tokenize base URL. Blank uses the local default inside `tokenize_url`.
+
+### llama_key
+
+<a id="member-llama_key"></a>
+
+```rust
+llama_key: String
+```
+
+API key for the tokenize post. Blank omits Authorization. The key is not logged.
 
 ---
 

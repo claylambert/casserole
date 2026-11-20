@@ -17,15 +17,17 @@ import java.util.Arrays;
 
 import org.roux.model.Role;
 
-// @aa-sdd PK-1259 docs/specs/java/org/roux/roux.spec.md
+// @aa-sdd PK-1259 docs/specs/java/org/roux/roux.spec.md FINESSE:f-222
 /**
  * The ReichenbachSink selects which turns fit inside a token allowance.
  * The result order is the system pin, then the packed head, then the tail that fits, then the live line.
  * A refused selection returns null.
+ * A slot selection uses the same walk when no head is designated.
  * The type holds no region and writes no page.
  *
  * The type refuses construction.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#ReichenbachSink reichenbach-sink.draft.001.md
  *
  * @author clayl (2026-11-04)
  */
@@ -41,7 +43,7 @@ import org.roux.model.Role;
 // @aa-sdd PK-799 docs/specs/common/roux.spec.md
 final class ReichenbachSink {
 
-    // @aa-sdd PK-1260 docs/specs/java/org/roux/roux.spec.md
+    // @aa-sdd PK-1260 docs/specs/java/org/roux/roux.spec.md FINESSE:f-222
     /**
      * The Piece is one turn the selector can see.
      * The ordinal is the position the caller assigned.
@@ -84,7 +86,7 @@ final class ReichenbachSink {
         }
     }
 
-    // @aa-sdd PK-1261 docs/specs/java/org/roux/roux.spec.md
+    // @aa-sdd PK-1261 docs/specs/java/org/roux/roux.spec.md FINESSE:f-222
     /**
      * The Transcript is the selection result.
      * The pieces array is the pin, then the head, then the tail, then the live line.
@@ -156,18 +158,88 @@ final class ReichenbachSink {
      * @return The transcript is the selection, or null when the selection is refused.
      */
     static Transcript select(int managedTokens, Piece[] pieces) {
-        if (managedTokens <= 0 || pieces == null || pieces.length == 0) { // @aa-sdd PK-1452 docs/specs/common/roux.spec.md
-            return null;
+        return walk(managedTokens, pieces, true);
+    }
+
+    // @aa-sdd aetheris-plan-f-282.001.md
+    /**
+     * The method selects the pieces that fit in a slot allowance.
+     * The walk is {@link #select}.
+     * An allowance of zero or less returns null.
+     * A null piece array returns null.
+     * An empty piece array returns null.
+     * A missing head flag leaves the head list empty and the tail walk still runs.
+     * A designated head returns the same transcript {@link #select} returns.
+     *
+     * @param allowance The allowance is the token limit for this call. Zero or less returns null.
+     * @param pieces The pieces are the stored turns and at most one live line.
+     * @return The transcript is the selection, or null when the allowance or the pieces are refused.
+     */
+    static Transcript selectSlot(int allowance, Piece[] pieces) {
+        return walk(allowance, pieces, false);
+    }
+
+    // @aa-sdd aetheris-plan-f-282.001.md
+    /**
+     * The method reports that a rendered prompt still exceeds the allowance and the transcript has no tail piece.
+     * A rendered count below zero returns false.
+     * A rendered count at or under the allowance returns false.
+     * A null transcript returns false.
+     * A null piece array returns false.
+     * A piece whose role is {@link Role#SYSTEM} is not a tail piece.
+     * A piece whose stay, head, or live flag is true is not a tail piece.
+     * Any other piece is a tail piece, and the method returns false.
+     *
+     * @param transcript The transcript is the selection. The value may be null.
+     * @param rendered The rendered count is the tokenized prompt. A negative count is a miss.
+     * @param allowance The allowance is the slot limit.
+     * @return The flag is true only when the rendered count is over the allowance and no tail piece remains.
+     */
+    static boolean slotRefuses(Transcript transcript, int rendered, int allowance) {
+        if (rendered < 0 || rendered <= allowance || transcript == null || transcript.pieces == null) {
+            return false;
         }
-        boolean designated = false;
-        for (int i = 0; i < pieces.length; i++) {
-            if (pieces[i] != null && pieces[i].head) {
-                designated = true;
-                break;
+        for (int i = 0; i < transcript.pieces.length; i++) {
+            Piece piece = transcript.pieces[i];
+            if (piece == null) {
+                continue;
             }
+            if (piece.role == Role.SYSTEM || piece.stay || piece.head || piece.live) {
+                continue;
+            }
+            return false;
         }
-        if (!designated) { // @aa-sdd PK-1452 docs/specs/common/roux.spec.md
+        return true;
+    }
+
+    /**
+     * The method walks the pieces for {@link #select} and {@link #selectSlot}.
+     * An allowance of zero or less returns null.
+     * A null piece array returns null.
+     * An empty piece array returns null.
+     * A required head with no head flag returns null.
+     * The rest of the walk is the pin, the head, the tail, and the live line.
+     *
+     * @param managedTokens The allowance is the token limit.
+     * @param pieces The pieces are the stored turns and at most one live line.
+     * @param requireHead The flag is true when a missing head refuses the selection.
+     * @return The transcript is the selection, or null when the selection is refused.
+     */
+    private static Transcript walk(int managedTokens, Piece[] pieces, boolean requireHead) {
+        if (managedTokens <= 0 || pieces == null || pieces.length == 0) {
             return null;
+        }
+        if (requireHead) {
+            boolean designated = false;
+            for (int i = 0; i < pieces.length; i++) {
+                if (pieces[i] != null && pieces[i].head) {
+                    designated = true;
+                    break;
+                }
+            }
+            if (!designated) {
+                return null;
+            }
         }
         Piece live = null;
         ArrayList<Piece> stored = new ArrayList<Piece>();
@@ -187,7 +259,7 @@ final class ReichenbachSink {
          * The comparator orders stored pieces by message id, then by ordinal.
          */
         Arrays.sort(ascending, new java.util.Comparator<Piece>() {
-            // @aa-sdd PK-1262 docs/specs/java/org/roux/roux.spec.md
+            // @aa-sdd PK-1262 docs/specs/java/org/roux/roux.spec.md FINESSE:f-222
             /**
              * The method orders two pieces.
              * A smaller message id comes first.
@@ -343,7 +415,7 @@ final class ReichenbachSink {
          * The comparator orders pin pieces by message id, then by ordinal.
          */
         Arrays.sort(raw, new java.util.Comparator<Piece>() {
-            // @aa-sdd PK-1262 docs/specs/java/org/roux/roux.spec.md
+            // @aa-sdd PK-1262 docs/specs/java/org/roux/roux.spec.md FINESSE:f-222
             /**
              * The method orders two pieces.
              * A smaller message id comes first.

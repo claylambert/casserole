@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -68,15 +69,15 @@ import org.roux.token.HeuristicTokenCounter;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.prompt.Prompt;
 
-// @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1053 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1052 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1051 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1020 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1019 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md FINESSE:f-173
+// @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md FINESSE:f-185
+// @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
+// @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+// @aa-sdd PK-1053 docs/specs/common/formal-plan.spec.md FINESSE:f-39
+// @aa-sdd PK-1052 docs/specs/common/formal-plan.spec.md FINESSE:f-40
+// @aa-sdd PK-1051 docs/specs/common/formal-plan.spec.md FINESSE:f-41
+// @aa-sdd PK-1020 docs/specs/common/formal-plan.spec.md FINESSE:f-75
+// @aa-sdd PK-1019 docs/specs/common/formal-plan.spec.md FINESSE:f-76
 // @aa-sdd PK-1257 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
 // @aa-sdd PK-1257 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
 // @aa-sdd PK-1257 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
@@ -84,6 +85,7 @@ import org.springframework.ai.chat.prompt.Prompt;
  * The {@code ChatShell} class is the VT100 shell for one SSH connection.
  * It implements {@link Command}, {@link Runnable}, and {@link CommandContext}. It holds the line buffer, the escape mode, and the chat session.
  * Command echo is green. Enter goes to the command processor or the model worker. The shell does not name the commands. Terminal bytes stay on this connection.
+ * // @aa-sdd L40 aa-sdd-source-prose.md#ChatShell
  *
  * @author clayl (2026-08-24)
  */
@@ -195,7 +197,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 // @aa-sdd PK-1020 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-1019 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-725 docs/specs/common/server.spec.md
-public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd PK-1019 PK-1020 PK-1163 docs/specs/common/formal-plan.spec.md docs/specs/java/org/casserole/edit/edit.spec.md
+public class ChatShell implements Command, Runnable, CommandContext {
 
     private static final char ESC = 0x1B;
     private static final int CTRL_A = 1;
@@ -219,12 +221,14 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     private String modelName;
     /** The field is the think string for this console. An empty string means off. */
     private String consoleThink;
-    /** The field is the family word for this console. The values are {@code ollama}, {@code grok}, and {@code pool}. */
+    /** The field is the family word for this console. The values are {@code ollama}, {@code grok}, {@code pool}, and {@code llama-openapi}. */
     private String consoleProvider;
     /** The field is true when the console-model file version is not 1. That file is left unread and is not overwritten. */
     private boolean consoleModelBlocked;
     /** The field is the Grok model id for this console. The Ollama id stays in {@link #modelName}. */
     private String consoleGrokModel;
+    /** The field is the llama-openapi model id for this console. */
+    private String consoleLlamaModel = "";
     /** The field is the Grok think flag. It is applied by {@link #seatConsoleGrokThink} only when the text is {@code true}. */
     private String consoleGrokThink;
     /** The field is the Grok effort word. */
@@ -261,6 +265,10 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     private ExitCallback callback;
     private LaminaHandle readHandle;
     private String sshUsername;
+    /** The field is the user this shell was seated under. A null value means the shell is not seated. */
+    private String seatedUser;
+    /** The field is the live shell for one sanitized user. The last seat for that user wins. */
+    private static final HashMap<String, ChatShell> SEATS = new HashMap<String, ChatShell>();
     private int terminalColumns;
     private Environment environment;
     private int lastDrawnRows;
@@ -285,8 +293,8 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     /**
      * The field is the undo memory for the unsent draft. A history visit keeps its own undo memory.
      * Neither memory is written to the history file.
-     // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
-     */ // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md
+     * // @aa-sdd PK-1163 docs/specs/java/org/casserole/edit/edit.spec.md FINESSE:f-191
+     */
     private EditMemory draftSeat;
     /** The field is the undo memory for the history line now on the screen. A history move drops this stack. */
     private EditMemory visitSeat;
@@ -459,12 +467,13 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
 
     /**
      * The {@code destroy} method closes this shell.
-     * The exit flag is set. The pool seat for this login is cancelled. A paste is cleared. The in-flight turn is cancelled. Bracketed paste is disabled. The session is closed. The spinner and the escape timer are stopped and cancelled. The read task is cancelled.
+     * The seated shell is unseated first. The exit flag is set. The pool seat for this login is cancelled. A paste is cleared. The in-flight turn is cancelled. Bracketed paste is disabled. The session is closed. The spinner and the escape timer are stopped and cancelled. The read task is cancelled.
      *
      * @param channel The channel is the SSH channel being closed.
      */
     @Override
     public void destroy(ChannelSession channel) {
+        unseat(seatedUser, this);
         exiting = true;
         pasting = false;
         turnCancelled.set(true);
@@ -487,6 +496,123 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
         if (readHandle != null) {
             readHandle.cancel(true);
         }
+    }
+
+    // @aa-sdd aetheris-plan-f-281.001.md
+    /**
+     * The {@code seat} method stores the live shell for one user.
+     * A null user, a blank user, or a null shell is ignored.
+     * A later seat for the same user replaces the earlier shell.
+     *
+     * @param user The user is the sanitized login.
+     * @param shell The shell is the live shell for that login.
+     */
+    static void seat(String user, ChatShell shell) {
+        if (user == null || user.length() == 0 || shell == null) {
+            return;
+        }
+        synchronized (SEATS) {
+            shell.seatedUser = user;
+            SEATS.put(user, shell);
+        }
+    }
+
+    // @aa-sdd aetheris-plan-f-281.001.md
+    /**
+     * The {@code unseat} method removes one shell when it is still the seated shell.
+     * A null user or a null shell is ignored.
+     * A different shell that already replaced this one stays seated.
+     *
+     * @param user The user is the key stored when the shell was seated.
+     * @param shell The shell is the instance that is closing.
+     */
+    static void unseat(String user, ChatShell shell) {
+        if (user == null || shell == null) {
+            return;
+        }
+        synchronized (SEATS) {
+            ChatShell seated = SEATS.get(user);
+            if (seated == shell) {
+                SEATS.remove(user);
+            }
+        }
+    }
+
+    // @aa-sdd aetheris-plan-f-281.001.md
+    /**
+     * The {@code promptTextFor} method returns the prompt the seated shell would send.
+     * A missing user returns null.
+     * A user with no seated shell returns null.
+     * The seat map is not held while the prompt is built.
+     * A failure while building the prompt returns null.
+     *
+     * @param user The user is the sanitized login.
+     * @param draft The draft is the unsent line. The value may be null.
+     * @return The return value is the joined prompt, or null when no shell is seated.
+     */
+    public static String promptTextFor(String user, String draft) {
+        if (user == null) {
+            return null;
+        }
+        ChatShell shell;
+        synchronized (SEATS) {
+            shell = SEATS.get(user);
+        }
+        if (shell == null) {
+            return null;
+        }
+        try {
+            return shell.promptText(draft);
+        } catch (RuntimeException ex) {
+            return null;
+        }
+    }
+
+    // @aa-sdd aetheris-plan-f-281.001.md
+    /**
+     * The {@code promptText} method builds the prompt the next chat turn would send.
+     * The caps are the chat limits on this shell.
+     * The draft is the unsent line and is not stored by the call.
+     *
+     * @param draft The draft is the unsent line. A null draft is an empty line.
+     * @return The return value is the joined prompt.
+     */
+    String promptText(String draft) {
+        String line = draft == null ? "" : draft;
+        int maxMessages = properties.getChat().getMaxMessages();
+        int maxTokens = properties.getChat().getMaxTokens();
+        int managedTokens = properties.getChat().getManagedTokens();
+        int headCount = properties.getChat().getHeadCount();
+        Prompt prompt = session.buildPrompt(maxMessages, maxTokens, managedTokens, headCount, line);
+        return joinPrompt(prompt);
+    }
+
+    // @aa-sdd aetheris-plan-f-281.001.md
+    /**
+     * The {@code joinPrompt} method joins each message text with a newline.
+     * A null prompt returns an empty string.
+     * A null message list returns an empty string.
+     * A null message or a null text adds an empty piece.
+     *
+     * @param prompt The prompt is the assembled chat prompt. The value may be null.
+     * @return The return value is the joined text.
+     */
+    static String joinPrompt(Prompt prompt) {
+        if (prompt == null || prompt.getInstructions() == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        List<Message> messages = prompt.getInstructions();
+        for (int i = 0; i < messages.size(); i++) {
+            if (i > 0) {
+                sb.append('\n');
+            }
+            Message message = messages.get(i);
+            if (message != null && message.getText() != null) {
+                sb.append(message.getText());
+            }
+        }
+        return sb.toString();
     }
 
     /**
@@ -728,6 +854,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
      * The {@code handleCommandLine} method runs one command line.
      * An empty line writes the prompt and stays in command mode. An unknown command writes {@code Unknown command:} in red. A thrown exception is written by {@link #formatError}. If the shell is exiting, the exit callback receives status {@code 0}.
      * The prompt stays {@code cmd>} except for {@code chat start} and {@code exit}. {@code exit} leaves through the exit path. {@code chat start} returns to chat or idle.
+     * // @aa-sdd G-24 STICKY-CMD aetheris-stages-1-3.finalize.md
      *
      * @param line The line is the trimmed command text.
      * @throws IOException The method throws this exception when a write fails.
@@ -753,6 +880,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
             return;
         }
         // Clear, chat start, and the other commands leave the Roux count current.
+        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
         publishSessionTokens();
         if (leavesCommandMode(line)) {
             returnToChatOrIdle();
@@ -766,6 +894,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     /**
      * The {@code leavesCommandMode} method reports whether the command returns to chat.
      * The normalized line {@code chat start}, or a line that starts with {@code chat start }, returns true. Every other line returns false and stays in command mode.
+     * // @aa-sdd STICKY-CMD aetheris-stages-1-3.finalize.md
      *
      * @param line The line is the trimmed command.
      * @return The return value is true when command mode should be left.
@@ -813,7 +942,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
          * The task runs one model turn off the SSH read loop.
          */
         LaminaTask llmTask = new LaminaTask(Lane.LLM_EXEC, "casserole-llm", new Runnable() {
-            // @aa-sdd PK-1258 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
+            // @aa-sdd PK-1258 docs/specs/java/org/casserole/ssh/shell/shell.spec.md FINESSE:f-222
             /**
              * The {@code run} method calls {@link #runLlmTurn} with the captured limits.
              */
@@ -876,6 +1005,14 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
                     if ("true".equals(consolePoolThink)) {
                         req.think = "true";
                     }
+                // @aa-sdd aetheris-plan-f-278.001.md
+                } else if ("llama-openapi".equals(provider)) {
+                    String id = consoleLlamaModel == null ? "" : consoleLlamaModel.trim();
+                    req.executionTarget = "llama-openapi/" + id;
+                    req.temperaturePresent = consoleTemperaturePresent;
+                    req.temperature = consoleTemperature;
+                    req.maxCompletionPresent = consoleMaxPresent;
+                    req.maxCompletionTokens = consoleMaxTokens;
                 } else {
                     String id = modelName == null ? "" : modelName.trim();
                     req.executionTarget = id.length() == 0 ? "ollama" : "ollama/" + id;
@@ -906,6 +1043,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
                 session.appendAssistant(text);
                 session.checkpoint();
                 // The stored turn is in Roux. The heatbar hears that count.
+                // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
                 publishSessionTokens();
                 write(Ansi.replyHeader(LocalDateTime.now().format(REPLY_STAMP), consoleTargetLabel(), terminalColumns));
                 write(colorReply(formatRouter.format(text, replyContext())));
@@ -923,7 +1061,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
                 try {
                     stopSpinner();
                     if ("engine-down".equals(ex.getMessage())) {
-                        write(Ansi.yellow(configurationCheck()) + "\r\n"); // @aa-sdd PK-1413 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
+                        write(Ansi.yellow(configurationCheck()) + "\r\n");
                     } else if (ex.getMessage() != null && ex.getMessage().startsWith("pool ceiling")) {
                         write(Ansi.yellow(ex.getMessage()) + "\r\n");
                     } else {
@@ -1374,6 +1512,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
          * The task treats a lone escape as a mode toggle when the timer fires.
          */
         pendingEscapeTask = new TimerTask() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#ChatShell
             /**
              * The {@code run} method calls {@link #onEscapeTimeout}.
              */
@@ -1420,6 +1559,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
          * The task paints the next thinking frame on each timer tick.
          */
         spinnerTask = new TimerTask() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#ChatShell
             /**
              * The {@code run} method calls {@link #paintSpinnerFrame}.
              */
@@ -1676,6 +1816,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     /**
      * The {@code paintDiff} method patches the cells that changed.
      * Erase-to-end of the screen stays off this path. A change in the prompt cell's row or column uses {@link #paintFull}. Otherwise {@link PagePaint#update} writes the difference. Command mode paints characters in green.
+     * // @aa-sdd G-22 aetheris-stages-1-3.finalize.md
      */
     private void paintDiff() {
         clampEditCursor();
@@ -1706,6 +1847,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     /**
      * The {@code paintFull} method replaces the whole page in one flush.
      * A resize uses this path. A character edit does not. The old page is erased to the end of the screen, the prompt is written, and the line is drawn with row breaks. Command mode wraps each character in green. The cursor is then moved to its cell.
+     * // @aa-sdd G-22 aetheris-stages-1-3.finalize.md
      */
     private void paintFull() {
         clampEditCursor();
@@ -1952,7 +2094,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
 
     /**
      * The {@code loadConsoleModel} method reads version 1 of the console target.
-     * A missing file leaves the family at {@code ollama} and the model at the server default. A version other than {@code 1}, or a read error, blocks later writes and leaves the values unread. A file that carries only the family word still reads when that word is {@code ollama}, {@code grok}, or {@code pool}.
+     * A missing file leaves the family at {@code ollama} and the model at the server default. A version other than {@code 1}, or a read error, blocks later writes and leaves the values unread. A file that carries only the family word still reads when that word is {@code ollama}, {@code grok}, {@code pool}, or {@code llama-openapi}.
      * Temperature that is blank, infinite, or not a number stays unset. A max-token value below 1 or not an integer stays unset. Effort sending changes only for the text {@code true} or {@code false}.
      */
     private void loadConsoleModel() {
@@ -1969,6 +2111,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
             String ollama = null;
             String think = null;
             String grokModel = null;
+            String llamaModel = null;
             String grokThink = null;
             String effort = null;
             String sendEffort = null;
@@ -1991,6 +2134,8 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
                     ollama = row.substring("ollama_model:".length()).trim();
                 } else if (row.startsWith("grok_model:")) {
                     grokModel = row.substring("grok_model:".length()).trim();
+                } else if (row.startsWith("llama_model:")) {
+                    llamaModel = row.substring("llama_model:".length()).trim();
                 } else if (row.startsWith("grok_think:")) {
                     grokThink = row.substring("grok_think:".length()).trim();
                 } else if (row.startsWith("pool_think:")) {
@@ -2017,7 +2162,8 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
                 consoleModelBlocked = true;
                 return;
             }
-            if (sawProvider && ("ollama".equals(provider) || "grok".equals(provider) || "pool".equals(provider))) {
+            if (sawProvider && ("ollama".equals(provider) || "grok".equals(provider) || "pool".equals(provider)
+                    || "llama-openapi".equals(provider))) {
                 consoleProvider = provider;
             }
             if (ollama != null && ollama.length() > 0) {
@@ -2028,6 +2174,9 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
             }
             if (grokModel != null) {
                 consoleGrokModel = grokModel;
+            }
+            if (llamaModel != null) {
+                consoleLlamaModel = llamaModel;
             }
             if (grokThink != null) {
                 consoleGrokThink = grokThink;
@@ -2098,14 +2247,15 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
 
     /**
      * The {@code saveConsoleModel} method writes the family word and the chosen model.
-     * A blocked file is not overwritten. A family other than {@code ollama}, {@code grok}, or {@code pool} returns. Temperature and max tokens are written only when they are present. A write error leaves the previous file. Callers hold the shell lock.
+     * A blocked file is not overwritten. A family other than {@code ollama}, {@code grok}, {@code pool}, or {@code llama-openapi} returns. Temperature and max tokens are written only when they are present. A write error leaves the previous file. Callers hold the shell lock.
      */
     private void saveConsoleModel() {
         if (consoleModelBlocked) {
             return;
         }
         String provider = consoleProvider == null ? "" : consoleProvider.trim();
-        if (!"ollama".equals(provider) && !"grok".equals(provider) && !"pool".equals(provider)) {
+        if (!"ollama".equals(provider) && !"grok".equals(provider) && !"pool".equals(provider)
+                && !"llama-openapi".equals(provider)) {
             return;
         }
         File file = consoleModelFile();
@@ -2121,6 +2271,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
             writer.write("ollama_model: " + oneLine(modelName) + "\n");
             writer.write("think: " + oneLine(consoleThink) + "\n");
             writer.write("grok_model: " + oneLine(consoleGrokModel) + "\n");
+            writer.write("llama_model: " + oneLine(consoleLlamaModel) + "\n");
             writer.write("grok_think: " + oneLine(consoleGrokThink) + "\n");
             writer.write("effort: " + oneLine(consoleEffort) + "\n");
             writer.write("send_effort: " + (consoleSendEffort ? "true" : "false") + "\n");
@@ -2189,6 +2340,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     /**
      * The {@code listenForWindowChange} method listens for a terminal window change and refreshes the wrap width.
      * A null environment returns. Only {@code WINCH} is handled.
+     * // @aa-sdd G-22 naws-on-resize aetheris-stages-1-3.finalize.md
      *
      * @param channel The channel is the SSH channel.
      * @param env The environment is the session environment.
@@ -2201,6 +2353,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
          * The listener refreshes the wrap width when the terminal window changes.
          */
         env.addSignalListener(new SignalListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#ChatShell
             /**
              * The {@code signal} method applies a new column count on {@code WINCH}.
              * Any other signal returns.
@@ -2221,6 +2374,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     /**
      * The {@code applyWindowColumns} method reads the column count again and redraws the input line.
      * An unchanged width returns. The redraw uses {@link #paintFull}.
+     * // @aa-sdd G-22 aetheris-stages-1-3.finalize.md
      */
     private void applyWindowColumns() {
         int next = parseColumns(environment);
@@ -2301,7 +2455,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
      *
      * @return The return value is the yellow configuration sentence.
      */
-    private String configurationCheck() { // @aa-sdd PK-1413 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
+    private String configurationCheck() {
         String model = consoleTargetLabel();
         if (model == null || model.trim().length() == 0) {
             return "Check the Casserole configuration for the model selected for this SSH session.";
@@ -2435,6 +2589,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
         }
         this.consoleThink = lineValue(body, "think:");
         this.consoleGrokModel = lineValue(body, "grok_model:");
+        this.consoleLlamaModel = lineValue(body, "llama_model:");
         this.consoleGrokThink = lineValue(body, "grok_think:");
         this.consoleEffort = lineValue(body, "effort:");
         String send = lineValue(body, "send_effort:");
@@ -2513,6 +2668,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     /**
      * The {@code sessionTokenReply} method builds the stored-session count reply.
      * A chat with no messages uses 1 token, 0 characters, and 0 blocks. A chat with messages sums the token count, the character count, and the block count. Empty message text counts as empty. The screen is not written.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
      *
      * @return The return value is the {@code session_tokens_result:} body.
      */
@@ -2541,6 +2697,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     /**
      * The {@code publishSessionTokens} method sends the stored-session count on the console path.
      * A null facade or an empty user name returns. A user name that fails sanitizing returns. A failed send does not break the shell. The screen is not written.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
      */
     private void publishSessionTokens() {
         if (amwpFacade == null || sshUsername == null || sshUsername.length() == 0) {
@@ -2616,6 +2773,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
             return replaceResult(false, "the table is not input and reply rows");
         }
         // The replaced region is the count the heatbar wears.
+        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
         publishSessionTokens();
         return replaceResult(true, "");
     }
@@ -2688,6 +2846,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
         sb.append("ollama_model: ").append(oneLine(ollama)).append('\n');
         sb.append("think: ").append(oneLine(consoleThink)).append('\n');
         sb.append("grok_model: ").append(oneLine(consoleGrokModel)).append('\n');
+        sb.append("llama_model: ").append(oneLine(consoleLlamaModel)).append('\n');
         sb.append("grok_think: ").append(oneLine(consoleGrokThink)).append('\n');
         sb.append("effort: ").append(oneLine(consoleEffort)).append('\n');
         sb.append("send_effort: ").append(consoleSendEffort ? "true" : "false").append('\n');
@@ -2705,7 +2864,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
 
     /**
      * The {@code consoleTargetLabel} method returns the model line for the screen.
-     * Pool returns {@code pool}. Grok returns {@code grok/} plus the Grok id. Any other family returns the stored Ollama id. A null Ollama id returns an empty string.
+     * Pool returns {@code pool}. Grok returns {@code grok/} plus the Grok id. llama-openapi returns {@code llama-openapi/} plus the llama id. Any other family returns the stored Ollama id. A null Ollama id returns an empty string.
      *
      * @return The return value is the model line.
      */
@@ -2717,6 +2876,10 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
         if ("grok".equals(provider)) {
             String id = consoleGrokModel == null ? "" : consoleGrokModel;
             return "grok/" + id;
+        }
+        if ("llama-openapi".equals(provider)) {
+            String id = consoleLlamaModel == null ? "" : consoleLlamaModel;
+            return "llama-openapi/" + id;
         }
         return modelName == null ? "" : modelName;
     }
@@ -2742,7 +2905,7 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
     }
 
     /**
-     * The {@code selectConsoleFamily} method switches the console family to {@code ollama}, {@code grok}, or {@code pool}.
+     * The {@code selectConsoleFamily} method switches the console family to {@code ollama}, {@code grok}, {@code pool}, or {@code llama-openapi}.
      * The stored options for each family stay. An empty Grok id is filled by {@link #ensureGrokModel}. An unknown word writes nothing and returns false. A stored family writes {@code model} plus the target label and returns true.
      *
      * @param family The family is the family word.
@@ -2753,7 +2916,8 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
         String word = family == null ? "" : family.trim();
         String label;
         synchronized (this) {
-            if (!"ollama".equals(word) && !"grok".equals(word) && !"pool".equals(word)) {
+            if (!"ollama".equals(word) && !"grok".equals(word) && !"pool".equals(word)
+                    && !"llama-openapi".equals(word)) {
                 return false;
             }
             this.consoleProvider = word;
@@ -2810,6 +2974,13 @@ public class ChatShell implements Command, Runnable, CommandContext { // @aa-sdd
         } else if ("pool".equals(provider)) {
             String think = "true".equals(consolePoolThink) ? "true" : "off";
             sb.append(Ansi.kv("think", think)).append("\r\n");
+        } else if ("llama-openapi".equals(provider)) {
+            if (consoleTemperaturePresent) {
+                sb.append(Ansi.kv("temperature", Double.toString(consoleTemperature))).append("\r\n");
+            }
+            if (consoleMaxPresent) {
+                sb.append(Ansi.kv("max-tokens", Integer.toString(consoleMaxTokens))).append("\r\n");
+            }
         } else {
             sb.append(Ansi.kv("think", wordOrOff(consoleThink))).append("\r\n");
         }

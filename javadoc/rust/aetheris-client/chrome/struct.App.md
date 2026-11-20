@@ -213,6 +213,8 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | i32 | [`vt_used`](#member-vt_used) | The VT100 heatbar wears this count. The key does not walk the grid. |
 | i32 | [`vt_chars`](#member-vt_chars) |  |
 | i32 | [`vt_blocks`](#member-vt_blocks) |  |
+| String | [`llama_payload`](#member-llama_payload) | Last llama tokenize payload on the focused pane. Empty until a post lands. |
+| Option<i32> | [`llama_count`](#member-llama_count) | Last painted llama tokenize count. None means no tokenize count has landed. |
 | u64 | [`vt_heat_sig`](#member-vt_heat_sig) |  |
 | bool | [`vt_sig_set`](#member-vt_sig_set) |  |
 | std::sync::Arc<str> | [`vt_memory`](#member-vt_memory) |  |
@@ -404,6 +406,7 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | fn | [`paint_ollama_pane`](#method-paint_ollama_pane) | The method `paint_ollama_pane` paints the Ollama model fields and lands each edit. The parameter `ui` is the egui surface. The parameter `session` is the [`ModelSession`]. The console flag and the cell come from that session. |
 | fn | [`paint_grok_pane`](#method-paint_grok_pane) | The method `paint_grok_pane` paints the Grok model fields and lands each edit. The parameter `ui` is the egui surface. The parameter `session` is the [`ModelSession`]. The console flag and the cell come from that session. The labels `API` and `chat` are fixed text. |
 | fn | [`paint_pool_pane`](#method-paint_pool_pane) | The method `paint_pool_pane` paints the pool sentence and the thinking checkbox. The parameter `ui` is the egui surface. The parameter `session` is the [`ModelSession`]. The label is `POOL_SENTENCE`. |
+| fn | [`paint_llama_pane`](#method-paint_llama_pane) | The method `paint_llama_pane` paints the llama-openapi model, temperature, and cap. The parameter `ui` is the egui surface. The parameter `session` is the [`ModelSession`]. The card has no think box. |
 | fn | [`disconnect`](#method-disconnect) | The method `disconnect` stores the account file, closes it, and drops the live session. `store_vault` runs first. `close_vault` runs next. `clear_canvas` clears the facts and the scope text. `drop_plate_docs` forgets the card model records. `clear_deck` clears the cards and the focus. |
 | fn | [`note_live_chars`](#method-note_live_chars) | The unsent line on the focused pane. Enter submits it. Backspace drops one character. |
 | fn | [`note_live_key`](#method-note_live_key) | Enter submits the line. Backspace drops one character. Other keys stay on the wire only. |
@@ -1600,6 +1603,26 @@ vt_chars: i32
 ```rust
 vt_blocks: i32
 ```
+
+### llama_payload
+
+<a id="member-llama_payload"></a>
+
+```rust
+llama_payload: String
+```
+
+Last llama tokenize payload on the focused pane. Empty until a post lands.
+
+### llama_count
+
+<a id="member-llama_count"></a>
+
+```rust
+llama_count: Option<i32>
+```
+
+Last painted llama tokenize count. None means no tokenize count has landed.
 
 ### vt_heat_sig
 
@@ -3717,11 +3740,11 @@ fn paint_model_body(&mut self, ui: &mut egui::Ui, session: &mut crate::model::Mo
 
 The method `paint_model_body` paints the family picker and the pane for the open model dialog. The parameter `ui` is the egui surface. The parameter `session` is the `ModelSession` being edited.
 
-The family combo shows `family_label`, or a single space when that label is empty. The choices are [`Family::Ollama`](../model/enum.Family.md#member-ollama), [`Family::Grok`](../model/enum.Family.md#member-grok), and [`Family::Pool`](../model/enum.Family.md#member-pool). A click stores that family.
+The family combo shows `family_label`, or a single space when that label is empty. The choices are [`Family::Ollama`](../model/enum.Family.md#member-ollama), [`Family::Grok`](../model/enum.Family.md#member-grok), [`Family::Pool`](../model/enum.Family.md#member-pool), and [`Family::Llama`](../model/enum.Family.md#member-llama). A click stores that family.
 
 A picked family reads the stored target, the think snap, and the index from `model_card`. A console session passes an empty earlier-id list. A card session passes the text id of every card before that index. The flag list pairs every card's text id with that card's `grok_on`. `choose_family` builds the effect. `land_model` applies it.
 
-The method then paints the matching pane. [`Family::Ollama`](../model/enum.Family.md#member-ollama) calls `paint_ollama_pane`. [`Family::Grok`](../model/enum.Family.md#member-grok) calls `paint_grok_pane`. [`Family::Pool`](../model/enum.Family.md#member-pool) calls `paint_pool_pane`. A session with no family paints nothing more. A list miss paints its sentence in red.
+The method then paints the matching pane. [`Family::Ollama`](../model/enum.Family.md#member-ollama) calls `paint_ollama_pane`. [`Family::Grok`](../model/enum.Family.md#member-grok) calls `paint_grok_pane`. [`Family::Pool`](../model/enum.Family.md#member-pool) calls `paint_pool_pane`. [`Family::Llama`](../model/enum.Family.md#member-llama) calls `paint_llama_pane`. A session with no family paints nothing more. A list miss paints its sentence in red.
 
 ### paint_ollama_pane
 
@@ -3767,6 +3790,20 @@ The method `paint_pool_pane` paints the pool sentence and the thinking checkbox.
 
 The checkbox is `Thinking` and uses `POOL_THINK_TIP`. A change reads the think snap from `model_card`, calls `set_pool_think`, and lands the effect. A checkbox that did not change leaves the session as it was.
 
+### paint_llama_pane
+
+<a id="method-paint_llama_pane"></a>
+
+```rust
+fn paint_llama_pane(&mut self, ui: &mut egui::Ui, session: &mut crate::model::ModelSession)
+```
+
+The method `paint_llama_pane` paints the llama-openapi model, temperature, and cap. The parameter `ui` is the egui surface. The parameter `session` is the `ModelSession`. The card has no think box.
+
+The row labeled `Model` is a single-line editor of width 220. The hover text is `LLAMA_MODEL_TIP`. A change calls `type_llama`. A lost focus calls `commit_llama`. The combo lists `shown_rows` of `llama_tags`. A click stores the first raw id whose shown label matches.
+
+The temperature field is width 80. A lost focus calls `set_llama_temperature`. The cap field is labeled `Max tokens` and is width 100. A lost focus calls `set_llama_cap`. A blank field leaves that key off the body.
+
 ### disconnect
 
 <a id="method-disconnect"></a>
@@ -3800,6 +3837,7 @@ fn note_live_key(&mut self, key: Key)
 ```
 
 Enter submits the line. Backspace drops one character. Other keys stay on the wire only.
+A non-empty line is kept so one empty host reply can send it again.
 
 ### note_grid
 

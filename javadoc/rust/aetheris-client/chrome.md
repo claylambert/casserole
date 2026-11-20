@@ -12,7 +12,7 @@ The End key returns the view to the tail when the view is off the tail. The tail
 
 The console takes the keyboard on the first paint. The console takes the keyboard when a session opens. A click on the console takes the keyboard. A drag on the console takes the keyboard. Closing the console Model Config returns the keyboard to the pane that opened the modal. That return runs once. A later click in a login field keeps that field.
 
-Esc is the byte `0x1B` on its own key. The host times that bare Esc. The host owns the prompt `cmd>`. The client sends the typed line and a CR. CR is the carriage-return byte. The command `select-model` stays on the host. The family word is `grok`, `ollama`, or `pool`.
+Esc is the byte `0x1B` on its own key. The host times that bare Esc. The host owns the prompt `cmd>`. The client sends the typed line and a CR. CR is the carriage-return byte. The command `select-model` stays on the host. The family word is `grok`, `ollama`, `pool`, or `llama-openapi`.
 
 While the console holds the keyboard, Escape stays on the console. While the console holds the keyboard, the arrow keys stay on the console. Tab still leaves the console. That lock is what lets the family word follow Esc.
 
@@ -117,7 +117,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | struct | [`InspectPane`](chrome/struct.InspectPane.md) | The struct `InspectPane` is one measured inspector view. |
 | struct | [`SinkPiece`](chrome/struct.SinkPiece.md) | The struct `SinkPiece` is one row while `sink_inspect` chooses what to keep. |
 | struct | [`TokenModel`](chrome/struct.TokenModel.md) | The struct `TokenModel` is one model row in the token window. |
-| struct | [`TokenBudgets`](chrome/struct.TokenBudgets.md) | The struct `TokenBudgets` holds the two context windows read from `application.yaml`. |
+| struct | [`TokenBudgets`](chrome/struct.TokenBudgets.md) | The struct `TokenBudgets` holds the context windows read from `application.yaml`. |
 | struct | [`MoodFit`](chrome/struct.MoodFit.md) | The struct `MoodFit` is the result of fitting one send into a frame. |
 | struct | [`ColumnNotice`](chrome/struct.ColumnNotice.md) | The struct `ColumnNotice` carries the heights the column paints in this frame. |
 | struct | [`ColumnBands`](chrome/struct.ColumnBands.md) | The struct `ColumnBands` holds the rectangles for one column frame. |
@@ -961,6 +961,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`keep_pending`](#function-keep_pending) | The function `keep_pending` stores the newest beat and drops a stale result. |
 | fn | [`seat_ready`](#function-seat_ready) | The function `seat_ready` stores a finished paint when that paint is still the newest one. |
 | fn | [`run_heat`](#function-run_heat) | The function `run_heat` counts one heatbar beat into a [`HeatPaint`]. |
+| fn | [`llama_vt_count`](#function-llama_vt_count) | The function `llama_vt_count` counts one terminal beat. |
 | fn | [`heat_worker`](#function-heat_worker) | The function `heat_worker` is the loop on the heatbar thread. |
 | fn | [`hash_mood`](#function-hash_mood) | The function `hash_mood` writes one [`MoodYaml`] into a `DefaultHasher`. |
 | fn | [`mark_tag`](#function-mark_tag) | The function `mark_tag` returns a small number for one card mark. |
@@ -1428,7 +1429,7 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`decode_icon_rgba`](#function-decode_icon_rgba) | The function `decode_icon_rgba` decodes an image and scales it to a square. |
 | fn | [`window_icon`](#function-window_icon) | The function `window_icon` builds the window icon for the client window. |
 | fn | [`shell_icon_seat`](#function-shell_icon_seat) | The function `shell_icon_seat` names the icon slots for one host. |
-| fn | [`apply_taskbar`](#function-apply_taskbar) | The function `apply_taskbar` sets the Windows taskbar icon when this build is Windows and `taskbar` is true. |
+| fn | [`apply_taskbar`](#function-apply_taskbar) | The function `apply_taskbar` sets the Windows big icon when this build is Windows and `taskbar` is true. |
 | fn | [`apply_taskbar`](#function-apply_taskbar) | The function `apply_taskbar` is the host that is not Windows. |
 | fn | [`apply_class_name`](#function-apply_class_name) | The function `apply_class_name` names the Linux window `aetheris` when `class_name` is true. |
 | fn | [`apply_class_name`](#function-apply_class_name) | The function `apply_class_name` is the host that is not Linux. |
@@ -2715,7 +2716,7 @@ const SHOW_THINKING: &str = "Show Thinking";
 <a id="constant-token_combo_tip"></a>
 
 ```rust
-const TOKEN_COMBO_TIP: &str = "The estimate stays. The ring uses this model's context window. Ollama rows share the session num-ctx. Grok and pool windows come from application.yaml. A grok row shows the completion cap. That cap is the reply limit. This open does not ask the host.";
+const TOKEN_COMBO_TIP: &str = "The estimate stays. The ring uses this model's context window. Ollama rows share the session num-ctx. Grok and pool windows come from application.yaml. A llama-openapi row uses num-ctx from application.yaml. A grok row shows the completion cap. That cap is the reply limit. This open does not ask the host.";
 ```
 
 `TOKEN_COMBO_TIP` is the hover text on the model combo in the token window. The estimate stays. The ring uses this model's context window.
@@ -8887,7 +8888,7 @@ fn mood_glass_target(
 ```
 
 The function `mood_glass_target` returns the model the mood glass sends.
-`card` is the selected cell. `entry` is that cell's Grok settings, when the document has one. `pool_boot` is the canvas boot id. The Java client calls this `moodTarget`.
+`card` is the selected cell. `entry` is that cell's Grok settings, when the document has one. `pool_boot` is the boot id from `mint_pool_boot`. The Java client calls this `moodTarget`.
 The result is the `target` from `crate::model::mood_tune`. A pool card sends the word `pool`. A Grok card with no model id takes the model stored on `entry`.
 // @aa-sdd PK-1170 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-208
 
@@ -10493,9 +10494,9 @@ fn join_word(target: &str) -> String
 ```
 
 The function `join_word` returns the short name the cell caption already paints.
-The string `target` is the stored model word. `short_model_name` is tried first. A non-empty short name is returned.
+The string `target` is the stored model word. A llama-openapi target shows the alias when the id is a path. `short_model_name` is tried for every other family. A non-empty short name is returned.
 
-An empty short name falls back to `target` trimmed. An empty trimmed target returns `ollama`. Any other trimmed target is returned as it is.
+An empty llama id returns `llama-openapi`. An empty short name falls back to `target` trimmed. An empty trimmed target returns `ollama`. Any other trimmed target is returned as it is.
 
 ### join_banner_line
 
@@ -10770,6 +10771,17 @@ A canvas beat with `pin_active` builds a [`PinView`](chrome/struct.PinView.md) w
 The canvas result uses the beat sequence number. `canvas` is true. `estimate`, `chars`, and `blocks` pass through `count_i32`. `body` is the pane text.
 A terminal beat sets `estimate` from `ssh_live_count`. A present `held` integer forces `chars` and `blocks` to zero. A missing `held` sets `chars` from the UTF-16 length of `memory` and `blocks` from `session_memory_lines`. Both of those counts pass through `count_i32`. `canvas` is false. `body` is empty.
 // @aa-sdd PK-1171 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-209
+
+### llama_vt_count
+
+<a id="function-llama_vt_count"></a>
+
+```rust
+fn llama_vt_count(seat: &VtHeat, fallback: i32) -> (i32, bool, String, Option<i32>)
+```
+
+The function `llama_vt_count` counts one terminal beat.
+A word that does not start with `llama-openapi` returns the character guess. A held empty draft returns that guess and does not post. A new payload posts. A miss keeps the stored tokenize count, or the character guess when no tokenize count has landed. A held success adds the draft length to the base.
 
 ### heat_worker
 
@@ -11475,7 +11487,7 @@ The function `token_budgets_from_yaml` reads the pool window and the Grok map fr
 The string `yaml` is that document. A bad document returns [`TokenBudgets::empty`](chrome/struct.TokenBudgets.md#method-empty). The text is not logged.
 
 Empty text, after trim, returns empty budgets. A parse error returns empty budgets. A root that is not a mapping returns empty budgets. A missing `casserole` mapping returns empty budgets.
-`casserole.grok.context-windows` supplies the Grok pairs. A key that is not a string is skipped. A window of 0 is skipped. `casserole.pool.context-window` supplies `pool` through `yaml_window`. Every other key is dropped.
+`casserole.grok.context-windows` supplies the Grok pairs. A key that is not a string is skipped. A window of 0 is skipped. `casserole.pool.context-window` supplies `pool` through `yaml_window`. `spring.ai.llama-openapi` supplies the llama window, the alias, the base, and the key.
 
 ### application_yaml_path
 
@@ -11559,6 +11571,8 @@ fn add_token_target(
     factory: i32,
     pool_window: i32,
     grok_windows: &[(String, i32)],
+    llama_window: i32,
+    llama_alias: &str,
 )
 ```
 
@@ -11566,7 +11580,7 @@ The function `add_token_target` appends the token-window row for one stored targ
 The string `target` is that model word. `provider_id` reads the family. `model_after_slash` reads the id. A label already in `seen` is not added again.
 
 An Ollama target with an empty id returns without a change. Any other Ollama target uses the label `ollama/` plus the id, the session `window`, and the session `known` flag. Its completion cap is 0 and is not known.
-A Grok target with an empty id returns without a change. Any other Grok target is passed to `add_grok_row`. A pool target adds one row labeled `pool` when that label is new. The pool window is `pool_window` when that value is above 0, and otherwise 0. Its completion cap is 0 and is not known. Any other provider adds nothing.
+A Grok target with an empty id returns without a change. Any other Grok target is passed to `add_grok_row`. A pool target adds one row labeled `pool` when that label is new. The pool window is `pool_window` when that value is above 0, and otherwise 0. Its completion cap is 0 and is not known. A llama-openapi target adds one row. The label is `heat_label`. The window is `llama_window` of the stored count. A repeated label is skipped. Any other provider adds nothing.
 
 ### token_models
 
@@ -11581,6 +11595,8 @@ fn token_models(
     focused_cap: i32,
     pool_window: i32,
     grok_windows: &[(String, i32)],
+    llama_window: i32,
+    llama_alias: &str,
 ) -> Vec<TokenModel>
 ```
 
@@ -11589,7 +11605,7 @@ The flag `window_known` says whether the session window was reported. The intege
 
 The session window is kept only when `window_known` is true and the window is above 0. Otherwise the stored window is 0 and the known flag is false. The factory cap is `GrokEntry::factory` and its `max_completion_tokens`.
 The first row is always `Ollama session` in the `ollama` family, using that session window. Its completion cap is 0 and is not known. Each target is then offered to `add_token_target`. The focused target is offered after that list. A Grok row is a canvas target or the focused turn.
-A pool row labeled `pool` is appended when none was added yet. Its window is `pool_window` when that value is above 0, and otherwise 0.
+A pool row labeled `pool` is appended when none was added yet. Its window is `pool_window` when that value is above 0, and otherwise 0. `llama_window` is the stored llama count. `llama_alias` replaces a path-shaped llama id on the label.
 
 ### selected_heat_budget
 
@@ -11604,6 +11620,8 @@ fn selected_heat_budget(
     focused_cap: i32,
     pool_window: i32,
     grok_windows: &[(String, i32)],
+    llama_window: i32,
+    llama_alias: &str,
 ) -> i32
 ```
 
@@ -11624,7 +11642,7 @@ fn token_model_index(rows: &[TokenModel], focused_target: &str) -> usize
 The function `token_model_index` returns the row to select for the focused target.
 The slice `rows` is the token-window rows. The string `focused_target` is the model word. An empty slice returns 0.
 
-A pool target looks for the label `pool`. A Grok target with an id looks for `grok/` plus that id. An Ollama target with an id looks for `ollama/` plus that id. A turn that names no model looks for `Ollama session`. The returned index is the first matching label. A missing label returns 0.
+A pool target looks for the label `pool`. A Grok target with an id looks for `grok/` plus that id. An Ollama target with an id looks for `ollama/` plus that id. A llama-openapi target selects the first llama row. A turn that names no model looks for `Ollama session`. The returned index is the first matching label. A missing label returns 0.
 
 ### token_source
 
@@ -11635,7 +11653,7 @@ fn token_source(model: &TokenModel) -> &'static str
 ```
 
 The function `token_source` returns the words that name where the context window came from.
-The model `model` is the selected row. A family of `grok` or `pool` returns `application.yaml`. Any other family returns `session num-ctx`.
+The model `model` is the selected row. A family of `grok`, `pool`, or `llama-openapi` returns `application.yaml`. Any other family returns `session num-ctx`.
 
 ### token_stats
 
@@ -12837,7 +12855,7 @@ Each flank is `flank_band` filled with [`EDGE_ARMED`](#constant-edge_armed). Tha
 <a id="function-prompt_caret_segment"></a>
 
 ```rust
-fn prompt_caret_segment( // @aa-sdd PK-1432 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn prompt_caret_segment(
     widget: egui::Rect,
     galley_pos: egui::Pos2,
     row_h: f32,
@@ -13639,7 +13657,7 @@ The rectangle `band` is the span under the columns. The bar is painted in its ow
 <a id="function-paint_bar_lane"></a>
 
 ```rust
-fn paint_bar_lane<R>( // @aa-sdd PK-1441 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn paint_bar_lane<R>(
     ui: &mut egui::Ui,
     salt: &'static str,
     width: f32,
@@ -14246,7 +14264,7 @@ The merge card's stored reply. JOIN lines stay.
 <a id="function-seat_transferred"></a>
 
 ```rust
-fn seat_transferred( // @aa-sdd PK-1419 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+fn seat_transferred(
     cards: &mut Vec<TurnCard>,
     focus: &mut usize,
     seq: &mut u64,
@@ -16954,6 +16972,7 @@ fn ssh_heat_budget(managed: i32, engine: &str) -> i32
 ```
 
 The SSH heat budget. A managed count above zero is that count.
+A word that starts with `llama-openapi` uses `num-ctx`, or 4096 when that key is absent or 0.
 A blank engine counts as ollama. An engine that contains ollama uses 131072.
 Any other engine uses zero. A canvas window is not this number.
 // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
@@ -17187,7 +17206,7 @@ fn apply_taskbar(
 ) -> winit::window::WindowAttributes
 ```
 
-The function `apply_taskbar` sets the Windows taskbar icon when this build is Windows and `taskbar` is true.
+The function `apply_taskbar` sets the Windows big icon when this build is Windows and `taskbar` is true.
 The attributes `attributes` are the window attributes. Another host returns those attributes unchanged. The Windows trait stays out of a Linux build and out of a macOS build.
 
 ### apply_taskbar

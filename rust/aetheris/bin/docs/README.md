@@ -6,36 +6,36 @@ This page documents the scripts of the Rust workspace `rust/aetheris`. The scrip
 
 ## Fast path
 
-[app/start.ps1](../../app/start.ps1) on Windows and [app/start.sh](../../app/start.sh) on Linux are the start scripts for the Rust Aetheris Client. A start script is designed to check the environment, check the pre-build, build, bind and install, and run the Rust Aetheris Client in one operation. Check the environment selects the Rust toolchain. Check the pre-build prints the tools on one screen. Build compiles the Rust Aetheris Client. Bind and install places the binary in the app folder the start launches. The goal is to get you up and running fast.
+[app/start.ps1](../../../../rust/aetheris/app/start.ps1) on Windows and [app/start.sh](../../../../rust/aetheris/app/start.sh) on Linux are the start scripts for the Rust Aetheris Client. A start script is designed to check the environment, check the pre-build, build, bind and install, and run the Rust Aetheris Client in one operation. Check the environment selects the Rust toolchain. Check the pre-build prints the tools on one screen. Build compiles the Rust Aetheris Client. Bind and install places the binary in the app folder the start launches. The goal is to get you up and running fast.
 
 If that start runs into trouble, walk the checklist in this section and the numbered sections on the [Rust Aetheris Client page](../../README.md#fast-path), one script at a time. The block under this heading is the command list for this directory.
 
-Windows. The scripts are [install.ps1](../install.ps1) and [app/start.ps1](../../app/start.ps1).
+Windows. The scripts are [install.ps1](../../../../rust/aetheris/bin/install.ps1) and [app/start.ps1](../../../../rust/aetheris/app/start.ps1).
 
 ```powershell
 powershell -File rust\aetheris\bin\install.ps1
 powershell -File rust\aetheris\app\start.ps1
 ```
 
-Linux. The scripts are [install.sh](../install.sh) and [app/start.sh](../../app/start.sh).
+Linux. The scripts are [install.sh](../../../../rust/aetheris/bin/install.sh) and [app/start.sh](../../../../rust/aetheris/app/start.sh).
 
 ```bash
 bash rust/aetheris/bin/install.sh
 bash rust/aetheris/app/start.sh
 ```
 
-macOS. macOS is the operating system on a Mac. The scripts are [install.zsh](../install.zsh) and [app/start.zsh](../../app/start.zsh).
+macOS. macOS is the operating system on a Mac. The scripts are [install.zsh](../../../../rust/aetheris/bin/install.zsh) and [app/start.zsh](../../../../rust/aetheris/app/start.zsh).
 
 ```zsh
 zsh rust/aetheris/bin/install.zsh
 zsh rust/aetheris/app/start.zsh
 ```
 
-The start script is finished when the window prints the line `aetheris-client 1.0.0`. The macOS install script prints that line when it copies the binary. The binary name is `aetheris-client` on macOS. `1.0.0` is the version of the Rust Aetheris Client crate you just launched. The Rust Aetheris Client's own window then opens.
+The start script is finished when the window prints the line `aetheris-client 1.0.1`. The macOS install script prints that line when it copies the binary. The binary name is `aetheris-client` on macOS. `1.0.1` is the version of the Rust Aetheris Client crate you just launched. The Rust Aetheris Client's own window then opens.
 
 ## build
 
-The dev build runs the tests and compiles the Rust Aetheris Client. It is the step you use while you are changing the crate. The install section is the separate step that produces the release binary the start script launches. [build.ps1](../build.ps1) and [build.sh](../build.sh) load [rust-env.ps1](../../../../bin/rust-env.ps1) or [rust-env.sh](../../../../bin/rust-env.sh). On macOS [build.zsh](../build.zsh) loads [rust-env.zsh](../../../../bin/rust-env.zsh) and runs `cargo build`. They then, in `rust/aetheris`, run `cargo test` and `cargo build -p aetheris-client`. `cargo test` runs the crate tests. `cargo build -p aetheris-client` compiles the window crate. The workspace file is [Cargo.toml](../../Cargo.toml).
+The dev build runs the tests and compiles the Rust Aetheris Client. It is the step you use while you are changing the crate. The install section is the separate step that produces the release binary the start script launches. [build.ps1](../../../../rust/aetheris/bin/build.ps1) and [build.sh](../../../../rust/aetheris/bin/build.sh) load [rust-env.ps1](../../../../bin/rust-env.ps1) or [rust-env.sh](../../../../bin/rust-env.sh). On macOS [build.zsh](../../../../rust/aetheris/bin/build.zsh) loads [rust-env.zsh](../../../../bin/rust-env.zsh) and runs `cargo build`. They then, in `rust/aetheris`, run `cargo test` and `cargo build -p aetheris-client`. `cargo test` runs the crate tests. `cargo build -p aetheris-client` compiles the window crate. The workspace file is [Cargo.toml](../../Cargo.toml).
 
 Windows:
 
@@ -71,7 +71,7 @@ The Cargo text names the crate. Fix the failure that crate names, and run the bu
 
 ## install
 
-Install is the release build, copied into `app/` so start can launch it without asking Cargo again. [install.ps1](../install.ps1) and [install.sh](../install.sh) load the Rust toolchain. On macOS [install.zsh](../install.zsh) runs `cargo build --release` and copies `aetheris-client`. They run `cargo build --release -p aetheris-client`. `--release` tells Cargo to compile the binary you run, rather than the debug binary. They copy that release binary into `rust/aetheris/app/`.
+Install is the release build, copied into `app/` so start can launch it without asking Cargo again. [install.ps1](../../../../rust/aetheris/bin/install.ps1) and [install.sh](../../../../rust/aetheris/bin/install.sh) load the Rust toolchain. On macOS [install.zsh](../../../../rust/aetheris/bin/install.zsh) runs `cargo build --release` and copies `aetheris-client`. They run `cargo build --release -p aetheris-client`. `--release` tells Cargo to compile the binary you run, rather than the debug binary. They copy that release binary into `rust/aetheris/app/`.
 
 Windows:
 
@@ -91,7 +91,7 @@ macOS:
 zsh rust/aetheris/bin/install.zsh
 ```
 
-The macOS script prints `aetheris-client 1.0.0`. A missing binary prints `aetheris-client is missing`.
+The macOS script prints `aetheris-client 1.0.1`. A missing binary prints `aetheris-client is missing`.
 
 > **What appears**
 >
@@ -107,7 +107,7 @@ Read the Cargo text. The binary name is `aetheris-client.exe` on Windows. The bi
 
 ## reset
 
-Reset removes the installed binary and the compiled dependencies so the next install builds them again. [reset.ps1](../reset.ps1), [reset.sh](../reset.sh), and [reset.zsh](../reset.zsh) remove `aetheris-client` and `aetheris-client.exe` from `rust/aetheris/app/`. They remove `rust/aetheris/target`, which holds the debug binary, the release binary, and the compiled dependencies. They also remove `aetheris-client/target` and `aetheris-term/target` when those directories exist. When Cargo can be selected, they run `cargo clean` in the workspace. The Rust compiler, rustup, and the downloaded crate cache stay on the machine. `Cargo.lock` stays.
+Reset removes the installed binary and the compiled dependencies so the next install builds them again. [reset.ps1](../../../../rust/aetheris/bin/reset.ps1), [reset.sh](../../../../rust/aetheris/bin/reset.sh), and [reset.zsh](../../../../rust/aetheris/bin/reset.zsh) remove `aetheris-client` and `aetheris-client.exe` from `rust/aetheris/app/`. They remove `rust/aetheris/target`, which holds the debug binary, the release binary, and the compiled dependencies. They also remove `aetheris-client/target` and `aetheris-term/target` when those directories exist. When Cargo can be selected, they run `cargo clean` in the workspace. The Rust compiler, rustup, and the downloaded crate cache stay on the machine. `Cargo.lock` stays.
 
 Windows:
 
@@ -127,11 +127,11 @@ macOS:
 zsh rust/aetheris/bin/reset.zsh
 ```
 
-The script prints `aetheris-client reset finished`. A missing binary is already reset. Run [install.ps1](../install.ps1), [install.sh](../install.sh), or [install.zsh](../install.zsh) for the next build.
+The script prints `aetheris-client reset finished`. A missing binary is already reset. Run [install.ps1](../../../../rust/aetheris/bin/install.ps1), [install.sh](../../../../rust/aetheris/bin/install.sh), or [install.zsh](../../../../rust/aetheris/bin/install.zsh) for the next build.
 
 ## start
 
-Start prints the crate version and opens the window. When the binary is not in `app/` yet, start installs it, then opens the window. [start.ps1](../../app/start.ps1) and [start.sh](../../app/start.sh) print `aetheris-client 1.0.0`. On macOS [start.zsh](../../app/start.zsh) loads the Rust toolchain and launches `aetheris-client`. The install script prints `aetheris-client 1.0.0` when it copies the binary. They then launch the binary in the same directory. When that binary is absent, start runs [install.ps1](../install.ps1) or [install.sh](../install.sh), then opens the window. The installer still runs alone when you call it by itself, and that call only installs.
+Start prints the crate version and opens the window. When the binary is not in `app/` yet, start installs it, then opens the window. [start.ps1](../../../../rust/aetheris/app/start.ps1) and [start.sh](../../../../rust/aetheris/app/start.sh) print `aetheris-client 1.0.1`. On macOS [start.zsh](../../../../rust/aetheris/app/start.zsh) loads the Rust toolchain and launches `aetheris-client`. The install script prints `aetheris-client 1.0.1` when it copies the binary. They then launch the binary in the same directory. When that binary is absent, start runs [install.ps1](../../../../rust/aetheris/bin/install.ps1) or [install.sh](../../../../rust/aetheris/bin/install.sh), then opens the window. The installer still runs alone when you call it by itself, and that call only installs.
 
 Windows:
 

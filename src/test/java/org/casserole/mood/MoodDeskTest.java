@@ -27,10 +27,10 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 
-// @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md FINESSE:f-185
+// @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md FINESSE:f-187
+// @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
+// @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md FINESSE:f-198
 /**
  * The class checks {@link MoodDesk}.
  * One desk builds the canvas prefix, the shell announce, and the stored transcript.
@@ -58,7 +58,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 // @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-652 docs/specs/common/formal-plan.spec.md
-class MoodDeskTest { // @aa-sdd PK-1083 PK-1084 PK-1089 PK-1092 PK-1094 docs/specs/common/formal-plan.spec.md
+class MoodDeskTest {
 
     /**
      * The method arranges the line {@code lantern-keep} and calls {@link MoodDesk#canvasSystems} and {@link MoodDesk#moodHead}.
@@ -197,6 +197,27 @@ class MoodDeskTest { // @aa-sdd PK-1083 PK-1084 PK-1089 PK-1092 PK-1094 docs/spe
         prompt.add(new UserMessage(spliced));
         assertEquals(head.substring(0, head.length() - 1), MoodDesk.DESK.porchRules(prompt));
         assertEquals("lantern-keep", MoodDesk.DESK.adopt(prompt));
+    }
+
+    /**
+     * The method arranges a stored head that still says {@code step into it}.
+     * {@link MoodDesk#lineAtTurnHead} reads {@code lantern-keep}.
+     * {@link MoodDesk#unspliceTurn} returns {@code next}.
+     * Splicing that stored text again writes {@code step in with me} and does not keep {@code step into it}.
+     *
+     * @return The method returns nothing.
+     */
+    @Test
+    void aPriorOpenerStripsAndTheNewSentenceStepsIn() {
+        String prior = "I'm opening a window with this atmosphere\u2026 would you like to step into it with me?";
+        String stored = "mood: lantern-keep\nshape:\n" + prior + "\n" + MoodDesk.CLOSER + "\nnext";
+        assertEquals("lantern-keep", MoodDesk.lineAtTurnHead(stored));
+        assertEquals("next", MoodDesk.unspliceTurn(stored));
+        String again = MoodDesk.spliceTurn(stored, "lantern-keep");
+        assertTrue(again.startsWith("mood: lantern-keep\nshape:\n" + MoodDesk.OPENER + "\n"));
+        assertTrue(MoodDesk.OPENER.contains("step in with me"));
+        assertFalse(again.contains("step into it"));
+        assertTrue(again.endsWith("next"));
     }
 
     /**

@@ -631,6 +631,108 @@ class ReichenbachSinkTest {
             stream.close();
         }
     }
+
+    /**
+     * The method arranges a user turn, an assistant turn, and a live line.
+     * The token counts are {@code 5}, {@code 5}, and {@code 1}.
+     * The allowance is {@code 6}.
+     * {@link ReichenbachSink#select} returns null because no head is designated.
+     * {@link ReichenbachSink#selectSlot} keeps the live piece.
+     * {@link RouxEngine#selectCut} returns null for that same input.
+     * {@link RouxEngine#selectSlot} keeps ordinal {@code 2}.
+     *
+     * @return The method returns nothing.
+     */
+    @Test
+    void aHeadlessSlotDropsTheOldestAtom() {
+        ReichenbachSink.Piece[] pieces = new ReichenbachSink.Piece[] {
+                new ReichenbachSink.Piece(0, 1L, Role.USER, 5, false, false, false),
+                new ReichenbachSink.Piece(1, 2L, Role.ASSISTANT, 5, false, false, false),
+                new ReichenbachSink.Piece(2, 0L, Role.USER, 1, false, false, true) };
+        assertNull(ReichenbachSink.select(6, pieces));
+        assertNull(ReichenbachSink.selectSlot(0, pieces));
+        ReichenbachSink.Transcript slot = ReichenbachSink.selectSlot(6, pieces);
+        assertNotNull(slot);
+        assertEquals(1, slot.pieces.length);
+        assertEquals(2, slot.pieces[0].ordinal);
+        assertTrue(slot.pieces[0].live);
+        long[] seqs = new long[] { 1L, 2L, 0L };
+        byte[] roles = new byte[] { Role.USER, Role.ASSISTANT, Role.USER };
+        int[] tokens = new int[] { 5, 5, 1 };
+        boolean[] open = new boolean[] { false, false, false };
+        boolean[] lives = new boolean[] { false, false, true };
+        assertNull(RouxEngine.selectCut(6, seqs, roles, tokens, open, null, lives));
+        RouxEngine.SinkCut cut = RouxEngine.selectSlot(6, seqs, roles, tokens, open, null, lives);
+        assertNotNull(cut);
+        assertArrayEquals(new int[] { 2 }, cut.ordinals);
+    }
+
+    /**
+     * The method arranges the crossing atom with a designated head.
+     * {@link RouxEngine#selectCut} and {@link RouxEngine#selectSlot} return the same ordinals.
+     * The head-over flag matches.
+     * The token sum matches.
+     *
+     * @return The method returns nothing.
+     */
+    @Test
+    void aDesignatedHeadMatchesTheSlot() {
+        long[] seqs = new long[] { 1L, 2L, 3L, 0L };
+        byte[] roles = new byte[] { Role.USER, Role.ASSISTANT, Role.USER, Role.USER };
+        int[] tokens = new int[] { 1, 1, 2, 1 };
+        boolean[] heads = new boolean[] { true, true, false, false };
+        boolean[] lives = new boolean[] { false, false, false, true };
+        RouxEngine.SinkCut headed = RouxEngine.selectCut(3, seqs, roles, tokens, heads, null, lives);
+        RouxEngine.SinkCut slot = RouxEngine.selectSlot(3, seqs, roles, tokens, heads, null, lives);
+        assertNotNull(headed);
+        assertNotNull(slot);
+        assertEquals(headed.headOver, slot.headOver);
+        assertEquals(headed.tokenSum, slot.tokenSum);
+        assertArrayEquals(headed.ordinals, slot.ordinals);
+        assertArrayEquals(new int[] { 0, 1, 3 }, slot.ordinals);
+    }
+
+    /**
+     * The method arranges a system pin and a designated head that together exceed the allowance.
+     * {@link ReichenbachSink#select} and {@link ReichenbachSink#selectSlot} keep the pin, the head, and the live line.
+     * The head-over flag is true.
+     * {@link ReichenbachSink#slotRefuses} is true when the rendered count is over the allowance.
+     * A miss does not refuse.
+     * A transcript that still holds a tail piece does not refuse.
+     *
+     * @return The method returns nothing.
+     */
+    @Test
+    void aLockedPrefixRefusesWhenItStaysOver() {
+        ReichenbachSink.Piece[] pieces = new ReichenbachSink.Piece[] {
+                new ReichenbachSink.Piece(0, 1L, Role.SYSTEM, 4, false, false, false),
+                new ReichenbachSink.Piece(1, 2L, Role.USER, 4, true, false, false),
+                new ReichenbachSink.Piece(2, 3L, Role.USER, 1, false, false, false),
+                new ReichenbachSink.Piece(3, 0L, Role.USER, 1, false, false, true) };
+        ReichenbachSink.Transcript headed = ReichenbachSink.select(5, pieces);
+        ReichenbachSink.Transcript slot = ReichenbachSink.selectSlot(5, pieces);
+        assertNotNull(headed);
+        assertNotNull(slot);
+        assertTrue(headed.headOver);
+        assertTrue(slot.headOver);
+        assertEquals(3, headed.pieces.length);
+        assertEquals(headed.pieces[0].ordinal, slot.pieces[0].ordinal);
+        assertEquals(headed.pieces[1].ordinal, slot.pieces[1].ordinal);
+        assertEquals(headed.pieces[2].ordinal, slot.pieces[2].ordinal);
+        assertEquals(0, headed.pieces[0].ordinal);
+        assertEquals(1, headed.pieces[1].ordinal);
+        assertEquals(3, headed.pieces[2].ordinal);
+        assertTrue(ReichenbachSink.slotRefuses(headed, 6, 5));
+        assertFalse(ReichenbachSink.slotRefuses(headed, 5, 5));
+        assertFalse(ReichenbachSink.slotRefuses(headed, -1, 5));
+        assertFalse(ReichenbachSink.slotRefuses(null, 6, 5));
+        ReichenbachSink.Piece[] open = new ReichenbachSink.Piece[] {
+                new ReichenbachSink.Piece(0, 1L, Role.USER, 1, false, false, false),
+                new ReichenbachSink.Piece(1, 0L, Role.USER, 1, false, false, true) };
+        ReichenbachSink.Transcript tail = ReichenbachSink.selectSlot(10, open);
+        assertNotNull(tail);
+        assertFalse(ReichenbachSink.slotRefuses(tail, 100, 10));
+    }
 }
 /*****************************************************************************************
  * End of Class: ReichenbachSinkTest.java 110426

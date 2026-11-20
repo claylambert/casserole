@@ -19,7 +19,7 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 
-// @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md FINESSE:f-185
 /**
  * The {@code MoodDesk} type is the shared {@link MoodDoor} implementation.
  * The canvas, group, and pipe pushes ask this type for the system lines.
@@ -30,6 +30,7 @@ import org.springframework.ai.chat.messages.UserMessage;
  * The SSH checkbox only makes the shell available.
  * The footer switch, when off, clears a checked SSH shell.
  * The constructed mood sits between {@link #OPENER} and {@link #CLOSER}.
+ * // @aa-sdd L40 aa-sdd-source-prose.md#MoodDesk
  *
  * @author clayl (2026-11-03)
  */
@@ -40,6 +41,13 @@ public final class MoodDesk implements MoodDoor {
      * The canvas push and the SSH shell use this same line.
      */
     public static final String OPENER =
+            "I'm opening a window with this atmosphere\u2026 would you like to step in with me?";
+
+    /**
+     * The field holds the invitation sentence a stored head may still carry.
+     * A new send writes {@link #OPENER}. A stored head that still uses this sentence is recognized and stripped.
+     */
+    private static final String PRIOR_OPENER =
             "I'm opening a window with this atmosphere\u2026 would you like to step into it with me?";
 
     /**
@@ -87,7 +95,7 @@ public final class MoodDesk implements MoodDoor {
     }
 
     /**
-     * The {@code canvasSystems} method returns the system texts for a canvas, group, or pipe push. // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
+     * The {@code canvasSystems} method returns the system texts for a canvas, group, or pipe push.
      * The method returns an empty list when {@code on} is false.
      * The method returns an empty list when {@link #normalize} returns null.
      * The list is {@link #OPENER}, the trimmed line, and {@link #CLOSER} otherwise.
@@ -96,13 +104,13 @@ public final class MoodDesk implements MoodDoor {
      * @param line The saved mood line.
      * @return The opener, the constructed mood, and the closer, or an empty list.
      */
-    public static List<String> canvasSystems(boolean on, String line) { // @aa-sdd PK-1430 docs/specs/common/stages.spec.md
+    public static List<String> canvasSystems(boolean on, String line) {
         ArrayList<String> systems = new ArrayList<String>();
         String trimmed = normalize(line);
         if (!on || trimmed == null) {
             return systems;
         }
-        // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md FINESSE:f-187
         systems.add(OPENER);
         systems.add(trimmed);
         systems.add(CLOSER);
@@ -124,7 +132,7 @@ public final class MoodDesk implements MoodDoor {
             return null;
         }
         return systems.get(0) + "\n" + systems.get(1) + "\n" + systems.get(2) + "\n";
-    } // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
+    }
 
     /**
      * The {@code sshLine} method returns the mood line for that user's panes.
@@ -139,11 +147,11 @@ public final class MoodDesk implements MoodDoor {
      * @param line The saved mood line.
      * @return The trimmed line, or null when the shell stays clear.
      */
-    public static String sshLine(boolean armed, boolean on, String line) { // @aa-sdd PK-1430 docs/specs/common/stages.spec.md
+    public static String sshLine(boolean armed, boolean on, String line) {
         if (!armed || !on) {
             return null;
         }
-        // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md FINESSE:f-187
         return normalize(line);
     }
 
@@ -237,7 +245,7 @@ public final class MoodDesk implements MoodDoor {
      * The first remaining system message is kept as the prompt message.
      * The other remaining messages go into the body.
      *
-     * The result starts with a new system message of the configured prompt when no prompt message was kept and a prompt is configured. // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
+     * The result starts with a new system message of the configured prompt when no prompt message was kept and a prompt is configured.
      * The result starts with the kept prompt message when one was found.
      * The result has no leading prompt when none was kept and no prompt is configured.
      * The result appends {@link #OPENER}, the next line, and {@link #CLOSER} as three system messages when the next line is not null.
@@ -268,7 +276,7 @@ public final class MoodDesk implements MoodDoor {
                 if (i + 1 < stored.size() && closes(stored.get(i + 1))) {
                     remember(moodTexts, message.getText(), hostText, hostConfigured);
                 }
-            } // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+            }
         }
         Message host = null;
         ArrayList<Message> body = new ArrayList<Message>();
@@ -303,8 +311,8 @@ public final class MoodDesk implements MoodDoor {
             out.add(host);
         }
         if (next != null) {
-            // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md
-            out.add(new SystemMessage(OPENER)); // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md FINESSE:f-187
+            out.add(new SystemMessage(OPENER));
             out.add(new SystemMessage(next));
             out.add(new SystemMessage(CLOSER));
         }
@@ -313,7 +321,7 @@ public final class MoodDesk implements MoodDoor {
     }
 
     /**
-     * The {@code adopt} method reads the constructed mood already stored. // @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md
+     * The {@code adopt} method reads the constructed mood already stored.
      * The method returns null when {@code stored} is null.
      * The method finds the first system message.
      * The {@link #seatedLine} call at that index returns the mood when the triple or the legacy pair matches.
@@ -346,7 +354,7 @@ public final class MoodDesk implements MoodDoor {
                 return beside;
             }
         }
-        // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
         for (int i = 0; i < stored.size(); i++) {
             Message message = stored.get(i);
             if (message instanceof UserMessage) {
@@ -395,7 +403,7 @@ public final class MoodDesk implements MoodDoor {
                 return beside;
             }
         }
-        // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
         return rulesFromTurn(messages);
     }
 
@@ -406,13 +414,13 @@ public final class MoodDesk implements MoodDoor {
      * The {@link #unspliceTurn} method removes a stored head first, including a head in the older order.
      * The method returns that stripped turn when {@link #normalize} of {@code line} is null.
      * The method returns the invitation plus that stripped turn otherwise.
-     // @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md FINESSE:f-198
      *
      * @param turn The turn text. The method treats a null turn as an empty string after the head is removed.
      * @param line The mood line, or null when the splice should clear.
      * @return The turn the prompt sends.
      */
-    public static String spliceTurn(String turn, String line) { // @aa-sdd PK-1431 docs/specs/common/stages.spec.md
+    public static String spliceTurn(String turn, String line) {
         String next = normalize(line);
         String raw = unspliceTurn(turn);
         if (next == null) {
@@ -432,18 +440,26 @@ public final class MoodDesk implements MoodDoor {
      * @param turn The prompt turn to strip.
      * @return The turn with one spliced mood removed.
      */
-    public static String unspliceTurn(String turn) { // @aa-sdd PK-1431 docs/specs/common/stages.spec.md
+    public static String unspliceTurn(String turn) {
         String line = lineAtTurnHead(turn);
-        if (line == null || turn == null) { // @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md
+        if (line == null || turn == null) {
             return turn == null ? "" : turn;
         }
         String fresh = inviteHead(line);
         if (turn.startsWith(fresh)) {
             return turn.substring(fresh.length());
         }
+        String prior = "mood: " + line + "\nshape:\n" + PRIOR_OPENER + "\n" + CLOSER + "\n";
+        if (turn.startsWith(prior)) {
+            return turn.substring(prior.length());
+        }
         String older = OPENER + "\n" + line + "\n" + CLOSER + "\n";
         if (turn.startsWith(older)) {
             return turn.substring(older.length());
+        }
+        String olderPrior = PRIOR_OPENER + "\n" + line + "\n" + CLOSER + "\n";
+        if (turn.startsWith(olderPrior)) {
+            return turn.substring(olderPrior.length());
         }
         return turn;
     }
@@ -458,7 +474,7 @@ public final class MoodDesk implements MoodDoor {
      * @param turn The prompt turn to read.
      * @return The mood at the head of the turn, or null when no head matches.
      */
-    public static String lineAtTurnHead(String turn) { // @aa-sdd PK-1431 docs/specs/common/stages.spec.md
+    public static String lineAtTurnHead(String turn) {
         if (turn == null) {
             return null;
         }
@@ -507,11 +523,24 @@ public final class MoodDesk implements MoodDoor {
             return null;
         }
         String rest = turn.substring(lineEnd + 1);
-        String shape = "shape:\n" + OPENER + "\n" + CLOSER;
-        if (!rest.startsWith(shape + "\n") && !rest.equals(shape)) {
+        if (!invitationRest(rest, OPENER) && !invitationRest(rest, PRIOR_OPENER)) {
             return null;
         }
         return line;
+    }
+
+    /**
+     * The {@code invitationRest} method reports whether the text after the mood line is the shape block.
+     * The block is {@code shape:}, {@code opener}, and {@link #CLOSER}.
+     * The text may end on that block or continue after one more newline.
+     *
+     * @param rest The text after the mood line.
+     * @param opener The opener sentence in the block.
+     * @return Whether the text is that shape block.
+     */
+    private static boolean invitationRest(String rest, String opener) {
+        String shape = "shape:\n" + opener + "\n" + CLOSER;
+        return rest.startsWith(shape + "\n") || rest.equals(shape);
     }
 
     /**
@@ -527,7 +556,28 @@ public final class MoodDesk implements MoodDoor {
      * @return The mood when the head is the older splice, or null when it is not.
      */
     private static String olderSpliceLine(String turn) {
-        String prefix = OPENER + "\n";
+        String line = olderSpliceLine(turn, OPENER);
+        if (line != null) {
+            return line;
+        }
+        return olderSpliceLine(turn, PRIOR_OPENER);
+    }
+
+    /**
+     * The {@code olderSpliceLine} method returns the mood when the head starts with {@code opener}.
+     * The method returns null when the turn does not start with that opener and a newline.
+     * The method returns null when no newline follows that prefix.
+     * The method returns null when the text between those newlines trims to empty.
+     * The text after the line must start with {@link #CLOSER} and a newline, or equal {@link #CLOSER}.
+     * The method returns null when that text does not match.
+     * The method returns the normalized mood line when the text matches.
+     *
+     * @param turn The prompt turn to read.
+     * @param opener The opener sentence at the head.
+     * @return The mood when the head is that older splice, or null when it is not.
+     */
+    private static String olderSpliceLine(String turn, String opener) {
+        String prefix = opener + "\n";
         if (!turn.startsWith(prefix)) {
             return null;
         }
@@ -563,7 +613,7 @@ public final class MoodDesk implements MoodDoor {
             }
             String line = lineAtTurnHead(message.getText());
             if (line != null) {
-                // @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md FINESSE:f-198
                 String head = inviteHead(line);
                 return head.substring(0, head.length() - 1);
             }
@@ -600,7 +650,8 @@ public final class MoodDesk implements MoodDoor {
      * @return The rules text, or an empty string.
      */
     private static String tripleText(List<Message> messages, int at) {
-        if (!systemText(messages, at, OPENER) || !systemText(messages, at + 2, CLOSER)) {
+        if ((!systemText(messages, at, OPENER) && !systemText(messages, at, PRIOR_OPENER))
+                || !systemText(messages, at + 2, CLOSER)) {
             return "";
         }
         String line = normalize(messages.get(at + 1).getText());
@@ -660,7 +711,8 @@ public final class MoodDesk implements MoodDoor {
      * @return The constructed mood, or null when the triple does not match.
      */
     private static String moodOfTriple(List<Message> stored, int index) {
-        if (!systemText(stored, index, OPENER) || !systemText(stored, index + 2, CLOSER)) {
+        if ((!systemText(stored, index, OPENER) && !systemText(stored, index, PRIOR_OPENER))
+                || !systemText(stored, index + 2, CLOSER)) {
             return null;
         }
         String line = normalize(stored.get(index + 1).getText());
@@ -748,7 +800,7 @@ public final class MoodDesk implements MoodDoor {
      * @return Whether this text is an opener, a closer, or the old activate sentence.
      */
     private static boolean wrapperText(String text) {
-        return OPENER.equals(text) || CLOSER.equals(text) || LEGACY.equals(text);
+        return OPENER.equals(text) || PRIOR_OPENER.equals(text) || CLOSER.equals(text) || LEGACY.equals(text);
     }
 
     /**

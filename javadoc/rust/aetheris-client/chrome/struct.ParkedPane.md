@@ -59,6 +59,8 @@ The focused pane keeps its grid and session on [`App`](struct.App.md). This stru
 | String | [`shell_window`](#member-shell_window) | Recent host bytes, kept so a split empty-reply sentence still matches. |
 | String | [`engine_label`](#member-engine_label) | This pane's selected model. Empty prints as ollama. A canvas cell is not this word. |
 | bool | [`engine_asked`](#member-engine_asked) | This connection has been asked for the saved model. A disconnect clears it. |
+| String | [`llama_payload`](#member-llama_payload) | Last llama tokenize payload on this pane. Empty until a post lands. |
+| Option<i32> | [`llama_count`](#member-llama_count) | Last painted llama tokenize count. None means no tokenize count has landed. |
 
 ## Field Detail
 
@@ -315,6 +317,26 @@ engine_asked: bool
 ```
 
 This connection has been asked for the saved model. A disconnect clears it.
+
+### llama_payload
+
+<a id="member-llama_payload"></a>
+
+```rust
+llama_payload: String
+```
+
+Last llama tokenize payload on this pane. Empty until a post lands.
+
+### llama_count
+
+<a id="member-llama_count"></a>
+
+```rust
+llama_count: Option<i32>
+```
+
+Last painted llama tokenize count. None means no tokenize count has landed.
 
 ---
 

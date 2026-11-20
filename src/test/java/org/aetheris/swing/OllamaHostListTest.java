@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
 
+// @aa-sdd L40 aetheris-plan-stage-1.001.md
 /**
  * The class checks the model rows {@link AetherisNotebookPanel} builds from a tags reply.
  * The test does not open a window.
@@ -132,6 +133,27 @@ class OllamaHostListTest {
         assertFalse(AetherisNotebookPanel.sameDialogCell(
                 "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
                 "00000000-0000-0000-0000-000000000000"));
+    }
+
+    // @aa-sdd aetheris-plan-f-278.001.md
+    /**
+     * The method arranges a llama reply that lists {@code Falcon3-3B} and a typed id {@code typed-local}.
+     * The method calls {@link AetherisNotebookPanel#ollamaHostRows}.
+     * The typed id stays.
+     * An empty reply has no model lines.
+     * {@link AetherisNotebookPanel#llamaListMiss} is the red notice.
+     *
+     * @return The method returns nothing.
+     */
+    @Test
+    void aLlamaReplyKeepsATypedId() {
+        ArrayList<String> rows = AetherisNotebookPanel.ollamaHostRows(
+                "llama_models_result:\nmodel: Falcon3-3B\n", "typed-local");
+        assertEquals(2, rows.size());
+        assertEquals("Falcon3-3B", rows.get(0));
+        assertEquals("typed-local", rows.get(1));
+        assertEquals(0, AetherisNotebookPanel.tagsResultModels("llama_models_result:\n").size());
+        assertEquals("llama-openapi model list is empty.", AetherisNotebookPanel.llamaListMiss());
     }
 
     /**

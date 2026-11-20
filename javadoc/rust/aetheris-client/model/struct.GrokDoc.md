@@ -11,6 +11,10 @@ pub struct GrokDoc
 The [`GrokDoc`](struct.GrokDoc.md) struct is the Grok settings document.
 The file is `aetheris-grok.yaml` under `.casserole` in the home directory. A version other than 1 is left unread. A blocked document is not written. `path` is the file. `blocked` stops reads and writes. `standing` is the default entry. `cells` are the per-cell entries.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

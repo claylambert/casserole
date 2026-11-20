@@ -12,16 +12,26 @@
 
 package org.casserole.ssh.shell;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.Prompt;
 
 /**
  * The class checks {@link ChatShell#softReturn}.
  * A lone line feed keeps the input line.
  * A carriage return still submits.
  * A line feed that follows a carriage return stays swallowed.
+ * // @aa-sdd L40 aa-sdd-source-prose.md#SoftReturnTest
  *
  * @author clayl (2026-10-29)
  */
@@ -43,5 +53,31 @@ class SoftReturnTest {
         assertFalse(ChatShell.softReturn('\n', true));
         assertFalse(ChatShell.softReturn('\r', false));
         assertFalse(ChatShell.softReturn('a', false));
+    }
+
+    /**
+     * The method asks for a prompt when no shell is seated.
+     * The result is null.
+     * The method does not open a socket.
+     *
+     * @return The method returns nothing.
+     */
+    @Test
+    void aMissingShellReturnsNoPrompt() {
+        assertNull(ChatShell.promptTextFor("nobody-281", "hi"));
+    }
+
+    /**
+     * The method joins two message texts with a newline.
+     * The method does not open a socket.
+     *
+     * @return The method returns nothing.
+     */
+    @Test
+    void joinPromptJoinsTwoMessages() {
+        List<Message> messages = new ArrayList<Message>();
+        messages.add(new SystemMessage("sys"));
+        messages.add(new UserMessage("line"));
+        assertEquals("sys\nline", ChatShell.joinPrompt(new Prompt(messages)));
     }
 }

@@ -46,6 +46,9 @@ import org.casserole.lamina.LaminaTask;
 import org.casserole.lamina.Lane;
 import org.casserole.llm.GrokCallOptions;
 import org.casserole.llm.GrokLlmService;
+import org.casserole.llm.LlamaCppCallOptions;
+import org.casserole.llm.LlamaCppLlmService;
+import org.casserole.llm.LlamaOpenApiProperties;
 import org.casserole.llm.LlmRouter;
 import org.casserole.llm.SpringAiOllamaLlmService;
 import org.casserole.mood.MoodDesk;
@@ -70,14 +73,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Component;
 
-// @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1059 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1023 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+// @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
+// @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
+// @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
+// @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md FINESSE:f-32
+// @aa-sdd PK-1059 docs/specs/common/formal-plan.spec.md FINESSE:f-33
+// @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+// @aa-sdd PK-1023 docs/specs/common/formal-plan.spec.md FINESSE:f-72
 // @aa-sdd PK-1185 docs/specs/java/org/aetheris/ssh/ssh.spec.md
 /**
  * The {@code AmwpFacade} class is the server AMWP Scope A handler.
@@ -90,6 +93,8 @@ import org.springframework.stereotype.Component;
  * A caller sends frames through {@link #handle}.
  * A caller sends one console turn through {@link #completeTurn}.
  * A tool frame is refused.
+ * // @aa-sdd L40 aa-sdd-source-prose.md#AmwpFacade
+ * // @aa-sdd G-08 G-09 G-10 aetheris-stages-1-3.finalize.md
  *
  * @author clayl (2026-09-02)
  */
@@ -187,6 +192,11 @@ public class AmwpFacade {
      */
     private final GrokLlmService grokLlm;
     /**
+     * The properties bind {@code spring.ai.llama-openapi}.
+     * The model list uses the base URL and the API key.
+     */
+    private final LlamaOpenApiProperties llamaOpenApi;
+    /**
      * The map holds the mux writer for a console thought.
      * The key is the sanitized SSH user.
      */
@@ -205,12 +215,13 @@ public class AmwpFacade {
      * @param lamina The lamina is the lane pool.
      * @param properties The properties are the server settings.
      * @param grokLlm The service lists Grok language models. A null service answers the catalog with the header only.
+     * @param llamaOpenApi The properties bind the llama-openapi base URL and API key.
      * @param numCtx The number is {@code spring.ai.ollama.chat.options.num-ctx}. {@code 0} omits {@code num_ctx}.
      * @param ollamaBaseUrl The URL is {@code spring.ai.ollama.base-url}. Empty uses {@code http://localhost:11434}.
      * @param ollamaModel The model is {@code spring.ai.ollama.chat.options.model}. Empty stays empty.
      */
     public AmwpFacade(RouxChatMemory rouxMemory, LlmRouter llmRouter, Lamina lamina,
-            CasseroleProperties properties, GrokLlmService grokLlm,
+            CasseroleProperties properties, GrokLlmService grokLlm, LlamaOpenApiProperties llamaOpenApi,
             @Value("${spring.ai.ollama.chat.options.num-ctx:0}") int numCtx,
             @Value("${spring.ai.ollama.base-url:http://localhost:11434}") String ollamaBaseUrl,
             @Value("${spring.ai.ollama.chat.options.model:}") String ollamaModel) {
@@ -230,6 +241,7 @@ public class AmwpFacade {
         this.consoleSinks = new ConcurrentHashMap<String, AmwpReplySink>();
         this.probeGate = new ProbeGate();
         this.grokLlm = grokLlm;
+        this.llamaOpenApi = llamaOpenApi;
         // @aa-sdd PK-1276 docs/specs/java/org/aetheris/ssh/ssh.spec.md
         this.poolChat = new PoolChatServer(lamina, properties);
     }
@@ -265,6 +277,7 @@ public class AmwpFacade {
     /**
      * The {@code banthaRegion} method builds the Bantha region id.
      * The id is the user name, a dot, and {@code aetheris}.
+     * // @aa-sdd G-08 aetheris-stages-1-3.finalize.md
      *
      * @param user The user is the sanitized user name.
      * @return The return value is {@code user.aetheris}.
@@ -279,6 +292,7 @@ public class AmwpFacade {
      * {@link RegionOwner#sanitize} prepares the user name.
      * An {@link IllegalArgumentException} returns {@link OpenResult#refused} with {@code invalid username}.
      * Any other user opens {@link #banthaRegion} through {@link RouxChatMemory#openRam}.
+     * // @aa-sdd G-08 aetheris-stages-1-3.finalize.md
      *
      * @param user The user is the SSH user.
      * @return The return value is the open result.
@@ -362,6 +376,10 @@ public class AmwpFacade {
                 answerGrokModels(replyTo, cellId);
                 return;
             }
+            if (llamaModelsAsk(body)) {
+                answerLlamaModels(replyTo, cellId);
+                return;
+            }
         }
         final String key = uuidString(cellId);
         LaminaHandle existing = inFlight.get(key);
@@ -395,9 +413,10 @@ public class AmwpFacade {
          * A token that is no longer live releases the permit and drops the placeholder.
          * A live token submits the task and leaves the permit with that task.
          * An interrupt restores the interrupt flag and drops the placeholder when the task was not submitted.
-         * A runtime failure replies {@code failed} and drops the placeholder when the task was not submitted. // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+         * A runtime failure replies {@code failed} and drops the placeholder when the task was not submitted.
          */
         Thread waiter = new Thread(new Runnable() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#AmwpFacade
             @Override
             public void run() {
                 boolean held = false;
@@ -498,7 +517,7 @@ public class AmwpFacade {
          * The runnable sends the show result on channel A.
          */
         Thread worker = new Thread(new Runnable() {
-            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
             @Override
             public void run() {
                 String text = showResult(modelId);
@@ -622,8 +641,8 @@ public class AmwpFacade {
          * The runnable sends the tags result on channel A.
          */
         Thread worker = new Thread(new Runnable() {
-            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md
-            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md
+            // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
+            // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
             @Override
             public void run() {
                 String text = tagsResult();
@@ -763,6 +782,148 @@ public class AmwpFacade {
         return grokLlm.catalogBody();
     }
 
+    // @aa-sdd aetheris-plan-f-278.001.md
+    /**
+     * The {@code llamaModelsAsk} method reports whether the body asks for llama-openapi models.
+     * A null body returns false.
+     * An empty body returns false.
+     * The first line must start with {@code llama_models:}.
+     * A first line that starts with {@code llama_models_result:} returns false.
+     *
+     * @param body The body is the stripped payload.
+     * @return The return value is true when this frame is a llama model ask.
+     */
+    private static boolean llamaModelsAsk(byte[] body) {
+        if (body == null || body.length == 0) {
+            return false;
+        }
+        String text = new String(body, StandardCharsets.UTF_8);
+        int nl = text.indexOf('\n');
+        String first = nl < 0 ? text : text.substring(0, nl);
+        if (first.startsWith("llama_models_result:")) {
+            return false;
+        }
+        return first.startsWith("llama_models:");
+    }
+
+    /**
+     * The {@code answerLlamaModels} method gets {@code /v1/models} off the execute path.
+     * The worker thread is named {@code aetheris-llama-models} and is a daemon.
+     * The reply is channel A type data.
+     * The text is {@link #llamaModelsResult}.
+     * A send failure is ignored.
+     *
+     * @param replyTo The sink is the mux writer.
+     * @param cellId The cell id is the cell that asked.
+     */
+    private void answerLlamaModels(final AmwpReplySink replyTo, final byte[] cellId) {
+        /**
+         * The runnable sends the llama model result on channel A.
+         */
+        Thread worker = new Thread(new Runnable() {
+            // @aa-sdd aetheris-plan-f-278.001.md
+            @Override
+            public void run() {
+                String text = llamaModelsResult();
+                try {
+                    byte[] utf = text.getBytes(StandardCharsets.UTF_8);
+                    byte[] payload = AmwpCodec.scopeAPayload(0, 1, cellId, utf);
+                    replyTo.send(AmwpConstants.CHANNEL_A, AmwpConstants.TYPE_DATA, payload);
+                } catch (Exception ignored) {
+                }
+            }
+        }, "aetheris-llama-models");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    /**
+     * The {@code llamaModelsResult} method builds a {@code llama_models_result:} body.
+     * The call is a GET of the base URL plus {@code /v1/models}.
+     * Connect is 10 seconds.
+     * Read is 10 seconds.
+     * A blank API key omits {@code Authorization}.
+     * A set key sends {@code Authorization: Bearer} and the key.
+     * A status from 200 through 299 returns {@link LlamaCppLlmService#catalogText(String, String)}.
+     * The alias is {@link #llamaAlias}.
+     * Any other status returns the header only.
+     * An exception returns the header only.
+     *
+     * @return The return value is the {@code llama_models_result:} body.
+     */
+    private String llamaModelsResult() {
+        String header = "llama_models_result:\n";
+        try {
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(URI.create(llamaBase() + "/v1/models"))
+                    .timeout(Duration.ofSeconds(10))
+                    .GET();
+            String key = llamaKey();
+            if (key.length() > 0) {
+                builder.header("Authorization", "Bearer " + key);
+            }
+            HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+            HttpResponse<String> response = http.send(builder.build(),
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                return header;
+            }
+            return LlamaCppLlmService.catalogText(response.body(), llamaAlias());
+        } catch (Exception ignored) {
+            return header;
+        }
+    }
+
+    /**
+     * The {@code llamaBase} method returns the llama-openapi base URL.
+     * A missing properties object uses {@code http://127.0.0.1:3333}.
+     * A blank base URL uses that same default.
+     * One trailing slash is dropped.
+     *
+     * @return The return value is the base URL.
+     */
+    private String llamaBase() {
+        String raw = "";
+        if (llamaOpenApi != null && llamaOpenApi.getBaseUrl() != null) {
+            raw = llamaOpenApi.getBaseUrl().trim();
+        }
+        if (raw.length() == 0) {
+            return "http://127.0.0.1:3333";
+        }
+        if (raw.endsWith("/")) {
+            return raw.substring(0, raw.length() - 1);
+        }
+        return raw;
+    }
+
+    /**
+     * The {@code llamaKey} method returns the llama-openapi API key.
+     * A missing properties object returns an empty string.
+     * A null key returns an empty string.
+     *
+     * @return The return value is the trimmed key.
+     */
+    private String llamaKey() {
+        if (llamaOpenApi == null || llamaOpenApi.getApiKey() == null) {
+            return "";
+        }
+        return llamaOpenApi.getApiKey().trim();
+    }
+
+    /**
+     * The {@code llamaAlias} method returns the llama-openapi model alias.
+     * A missing properties object returns an empty string.
+     * A null alias returns an empty string.
+     *
+     * @return The return value is the trimmed alias.
+     */
+    private String llamaAlias() {
+        if (llamaOpenApi == null || llamaOpenApi.getAlias() == null) {
+            return "";
+        }
+        return llamaOpenApi.getAlias().trim();
+    }
+
     /**
      * The {@code trimSlash} method returns a base URL without one trailing slash.
      * A null URL uses {@code http://localhost:11434}.
@@ -878,6 +1039,7 @@ public class AmwpFacade {
      * {@link #doorBanner} throws {@link Exception} when it returns text.
      * A null message list is built by {@link #assembleMessages}.
      * Any other list is copied, and {@link #placeHost} inserts the configured system prompt when that text is absent.
+     * A supplied message list clears {@code llamaHeads}.
      * {@link #holdRoux} stores the prompt with a null cell key.
      * {@link #routedComplete} runs with the cell flag false.
      * An empty reply is returned.
@@ -898,6 +1060,9 @@ public class AmwpFacade {
         if (messages != null) {
             prompt.addAll(messages);
             placeHost(prompt);
+            if (req != null) {
+                req.llamaHeads = null;
+            }
         } else {
             prompt = assembleMessages(req);
         }
@@ -938,6 +1103,8 @@ public class AmwpFacade {
      * Null means the turn may run.
      * A null request returns {@code failed}.
      * A Grok target with no model returns {@code no model defined}.
+     * A llama-openapi target with no model returns {@code no model defined}.
+     * A llama-openapi target is local. An air-gap refusal does not apply.
      * {@link AetherisYaml#grokDoor} is checked first.
      * A false result tries {@link AetherisYaml#poolDoor}.
      * A cloud target that fails both checks returns {@code air-gap} when {@link AetherisYaml#refusesCloud} is true.
@@ -957,11 +1124,12 @@ public class AmwpFacade {
             return "failed";
         }
         String provider = LlmRouter.providerId(req.executionTarget);
-        boolean cloud = !"ollama".equals(provider);
+        boolean local = "ollama".equals(provider) || "llama-openapi".equals(provider);
+        boolean cloud = !local;
         String model = LlmRouter.modelAfterSlash(req.executionTarget);
         boolean modelPresent = model.length() > 0;
         AetherisYaml home = AetherisYaml.readProcessHome();
-        if ("grok".equals(provider) && !modelPresent) {
+        if (("grok".equals(provider) || "llama-openapi".equals(provider)) && !modelPresent) {
             return "no model defined";
         }
         boolean grokBurner = "grok".equals(provider) && req.ephemeral;
@@ -1026,6 +1194,8 @@ public class AmwpFacade {
      * The {@code assembleMessages} method turns a working set into Spring messages.
      * {@link #seatWorkingSet} places the configured system prompt.
      * {@link #trimCanvas} then drops omitted turns when a head is designated.
+     * When the trimmed list keeps every seated message, the head flags are stored on {@code llamaHeads}.
+     * A shorter trim leaves {@code llamaHeads} null.
      *
      * @param req The request is the execute body.
      * @return The return value is the message list.
@@ -1034,7 +1204,18 @@ public class AmwpFacade {
     private List<Message> assembleMessages(AmwpToon.ExecuteBody req) throws Exception {
         ArrayList<Boolean> heads = new ArrayList<Boolean>();
         List<Message> messages = seatWorkingSet(hostPrompt(), req.workingSet, heads);
-        return trimCanvas(messages, heads);
+        List<Message> trimmed = trimCanvas(messages, heads);
+        if (trimmed != null && trimmed.size() == heads.size()) {
+            boolean[] marks = new boolean[heads.size()];
+            for (int i = 0; i < heads.size(); i++) {
+                Boolean flag = heads.get(i);
+                marks[i] = flag != null && flag.booleanValue();
+            }
+            req.llamaHeads = marks;
+        } else {
+            req.llamaHeads = null;
+        }
+        return trimmed;
     }
 
     /**
@@ -1167,7 +1348,7 @@ public class AmwpFacade {
         long[] seqs = new long[count];
         byte[] roles = new byte[count];
         int[] tokens = new int[count];
-        boolean[] headFlags = new boolean[count]; // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
+        boolean[] headFlags = new boolean[count];
         boolean[] stays = new boolean[count];
         boolean[] lives = new boolean[count];
         HeuristicTokenCounter counter = new HeuristicTokenCounter();
@@ -1184,8 +1365,8 @@ public class AmwpFacade {
                 roles[i] = Role.USER;
                 if (MoodDesk.lineAtTurnHead(text) != null) {
                     stays[i] = true;
-                } // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-            } // @aa-sdd PK-1023 docs/specs/common/formal-plan.spec.md
+                }
+            }
             tokens[i] = counter.count(text);
             headFlags[i] = i < heads.size() && Boolean.TRUE.equals(heads.get(i));
         }
@@ -1319,6 +1500,7 @@ public class AmwpFacade {
      * The cell HTTP slot is removed in {@code finally}.
      * An opened console thought is closed in {@code finally}.
      * A live Ollama cell with a non-empty think string sends kind {@code t} when {@link SpringAiOllamaLlmService#thinkingText} is non-empty.
+     * A llama-openapi call fits the prompt to the slot before the completion.
      * A null response returns empty.
      *
      * @param user The user is the SSH user.
@@ -1345,7 +1527,7 @@ public class AmwpFacade {
             String poolThink = req.think == null ? "" : req.think;
             String boot = req.poolBoot == null ? "" : req.poolBoot;
             try {
-                poolChat.prompt(user, PoolChat.Seat.SSH, poolPromptText(messages), boot, // @aa-sdd PK-1460 docs/specs/java/org/casserole/pool/pool.spec.md
+                poolChat.prompt(user, PoolChat.Seat.SSH, poolPromptText(messages), boot,
                         "true".equals(poolThink), ChatSession.porchRules(messages), collected);
             } catch (PoolChat.TooLarge ex) {
                 throw new Exception("too-large");
@@ -1395,14 +1577,21 @@ public class AmwpFacade {
             sink = consoleThink;
         }
         ChatResponse response = null;
+        boolean llama = "llama-openapi".equals(provider);
         try {
-            response = llmRouter.complete(req.executionTarget, new Prompt(messages), options, think, slot, sink);
+            if (llama) {
+                messages = fitLlamaSlot(req, messages);
+                response = llmRouter.complete(req.executionTarget, new Prompt(messages), llamaCallOptions(req),
+                        slot, sink);
+            } else {
+                response = llmRouter.complete(req.executionTarget, new Prompt(messages), options, think, slot, sink);
+            }
         } catch (GrokLlmService.CallStopped ex) {
             throw ex;
         } catch (LlmRouter.UnknownProviderException ex) {
             if (cell) {
                 replyReason(replyTo, cellId, "failed", "unknown provider");
-                throw new QuietStop(); // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
+                throw new QuietStop();
             }
             throw new Exception("unknown provider");
         } catch (GrokLlmService.NoModelException ex) {
@@ -1418,7 +1607,7 @@ public class AmwpFacade {
             }
             throw new Exception("grok key missing");
         } catch (GrokLlmService.StatusException ex) {
-            if (ex.status() == 400 && options.sendReasoningEffort
+            if (!llama && ex.status() == 400 && options.sendReasoningEffort
                     && GrokLlmService.rejectedEffort(ex.getMessage())) {
                 options.sendReasoningEffort = false;
                 req.sendReasoningEffort = false;
@@ -1511,7 +1700,7 @@ public class AmwpFacade {
         return text;
     }
 
-    // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
     /**
      * The {@code QuietStop} class stops a cell that already answered.
      * The probe skip uses the same exception.
@@ -1534,13 +1723,13 @@ public class AmwpFacade {
      */
     private static final byte[] CONSOLE_ID = new byte[16];
 
-    // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1023 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+    // @aa-sdd PK-1023 docs/specs/common/formal-plan.spec.md FINESSE:f-72
     /**
      * The {@code TextSink} class collects a console pool reply.
      * A thought rides the stream channel.
      * The terminal stays the reply.
-     * A reason becomes the banner. // @aa-sdd PK-18 docs/specs/java/org/aetheris/ssh/ssh.spec.md
+     * A reason becomes the banner.
      */
     // @aa-sdd PK-18 docs/specs/java/org/aetheris/ssh/ssh.spec.md
     private static final class TextSink implements PoolChat.Sink {
@@ -1677,6 +1866,7 @@ public class AmwpFacade {
         return "grok".equals(provider) && "true".equals(level);
     }
 
+    // @aa-sdd L40 aa-sdd-source-prose.md#AmwpFacade
     /**
      * The {@code ConsoleThinkSink} class sends a console thought.
      * Kind {@code t} rides the nil cell.
@@ -1747,10 +1937,9 @@ public class AmwpFacade {
      * A null sink releases the user.
      * The method is package-private.
      * The method is not a public method.
-     * A null user returns without a change. // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-     * An empty user returns without a change. // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
+     * A null user returns without a change.
+     * An empty user returns without a change.
      *
-     * // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
      * @param user The user is the sanitized SSH user.
      * @param sink The sink is the mux writer, or null to release.
      */
@@ -1775,6 +1964,7 @@ public class AmwpFacade {
      * A missing sink returns without writing.
      * The payload is {@link AmwpCodec#scopeAPayload} with a null cell id.
      * A send failure is ignored.
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
      *
      * @param user The user is the sanitized SSH user.
      * @param text The text is the reply body.
@@ -1832,7 +2022,7 @@ public class AmwpFacade {
         }
     }
 
-    // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
     /**
      * The {@code CellDelta} class forwards cell Grok deltas.
      * A cancelled execute stops the HTTP call.
@@ -1911,7 +2101,7 @@ public class AmwpFacade {
             boot = req.poolBoot;
         }
         try {
-            poolChat.prompt(user, PoolChat.Seat.CANVAS, poolPromptText(messages), boot, thinkOn, // @aa-sdd PK-1460 docs/specs/java/org/casserole/pool/pool.spec.md
+            poolChat.prompt(user, PoolChat.Seat.CANVAS, poolPromptText(messages), boot, thinkOn,
                     ChatSession.porchRules(messages), sink);
         } catch (PoolChat.TooLarge ex) {
             return;
@@ -2025,6 +2215,442 @@ public class AmwpFacade {
             options.maxCompletionTokens = req.maxCompletionTokens;
         }
         return options;
+    }
+
+    // @aa-sdd aetheris-plan-f-278.001.md
+    /**
+     * The {@code llamaCallOptions} method builds llama options from the execute frame and the yaml.
+     * A present cell temperature is copied.
+     * A present cell cap is copied as {@code max_tokens}.
+     * A yaml temperature is copied only when the cell did not store one and the yaml value is non-null.
+     * A yaml {@code num-predict} is copied as {@code max_tokens} only when the cell did not store a cap and the yaml value is non-null.
+     * {@code n_predict} stays unset.
+     * The Grok factory pair is not copied.
+     *
+     * @param req The request is the execute frame.
+     * @return The return value is the llama call options.
+     */
+    private LlamaCppCallOptions llamaCallOptions(AmwpToon.ExecuteBody req) {
+        LlamaCppCallOptions built = new LlamaCppCallOptions();
+        boolean cellTemp = req != null && req.temperaturePresent;
+        boolean cellCap = req != null && req.maxCompletionPresent;
+        if (cellTemp) {
+            built.temperature = Double.valueOf(req.temperature);
+        }
+        if (cellCap) {
+            built.maxTokens = Integer.valueOf(req.maxCompletionTokens);
+        }
+        LlamaOpenApiProperties.Chat.Options yaml = llamaYamlOptions();
+        if (!cellTemp && yaml != null && yaml.getTemperature() != null) {
+            built.temperature = yaml.getTemperature();
+        }
+        if (!cellCap && yaml != null && yaml.getNumPredict() != null) {
+            built.maxTokens = yaml.getNumPredict();
+        }
+        return built;
+    }
+
+    /**
+     * The {@code llamaYamlOptions} method returns the bound chat options.
+     * A missing properties object returns null.
+     * A missing chat block returns null.
+     *
+     * @return The return value is the options block, or null.
+     */
+    private LlamaOpenApiProperties.Chat.Options llamaYamlOptions() {
+        if (llamaOpenApi == null || llamaOpenApi.getChat() == null) {
+            return null;
+        }
+        return llamaOpenApi.getChat().getOptions();
+    }
+
+    // @aa-sdd aetheris-plan-f-282.001.md
+    /**
+     * The {@code llamaSlotAllowance} method returns the llama slot minus the reply reserve.
+     * A missing options block uses {@code 4096}.
+     * A {@code num-ctx} at or below zero uses {@code 4096}.
+     * A positive {@code num-predict} is subtracted.
+     * A missing {@code num-predict} leaves the reserve at zero.
+     * The allowance is at least {@code 1}.
+     *
+     * @return The return value is the token allowance for one llama send.
+     */
+    private int llamaSlotAllowance() {
+        int ctx = 4096;
+        int reserve = 0;
+        LlamaOpenApiProperties.Chat.Options yaml = llamaYamlOptions();
+        if (yaml != null && yaml.getNumCtx() > 0) {
+            ctx = yaml.getNumCtx();
+        }
+        if (yaml != null && yaml.getNumPredict() != null && yaml.getNumPredict().intValue() > 0) {
+            reserve = yaml.getNumPredict().intValue();
+        }
+        int allowance = ctx - reserve;
+        if (allowance < 1) {
+            return 1;
+        }
+        return allowance;
+    }
+
+    // @aa-sdd aetheris-plan-f-282.001.md
+    // @aa-sdd aetheris-plan-f-283.001.md
+    // @aa-sdd aetheris-plan-f-284.001.md
+    /**
+     * The {@code fitLlamaSlot} method keeps the llama prompt inside the slot.
+     * A null list returns unchanged.
+     * An empty list returns unchanged.
+     * The first rendered count comes from {@link #measureLlama}.
+     * A miss is tried once more.
+     * A second miss throws {@link Exception} with {@code The slot could not be measured.}
+     * A count at or under the allowance returns that same list.
+     * {@link #spreadGap} adds the gap between that count and the character-guess sum.
+     * The remainder of the gap lands on the earliest included lines.
+     * {@link RouxEngine#selectSlot} then walks the messages that are still included.
+     * The weights for that walk are the corrected counts.
+     * A system line joins the pin.
+     * A mood line that {@link MoodDesk#lineAtTurnHead} recognizes joins the pin.
+     * {@code llamaHeads} marks a head only when its length matches the arrived list.
+     * The live line is the last user message with no later assistant message.
+     * A rendered count of the kept list that is at or under the allowance is the send.
+     * A count that is still over spreads the new gap onto the kept weights.
+     * {@link #cutHolds} reports a cut that did not shrink.
+     * A smaller cut walks again.
+     * A cut that holds the same count throws {@link Exception} with {@code The locked turns do not fit the slot.}
+     * A second miss on a count throws {@code The slot could not be measured.}
+     * The method does not return the uncut list after a miss.
+     * The method does not log the API key.
+     *
+     * @param req The request carries {@code llamaHeads}. The value may be null.
+     * @param messages The messages are the prompt that arrived.
+     * @return The return value is the list to send.
+     * @throws Exception The exception is the measure sentence or the locked-prefix sentence.
+     */
+    private List<Message> fitLlamaSlot(AmwpToon.ExecuteBody req, List<Message> messages) throws Exception {
+        if (messages == null || messages.size() == 0) {
+            return messages;
+        }
+        int allowance = llamaSlotAllowance();
+        HttpClient http = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(2))
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build();
+        int full = measureLlama(http, messages);
+        if (full <= allowance) {
+            return messages;
+        }
+        int count = messages.size();
+        boolean[] heads = null;
+        if (req != null && req.llamaHeads != null && req.llamaHeads.length == count) {
+            heads = req.llamaHeads;
+        }
+        byte[] roles = new byte[count];
+        boolean[] stays = new boolean[count];
+        int[] weights = new int[count];
+        HeuristicTokenCounter counter = new HeuristicTokenCounter();
+        for (int i = 0; i < count; i++) {
+            Message message = messages.get(i);
+            String text = message == null || message.getText() == null ? "" : message.getText();
+            if (message instanceof SystemMessage) {
+                roles[i] = Role.SYSTEM;
+            } else if (message instanceof AssistantMessage) {
+                roles[i] = Role.ASSISTANT;
+            } else {
+                roles[i] = Role.USER;
+                if (MoodDesk.lineAtTurnHead(text) != null) {
+                    stays[i] = true;
+                }
+            }
+            weights[i] = counter.count(text);
+        }
+        int liveAt = -1;
+        for (int i = 0; i < count; i++) {
+            if (!(messages.get(i) instanceof UserMessage)) {
+                continue;
+            }
+            boolean assistantAfter = false;
+            for (int j = i + 1; j < count; j++) {
+                if (messages.get(j) instanceof AssistantMessage) {
+                    assistantAfter = true;
+                    break;
+                }
+            }
+            if (!assistantAfter) {
+                liveAt = i;
+            }
+        }
+        boolean[] include = new boolean[count];
+        for (int i = 0; i < count; i++) {
+            include[i] = true;
+        }
+        spreadGap(weights, include, full);
+        boolean[] omit = new boolean[count];
+        int seen = -1;
+        while (true) {
+            ArrayList<Message> chosen = chosenSlot(messages, omit, roles, stays, heads, weights, liveAt, allowance);
+            int rendered = measureLlama(http, chosen);
+            if (rendered <= allowance) {
+                return chosen;
+            }
+            if (cutHolds(seen, chosen.size())) {
+                throw new Exception("The locked turns do not fit the slot.");
+            }
+            seen = chosen.size();
+            boolean[] kept = new boolean[count];
+            for (int i = 0; i < count; i++) {
+                kept[i] = !omit[i];
+            }
+            spreadGap(weights, kept, rendered);
+        }
+    }
+
+    // @aa-sdd aetheris-plan-f-283.001.md
+    /**
+     * The {@code measureLlama} method counts one rendered llama prompt.
+     * The count comes from {@link #llamaRendered}.
+     * A miss is tried once more.
+     * A second miss throws {@link Exception} with {@code The slot could not be measured.}
+     *
+     * @param http The client is the slot client.
+     * @param messages The messages are the prompt to measure.
+     * @return The return value is the token count.
+     * @throws Exception The exception is the measure sentence.
+     */
+    private int measureLlama(HttpClient http, List<Message> messages) throws Exception {
+        int count = llamaRendered(http, messages);
+        if (count < 0) {
+            count = llamaRendered(http, messages);
+        }
+        if (count < 0) {
+            throw new Exception("The slot could not be measured.");
+        }
+        return count;
+    }
+
+    // @aa-sdd aetheris-plan-f-284.001.md
+    /**
+     * The {@code cutHolds} method reports a cut that did not shrink.
+     * A seen count below zero is the first cut.
+     * A kept count equal to that seen count holds still.
+     * A smaller kept count walks again.
+     *
+     * @param seen The seen count is the cut already confirmed over the slot, or {@code -1}.
+     * @param kept The kept count is the cut this walk returned.
+     * @return The flag is true when the cut holds the same count.
+     */
+    static boolean cutHolds(int seen, int kept) {
+        return seen >= 0 && kept == seen;
+    }
+
+    // @aa-sdd aetheris-plan-f-283.001.md
+    /**
+     * The {@code spreadGap} method adds the gap between a rendered total and the included weights.
+     * A null weight array returns.
+     * A null include array includes every index.
+     * An included flag that is false is left as it is.
+     * A rendered count at or under the included sum returns.
+     * The whole gap is shared across the included weights.
+     * The remainder lands on the earliest included indexes.
+     * The included weights then sum to the rendered count.
+     *
+     * @param weights The weights are the character guesses. The method writes the corrected counts.
+     * @param include The include flags name the weights that share the gap. The value may be null.
+     * @param rendered The rendered count is the measured prompt.
+     */
+    static void spreadGap(int[] weights, boolean[] include, int rendered) {
+        if (weights == null) {
+            return;
+        }
+        int included = 0;
+        int sum = 0;
+        for (int i = 0; i < weights.length; i++) {
+            if (include != null && (i >= include.length || !include[i])) {
+                continue;
+            }
+            included++;
+            sum = sum + weights[i];
+        }
+        if (included == 0 || rendered <= sum) {
+            return;
+        }
+        int gap = rendered - sum;
+        int each = gap / included;
+        int rem = gap % included;
+        int seen = 0;
+        for (int i = 0; i < weights.length; i++) {
+            if (include != null && (i >= include.length || !include[i])) {
+                continue;
+            }
+            int add = each;
+            if (seen < rem) {
+                add = add + 1;
+            }
+            weights[i] = weights[i] + add;
+            seen++;
+        }
+    }
+
+    // @aa-sdd aetheris-plan-f-283.001.md
+    /**
+     * The {@code chosenSlot} method walks the messages that are still included.
+     * A piece {@code omit} marks is left out.
+     * The walk is {@link RouxEngine#selectSlot}.
+     * An empty cut throws {@link Exception} with {@code The locked turns do not fit the slot.}
+     * Indexes the walk leaves out are marked omitted.
+     * The method does not add a piece back.
+     *
+     * @param messages The messages are the prompt that arrived.
+     * @param omit The omit flags name pieces already left out. The method marks the pieces this walk leaves out.
+     * @param roles The roles are the role bytes.
+     * @param stays The stays mark mood lines.
+     * @param heads The heads mark designated turns. The value may be null.
+     * @param weights The weights are the corrected counts.
+     * @param liveAt The live index is the unsent line, or {@code -1}.
+     * @param allowance The allowance is the slot.
+     * @return The return value is the kept list, in walk order.
+     * @throws Exception The exception is the locked-prefix sentence.
+     */
+    private static ArrayList<Message> chosenSlot(List<Message> messages, boolean[] omit, byte[] roles, boolean[] stays,
+            boolean[] heads, int[] weights, int liveAt, int allowance) throws Exception {
+        int count = messages.size();
+        int kept = 0;
+        for (int i = 0; i < count; i++) {
+            if (!omit[i]) {
+                kept++;
+            }
+        }
+        if (kept == 0) {
+            throw new Exception("The locked turns do not fit the slot.");
+        }
+        long[] seqs = new long[kept];
+        byte[] roleCut = new byte[kept];
+        int[] tokens = new int[kept];
+        boolean[] headCut = new boolean[kept];
+        boolean[] stayCut = new boolean[kept];
+        boolean[] liveCut = new boolean[kept];
+        int[] origin = new int[kept];
+        int at = 0;
+        for (int i = 0; i < count; i++) {
+            if (omit[i]) {
+                continue;
+            }
+            origin[at] = i;
+            seqs[at] = i == liveAt ? 0L : (long) i + 1L;
+            roleCut[at] = roles[i];
+            tokens[at] = weights[i];
+            headCut[at] = heads != null && heads[i];
+            stayCut[at] = stays[i];
+            liveCut[at] = i == liveAt;
+            at++;
+        }
+        RouxEngine.SinkCut cut = RouxEngine.selectSlot(allowance, seqs, roleCut, tokens, headCut, stayCut, liveCut);
+        if (cut == null || cut.ordinals == null || cut.ordinals.length == 0) {
+            throw new Exception("The locked turns do not fit the slot.");
+        }
+        ArrayList<Message> chosen = new ArrayList<Message>();
+        boolean[] seen = new boolean[count];
+        for (int i = 0; i < cut.ordinals.length; i++) {
+            int compact = cut.ordinals[i];
+            if (compact < 0 || compact >= origin.length) {
+                continue;
+            }
+            int index = origin[compact];
+            seen[index] = true;
+            chosen.add(messages.get(index));
+        }
+        if (chosen.size() == 0) {
+            throw new Exception("The locked turns do not fit the slot.");
+        }
+        for (int i = 0; i < count; i++) {
+            if (!seen[i]) {
+                omit[i] = true;
+            }
+        }
+        return chosen;
+    }
+
+    /**
+     * The {@code lockedPiece} method reports a piece the slot fit must keep.
+     * A system role stays.
+     * A stay flag stays.
+     * A head flag stays.
+     * A live flag stays.
+     *
+     * @param role The role is the role byte.
+     * @param stay The stay flag joins the pin.
+     * @param head The head flag is a designated turn.
+     * @param live The live flag is the unsent line.
+     * @return The flag is true when the piece is locked.
+     */
+    private static boolean lockedPiece(byte role, boolean stay, boolean head, boolean live) {
+        return role == Role.SYSTEM || stay || head || live;
+    }
+
+    /**
+     * The {@code llamaRendered} method counts the rendered llama prompt.
+     * The first POST is {@code /apply-template}.
+     * The second POST is {@link LlamaCppLlmService#TOKENIZE_PATH} of the prompt field.
+     * A miss on either POST returns {@code -1}.
+     * The method does not log the API key.
+     *
+     * @param http The client is the slot client. Redirects are already refused.
+     * @param messages The messages are the prompt to measure.
+     * @return The return value is the token count, or {@code -1} on a miss.
+     */
+    private int llamaRendered(HttpClient http, List<Message> messages) {
+        String body;
+        try {
+            body = LlamaCppLlmService.applyTemplateBody(messages);
+        } catch (Exception ex) {
+            return -1;
+        }
+        String raw = postLlama(http, "/apply-template", body);
+        if (raw == null) {
+            return -1;
+        }
+        String prompt = LlamaCppLlmService.templatePrompt(raw);
+        if (prompt == null) {
+            return -1;
+        }
+        String counted = postLlama(http, LlamaCppLlmService.TOKENIZE_PATH, LlamaCppLlmService.tokenizeBody(prompt));
+        if (counted == null) {
+            return -1;
+        }
+        return LlamaCppLlmService.tokenCount(counted);
+    }
+
+    /**
+     * The {@code postLlama} method posts one JSON document to the llama base.
+     * The timeout is 2 seconds.
+     * A blank API key omits {@code Authorization}.
+     * A status outside 200 through 299 returns null.
+     * An exception returns null.
+     * The method does not log the API key.
+     *
+     * @param http The client is the slot client.
+     * @param path The path is the suffix after the base URL.
+     * @param json The json is the request body.
+     * @return The return value is the response text, or null on a miss.
+     */
+    private String postLlama(HttpClient http, String path, String json) {
+        try {
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(URI.create(llamaBase() + path))
+                    .timeout(Duration.ofSeconds(2))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(json == null ? "" : json, StandardCharsets.UTF_8));
+            String key = llamaKey();
+            if (key.length() > 0) {
+                builder.header("Authorization", "Bearer " + key);
+            }
+            HttpResponse<String> response = http.send(builder.build(),
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                return null;
+            }
+            return response.body();
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     /**
@@ -2220,6 +2846,7 @@ public class AmwpFacade {
         return new UUID(msb, lsb).toString();
     }
 
+    // @aa-sdd L40 aa-sdd-source-prose.md#AmwpFacade
     /**
      * The {@code OpenFuture} class is the in-flight placeholder before submit.
      * The future is not done until it is cancelled.
@@ -2294,6 +2921,7 @@ public class AmwpFacade {
         }
     }
 
+    // @aa-sdd L40 aa-sdd-source-prose.md#AmwpFacade
     /**
      * The {@code ProbeOutcome} class is the probe result for one run.
      * {@link #SEND} means the completion may run.
@@ -2321,9 +2949,9 @@ public class AmwpFacade {
         }
     }
 
-    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+    // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
+    // @aa-sdd PK-1060 docs/specs/common/formal-plan.spec.md FINESSE:f-32
     /**
      * The {@code ProbeGate} class runs one Grok probe for this server process.
      * The valid flag matches the key that passed.
@@ -2331,11 +2959,11 @@ public class AmwpFacade {
      * The shell does not keep a copy.
      * A restart clears it.
      * The probe future stays here.
-     * Cancelling the leader does not cancel it. // @aa-sdd PK-758 docs/specs/common/stages.spec.md
-     */ // @aa-sdd PK-697 docs/specs/common/pre-plan.spec.md
-    // @aa-sdd PK-758 PK-19 docs/specs/common/stages.spec.md docs/specs/java/org/aetheris/ssh/ssh.spec.md
-    // @aa-sdd PK-697 PK-658 docs/specs/common/pre-plan.spec.md docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-19 PK-784 docs/specs/java/org/aetheris/ssh/ssh.spec.md docs/specs/common/formal-plan.spec.md
+     * Cancelling the leader does not cancel it.
+     */
+    // @aa-sdd PK-758 docs/specs/common/stages.spec.md
+    // @aa-sdd PK-697 docs/specs/common/pre-plan.spec.md
+    // @aa-sdd PK-19 docs/specs/java/org/aetheris/ssh/ssh.spec.md
     // @aa-sdd PK-658 docs/specs/common/formal-plan.spec.md
     // @aa-sdd PK-784 docs/specs/common/formal-plan.spec.md
     private final class ProbeGate {
@@ -2445,6 +3073,7 @@ public class AmwpFacade {
              * @param err The error is the probe failure, or null.
              */
             future.whenComplete(new BiConsumer<Void, Throwable>() {
+                // @aa-sdd L40 aa-sdd-source-prose.md#AmwpFacade
                 @Override
                 public void accept(Void ok, Throwable err) {
                     if (err == null) {
@@ -2531,6 +3160,7 @@ public class AmwpFacade {
         }
     }
 
+    // @aa-sdd L40 aa-sdd-source-prose.md#AmwpFacade
     /**
      * The {@code AmwpReplySink} interface is the mux writer for replies.
      */
@@ -2546,6 +3176,7 @@ public class AmwpFacade {
         void send(int channel, int type, byte[] payload) throws Exception;
     }
 
+    // @aa-sdd L40 aa-sdd-source-prose.md#AmwpFacade
     /**
      * The {@code PoolSink} class sends frames for one pool prompt.
      * A chunk that does not fit sends {@code too-large} and stops the prompt.

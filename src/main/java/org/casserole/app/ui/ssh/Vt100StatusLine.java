@@ -20,6 +20,7 @@ package org.casserole.app.ui.ssh;
  * The line does not print the word {@code AMWP}, the name of the Aetheris frame protocol.
  * The line does not print the word {@code raw}.
  * The two words stay on the Aetheris strip, the status strip of the canvas tab.
+ * // @aa-sdd L40 aa-sdd-source-prose.md#Vt100StatusLine
  *
  * @author clayl (2026-10-31)
  */
@@ -229,6 +230,7 @@ public final class Vt100StatusLine {
     /**
      * The engineFromConsole method builds the SSH strip engine from one pane's selected model.
      * Pool returns {@code pool}. Grok returns {@code grok/} plus the id, or {@code grok} when the id is blank.
+     * llama-openapi returns {@code llama-openapi/} plus the id, or {@code llama-openapi} when that id is blank.
      * Any other family returns {@code ollama/} plus the Ollama id, or {@code ollama} when that id is blank.
      * An id that already begins with its family prefix is returned as stored.
      * A canvas cell is not an input.
@@ -252,6 +254,16 @@ public final class Vt100StatusLine {
                 return id;
             }
             return "grok/" + id;
+        }
+        if ("llama-openapi".equals(family)) {
+            String llamaId = ollamaId == null ? "" : ollamaId.trim();
+            if (llamaId.length() == 0) {
+                return "llama-openapi";
+            }
+            if (llamaId.startsWith("llama-openapi/")) {
+                return llamaId;
+            }
+            return "llama-openapi/" + llamaId;
         }
         String id = ollamaId == null ? "" : ollamaId.trim();
         if (id.length() == 0) {
@@ -283,7 +295,11 @@ public final class Vt100StatusLine {
             ollama = consoleLine(text, "model:");
         }
         String grok = consoleLine(text, "grok_model:");
-        return engineFromConsole(provider, ollama, grok);
+        String shown = ollama;
+        if ("llama-openapi".equals(provider)) {
+            shown = consoleLine(text, "llama_model:");
+        }
+        return engineFromConsole(provider, shown, grok);
     }
 
     /**

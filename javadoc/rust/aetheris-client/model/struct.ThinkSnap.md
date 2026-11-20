@@ -9,7 +9,11 @@ pub struct ThinkSnap
 ```
 
 The [`ThinkSnap`](struct.ThinkSnap.md) struct is the think state for one cell.
-It is not a vault column. `ollama_on` is the Ollama checkbox. `ollama_level` is the Ollama effort. `ollama_id` is the Ollama model id. `grok_on` is the Grok checkbox. `pool_on` is the pool checkbox.
+It is not a vault column. `ollama_on` is the Ollama checkbox. `ollama_level` is the Ollama effort. `ollama_id` is the Ollama model id. `grok_on` is the Grok checkbox. `pool_on` is the pool checkbox. `llama_id` is the llama model id. `llama_temperature` and `llama_cap` are the llama card fields. A blank llama field stays off the body.
+
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
 
 ## Field Summary
 
@@ -20,6 +24,9 @@ It is not a vault column. `ollama_on` is the Ollama checkbox. `ollama_level` is 
 | String | [`pub`](#member-pub) |  |
 | bool | [`pub`](#member-pub) |  |
 | bool | [`pub`](#member-pub) |  |
+| String | [`pub`](#member-pub) |  |
+| String | [`pub`](#member-pub) |  |
+| String | [`pub`](#member-pub) |  |
 
 ## Method Summary
 
@@ -67,6 +74,30 @@ pub grok_on: bool
 
 ```rust
 pub pool_on: bool
+```
+
+### pub
+
+<a id="member-pub"></a>
+
+```rust
+pub llama_id: String
+```
+
+### pub
+
+<a id="member-pub"></a>
+
+```rust
+pub llama_temperature: String
+```
+
+### pub
+
+<a id="member-pub"></a>
+
+```rust
+pub llama_cap: String
 ```
 
 ## Method Detail

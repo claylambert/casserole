@@ -27,8 +27,8 @@ import org.aetheris.swing.AetherisNotebookPanel.TokenModel;
 import org.aetheris.swing.AetherisNotebookPanel.TokenRing;
 import org.junit.jupiter.api.Test;
 
-// @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
-/** // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-207
+/**
  * The class checks the token window under the inspector in {@link AetherisNotebookPanel}.
  * The test does not open a window.
  *
@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 // @aa-sdd PK-924 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
-class TokenRingTest { // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md
+class TokenRingTest {
 
     /**
      * The method arranges no objects.
@@ -422,5 +422,83 @@ class TokenRingTest { // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swin
             }
         }
         return n;
+    }
+
+    /**
+     * The method arranges a llama-openapi yaml window and a missing key.
+     * The parsed {@code num-ctx} is {@code 8192}.
+     * The parsed alias is {@code Falcon3-3B}.
+     * A document with no llama key stores a llama window of {@code 0} and a blank alias.
+     * {@link AetherisNotebookPanel#llamaHeatWindow} returns {@code 4096} for that document.
+     * A llama-openapi row knows window {@code 8192} and source {@code application.yaml}.
+     * A second llama target stays one row.
+     * A short id stays. A path id shows the alias passed to {@link AetherisNotebookPanel#llamaShownId}.
+     * The Ollama row on that same call still uses the session window.
+     *
+     * @return The method returns nothing.
+     */
+    @Test
+    void theLlamaWindowComesFromTheConfig() {
+        String yaml = ""
+                + "spring:\n"
+                + "  ai:\n"
+                + "    llama-openapi:\n"
+                + "      alias: Falcon3-3B\n"
+                + "      chat:\n"
+                + "        options:\n"
+                + "          num-ctx: 8192\n";
+        AetherisNotebookPanel.TokenBudgets budgets = AetherisNotebookPanel.tokenBudgetsFromYaml(yaml);
+        assertEquals(8192, budgets.llamaWindow);
+        assertEquals("Falcon3-3B", budgets.llamaAlias);
+        assertEquals(8192, AetherisNotebookPanel.llamaHeatWindow(budgets));
+        String missing = ""
+                + "casserole:\n"
+                + "  pool:\n"
+                + "    context-window: 256000\n";
+        AetherisNotebookPanel.TokenBudgets absent = AetherisNotebookPanel.tokenBudgetsFromYaml(missing);
+        assertEquals(256000, absent.poolWindow);
+        assertEquals(0, absent.llamaWindow);
+        assertEquals("", absent.llamaAlias);
+        assertEquals(4096, AetherisNotebookPanel.llamaHeatWindow(absent));
+        assertEquals(4096, AetherisNotebookPanel.llamaHeatWindow(AetherisNotebookPanel.tokenBudgetsFromYaml(null)));
+        String[] targets = new String[] {"llama-openapi/C:/models/Falcon3-3B.gguf", "ollama/deepseek-r1:7b"};
+        ArrayList<TokenModel> rows = AetherisNotebookPanel.tokenModels(
+                true, 131072, targets, "llama-openapi/C:/models/Falcon3-3B.gguf", 0, 0, null, 8192);
+        int index = AetherisNotebookPanel.tokenModelIndex(rows, "llama-openapi/C:/models/Falcon3-3B.gguf");
+        TokenModel llama = rows.get(index);
+        assertEquals("llama-openapi", llama.family);
+        assertTrue(llama.windowKnown);
+        assertEquals(8192, llama.window);
+        String stats = AetherisNotebookPanel.tokenStats(80, 320, 1, llama);
+        assertTrue(stats.contains("context window: 8192\n"));
+        assertTrue(stats.contains("source: application.yaml\n"));
+        TokenModel ollama = rows.get(indexOf(rows, "ollama/deepseek-r1:7b"));
+        assertEquals(131072, ollama.window);
+        assertTrue(AetherisNotebookPanel.tokenStats(10, 40, 1, ollama).contains("source: session num-ctx\n"));
+        String[] two = new String[] {
+            "llama-openapi/C:/models/Falcon3-3B.gguf",
+            "llama-openapi/D:/other/model.gguf"
+        };
+        ArrayList<TokenModel> once = AetherisNotebookPanel.tokenModels(
+                true, 131072, two, "llama-openapi", 0, 0, null, 4096);
+        int families = 0;
+        for (int i = 0; i < once.size(); i++) {
+            if ("llama-openapi".equals(once.get(i).family)) {
+                families = families + 1;
+            }
+        }
+        assertEquals(1, families);
+        int emptyIndex = AetherisNotebookPanel.tokenModelIndex(once, "llama-openapi");
+        assertEquals("llama-openapi", once.get(emptyIndex).family);
+        ArrayList<TokenModel> named = AetherisNotebookPanel.tokenModels(
+                true, 1000, new String[] {"llama-openapi/Falcon3-3B"}, "llama-openapi/Falcon3-3B", 0, 0, null, 4096);
+        int namedIndex = AetherisNotebookPanel.tokenModelIndex(named, "llama-openapi/Falcon3-3B");
+        assertEquals("llama-openapi/Falcon3-3B", named.get(namedIndex).label);
+        assertEquals("Falcon3-3B", AetherisNotebookPanel.llamaShownId("Falcon3-3B"));
+        assertEquals("Falcon3-3B", AetherisNotebookPanel.llamaShownId("C:/models/Falcon3-3B.gguf", "Falcon3-3B"));
+        assertEquals("C:/models/Falcon3-3B.gguf", AetherisNotebookPanel.llamaShownId("C:/models/Falcon3-3B.gguf", ""));
+        assertEquals("Falcon3-3B", AetherisNotebookPanel.llamaShownId("Falcon3-3B", "Other"));
+        assertEquals("Falcon3-3B", AetherisNotebookPanel.llamaShownId("plain.gguf", " Falcon3-3B "));
+        assertEquals("", AetherisNotebookPanel.llamaShownId("", "Falcon3-3B"));
     }
 }

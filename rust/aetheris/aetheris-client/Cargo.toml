@@ -1,10 +1,10 @@
 [package]
 name = "aetheris-client"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2024"
 
 [dependencies]
-aetheris-term = { version = "1.0.0", path = "../aetheris-term" }
+aetheris-term = { version = "1.0.1", path = "../aetheris-term" }
 chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 crc32c = "0.6.8"
 egui = { version = "0.37.0", features = ["default_fonts", "experimental"] }

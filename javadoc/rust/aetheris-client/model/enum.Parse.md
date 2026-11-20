@@ -11,6 +11,10 @@ enum Parse
 The `Parse` enum is the result of reading one settings document.
 `Blocked` means the text is refused. `Doc` is a standing entry and the cell rows.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Enum Constant Summary
 
 | Modifier and Type | Member | Description |

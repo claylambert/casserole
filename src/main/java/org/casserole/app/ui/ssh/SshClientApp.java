@@ -50,7 +50,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
@@ -60,10 +64,13 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 
 import java.awt.Container;
 
@@ -90,8 +97,12 @@ import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.yaml.snakeyaml.Yaml;
+
 import org.aetheris.config.AetherisYaml;
+import org.casserole.llm.LlamaCppLlmService;
 import org.casserole.mood.MoodDesk;
+import org.casserole.ssh.shell.ChatShell;
 import org.aetheris.swing.AetherisNotebookPanel;
 import org.aetheris.swing.AetherisWorker;
 import org.aetheris.swing.ThinkPaneManager;
@@ -1738,6 +1749,7 @@ public class SshClientApp extends JFrame
      * A missing stored line uses the notebook strip.
      * The SSH tab joins the west link text, the mood gate, and the facts.
      * The facts use the mode property value, the shell air word, and the focused pane's model.
+     * A path-shaped llama-openapi id shows the configured alias.
      * A pane that has not reported a model uses {@code ollama}. A canvas cell is not this word.
      * The mood gate is true when the focused vault user has an SSH mood line.
      * {@link #feedComposerHeat} runs for either tab.
@@ -1759,7 +1771,8 @@ public class SshClientApp extends JFrame
             return;
         }
         String mode = connectionPanel.getMode().getPropertyValue();
-        String facts = Vt100StatusLine.facts(mode, aetherisPanel.shellAirWord(), sshPaneEngine());
+        String facts = Vt100StatusLine.facts(mode, aetherisPanel.shellAirWord(),
+                AetherisNotebookPanel.shownEngine(sshPaneEngine()));
         String west = Vt100StatusLine.west(linkWord, linkHost, linkPort);
         boolean moodGate = aetherisPanel.sshMoodLineFor(focusedVaultUser()) != null;
         String joined = Vt100StatusLine.join(west, moodGate, facts);
@@ -1780,7 +1793,7 @@ public class SshClientApp extends JFrame
      *
      * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-160
      */
-    private void feedComposerHeat() { // @aa-sdd PK-1422 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+    private void feedComposerHeat() {
         if (composerHeat == null || aetherisPanel == null || productTabs == null) {
             return;
         }
@@ -1901,6 +1914,139 @@ public class SshClientApp extends JFrame
         return Vt100TokenWindow.heuristic(memory);
     }
 
+    // @aa-sdd aetheris-plan-f-281.001.md
+    /**
+     * The {@code llamaBase} method reads {@code spring.ai.llama-openapi.base-url}.
+     * A missing resource, a bad document, or a blank value returns {@code http://127.0.0.1:3333}.
+     * A trailing slash is removed.
+     *
+     * @return The return value is the base URL with no trailing slash.
+     */
+    private static String llamaBase() {
+        String base = llamaYamlText("base-url");
+        while (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        if (base.length() == 0) {
+            return "http://127.0.0.1:3333";
+        }
+        return base;
+    }
+
+    // @aa-sdd aetheris-plan-f-281.001.md
+    /**
+     * The {@code llamaKey} method reads {@code spring.ai.llama-openapi.api-key}.
+     * A missing key returns an empty string.
+     * The value is not written to a log.
+     *
+     * @return The return value is the key, or an empty string.
+     */
+    private static String llamaKey() {
+        return llamaYamlText("api-key");
+    }
+
+    /**
+     * The {@code llamaYamlText} method reads one string under {@code spring.ai.llama-openapi}.
+     * A missing resource returns an empty string.
+     * A document that is not a map returns an empty string.
+     * A value that is not a string returns an empty string.
+     *
+     * @param key The key is {@code base-url} or {@code api-key}.
+     * @return The return value is the trimmed text, or an empty string.
+     */
+    private static String llamaYamlText(String key) {
+        InputStream in = SshClientApp.class.getResourceAsStream("/application.yaml");
+        if (in == null) {
+            return "";
+        }
+        try {
+            Object loaded = new Yaml().load(in);
+            Map<?, ?> root = llamaMap(loaded);
+            if (root == null) {
+                return "";
+            }
+            Map<?, ?> spring = llamaMap(root.get("spring"));
+            if (spring == null) {
+                return "";
+            }
+            Map<?, ?> ai = llamaMap(spring.get("ai"));
+            if (ai == null) {
+                return "";
+            }
+            Map<?, ?> llama = llamaMap(ai.get("llama-openapi"));
+            if (llama == null) {
+                return "";
+            }
+            Object value = llama.get(key);
+            if (!(value instanceof String)) {
+                return "";
+            }
+            return ((String) value).trim();
+        } catch (RuntimeException ex) {
+            return "";
+        } finally {
+            try {
+                in.close();
+            } catch (IOException closed) {
+                // The text already left the stream.
+            }
+        }
+    }
+
+    /**
+     * The {@code llamaMap} method returns a map value.
+     * A value that is not a map returns null.
+     *
+     * @param value The value is one yaml node. The value may be null.
+     * @return The return value is that map, or null.
+     */
+    private static Map<?, ?> llamaMap(Object value) {
+        if (value instanceof Map<?, ?>) {
+            return (Map<?, ?>) value;
+        }
+        return null;
+    }
+
+    // @aa-sdd aetheris-plan-f-281.001.md
+    /**
+     * The {@code askTokenizer} method posts one prompt to {@code /tokenize}.
+     * The call uses the yaml base URL.
+     * A blank API key omits {@code Authorization}.
+     * The timeout is two seconds.
+     * A status outside 2xx returns {@code -1}.
+     * A missing {@code tokens} array returns {@code -1}.
+     * The method does not log the key.
+     *
+     * @param prompt The prompt is the shell text.
+     * @return The return value is the token length, or {@code -1} on a miss.
+     */
+    private static int askTokenizer(String prompt) {
+        String key = llamaKey();
+        String body = LlamaCppLlmService.tokenizeBody(prompt);
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(2))
+                    .followRedirects(HttpClient.Redirect.NEVER)
+                    .build();
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(URI.create(llamaBase() + LlamaCppLlmService.TOKENIZE_PATH))
+                    .timeout(Duration.ofSeconds(2))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
+            if (key.length() > 0) {
+                builder.header("Authorization", "Bearer " + key);
+            }
+            HttpResponse<String> response = client.send(builder.build(),
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                return -1;
+            }
+            return LlamaCppLlmService.tokenCount(response.body());
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
+
     /**
      * The {@code sessionVaultUser} method returns the vault name for one pane.
      * A null session returns an empty string.
@@ -1948,7 +2094,7 @@ public class SshClientApp extends JFrame
      * A null edit returns null.
      * An edit older than {@code sshEditSeq} returns null.
      * A missing session or panel returns null.
-     * The copy holds the unsent line, the session text, and the vault user.
+     * The copy holds the unsent line, the session text, the vault user, and the engine word.
      * A held Roux tally stores the estimator result as the base.
      * Any other copy stores a base of zero.
      *
@@ -1968,7 +2114,8 @@ public class SshClientApp extends JFrame
             base = new StoredCountEstimator(user, aetherisPanel.rouxSessionUsed(user))
                     .estimate(Transcript.empty());
         }
-        return new SshSeat(edit.sequence, edit.session, held, base, memory, draft);
+        String engine = edit.session.engineLabel();
+        return new SshSeat(edit.sequence, edit.session, held, base, memory, draft, user, engine);
     }
 
     // @aa-sdd PK-1088 docs/specs/common/formal-plan.spec.md FINESSE:f-192
@@ -2001,6 +2148,8 @@ public class SshClientApp extends JFrame
      * The strings are copied before the worker counts them.
      * A null memory is stored as an empty string.
      * A null draft is stored as an empty string.
+     * A null user is stored as an empty string.
+     * A null engine is stored as an empty string.
      */
     // @aa-sdd PK-1328 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
     // @aa-sdd PK-219 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
@@ -2011,11 +2160,15 @@ public class SshClientApp extends JFrame
         private final int base;
         private final String memory;
         private final String draft;
+        private final String user;
+        private final String engine;
 
         /**
          * The constructor stores one snapshot.
          * A null memory becomes an empty string.
          * A null draft becomes an empty string.
+         * A null user becomes an empty string.
+         * A null engine becomes an empty string.
          *
          * @param sequence The edit number.
          * @param session The pane the text came from.
@@ -2023,14 +2176,19 @@ public class SshClientApp extends JFrame
          * @param base The held integer.
          * @param memory The session text.
          * @param draft The unsent line.
+         * @param user The vault user.
+         * @param engine The selected model word.
          */
-        private SshSeat(long sequence, TerminalSession session, boolean held, int base, String memory, String draft) {
+        private SshSeat(long sequence, TerminalSession session, boolean held, int base, String memory, String draft,
+                String user, String engine) {
             this.sequence = sequence;
             this.session = session;
             this.held = held;
             this.base = base;
             this.memory = memory == null ? "" : memory;
             this.draft = draft == null ? "" : draft;
+            this.user = user == null ? "" : user;
+            this.engine = engine == null ? "" : engine;
         }
     }
 
@@ -2054,6 +2212,8 @@ public class SshClientApp extends JFrame
     // @aa-sdd PK-219 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
     private final class SshEditQueue implements Runnable {
         private final ArrayDeque<SshEdit> pending = new ArrayDeque<SshEdit>();
+        private final HashMap<TerminalSession, String> lastPayload = new HashMap<TerminalSession, String>();
+        private final HashMap<TerminalSession, Integer> lastCount = new HashMap<TerminalSession, Integer>();
         private final Object gate = new Object();
         private final Thread thread;
         private boolean started;
@@ -2110,6 +2270,8 @@ public class SshClientApp extends JFrame
          * A null snapshot is skipped.
          * A snapshot older than {@code sshEditSeq} is skipped.
          * A count that throws is skipped.
+         * A llama-openapi word tokenizes the shell prompt.
+         * Any other word calls {@link SshClientApp#countDraft}.
          * A snapshot that became old during the count is skipped.
          * {@link #paintLater} posts the count to the Swing thread.
          */
@@ -2126,7 +2288,7 @@ public class SshClientApp extends JFrame
                 }
                 int count;
                 try {
-                    count = countDraft(seat.held, seat.base, seat.memory, seat.draft);
+                    count = countSeat(seat);
                 } catch (Exception ex) {
                     continue;
                 }
@@ -2156,6 +2318,60 @@ public class SshClientApp extends JFrame
                 }
                 return pending.removeFirst();
             }
+        }
+
+        // @aa-sdd aetheris-plan-f-281.001.md
+        /**
+         * The {@code countSeat} method counts one snapshot.
+         * A word that does not start with {@code llama-openapi} calls {@link SshClientApp#countDraft}.
+         * A llama-openapi word asks the seated shell for the prompt.
+         * The same payload as the last attempt does not call the server again.
+         * A stored tokenize count is painted when that payload matches, and when a new payload misses.
+         * A miss with no stored tokenize count calls {@link SshClientApp#countDraft}.
+         * The prompt is copied before the POST. The seat map is not held during the POST.
+         *
+         * @param seat The snapshot to count.
+         * @return The estimate.
+         */
+        private int countSeat(SshSeat seat) {
+            String word = Vt100StatusLine.engineWord(seat.engine);
+            if (!word.startsWith("llama-openapi")) {
+                return countDraft(seat.held, seat.base, seat.memory, seat.draft);
+            }
+            String prompt = ChatShell.promptTextFor(seat.user, seat.draft);
+            if (prompt == null) {
+                return missedCount(seat);
+            }
+            String previous = lastPayload.get(seat.session);
+            if (prompt.equals(previous)) {
+                Integer stored = lastCount.get(seat.session);
+                if (stored != null && stored.intValue() >= 0) {
+                    return stored.intValue();
+                }
+                return countDraft(seat.held, seat.base, seat.memory, seat.draft);
+            }
+            lastPayload.put(seat.session, prompt);
+            int tokens = askTokenizer(prompt);
+            if (tokens >= 0) {
+                lastCount.put(seat.session, Integer.valueOf(tokens));
+                return tokens;
+            }
+            return missedCount(seat);
+        }
+
+        /**
+         * The {@code missedCount} method paints a stored tokenize count.
+         * A pane with no stored count calls {@link SshClientApp#countDraft}.
+         *
+         * @param seat The snapshot that missed.
+         * @return The estimate.
+         */
+        private int missedCount(SshSeat seat) {
+            Integer stored = lastCount.get(seat.session);
+            if (stored != null && stored.intValue() >= 0) {
+                return stored.intValue();
+            }
+            return countDraft(seat.held, seat.base, seat.memory, seat.draft);
         }
 
         /**
@@ -2837,7 +3053,7 @@ public class SshClientApp extends JFrame
      *
      * @param session the SSH session that is closing
      */
-    private void releaseSessionThought(TerminalSession session) { // @aa-sdd PK-1456 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+    private void releaseSessionThought(TerminalSession session) {
         if (session == null || aetherisPanel == null) {
             return;
         }
@@ -2859,7 +3075,7 @@ public class SshClientApp extends JFrame
      * The remaining pane is selected and takes focus.
      * A sibling that owns no session selects the first session.
      */
-    private void closeFocusedPane() { // @aa-sdd PK-1456 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+    private void closeFocusedPane() {
         if (sessions.size() <= 1) {
             return;
         }
@@ -3603,7 +3819,7 @@ public class SshClientApp extends JFrame
      * @return The engine word, or an empty string.
      */
     @Override
-    public String focusedEngine() { // @aa-sdd PK-1418 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+    public String focusedEngine() {
         return sshPaneEngine();
     }
 
@@ -3613,7 +3829,7 @@ public class SshClientApp extends JFrame
      * A missing pane returns.
      */
     @Override
-    public void noteTransferredSession() { // @aa-sdd PK-1418 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
+    public void noteTransferredSession() {
         if (focused == null) {
             return;
         }
@@ -3948,7 +4164,8 @@ public class SshClientApp extends JFrame
      * The Aetheris tab reveals the notebook token window.
      * A held Roux tally reveals the stored character count and block count.
      * Any other SSH pane reveals the session-text length and the non-blank row count.
-     * The SSH count comes from {@link #sshLiveCount}.
+     * A llama-openapi word opens on the stored pane count.
+     * Every other SSH count comes from {@link #sshLiveCount}.
      *
      * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-160 FINESSE:f-163
      */
@@ -3962,7 +4179,8 @@ public class SshClientApp extends JFrame
             return;
         }
         String user = focusedVaultUser();
-        int used = sshLiveCount();
+        String word = Vt100StatusLine.engineWord(sshPaneEngine());
+        int used = word.startsWith("llama-openapi") ? focusedLiveCount() : sshLiveCount();
         if (aetherisPanel.rouxSessionHeld(user)) {
             aetherisPanel.revealRouxTokenWindow(
                     used,

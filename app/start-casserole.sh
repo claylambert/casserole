@@ -12,7 +12,7 @@
 #
 # java-env.sh is sourced, so the JDK it selects stays in this process.
 # The launch runs the java inside that home. The script prints
-# casserole-server 1.0.0. A missing jar runs
+# casserole-server 1.0.1. A missing jar runs
 # bin/install.sh once. A jar that is already present is not rebuilt.
 #
 # Ollama is installed only when the ollama command is missing or when
@@ -41,7 +41,7 @@ cd "$root"
 # shellcheck disable=SC1091
 . "$root/bin/java-env.sh"
 
-printf 'casserole-server 1.0.0\n'
+printf 'casserole-server 1.0.1\n'
 
 # Install builds the jar only when app/casserole.jar is absent.
 if [ ! -f "$root/app/casserole.jar" ]; then

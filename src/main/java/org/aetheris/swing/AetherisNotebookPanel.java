@@ -182,6 +182,7 @@ import org.casserole.app.ui.ssh.SshClientProperties;
 import org.casserole.app.ui.ssh.SshClientTheme;
 import org.casserole.chat.ThinkingClock;
 import org.casserole.edit.EditMemory;
+import org.casserole.llm.LlamaCppLlmService;
 import org.casserole.mood.MoodDesk;
 import org.casserole.app.ui.ssh.SshTtyConnector;
 import org.casserole.app.ui.ssh.Vt100StatusLine;
@@ -830,6 +831,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private static final String GROK_LIST_MISS = "Grok model list is empty.";
     /** Red notice when the Ollama tag reply has no model lines. */
     private static final String OLLAMA_LIST_MISS = "Ollama model list is empty.";
+    /** Red notice when the llama-openapi model reply has no model lines. */
+    private static final String LLAMA_LIST_MISS = "llama-openapi model list is empty.";
     /** Right inset of the stamp on the focused cell. A wide line keeps this edge. */
     private static final int CAPTION_PAD = 8;
     /** Corner of a canvas cell. The same short radius as the Rust cell. */
@@ -946,7 +949,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private int moodDialogWidth;
     private int moodDialogHeight;
     /** True after the open size is set and the dialog is showing. A resize before that is ignored. */
-    private boolean moodSizeArmed; // @aa-sdd PK-1437 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private boolean moodSizeArmed;
     /** Air-gap and num-ctx. One line on its own panel. The font fits the column. */
     private FactsLine factsNote;
     /** T stays on the inspector. The estimate sits on the frame heatbar. */
@@ -1055,6 +1058,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private JCheckBox dialogGrokBurner;
     private JTextField dialogGrokTemperature;
     private JTextField dialogGrokMaxTokens;
+    private JComboBox<String> dialogLlamaModel;
+    private JTextField dialogLlamaTemperature;
+    private JTextField dialogLlamaMaxTokens;
     private JTextField dialogCardField;
     private CellRecord dialogCell;
     private JDialog modelDialog;
@@ -1095,10 +1101,20 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private boolean consoleDialogDismissed;
     /** True after OK on Transfer Conversation from the console, until that export reply. */
     private boolean transferToCanvas;
-    /** Console family word. {@code ollama}, {@code grok}, or {@code pool}. */
+    /** Console family word. {@code ollama}, {@code grok}, {@code pool}, or {@code llama-openapi}. */
     private String consoleProvider = "ollama";
     /** Ollama id last read for this console. */
     private String consoleOllamaModel = "";
+    /** llama-openapi id last read for this console. */
+    private String consoleLlamaModel = "";
+    /** True when this console stored a llama temperature. */
+    private boolean consoleLlamaTemperaturePresent;
+    /** Llama temperature last read for this console. */
+    private double consoleLlamaTemperature;
+    /** True when this console stored a llama completion cap. */
+    private boolean consoleLlamaMaxPresent;
+    /** Llama completion cap last read for this console. */
+    private int consoleLlamaMaxTokens;
     /**
      * Ollama think string for this console. Empty and {@code false} keep the pane shut.
      * The dialog checkbox does not survive a closed modal, so the gate reads this field.
@@ -2300,7 +2316,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param button a short chrome button
      */
-    private static void holdShortLabel(AbstractButton button) { // @aa-sdd PK-1448 docs/specs/common/stages.spec.md
+    private static void holdShortLabel(AbstractButton button) {
         if (button == null) {
             return;
         }
@@ -3190,7 +3206,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (consoleGrok != null && consoleGrok.model != null) {
             grok = consoleGrok.model;
         }
-        return Vt100StatusLine.engineFromConsole(consoleProvider, consoleOllamaModel, grok);
+        String shown = consoleOllamaModel;
+        if ("llama-openapi".equals(consoleProvider)) {
+            shown = consoleLlamaModel;
+        }
+        return shownEngine(Vt100StatusLine.engineFromConsole(consoleProvider, shown, grok));
     }
 
     /**
@@ -3603,6 +3623,20 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     @Override
                     public void run() {
                         applyTagsResult(cellId, text);
+                    }
+                });
+            } else if (text.startsWith("llama_models_result:")) {
+                /**
+                 * The runnable applies the llama model list for the cell named in the frame.
+                 */
+                SwingUtilities.invokeLater(new Runnable() {
+                    // @aa-sdd aetheris-plan-f-278.001.md
+                    /**
+                     * The method calls {@code applyLlamaModelsResult} with the frame's cell id and text.
+                     */
+                    @Override
+                    public void run() {
+                        applyLlamaModelsResult(cellId, text);
                     }
                 });
             } else if (text.startsWith("grok_models_result:")) {
@@ -5184,7 +5218,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param collapsed {@code true} folds the cards, and {@code false} opens them
      */
-    private void setCanvasCollapsed(boolean collapsed) { // @aa-sdd PK-1420 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private void setCanvasCollapsed(boolean collapsed) {
         CanvasRecord canvas = currentCanvas();
         if (canvas == null) {
             return;
@@ -5682,7 +5716,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param pairs prompt, reply, prompt, reply
      */
-    private void seatTransferred(final String[] pairs) { // @aa-sdd PK-1416 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private void seatTransferred(final String[] pairs) {
         final CanvasRecord canvas = currentCanvas();
         if (canvas == null || vault == null) {
             host.aetherisStatus("replace failed: no canvas");
@@ -9317,6 +9351,16 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             CellThink held = ollamaThink.get(target.id);
             if (held != null && held.poolOn) {
                 body.think = "true";
+            }
+        } else if ("llama-openapi".equals(bodyProvider)) {
+            CellThink held = ollamaThink.get(target.id);
+            if (held != null && held.llamaTemperaturePresent) {
+                body.temperaturePresent = true;
+                body.temperature = held.llamaTemperature;
+            }
+            if (held != null && held.llamaMaxPresent) {
+                body.maxCompletionPresent = true;
+                body.maxCompletionTokens = held.llamaMaxTokens;
             }
         }
         // Empty seat. A blank prompt drops it. A configured prompt fills it. The vestige sentence stays off.
@@ -15425,7 +15469,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * @param hasResponse The flag is true when reply text is present.
          * @return The return value is the frame for that pane.
          */
-        private Border paneEdge(boolean input, boolean hasResponse) { // @aa-sdd PK-1098 docs/specs/common/formal-plan.spec.md
+        private Border paneEdge(boolean input, boolean hasResponse) {
             if (!paintedBorders) {
                 return roundEdge(new Color(0x3a, 0x3a, 0x3a), 1, PANE_ROUND, 0);
             }
@@ -16336,7 +16380,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The prompt document and the reply document stay.
          * The run stays. The thinking pane stays.
          */
-        private void seatFold() { // @aa-sdd PK-1420 docs/specs/java/org/aetheris/swing/swing.spec.md
+        private void seatFold() {
             if (cell.collapsed) {
                 collapseButton.setText("+");
                 collapseButton.setToolTipText(buttonTip(
@@ -17220,11 +17264,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The class {@code TokenBudgets} holds the context-window integers taken from {@code application.yaml}.
      * The field {@code poolWindow} is the pool window.
      * The field {@code grokWindows} is the map from a Grok model id to that model's window.
-     * The type keeps those two values.
-     * The type has no field for any other key in the file.
+     * The field {@code llamaWindow} is {@code spring.ai.llama-openapi.chat.options.num-ctx}.
+     * The field {@code llamaAlias} is {@code spring.ai.llama-openapi.alias}.
+     * Other keys in the file stay unread.
      *
-     * A caller passes the two values to the constructor.
-     * A missing file is represented by a pool window of 0 and an empty Grok map.
+     * A caller passes the four values to the constructor.
+     * A missing file is represented by a pool window of 0, an empty Grok map, a llama window of 0, and a blank alias.
      *
      * The type does not read the file.
      * The type does not write a log line.
@@ -17232,18 +17277,24 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     static final class TokenBudgets {
         final int poolWindow;
         final Map<String, Integer> grokWindows;
+        final int llamaWindow;
+        final String llamaAlias;
 
         /**
-         * The constructor stores the pool window and the Grok map.
+         * The constructor stores the pool window, the Grok map, the llama window, and the llama alias.
          * A pool window below 1 is stored as 0.
          * A pool window of 1 or more is stored as that integer.
          * A null map is stored as a new empty {@code LinkedHashMap}.
          * A map that is not null is stored as that same map.
+         * A llama window below 1 is stored as 0.
+         * A null alias is stored as an empty string.
          *
          * @param poolWindow The pool window is the pool context window.
          * @param grokWindows The Grok windows are the model-id map, or null when the map is empty.
+         * @param llamaWindow The llama window is {@code num-ctx}, or 0 when that key is absent.
+         * @param llamaAlias The llama alias is the configured alias, or blank when that key is absent.
          */
-        private TokenBudgets(int poolWindow, Map<String, Integer> grokWindows) {
+        private TokenBudgets(int poolWindow, Map<String, Integer> grokWindows, int llamaWindow, String llamaAlias) {
             if (poolWindow < 1) {
                 this.poolWindow = 0;
             } else {
@@ -17254,6 +17305,16 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             } else {
                 this.grokWindows = grokWindows;
             }
+            if (llamaWindow < 1) {
+                this.llamaWindow = 0;
+            } else {
+                this.llamaWindow = llamaWindow;
+            }
+            if (llamaAlias == null) {
+                this.llamaAlias = "";
+            } else {
+                this.llamaAlias = llamaAlias.trim();
+            }
         }
     }
 
@@ -17263,12 +17324,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     static TokenBudgets classpathTokenBudgets() {
         InputStream in = AetherisNotebookPanel.class.getResourceAsStream("/application.yaml");
         if (in == null) {
-            return new TokenBudgets(0, null);
+            return new TokenBudgets(0, null, 0, "");
         }
         try {
             return tokenBudgetsFromYaml(readUtf8(in));
         } catch (IOException ex) {
-            return new TokenBudgets(0, null);
+            return new TokenBudgets(0, null, 0, "");
         } finally {
             try {
                 in.close();
@@ -17280,50 +17341,71 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
     /**
      * @param yaml application.yaml text. Null is empty.
-     * @return the pool window and the grok map. A bad document is empty.
+     * @return the pool window, the grok map, the llama window, and the llama alias. A bad document is empty.
      */
     static TokenBudgets tokenBudgetsFromYaml(String yaml) {
         LinkedHashMap<String, Integer> grok = new LinkedHashMap<String, Integer>();
         int pool = 0;
+        int llamaWindow = 0;
+        String llamaAlias = "";
         if (yaml == null || yaml.trim().length() == 0) {
-            return new TokenBudgets(0, grok);
+            return new TokenBudgets(0, grok, 0, "");
         }
         Object loaded;
         try {
             loaded = new Yaml().load(yaml);
         } catch (RuntimeException ex) {
-            return new TokenBudgets(0, grok);
+            return new TokenBudgets(0, grok, 0, "");
         }
         Map<?, ?> root = tokenMap(loaded);
         if (root == null) {
-            return new TokenBudgets(0, grok);
+            return new TokenBudgets(0, grok, 0, "");
         }
         Map<?, ?> casserole = tokenMap(root.get("casserole"));
-        if (casserole == null) {
-            return new TokenBudgets(0, grok);
-        }
-        Map<?, ?> grokNode = tokenMap(casserole.get("grok"));
-        if (grokNode != null) {
-            Map<?, ?> windows = tokenMap(grokNode.get("context-windows"));
-            if (windows != null) {
-                Iterator<?> keys = windows.keySet().iterator();
-                while (keys.hasNext()) {
-                    Object key = keys.next();
-                    if (!(key instanceof String)) {
-                        continue;
+        if (casserole != null) {
+            Map<?, ?> grokNode = tokenMap(casserole.get("grok"));
+            if (grokNode != null) {
+                Map<?, ?> windows = tokenMap(grokNode.get("context-windows"));
+                if (windows != null) {
+                    Iterator<?> keys = windows.keySet().iterator();
+                    while (keys.hasNext()) {
+                        Object key = keys.next();
+                        if (!(key instanceof String)) {
+                            continue;
+                        }
+                        int value = tokenPositive(windows.get(key));
+                        if (value > 0) {
+                            grok.put((String) key, Integer.valueOf(value));
+                        }
                     }
-                    int value = tokenPositive(windows.get(key));
-                    if (value > 0) {
-                        grok.put((String) key, Integer.valueOf(value));
+                }
+            }
+            Map<?, ?> poolNode = tokenMap(casserole.get("pool"));
+            if (poolNode != null) {
+                pool = tokenPositive(poolNode.get("context-window"));
+            }
+        }
+        Map<?, ?> spring = tokenMap(root.get("spring"));
+        if (spring != null) {
+            Map<?, ?> ai = tokenMap(spring.get("ai"));
+            if (ai != null) {
+                Map<?, ?> llama = tokenMap(ai.get("llama-openapi"));
+                if (llama != null) {
+                    Object aliasRaw = llama.get("alias");
+                    if (aliasRaw instanceof String) {
+                        llamaAlias = (String) aliasRaw;
+                    }
+                    Map<?, ?> chat = tokenMap(llama.get("chat"));
+                    if (chat != null) {
+                        Map<?, ?> options = tokenMap(chat.get("options"));
+                        if (options != null) {
+                            llamaWindow = tokenPositive(options.get("num-ctx"));
+                        }
                     }
                 }
             }
         }
-        Map<?, ?> poolNode = tokenMap(casserole.get("pool"));
-        if (poolNode != null) {
-            pool = tokenPositive(poolNode.get("context-window"));
-        }
-        return new TokenBudgets(pool, grok);
+        return new TokenBudgets(pool, grok, llamaWindow, llamaAlias);
     }
 
     /**
@@ -17426,6 +17508,29 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      */
     static ArrayList<TokenModel> tokenModels(boolean windowKnown, int sessionWindow, String[] targets,
             String focusedTarget, int focusedCompletionCap, int poolWindow, Map<String, Integer> grokWindows) {
+        return tokenModels(windowKnown, sessionWindow, targets, focusedTarget, focusedCompletionCap, poolWindow,
+                grokWindows, 0);
+    }
+
+    /**
+     * Rows the token window can calculate against. No host call.
+     * The llama window is the llama-openapi context window.
+     * A llama window of 0 leaves that row unknown.
+     * The first row is the Ollama session.
+     *
+     * @param windowKnown           session num-ctx is present and positive
+     * @param sessionWindow         that integer
+     * @param targets               execution targets already on the canvas
+     * @param focusedTarget         the focused turn
+     * @param focusedCompletionCap  stored cap for a focused grok turn. 0 uses the factory cap.
+     * @param poolWindow            {@code casserole.pool.context-window}. 0 leaves pool unreported.
+     * @param grokWindows           {@code casserole.grok.context-windows}. Null leaves grok unreported.
+     * @param llamaWindow           the llama-openapi context window. 0 leaves that row unknown.
+     * @return the combo rows. The first row is the Ollama session.
+     */
+    static ArrayList<TokenModel> tokenModels(boolean windowKnown, int sessionWindow, String[] targets,
+            String focusedTarget, int focusedCompletionCap, int poolWindow, Map<String, Integer> grokWindows,
+            int llamaWindow) {
         int window = windowKnown && sessionWindow > 0 ? sessionWindow : 0;
         boolean known = window > 0;
         int factory = factoryCompletionCap();
@@ -17437,11 +17542,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (targets != null) {
             for (int i = 0; i < targets.length; i++) {
                 addTokenTarget(rows, seen, targets[i], window, known, focusedTarget, focusedCompletionCap, factory,
-                        pool, grokWindows);
+                        pool, grokWindows, llamaWindow);
             }
         }
         addTokenTarget(rows, seen, focusedTarget, window, known, focusedTarget, focusedCompletionCap, factory,
-                pool, grokWindows);
+                pool, grokWindows, llamaWindow);
         if (!tokenSeen(seen, "pool")) {
             rows.add(new TokenModel("pool", "pool", pool, pool > 0, 0, false));
         }
@@ -17466,6 +17571,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             want = "grok/" + id;
         } else if ("ollama".equals(provider) && id.length() > 0) {
             want = "ollama/" + id;
+        } else if ("llama-openapi".equals(provider)) {
+            for (int i = 0; i < rows.size(); i++) {
+                if ("llama-openapi".equals(rows.get(i).family)) {
+                    return i;
+                }
+            }
+            return 0;
         }
         for (int i = 0; i < rows.size(); i++) {
             if (want.equals(rows.get(i).label)) {
@@ -17525,7 +17637,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
     /**
      * The method tokenSource names where a model row got its context window.
-     * If the family is {@code grok} or {@code pool}, the method returns {@code application.yaml}.
+     * If the family is {@code grok}, {@code pool}, or {@code llama-openapi}, the method returns {@code application.yaml}.
      * A null model returns {@code session num-ctx}.
      * Any other family returns {@code session num-ctx}.
      *
@@ -17533,7 +17645,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @return The return value is the source line for that row.
      */
     private static String tokenSource(TokenModel model) {
-        if (model != null && ("grok".equals(model.family) || "pool".equals(model.family))) {
+        if (model != null && ("grok".equals(model.family) || "pool".equals(model.family)
+                || "llama-openapi".equals(model.family))) {
             return "application.yaml";
         }
         return "session num-ctx";
@@ -17583,6 +17696,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The pool window is {@code poolWindow} when that value is greater than 0.
      * A pool window of 0 or less is stored as 0, and the window is then unknown.
      * The pool row stores no completion cap.
+     * A {@code llama-openapi} target adds one row for the family.
+     * The seen key for that row is {@code llama-openapi}.
+     * The label is {@code llama-openapi/} plus the shown id, or {@code llama-openapi} when the id is empty.
+     * The llama window is known when {@code llamaWindow} is greater than 0.
      * Any other provider adds nothing.
      *
      * @param rows The rows are the token-window rows being filled.
@@ -17595,10 +17712,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param factory The factory value is the factory completion cap.
      * @param poolWindow The pool window is the pool context window.
      * @param grokWindows The Grok windows map a model id to a context window.
+     * @param llamaWindow The llama window is the llama-openapi context window.
      */
     private static void addTokenTarget(ArrayList<TokenModel> rows, ArrayList<String> seen, String target,
             int window, boolean known, String focusedTarget, int focusedCompletionCap, int factory,
-            int poolWindow, Map<String, Integer> grokWindows) {
+            int poolWindow, Map<String, Integer> grokWindows, int llamaWindow) {
         if (target == null) {
             return;
         }
@@ -17627,6 +17745,20 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             int pool = poolWindow > 0 ? poolWindow : 0;
             rows.add(new TokenModel("pool", "pool", pool, pool > 0, 0, false));
             seen.add("pool");
+            return;
+        }
+        if ("llama-openapi".equals(provider)) {
+            if (tokenSeen(seen, "llama-openapi")) {
+                return;
+            }
+            String shown = llamaShownId(id);
+            String label = "llama-openapi";
+            if (shown.length() > 0) {
+                label = "llama-openapi/" + shown;
+            }
+            int budget = llamaWindow > 0 ? llamaWindow : 0;
+            rows.add(new TokenModel(label, "llama-openapi", budget, budget > 0, 0, false));
+            seen.add("llama-openapi");
         }
     }
 
@@ -18081,12 +18213,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A Grok word with an id uses the yaml window for that id.
      * A Grok word with no id uses 0.
      * Pool uses the yaml pool window.
+     * A llama-openapi word uses {@code num-ctx}, or 4096 when that key is absent.
      * Any other word uses 0.
      *
      * @param modelWord the selected model. The value may be null.
      * @return the context window, or 0 when that model has none
      */
-    public int heatBudget(String modelWord) { // @aa-sdd PK-1421 docs/specs/java/org/aetheris/swing/swing.spec.md
+    public int heatBudget(String modelWord) {
         int managed = managedTokens();
         if (managed > 0) {
             return managed;
@@ -18099,12 +18232,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A blank word is Ollama. An Ollama word uses 131072.
      * A Grok word with an id uses the yaml window for that id.
      * Pool uses the yaml pool window.
+     * A llama-openapi word uses {@link #llamaHeatWindow}.
      * Any other word uses 0.
      *
      * @param modelWord the selected model. The value may be null.
      * @return the context window, or 0 when that model has none
      */
-    private static int modelHeatWindow(String modelWord) { // @aa-sdd PK-1421 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private static int modelHeatWindow(String modelWord) {
         String word = Vt100StatusLine.engineWord(modelWord);
         if (word.indexOf("ollama") >= 0) {
             return 131072;
@@ -18116,7 +18250,27 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (word.startsWith("grok/")) {
             return grokBudget(budgets.grokWindows, word.substring("grok/".length()));
         }
+        if (word.startsWith("llama-openapi")) {
+            return llamaHeatWindow(budgets);
+        }
         return 0;
+    }
+
+    // @aa-sdd aetheris-plan-f-280.001.md
+    /**
+     * The {@code llamaHeatWindow} method returns the llama-openapi context window.
+     * A stored window greater than 0 is that window.
+     * A missing budget returns 4096.
+     * A stored window of 0 returns 4096.
+     *
+     * @param budgets The budgets are the yaml values. The value may be null.
+     * @return The return value is the context window.
+     */
+    static int llamaHeatWindow(TokenBudgets budgets) {
+        if (budgets != null && budgets.llamaWindow > 0) {
+            return budgets.llamaWindow;
+        }
+        return 4096;
     }
 
     /**
@@ -18125,7 +18279,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @return the context window, or 0 when that model has none
      */
-    private int notebookWindow() { // @aa-sdd PK-1421 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private int notebookWindow() {
         return heatBudget(focusedTargetText());
     }
 
@@ -18171,7 +18325,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param focusedTarget  the focused turn
      * @return that model's window, or 0 when it is unknown
      */
-    static int selectedHeatBudget(ArrayList<TokenModel> rows, String focusedTarget) { // @aa-sdd PK-1451 docs/specs/java/org/aetheris/swing/swing.spec.md
+    static int selectedHeatBudget(ArrayList<TokenModel> rows, String focusedTarget) {
         if (rows == null || rows.size() == 0) {
             return 0;
         }
@@ -18192,7 +18346,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The window is known when those facts are present, {@code numCtxPresent} is true, and {@code numCtx} is greater than 0.
      * A known window is that {@code numCtx}.
      * An unknown window is 0.
-     * {@link #classpathTokenBudgets} supplies the pool window and the Grok windows.
+     * {@link #classpathTokenBudgets} supplies the pool window, the Grok windows, and the llama window.
+     * {@link #llamaHeatWindow} supplies the llama window passed to {@link #tokenModels}.
      * {@link #tokenModels} receives that window, {@link #canvasTargets}, {@link #focusedTargetText}, and {@link #focusedCompletionCap} for {@link #targetCell}.
      *
      * @return The return value is the row list for the current canvas.
@@ -18204,7 +18359,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         int window = known ? facts.numCtx : 0;
         TokenBudgets budgets = classpathTokenBudgets();
         return tokenModels(known, window, canvasTargets(), focusedTargetText(), focusedCompletionCap(targetCell()),
-                budgets.poolWindow, budgets.grokWindows);
+                budgets.poolWindow, budgets.grokWindows, llamaHeatWindow(budgets));
     }
 
     /**
@@ -19257,7 +19412,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * If {@link #moodHasLine} is true, the draft shows the trimmed saved line.
      * The window opens relative to this panel.
      */
-    private void openMood() { // @aa-sdd PK-1435 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private void openMood() {
         CellRecord card = moodCard();
         if (card == null) {
             host.aetherisStatus(statusLine("no cell"));
@@ -19408,7 +19563,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-153
         Dimension cancelPref = cancel.getPreferredSize();
         Dimension cancelSized = new Dimension(cancelPref.width + approveExtra, cancelPref.height);
-        cancel.setPreferredSize(cancelSized); // @aa-sdd PK-1446 docs/specs/common/stages.spec.md
+        cancel.setPreferredSize(cancelSized);
         cancel.setMinimumSize(cancelSized);
         /**
          * The action listener asks before it clears the mood.
@@ -19858,7 +20013,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * A size read while the window is not showing is not noted.
      * The write goes to this user's mood file.
      */
-    private void closeMoodDialog() { // @aa-sdd PK-1435 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private void closeMoodDialog() {
         JDialog dialog = moodDialog;
         moodSizeArmed = false;
         if (dialog != null) {
@@ -20841,7 +20996,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @param width dialog width
      * @param height dialog height
      */
-    private void noteMoodDialogSize(int width, int height) { // @aa-sdd PK-1435 PK-1437 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private void noteMoodDialogSize(int width, int height) {
         if (moodPairKept(width, height)) {
             moodDialogWidth = width;
             moodDialogHeight = height;
@@ -21175,7 +21330,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * If the write throws {@code IOException}, the status shows {@code export failed: } plus the exception message.
      * The stream is closed, and an {@code IOException} from close is ignored.
      */
-    private void exportCanvas() { // @aa-sdd PK-1411 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private void exportCanvas() {
         CanvasRecord canvas = currentCanvas();
         if (canvas == null) {
             return;
@@ -21401,7 +21556,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      *
      * @param imported The cells are the turns just read from the file.
      */
-    private void offerImportedMood(List<CellRecord> imported) { // @aa-sdd PK-1411 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private void offerImportedMood(List<CellRecord> imported) {
         if (moodOn || imported == null) {
             return;
         }
@@ -22998,6 +23153,14 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         } else if (held != null && held.ollamaId != null) {
             seedId = held.ollamaId;
         }
+        if ("llama-openapi".equals(provider)) {
+            String llamaId = AetherisStage2.modelAfterSlash(cell.executionTarget);
+            CellThink box = thinkOf(cell.id);
+            if (llamaId.length() > 0) {
+                box.llamaId = llamaId;
+            }
+            held = box;
+        }
         mountModelDialog(provider, seedId, held);
     }
 
@@ -23039,7 +23202,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         modelDialog = dialog;
-        final JComboBox<String> family = new JComboBox<String>(new String[] { "Ollama", "Grok", "Pool" });
+        final JComboBox<String> family = new JComboBox<String>(
+                new String[] { "Ollama", "Grok", "Pool", "llama-openapi" });
         family.setEditable(false);
         theme.applyComboBox(family);
         final JComboBox<String> api = new JComboBox<String>(new String[] { "chat" });
@@ -23187,6 +23351,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             family.setSelectedItem("Ollama");
         } else if ("pool".equals(provider)) {
             family.setSelectedItem("Pool");
+        } else if ("llama-openapi".equals(provider)) {
+            family.setSelectedItem("llama-openapi");
         } else {
             family.setSelectedIndex(-1);
         }
@@ -23245,6 +23411,110 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         poolThinkRow.add(dialogPoolThink);
         poolPane.add(poolSentence);
         poolPane.add(poolThinkRow);
+        dialogLlamaModel = new JComboBox<String>();
+        dialogLlamaModel.setEditable(true);
+        dialogLlamaModel.setLightWeightPopupEnabled(true);
+        dialogLlamaModel.setPrototypeDisplayValue("Falcon3-3B");
+        theme.applyComboBox(dialogLlamaModel);
+        Component llamaEditor = dialogLlamaModel.getEditor().getEditorComponent();
+        if (llamaEditor instanceof JTextField) {
+            theme.applyTextField((JTextField) llamaEditor);
+        }
+        dialogLlamaModel.setToolTipText(buttonTip(
+                "Models on the llama-openapi host."
+                        + "<br>Opening the arrow reads GET /v1/models."
+                        + "<br>A chosen id is stored as llama-openapi/ plus that id."
+                        + " A typed id that is not in the list stays."));
+        dialogLlamaTemperature = new JTextField(8);
+        theme.applyTextField(dialogLlamaTemperature);
+        dialogLlamaTemperature.setToolTipText(buttonTip(
+                "Temperature on the llama call."
+                        + "<br>A blank field leaves temperature off the body."));
+        dialogLlamaMaxTokens = new JTextField(10);
+        theme.applyTextField(dialogLlamaMaxTokens);
+        dialogLlamaMaxTokens.setToolTipText(buttonTip(
+                "max_tokens on the llama call."
+                        + "<br>A blank field leaves the cap off the body."));
+        /**
+         * The document listener stores the llama temperature and the llama cap.
+         * {@link #storeLlamaFields} reads both fields.
+         */
+        DocumentListener llamaSampling = new DocumentListener() {
+            // @aa-sdd aetheris-plan-f-278.001.md
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                storeLlamaFields();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                storeLlamaFields();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                storeLlamaFields();
+            }
+        };
+        dialogLlamaTemperature.getDocument().addDocumentListener(llamaSampling);
+        dialogLlamaMaxTokens.getDocument().addDocumentListener(llamaSampling);
+        /**
+         * The item listener stores a chosen llama model.
+         * If {@code dialogAdjusting} is true, the listener returns.
+         */
+        dialogLlamaModel.addItemListener(new ItemListener() {
+            // @aa-sdd aetheris-plan-f-278.001.md
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (dialogAdjusting || e.getStateChange() != ItemEvent.SELECTED) {
+                    return;
+                }
+                commitLlamaModel();
+            }
+        });
+        /**
+         * The action listener stores a typed llama model.
+         * If {@code dialogAdjusting} is true, the listener returns.
+         */
+        dialogLlamaModel.addActionListener(new ActionListener() {
+            // @aa-sdd aetheris-plan-f-278.001.md
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (dialogAdjusting) {
+                    return;
+                }
+                commitLlamaModel();
+            }
+        });
+        /**
+         * The popup listener asks for llama model names when the list is about to open.
+         */
+        dialogLlamaModel.addPopupMenuListener(new PopupMenuListener() {
+            // @aa-sdd aetheris-plan-f-278.001.md
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                if (dialogAdjusting) {
+                    return;
+                }
+                askLlamaModels(dialogCellId);
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+            }
+        });
+        JPanel llamaPane = new JPanel(new GridLayout(0, 2, 8, 6));
+        theme.applyPanel(llamaPane);
+        llamaPane.add(label("Model"));
+        llamaPane.add(dialogLlamaModel);
+        llamaPane.add(label("Temperature"));
+        llamaPane.add(dialogLlamaTemperature);
+        llamaPane.add(label("Max tokens"));
+        llamaPane.add(dialogLlamaMaxTokens);
         JPanel nonePane = new JPanel();
         theme.applyPanel(nonePane);
         final CardLayout deckLayout = new CardLayout();
@@ -23253,6 +23523,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         deck.add(ollamaPane, "ollama");
         deck.add(grokPane, "grok");
         deck.add(poolPane, "pool");
+        deck.add(llamaPane, "llama");
         deck.add(nonePane, "none");
         if ("grok".equals(provider)) {
             deckLayout.show(deck, "grok");
@@ -23260,6 +23531,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             deckLayout.show(deck, "ollama");
         } else if ("pool".equals(provider)) {
             deckLayout.show(deck, "pool");
+        } else if ("llama-openapi".equals(provider)) {
+            deckLayout.show(deck, "llama");
         } else {
             deckLayout.show(deck, "none");
         }
@@ -23314,6 +23587,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                         deckLayout.show(deck, "grok");
                     } else if ("Pool".equals(chosen)) {
                         deckLayout.show(deck, "pool");
+                    } else if ("llama-openapi".equals(chosen)) {
+                        loadLlamaControls();
+                        deckLayout.show(deck, "llama");
+                        askLlamaModels(CONSOLE_CELL);
                     }
                     sendConsoleSet();
                     dialog.pack();
@@ -23333,6 +23610,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 } else if ("Pool".equals(chosen)) {
                     applyPoolFamily();
                     deckLayout.show(deck, "pool");
+                } else if ("llama-openapi".equals(chosen)) {
+                    applyLlamaFamily();
+                    loadLlamaControls();
+                    deckLayout.show(deck, "llama");
+                    if (dialogCell != null) {
+                        askLlamaModels(dialogCell.id);
+                    }
                 }
                 dialog.pack();
             }
@@ -23474,7 +23758,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                         && dialogGrokStream != null;
                 if (armStream) {
                     dialogAdjusting = true;
-                    dialogGrokStream.setSelectedItem("true"); // @aa-sdd PK-1405 docs/specs/java/org/aetheris/swing/swing.spec.md
+                    dialogGrokStream.setSelectedItem("true");
                     dialogAdjusting = false;
                 }
                 if (dialogConsole) {
@@ -23780,6 +24064,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             askOllamaShow(dialogCellId, seedId);
         } else if ("grok".equals(provider)) {
             askGrokModels(dialogCellId);
+        } else if ("llama-openapi".equals(provider)) {
+            loadLlamaControls();
+            askLlamaModels(dialogCellId);
         }
         dialog.setVisible(true);
     }
@@ -23870,7 +24157,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * Ollama with no id reads {@code ollama}. Ollama with an id reads that id.
      * Grok reads the id after {@code grok/}. Grok with no id reads {@code grok}.
-     * Pool reads {@code pool}. Any other provider reads blank.
+     * Pool reads {@code pool}.
+     * llama-openapi reads the shown id, or {@code llama-openapi} when the id is empty.
+     * Any other provider reads blank.
      *
      * @param target stored execution target
      * @return the label line
@@ -23894,7 +24183,119 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if ("pool".equals(provider)) {
             return "pool";
         }
+        if ("llama-openapi".equals(provider)) {
+            String id = AetherisStage2.modelAfterSlash(target);
+            if (id.length() == 0) {
+                return "llama-openapi";
+            }
+            return llamaShownId(id);
+        }
         return "";
+    }
+
+    // @aa-sdd aetheris-plan-f-280.001.md
+    /**
+     * The {@code llamaShownId} method returns the model id to display.
+     * The alias comes from the classpath yaml.
+     * A path-shaped id shows that alias when the alias is set.
+     * A short id stays.
+     * An empty id stays empty.
+     *
+     * @param id The id is the stored model id. The value may be null.
+     * @return The return value is the id to show.
+     */
+    static String llamaShownId(String id) {
+        TokenBudgets budgets = classpathTokenBudgets();
+        String alias = "";
+        if (budgets != null) {
+            alias = budgets.llamaAlias;
+        }
+        return llamaShownId(id, alias);
+    }
+
+    /**
+     * The {@code llamaShownId} method returns the model id to display for one alias.
+     * A null id is empty.
+     * A path-shaped id shows the trimmed alias when that alias is non-blank.
+     * A short id stays.
+     * A blank alias leaves the id unchanged.
+     *
+     * @param id The id is the stored model id. The value may be null.
+     * @param alias The alias is the configured alias. The value may be null.
+     * @return The return value is the id to show.
+     */
+    static String llamaShownId(String id, String alias) {
+        String raw = id == null ? "" : id.trim();
+        if (raw.length() == 0) {
+            return "";
+        }
+        String name = alias == null ? "" : alias.trim();
+        if (name.length() > 0 && LlamaCppLlmService.pathShaped(raw)) {
+            return name;
+        }
+        return raw;
+    }
+
+    // @aa-sdd aetheris-plan-f-280.001.md
+    /**
+     * The {@code shownEngine} method returns the engine word for a status strip.
+     * {@link Vt100StatusLine#engineWord} supplies the stored word.
+     * A llama-openapi word with an empty id returns {@code llama-openapi}.
+     * A path-shaped id shows {@code llama-openapi/} plus the configured alias when that alias is set.
+     * Any other word is the stored word.
+     *
+     * @param modelWord The model word is the stored engine. The value may be null.
+     * @return The return value is the word to print.
+     */
+    public static String shownEngine(String modelWord) {
+        String word = Vt100StatusLine.engineWord(modelWord);
+        if (!word.startsWith("llama-openapi")) {
+            return word;
+        }
+        int slash = word.indexOf('/');
+        String id = "";
+        if (slash >= 0 && slash + 1 < word.length()) {
+            id = word.substring(slash + 1).trim();
+        }
+        if (id.length() == 0) {
+            return "llama-openapi";
+        }
+        String shown = llamaShownId(id);
+        if (!shown.equals(id)) {
+            return "llama-openapi/" + shown;
+        }
+        return word;
+    }
+
+    /**
+     * The {@code llamaShownRows} method maps catalog names through {@link #llamaShownId}.
+     * An empty name is skipped.
+     * A repeated name is one row.
+     *
+     * @param names The names are the catalog rows. The value may be null.
+     * @return The return value is the rows to show.
+     */
+    private static ArrayList<String> llamaShownRows(ArrayList<String> names) {
+        ArrayList<String> shown = new ArrayList<String>();
+        if (names == null) {
+            return shown;
+        }
+        for (int i = 0; i < names.size(); i++) {
+            String one = llamaShownId(names.get(i));
+            if (one.length() == 0) {
+                continue;
+            }
+            boolean seen = false;
+            for (int j = 0; j < shown.size(); j++) {
+                if (one.equals(shown.get(j))) {
+                    seen = true;
+                }
+            }
+            if (!seen) {
+                shown.add(one);
+            }
+        }
+        return shown;
     }
 
     /**
@@ -23924,6 +24325,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         dialogGrokBurner = null;
         dialogGrokTemperature = null;
         dialogGrokMaxTokens = null;
+        dialogLlamaModel = null;
+        dialogLlamaTemperature = null;
+        dialogLlamaMaxTokens = null;
         modelDialog = null;
     }
 
@@ -24510,6 +24914,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if ("Ollama".equals(chosen)) {
             return "ollama";
         }
+        if ("llama-openapi".equals(chosen)) {
+            return "llama-openapi";
+        }
         return "";
     }
 
@@ -24526,8 +24933,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (family.length() == 0) {
             return;
         }
-        String tempText = dialogGrokTemperature == null || dialogGrokTemperature.getText() == null
-                ? "" : dialogGrokTemperature.getText().trim();
+        boolean llamaFamily = "llama-openapi".equals(family);
+        JTextField tempSource = llamaFamily ? dialogLlamaTemperature : dialogGrokTemperature;
+        JTextField maxSource = llamaFamily ? dialogLlamaMaxTokens : dialogGrokMaxTokens;
+        String tempText = tempSource == null || tempSource.getText() == null
+                ? "" : tempSource.getText().trim();
         boolean tempPresent = false;
         double temp = 0d;
         if (tempText.length() > 0) {
@@ -24543,8 +24953,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
             tempPresent = true;
         }
-        String maxText = dialogGrokMaxTokens == null || dialogGrokMaxTokens.getText() == null
-                ? "" : dialogGrokMaxTokens.getText().trim();
+        String maxText = maxSource == null || maxSource.getText() == null
+                ? "" : maxSource.getText().trim();
         boolean maxPresent = false;
         int max = 0;
         if (maxText.length() > 0) {
@@ -24571,6 +24981,17 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         if (grokModel.length() == 0 && consoleGrok != null && consoleGrok.model != null) {
             grokModel = consoleGrok.model.trim();
+        }
+        String llamaModel = dialogLlamaModelId();
+        if (llamaModel.length() == 0 && consoleLlamaModel != null) {
+            llamaModel = consoleLlamaModel.trim();
+        }
+        if (llamaFamily) {
+            consoleLlamaModel = llamaModel;
+            consoleLlamaTemperaturePresent = tempPresent;
+            consoleLlamaTemperature = temp;
+            consoleLlamaMaxPresent = maxPresent;
+            consoleLlamaMaxTokens = max;
         }
         String effort = "";
         if (dialogGrokEffort != null && dialogGrokEffort.getSelectedItem() != null) {
@@ -24602,13 +25023,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         consoleProvider = family;
         consoleOllamaModel = ollamaId;
         consoleOllamaThink = think;
-        host.seatFocusedEngine(Vt100StatusLine.engineFromConsole(family, ollamaId, grokModel));
+        String engineId = llamaFamily ? llamaModel : ollamaId;
+        host.seatFocusedEngine(Vt100StatusLine.engineFromConsole(family, engineId, grokModel));
         final String body = "shell_model_set:\n"
                 + "provider: " + cleanWire(family) + "\n"
                 + "model: " + cleanWire(ollamaId) + "\n"
                 + "ollama_model: " + cleanWire(ollamaId) + "\n"
                 + "think: " + cleanWire(think) + "\n"
                 + "grok_model: " + cleanWire(grokModel) + "\n"
+                + "llama_model: " + cleanWire(llamaModel) + "\n"
                 + "grok_think: " + cleanWire(grokThink) + "\n"
                 + "effort: " + cleanWire(effort) + "\n"
                 + "send_effort: " + (sendEffort ? "true" : "false") + "\n"
@@ -24725,6 +25148,33 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
         }
         consoleGrok = entry;
+        consoleLlamaModel = shellLine(text, "llama_model:");
+        consoleLlamaTemperaturePresent = false;
+        consoleLlamaMaxPresent = false;
+        if ("llama-openapi".equals(provider)) {
+            if (temp.length() > 0) {
+                try {
+                    double parsed = Double.parseDouble(temp);
+                    if (!Double.isInfinite(parsed) && !Double.isNaN(parsed)) {
+                        consoleLlamaTemperature = parsed;
+                        consoleLlamaTemperaturePresent = true;
+                    }
+                } catch (NumberFormatException ignored) {
+                    consoleLlamaTemperaturePresent = false;
+                }
+            }
+            if (max.length() > 0) {
+                try {
+                    int parsed = Integer.parseInt(max);
+                    if (parsed >= 1) {
+                        consoleLlamaMaxTokens = parsed;
+                        consoleLlamaMaxPresent = true;
+                    }
+                } catch (NumberFormatException ignored) {
+                    consoleLlamaMaxPresent = false;
+                }
+            }
+        }
         consoleGrokThink = shellLine(text, "grok_think:");
         consolePoolOn = "true".equals(shellLine(text, "pool_think:"));
         consoleOllamaThink = shellLine(text, "think:");
@@ -24864,6 +25314,324 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             start = nl + 1;
         }
         return names;
+    }
+
+    // @aa-sdd aetheris-plan-f-278.001.md
+    /**
+     * The method returns the red notice for an empty llama-openapi model list.
+     *
+     * @return The return value is {@code llama-openapi model list is empty.}
+     */
+    static String llamaListMiss() {
+        return LLAMA_LIST_MISS;
+    }
+
+    /**
+     * The method reads the llama model id from the editor.
+     * A closed pane returns an empty string.
+     *
+     * @return The return value is the typed or chosen id.
+     */
+    private String dialogLlamaModelId() {
+        if (dialogLlamaModel == null) {
+            return "";
+        }
+        Component editor = dialogLlamaModel.getEditor().getEditorComponent();
+        if (editor instanceof JTextField) {
+            String text = ((JTextField) editor).getText();
+            return text == null ? "" : text.trim();
+        }
+        Object selected = dialogLlamaModel.getSelectedItem();
+        return selected == null ? "" : String.valueOf(selected).trim();
+    }
+
+    /**
+     * The method paints one llama model id into the combo.
+     * An empty id clears the selection.
+     *
+     * @param id The id is the model id.
+     */
+    private void setDialogLlamaModelId(String id) {
+        if (dialogLlamaModel == null) {
+            return;
+        }
+        boolean prior = dialogAdjusting;
+        dialogAdjusting = true;
+        String text = id == null ? "" : id.trim();
+        if (text.length() == 0) {
+            dialogLlamaModel.setSelectedIndex(-1);
+            dialogLlamaModel.getEditor().setItem("");
+            dialogAdjusting = prior;
+            return;
+        }
+        boolean known = false;
+        for (int i = 0; i < dialogLlamaModel.getItemCount(); i++) {
+            if (text.equals(String.valueOf(dialogLlamaModel.getItemAt(i)))) {
+                known = true;
+            }
+        }
+        if (!known) {
+            dialogLlamaModel.addItem(text);
+        }
+        dialogLlamaModel.setSelectedItem(text);
+        dialogLlamaModel.getEditor().setItem(text);
+        dialogAdjusting = prior;
+    }
+
+    /**
+     * The method stores the llama model on the cell or on the console.
+     * The cell target becomes {@code llama-openapi/} plus the id.
+     */
+    private void commitLlamaModel() {
+        String id = dialogLlamaModelId();
+        if (dialogConsole) {
+            consoleLlamaModel = id;
+            sendConsoleSet();
+            return;
+        }
+        if (dialogCell == null) {
+            return;
+        }
+        thinkOf(dialogCell.id).llamaId = id;
+        paintCellTarget(dialogCell, dialogCardField, "llama-openapi/" + id);
+        persistQuiet(dialogCell);
+    }
+
+    /**
+     * The method stores the llama temperature and the llama cap.
+     * A blank field clears that present flag.
+     * A bad number sets the status line {@code settings} and leaves the stored flags.
+     * A console path then calls {@link #sendConsoleSet}.
+     */
+    private void storeLlamaFields() {
+        if (dialogAdjusting) {
+            return;
+        }
+        String tempText = dialogLlamaTemperature == null || dialogLlamaTemperature.getText() == null
+                ? "" : dialogLlamaTemperature.getText().trim();
+        boolean tempPresent = false;
+        double temp = 0d;
+        if (tempText.length() > 0) {
+            try {
+                temp = Double.parseDouble(tempText);
+            } catch (NumberFormatException ex) {
+                host.aetherisStatus(statusLine("settings"));
+                return;
+            }
+            if (Double.isInfinite(temp) || Double.isNaN(temp)) {
+                host.aetherisStatus(statusLine("settings"));
+                return;
+            }
+            tempPresent = true;
+        }
+        String maxText = dialogLlamaMaxTokens == null || dialogLlamaMaxTokens.getText() == null
+                ? "" : dialogLlamaMaxTokens.getText().trim();
+        boolean maxPresent = false;
+        int max = 0;
+        if (maxText.length() > 0) {
+            try {
+                max = Integer.parseInt(maxText);
+            } catch (NumberFormatException ex) {
+                host.aetherisStatus(statusLine("settings"));
+                return;
+            }
+            if (max < 1) {
+                host.aetherisStatus(statusLine("settings"));
+                return;
+            }
+            maxPresent = true;
+        }
+        if (dialogConsole) {
+            consoleLlamaTemperaturePresent = tempPresent;
+            consoleLlamaTemperature = temp;
+            consoleLlamaMaxPresent = maxPresent;
+            consoleLlamaMaxTokens = max;
+            sendConsoleSet();
+            return;
+        }
+        if (dialogCell == null) {
+            return;
+        }
+        CellThink held = thinkOf(dialogCell.id);
+        held.llamaTemperaturePresent = tempPresent;
+        held.llamaTemperature = temp;
+        held.llamaMaxPresent = maxPresent;
+        held.llamaMaxTokens = max;
+    }
+
+    /**
+     * The method fills the llama card from the cell holder or the console fields.
+     * A missing temperature leaves that field blank.
+     * A missing cap leaves that field blank.
+     * Listeners stay quiet while the fields are filled.
+     */
+    private void loadLlamaControls() {
+        if (dialogLlamaModel == null) {
+            return;
+        }
+        dialogAdjusting = true;
+        String id = "";
+        boolean tempPresent = false;
+        double temp = 0d;
+        boolean maxPresent = false;
+        int max = 0;
+        if (dialogConsole) {
+            id = consoleLlamaModel == null ? "" : consoleLlamaModel;
+            tempPresent = consoleLlamaTemperaturePresent;
+            temp = consoleLlamaTemperature;
+            maxPresent = consoleLlamaMaxPresent;
+            max = consoleLlamaMaxTokens;
+        } else if (dialogCell != null) {
+            CellThink held = ollamaThink.get(dialogCell.id);
+            if (held != null) {
+                id = held.llamaId == null ? "" : held.llamaId;
+                tempPresent = held.llamaTemperaturePresent;
+                temp = held.llamaTemperature;
+                maxPresent = held.llamaMaxPresent;
+                max = held.llamaMaxTokens;
+            }
+        }
+        setDialogLlamaModelId(llamaShownId(id));
+        if (dialogLlamaTemperature != null) {
+            dialogLlamaTemperature.setText(tempPresent ? numberText(temp) : "");
+        }
+        if (dialogLlamaMaxTokens != null) {
+            dialogLlamaMaxTokens.setText(maxPresent ? Integer.toString(max) : "");
+        }
+        dialogAdjusting = false;
+    }
+
+    /**
+     * The method writes the llama-openapi target from the id this cell already holds.
+     */
+    private void applyLlamaFamily() {
+        if (dialogCell == null) {
+            return;
+        }
+        if (dialogOllamaId != null && "ollama".equals(AetherisStage2.providerId(dialogCell.executionTarget))) {
+            thinkOf(dialogCell.id).ollamaId = dialogOllamaModelId();
+        }
+        CellThink held = thinkOf(dialogCell.id);
+        String id = held.llamaId == null ? "" : held.llamaId.trim();
+        if ("llama-openapi".equals(AetherisStage2.providerId(dialogCell.executionTarget))) {
+            String typed = AetherisStage2.modelAfterSlash(dialogCell.executionTarget);
+            if (typed.length() > 0) {
+                id = typed;
+                held.llamaId = typed;
+            }
+        }
+        paintCellTarget(dialogCell, dialogCardField, "llama-openapi/" + id);
+        persistQuiet(dialogCell);
+    }
+
+    /**
+     * The method asks the server to GET {@code /v1/models}.
+     * No session is the red miss.
+     * The body is {@code llama_models:} and a newline.
+     *
+     * @param cellId The cell id is the vault cell id.
+     */
+    private void askLlamaModels(final String cellId) {
+        if (cellId == null) {
+            return;
+        }
+        final SshTtyConnector connector = host.focusedAmwpConnector();
+        final String keptId = dialogLlamaModelId();
+        if (connector == null || !connector.isAmwp()) {
+            missLlamaList(keptId);
+            return;
+        }
+        /**
+         * The run action sends the llama model request on the frame channel.
+         */
+        Thread worker = new Thread(new Runnable() {
+            // @aa-sdd aetheris-plan-f-278.001.md
+            @Override
+            public void run() {
+                try {
+                    byte[] utf = "llama_models:\n".getBytes(StandardCharsets.UTF_8);
+                    byte[] payload = AmwpCodec.scopeAPayload(0, 1, uuidBytes(cellId), utf);
+                    connector.writeAmwp(AmwpConstants.CHANNEL_A, AmwpConstants.TYPE_DATA, payload);
+                } catch (Exception ignored) {
+                    missLlamaList(keptId);
+                }
+            }
+        }, "aetheris-llama-models-ask");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    /**
+     * The method fills the llama model combo from {@code llama_models_result:}.
+     * A reply with no model lines keeps the typed id and shows the red miss.
+     *
+     * @param cellId The cell id is the cell on the frame.
+     * @param text The text is the stripped body.
+     */
+    private void applyLlamaModelsResult(String cellId, String text) {
+        if (!grokDialogOpen || !sameDialogCell(cellId, dialogCellId) || dialogLlamaModel == null) {
+            return;
+        }
+        String current = llamaShownId(dialogLlamaModelId());
+        if (tagsResultModels(text).isEmpty()) {
+            missLlamaList(current);
+            return;
+        }
+        ArrayList<String> names = llamaShownRows(ollamaHostRows(text, current));
+        boolean reopen = dialogLlamaModel.isPopupVisible();
+        dialogAdjusting = true;
+        dialogLlamaModel.removeAllItems();
+        for (int i = 0; i < names.size(); i++) {
+            dialogLlamaModel.addItem(names.get(i));
+        }
+        int rows = dialogLlamaModel.getItemCount();
+        dialogLlamaModel.setMaximumRowCount(rows > 0 ? rows : 1);
+        setDialogLlamaModelId(current);
+        if (modelDialog != null) {
+            modelDialog.pack();
+        }
+        if (reopen) {
+            dialogLlamaModel.setPopupVisible(false);
+            dialogLlamaModel.setPopupVisible(true);
+        }
+        dialogAdjusting = false;
+        clearModelListMiss();
+    }
+
+    /**
+     * The method clears the llama model rows and shows the red miss.
+     * The typed id stays in the editor.
+     *
+     * @param current The current value is the id to leave in the editor.
+     */
+    private void missLlamaList(final String current) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            /**
+             * The runnable moves the miss onto the event thread.
+             */
+            SwingUtilities.invokeLater(new Runnable() {
+                // @aa-sdd aetheris-plan-f-278.001.md
+                /**
+                 * The method calls {@link #missLlamaList(String)} on the event thread.
+                 */
+                @Override
+                public void run() {
+                    missLlamaList(current);
+                }
+            });
+            return;
+        }
+        if (dialogLlamaModel != null) {
+            boolean prior = dialogAdjusting;
+            dialogAdjusting = true;
+            dialogLlamaModel.removeAllItems();
+            dialogLlamaModel.setSelectedIndex(-1);
+            if (dialogLlamaModel.getEditor() != null) {
+                dialogLlamaModel.getEditor().setItem(current == null ? "" : current);
+            }
+            dialogAdjusting = prior;
+        }
+        showModelListMiss(llamaListMiss());
     }
 
     /**
@@ -25260,7 +26028,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         }
         if (errorBody != null) {
             String text = errorBody.getText();
-            if (GROK_LIST_MISS.equals(text) || OLLAMA_LIST_MISS.equals(text)) {
+            if (GROK_LIST_MISS.equals(text) || OLLAMA_LIST_MISS.equals(text) || llamaListMiss().equals(text)) {
                 hideErrorSlide();
             }
         }
@@ -26035,6 +26803,16 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * The flag stays off until the checkbox is set.
          */
         boolean poolOn;
+        /** The field is the llama-openapi model id for this session. */
+        String llamaId = "";
+        /** The field is true when this cell stored a llama temperature. */
+        boolean llamaTemperaturePresent;
+        /** The field is the llama temperature for this session. */
+        double llamaTemperature;
+        /** The field is true when this cell stored a llama completion cap. */
+        boolean llamaMaxPresent;
+        /** The field is the llama completion cap for this session. */
+        int llamaMaxTokens;
     }
 
     /**

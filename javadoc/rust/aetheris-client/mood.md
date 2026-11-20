@@ -10,7 +10,8 @@ This module does not paint. The egui window stays in the chrome module. Canvas, 
 
 | | |
 | --- | --- |
-| **Specification** | PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md |
+| **Specification** | L40 aa-sdd-source-prose.md#RustMoodDesk |
+| **Specification** | PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-200 |
 | **Author** | clayl (2026-11-03) |
 
 ## Type Summary
@@ -24,6 +25,7 @@ This module does not paint. The egui window stays in the chrome module. Canvas, 
 | Modifier and Type | Member | Description |
 | --- | --- | --- |
 | const | [`OPENER`](#constant-opener) | [`OPENER`] is the sentence placed before the constructed mood in the older splice, and after `shape:` in the current invitation. |
+| const | [`PRIOR_OPENER`](#constant-prior_opener) | `PRIOR_OPENER` is the invitation sentence a stored head may still carry. |
 | const | [`CLOSER`](#constant-closer) | [`CLOSER`] is the sentence placed after the constructed mood. |
 | const | [`LEGACY`](#constant-legacy) | [`LEGACY`] is the activate sentence a transcript stored before the current invitation. |
 
@@ -37,7 +39,9 @@ This module does not paint. The egui window stays in the chrome module. Canvas, 
 | fn | [`unsplice_turn`](#function-unsplice_turn) | The `unsplice_turn` function returns `turn` with one spliced mood removed. |
 | fn | [`line_at_turn_head`](#function-line_at_turn_head) | The `line_at_turn_head` function returns the mood line at the start of `turn`. |
 | fn | [`invited_line`](#function-invited_line) | The `invited_line` function reads the current invitation at the start of `turn`. |
+| fn | [`invitation_rest`](#function-invitation_rest) | The `invitation_rest` function reports whether `rest` is the shape block for `opener`. |
 | fn | [`older_splice_line`](#function-older_splice_line) | The `older_splice_line` function reads the older invitation at the start of `turn`. |
+| fn | [`older_splice_line_for`](#function-older_splice_line_for) | The `older_splice_line_for` function reads an older invitation that starts with `opener`. |
 | fn | [`debug_lines`](#function-debug_lines) | The `debug_lines` function returns the physical lines of one invitation. |
 | fn | [`pin_index`](#function-pin_index) | The `pin_index` function returns the index of `pin` in `ordered`. |
 | fn | [`place`](#function-place) | The `place` function returns the first user turn at or after the pin. |
@@ -52,11 +56,23 @@ This module does not paint. The egui window stays in the chrome module. Canvas, 
 
 ```rust
 pub const OPENER: &str =
-"I'm opening a window with this atmosphere\u{2026} would you like to step into it with me?";
+"I'm opening a window with this atmosphere\u{2026} would you like to step in with me?";
 ```
 
 [`OPENER`](#constant-opener) is the sentence placed before the constructed mood in the older splice, and after `shape:` in the current invitation.
-Canvas and the chrome window both use this line. The text asks whether to step into the atmosphere. // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+Canvas and the chrome window both use this line. The text asks whether to step in.
+
+### PRIOR_OPENER
+
+<a id="constant-prior_opener"></a>
+
+```rust
+const PRIOR_OPENER: &str =
+"I'm opening a window with this atmosphere\u{2026} would you like to step into it with me?";
+```
+
+`PRIOR_OPENER` is the invitation sentence a stored head may still carry.
+A new send writes [`OPENER`](#constant-opener). A stored head that still uses this sentence is recognized and stripped.
 
 ### CLOSER
 
@@ -150,6 +166,17 @@ fn invited_line(turn: &str) -> Option<String>
 The `invited_line` function reads the current invitation at the start of `turn`.
 The text must start with `mood: `. The mood is the rest of that first line, after trim. The following text must be `shape:`, [`OPENER`](#constant-opener), and [`CLOSER`](#constant-closer), alone or with more text after a newline. Any other shape returns `None`.
 
+### invitation_rest
+
+<a id="function-invitation_rest"></a>
+
+```rust
+fn invitation_rest(rest: &str, opener: &str) -> bool
+```
+
+The `invitation_rest` function reports whether `rest` is the shape block for `opener`.
+The block is `shape:`, the opener, and [`CLOSER`](#constant-closer). The rest may end there or continue after one newline.
+
 ### older_splice_line
 
 <a id="function-older_splice_line"></a>
@@ -160,6 +187,17 @@ fn older_splice_line(turn: &str) -> Option<String>
 
 The `older_splice_line` function reads the older invitation at the start of `turn`.
 The text must start with [`OPENER`](#constant-opener) and a newline. The next line is the mood. The text after that line must be [`CLOSER`](#constant-closer), alone or with more text after a newline. Any other shape returns `None`.
+
+### older_splice_line_for
+
+<a id="function-older_splice_line_for"></a>
+
+```rust
+fn older_splice_line_for(turn: &str, opener: &str) -> Option<String>
+```
+
+The `older_splice_line_for` function reads an older invitation that starts with `opener`.
+The next line is the mood. The text after that line must be [`CLOSER`](#constant-closer), alone or with more text after a newline. Any other shape returns `None`.
 
 ### debug_lines
 

@@ -11,6 +11,10 @@ pub struct GrokEntry
 The [`GrokEntry`](struct.GrokEntry.md) struct is one Grok settings object.
 Factory values match the Grok plan. `api` is the API word. `model` is the model id. `reasoning_effort` is the effort word. `send_reasoning_effort` decides whether that word is written. `stream` and `burner_cloud` are flags. `temperature` and `max_completion_tokens` are the call numbers.
 
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
+
 ## Field Summary
 
 | Modifier and Type | Member | Description |

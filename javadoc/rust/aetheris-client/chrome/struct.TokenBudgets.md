@@ -8,8 +8,8 @@
 struct TokenBudgets
 ```
 
-The struct `TokenBudgets` holds the two context windows read from `application.yaml`.
-The integer `pool` is the pool window. The vector `grok` pairs each Grok model id with its window. Every other key in the document is dropped.
+The struct `TokenBudgets` holds the context windows read from `application.yaml`.
+The integer `pool` is the pool window. The vector `grok` pairs each Grok model id with its window. `llama` is `num-ctx`, or 0 when that key is absent. `llama_alias` is the alias. `llama_base` is the base URL. `llama_key` is the API key. The key is not written to a log.
 
 | | |
 | --- | --- |
@@ -21,6 +21,10 @@ The integer `pool` is the pool window. The vector `grok` pairs each Grok model i
 | --- | --- | --- |
 | i32 | [`pool`](#member-pool) |  |
 | Vec<(String, i32)> | [`grok`](#member-grok) |  |
+| i32 | [`llama`](#member-llama) |  |
+| String | [`llama_alias`](#member-llama_alias) |  |
+| String | [`llama_base`](#member-llama_base) |  |
+| String | [`llama_key`](#member-llama_key) |  |
 
 ## Method Summary
 
@@ -44,6 +48,38 @@ pool: i32
 
 ```rust
 grok: Vec<(String, i32)>
+```
+
+### llama
+
+<a id="member-llama"></a>
+
+```rust
+llama: i32
+```
+
+### llama_alias
+
+<a id="member-llama_alias"></a>
+
+```rust
+llama_alias: String
+```
+
+### llama_base
+
+<a id="member-llama_base"></a>
+
+```rust
+llama_base: String
+```
+
+### llama_key
+
+<a id="member-llama_key"></a>
+
+```rust
+llama_key: String
 ```
 
 ## Method Detail

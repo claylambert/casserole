@@ -19,7 +19,7 @@
     for target/release/aetheris-client. Neither file throws
     aetheris-client is missing. The file that was found is copied into
     rust/aetheris/app, overwriting an older copy. Success prints
-    aetheris-client 1.0.0.
+    aetheris-client 1.0.1.
 
     The start script calls this script only when both names are absent
     from rust/aetheris/app.
@@ -62,4 +62,4 @@ if (-not (Test-Path -LiteralPath $bin)) { throw "aetheris-client is missing" }
 
 New-Item -ItemType Directory -Force -Path (Join-Path $root "rust\aetheris\app") | Out-Null
 Copy-Item -LiteralPath $bin -Destination (Join-Path $root "rust\aetheris\app") -Force
-Write-Output "aetheris-client 1.0.0"
+Write-Output "aetheris-client 1.0.1"

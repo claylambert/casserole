@@ -38,6 +38,9 @@ A member is `group != 0` and `column > 0`.
 | String | [`ollama_id`](#member-ollama_id) | Ollama id remembered when this cell leaves that family. |
 | bool | [`grok_on`](#member-grok_on) | Grok Thinking for this window. Off drops kind `t` for Grok. |
 | bool | [`pool_on`](#member-pool_on) | Pool Thinking for this window. |
+| String | [`llama_id`](#member-llama_id) | Llama model id for this window. A blank id stores the family word. |
+| String | [`llama_temperature`](#member-llama_temperature) | Llama temperature text. Blank leaves temperature off the body. |
+| String | [`llama_cap`](#member-llama_cap) | Llama completion cap text. Blank leaves the cap off the body. |
 | bool | [`bar_open`](#member-bar_open) | The group row is open for this window. It starts closed. |
 | bool | [`expanded`](#member-expanded) | The reply shows in full. Unchecked, the reply window matches the prompt window. A fresh canvas and Clear start unchecked. New keeps the prior card's choice. A real cell id is saved. |
 | String | [`parent_cell_id`](#member-parent_cell_id) | Vault parent. Empty is none. Export still writes an empty parent. |
@@ -216,6 +219,36 @@ pool_on: bool
 ```
 
 Pool Thinking for this window.
+
+### llama_id
+
+<a id="member-llama_id"></a>
+
+```rust
+llama_id: String
+```
+
+Llama model id for this window. A blank id stores the family word.
+
+### llama_temperature
+
+<a id="member-llama_temperature"></a>
+
+```rust
+llama_temperature: String
+```
+
+Llama temperature text. Blank leaves temperature off the body.
+
+### llama_cap
+
+<a id="member-llama_cap"></a>
+
+```rust
+llama_cap: String
+```
+
+Llama completion cap text. Blank leaves the cap off the body.
 
 ### bar_open
 

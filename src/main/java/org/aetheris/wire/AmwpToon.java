@@ -16,14 +16,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-// @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1059 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+// @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
+// @aa-sdd PK-1059 docs/specs/common/formal-plan.spec.md FINESSE:f-33
 /**
  * The {@code AmwpToon} class reads and writes the line text used inside an AMWP execute frame.
  * TOON is that line text.
  * The text is not JSON.
  * The class does not use the Roux message codec.
+ * // @aa-sdd G-13 aetheris-stages-1-3.finalize.md
  *
  * @author clayl (2026-09-02)
  */
@@ -40,16 +41,16 @@ import java.util.List;
 // @aa-sdd PK-158 docs/specs/java/org/aetheris/wire/wire.spec.md
 public final class AmwpToon {
 
-    /** // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-     * The constructor stops a caller from creating an instance. // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
-     * The encode and decode methods are static. // @aa-sdd PK-1059 docs/specs/common/formal-plan.spec.md
+    /**
+     * The constructor stops a caller from creating an instance.
+     * The encode and decode methods are static.
      */
     private AmwpToon() {
     }
 
-    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1059 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+    // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
+    // @aa-sdd PK-1059 docs/specs/common/formal-plan.spec.md FINESSE:f-33
     /**
      * The {@code ExecuteBody} class is one execute request.
      * {@link #encodeExecute} writes it.
@@ -135,9 +136,16 @@ public final class AmwpToon {
          * An empty value keeps a new pool session on every prompt.
          */
         public String poolBoot = "";
+        /**
+         * The flags mark designated turns for a llama-openapi slot fit.
+         * Encode and decode leave the array off the wire.
+         * A null array means this prompt has no designated head.
+         */
+        public boolean[] llamaHeads;
         public final List<Turn> workingSet = new ArrayList<Turn>();
     }
 
+    // @aa-sdd L39 aetheris-stages-1-3.finalize.md
     /**
      * The {@code ErrorBody} class is the body of a {@link AmwpConstants#TYPE_ERROR} frame.
      * A body that does not start with {@code reason:} is a plain banner.
@@ -149,7 +157,7 @@ public final class AmwpToon {
         public String message = "";
     }
 
-    // @aa-sdd PK-1225 docs/specs/java/org/aetheris/wire/wire.spec.md
+    // @aa-sdd PK-1225 docs/specs/java/org/aetheris/wire/wire.spec.md FINESSE:f-222
     /**
      * The {@code SessionFacts} class holds the facts from an Init body.
      * An empty body leaves {@code reported} false.
@@ -179,7 +187,7 @@ public final class AmwpToon {
         public int headCount;
     }
 
-    // @aa-sdd PK-1226 docs/specs/java/org/aetheris/wire/wire.spec.md
+    // @aa-sdd PK-1226 docs/specs/java/org/aetheris/wire/wire.spec.md FINESSE:f-222
     /**
      * The {@code Turn} class is one row in the working set.
      * The {@code role} field starts as {@code user}.

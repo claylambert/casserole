@@ -275,10 +275,12 @@ This is the dependency list for Casserole and Aetheris. Each row names one langu
 | russh | 0.64.1 | russh is the Secure Shell library for the Rust Aetheris Client. |
 | tokio | 1.54.1 | tokio is the asynchronous runtime. The Rust Aetheris Client runs its network work on it. |
 | turso | 0.8.3 | turso is the embedded database. The manifest pins this exact version. |
-| aetheris-term | 1.0.0 | aetheris-term is the terminal crate. It parses terminal bytes with `vte` 0.15.0 and measures text with `unicode-width` 0.2.2. |
+| aetheris-term | 1.0.1 | aetheris-term is the terminal crate. It parses terminal bytes with `vte` 0.15.0 and measures text with `unicode-width` 0.2.2. |
 | image | 0.25.10 | image reads the JPEG icons. |
 
 The Rust Aetheris Client also depends on `chrono` 0.4.45, `crc32c` 0.6.8, and `serde_yaml` 0.9.34. On macOS the same client depends on `objc2` 0.5.2, `objc2-app-kit` 0.2.2, and `objc2-foundation` 0.2.2. Those three crates set the Dock icon.
+
+Spring AI supplies the Ollama client. llama-openapi is the Casserole family for a llama.cpp server that speaks the OpenAI chat routes. OpenAI chat is the request shape `POST /v1/chat/completions` and `GET /v1/models`. There is no Spring AI starter for that family. The Casserole Server implements the client. The account is [BitNet and the OpenAI-compatible llama server](bitnet/README.md).
 
 ## Fast path
 
@@ -288,9 +290,9 @@ On Windows the Casserole Server start is [app/start-casserole.ps1](app/start-cas
 
 If a start runs into trouble, walk the checklist below, one script at a time. The checklist is the same commands the start script runs, written out so you can see which step stopped. A script is a file in this repository, and you run it from a terminal, the PowerShell window or the shell window the text comes back into. Nothing is written between the commands. In order, the scripts set up Java and Rust, print a one-screen check of those tools, download the Ollama model `qwen2.5-coder:7b`, build the one Java module and the Rust Aetheris Client, and start the Casserole Server.
 
-Each script is finished only when the window shows one particular line. The Java toolchain finishes at `java-env ready`. The Rust toolchain finishes at `rust-env ready`. The pre-build check is the one-screen check of the tools, and it finishes at `pre-build-check finished`. The Casserole Server is up when the window shows `casserole-server 1.0.0` and the log keeps printing. `1.0.0` is the build identifier of the Casserole Server, the version string of the bits you just launched. Leave that window open. The log that stays open is the Casserole Server.
+Each script is finished only when the window shows one particular line. The Java toolchain finishes at `java-env ready`. The Rust toolchain finishes at `rust-env ready`. The pre-build check is the one-screen check of the tools, and it finishes at `pre-build-check finished`. The Casserole Server is up when the window shows `casserole-server 1.0.1` and the log keeps printing. `1.0.1` is the build identifier of the Casserole Server, the version string of the bits you just launched. Leave that window open. The log that stays open is the Casserole Server.
 
-An Aetheris Client is up when a second window shows `aetheris-java 1.0.0` or `aetheris-client 1.0.0` and the program's own window opens. `aetheris-java 1.0.0` is the build identifier of the Java Aetheris Client. `aetheris-client 1.0.0` is the version of the Rust Aetheris Client. Sign in to `localhost` port `2222` as the user `admin` with the password `demo-admin`. `localhost` means this same machine. Port `2222` is the Secure Shell port the Casserole Server opens. Secure Shell, written SSH, is the encrypted login a terminal uses to reach a host.
+An Aetheris Client is up when a second window shows `aetheris-java 1.0.1` or `aetheris-client 1.0.1` and the program's own window opens. `aetheris-java 1.0.1` is the build identifier of the Java Aetheris Client. `aetheris-client 1.0.1` is the version of the Rust Aetheris Client. Sign in to `localhost` port `2222` as the user `admin` with the password `demo-admin`. `localhost` means this same machine. Port `2222` is the Secure Shell port the Casserole Server opens. Secure Shell, written SSH, is the encrypted login a terminal uses to reach a host.
 
 The numbered sections under Windows 11, and the matching sections under Linux, run these scripts one at a time and quote the finished line beside the command. The macOS section runs the `.zsh` scripts in that same order. They also quote the line a failed run usually prints, and the next sentence is the fix. `Maven is not on PATH` means Maven is missing. Maven is the Java build tool. Install Apache Maven 3.9 or newer, open a new terminal, and run that script again. On Windows, a path to `OllamaSetup.exe` means the model installer stopped so you can run that file. `OllamaSetup.exe` is the Windows installer for Ollama. Ollama is the program that runs a language model on this computer.
 
@@ -389,7 +391,7 @@ Confirm the classpath contains [users.yaml](src/main/resources/users.yaml). Conf
 
 Another process is already listening on that port. Stop that other listener and start again. The first start creates `hostkey.ser` in the working directory. `hostkey.ser` is the host key the SSH login uses, and that file stays on your machine.
 
-A model reply can come from the Grok API, from Grok Build ACP via the pool, or from Ollama. The Grok API is Grok's hosted programming interface. Grok Build ACP via the pool is Grok Build reached through the Agent Client Protocol. ACP is that protocol. The pool is the agent connection for that protocol. The Casserole Server opens that connection. The Aetheris Client is the Sovereign Desktop in this repository. That Aetheris Client is the Java program or the Rust program. One Aetheris Client carries more than one conversation at the same time. Those conversations stay unified on that desktop. The desktop can use more than one of those models at the same time. The local example uses Ollama and the model `qwen2.5-coder:7b`. [bin/install-ollama.ps1](bin/install-ollama.ps1) or [bin/install-ollama.sh](bin/install-ollama.sh) prepares that model. The Casserole Server process itself comes up when the roster loads. The example configuration names that model on `spring.ai.ollama.chat.model` and on `spring.ai.ollama.chat.options.model`. It names the host `http://localhost:11434`. It names the pull strategy `never`. It names `num-ctx` as `8192`. `num-ctx` is the context length the local model is asked to keep. A pool turn can use a Grok agent on another machine on your network. That setup is [Remote Grok agent](#remote-grok-agent). The Ollama host, the Grok API key, and the pool keys are also under [Model settings](casserole-server/README.md#model-settings).
+A model reply can come from the Grok API, from Grok Build ACP via the pool, or from Ollama. A model reply can also come from a llama.cpp server on the llama-openapi family. That account is [BitNet and the OpenAI-compatible llama server](bitnet/README.md). The Grok API is Grok's hosted programming interface. Grok Build ACP via the pool is Grok Build reached through the Agent Client Protocol. ACP is that protocol. The pool is the agent connection for that protocol. The Casserole Server opens that connection. The Aetheris Client is the Sovereign Desktop in this repository. That Aetheris Client is the Java program or the Rust program. One Aetheris Client carries more than one conversation at the same time. Those conversations stay unified on that desktop. The desktop can use more than one of those models at the same time. The local example uses Ollama and the model `qwen2.5-coder:7b`. [bin/install-ollama.ps1](bin/install-ollama.ps1) or [bin/install-ollama.sh](bin/install-ollama.sh) prepares that model. The Casserole Server process itself comes up when the roster loads. The example configuration names that model on `spring.ai.ollama.chat.model` and on `spring.ai.ollama.chat.options.model`. It names the host `http://localhost:11434`. It names the pull strategy `never`. It names `num-ctx` as `8192`. `num-ctx` is the context length the local model is asked to keep. A pool turn can use a Grok agent on another machine on your network. That setup is [Remote Grok agent](#remote-grok-agent). The Ollama host, the Grok API key, and the pool keys are also under [Model settings](casserole-server/README.md#model-settings). The llama-openapi base URL is on that same page.
 
 ## Remote Grok agent
 
@@ -424,7 +426,7 @@ casserole:
     cap: 4
 ```
 
-Replace `your-pool-token` with a token you choose. Use the same token in the agent command below. Ollama and the Grok API key are separate settings. They are under [Model settings](casserole-server/README.md#model-settings).
+Replace `your-pool-token` with a token you choose. Use the same token in the agent command below. Ollama and the Grok API key are separate settings. They are under [Model settings](casserole-server/README.md#model-settings). The llama-openapi base URL is a separate setting on that same page.
 
 ### The Aetheris Client file
 
@@ -561,7 +563,7 @@ If Ollama is missing, the last line says so and names the script that installs i
 
 ### 3. Local model
 
-This step installs Ollama when that engine is missing. When you do not name another Ollama model, the script pulls `qwen2.5-coder:7b`. A chat can also use the Grok API or Grok Build ACP via the pool. The Sovereign Desktop carries more than one conversation at the same time. Those conversations stay unified. The desktop can use more than one model at the same time. [bin/install-ollama.ps1](bin/install-ollama.ps1) installs the engine when it is missing, then pulls that model.
+This step installs Ollama when that engine is missing. When you do not name another Ollama model, the script pulls `qwen2.5-coder:7b`. A chat can also use the Grok API or Grok Build ACP via the pool. A chat can also use a llama.cpp server on the llama-openapi family. That setup is [BitNet and the OpenAI-compatible llama server](bitnet/README.md). The Sovereign Desktop carries more than one conversation at the same time. Those conversations stay unified. The desktop can use more than one model at the same time. [bin/install-ollama.ps1](bin/install-ollama.ps1) installs the engine when it is missing, then pulls that model.
 
 ```powershell
 powershell -File bin\install-ollama.ps1
@@ -608,7 +610,7 @@ powershell -File app\start-casserole.ps1
 
 > **What appears**
 >
-> The line `casserole-server 1.0.0`, then the Casserole Server log.
+> The line `casserole-server 1.0.1`, then the Casserole Server log.
 
 The SSH port is 2222. The first start creates `hostkey.ser` in the working directory. That file stays on this machine. When `app\casserole.jar` is absent, start runs [bin/install.ps1](bin/install.ps1), then starts the Casserole Server. If port 2222 is already taken, stop the other listener and start again.
 
@@ -622,7 +624,7 @@ powershell -File app\start-aetheris.ps1
 
 > **What appears**
 >
-> The line `aetheris-java 1.0.0`, then the Java Aetheris Client window.
+> The line `aetheris-java 1.0.1`, then the Java Aetheris Client window.
 
 Connect to `localhost` port `2222` as the user `admin` with the password `demo-admin`.
 
@@ -632,7 +634,7 @@ powershell -File rust\aetheris\app\start.ps1
 
 > **What appears**
 >
-> The line `aetheris-client 1.0.0`, then the window.
+> The line `aetheris-client 1.0.1`, then the window.
 
 The host, the port, and the account are the same ones the Java Aetheris Client used.
 
@@ -654,7 +656,7 @@ Copy-Item aetheris.yaml "$env:USERPROFILE\.aetheris.yaml"
 
 Open a terminal in the repository root, the folder that contains `pom.xml`. Maven reads that file to build the Java programs. In that same terminal, run `source bin/java-env.sh` and then `source bin/rust-env.sh`. Source means the shell runs the file and keeps the values the file set. One of those values is `JAVA_HOME`, the folder where JDK 26 is installed. A terminal you open later has an empty `JAVA_HOME` until you source the two files again in that new terminal.
 
-After that, the steps are the Windows 11 steps, in the same order. The files are the `.sh` scripts. Run the toolchain files with `source`. Run the rest with `bash`. The finished lines are the same text. The toolchain finishes with `java-env ready` and `rust-env ready`. The pre-build check finishes with `pre-build-check finished`. The Casserole Server finishes with `casserole-server 1.0.0` and stays in that terminal so the log remains visible. If the toolchain prints `Maven is not on PATH`, install Maven 3.9 or newer from your distribution, open a new terminal, source the two files again, and continue.
+After that, the steps are the Windows 11 steps, in the same order. The files are the `.sh` scripts. Run the toolchain files with `source`. Run the rest with `bash`. The finished lines are the same text. The toolchain finishes with `java-env ready` and `rust-env ready`. The pre-build check finishes with `pre-build-check finished`. The Casserole Server finishes with `casserole-server 1.0.1` and stays in that terminal so the log remains visible. If the toolchain prints `Maven is not on PATH`, install Maven 3.9 or newer from your distribution, open a new terminal, source the two files again, and continue.
 
 ### 1. Toolchain
 
@@ -689,7 +691,7 @@ bash bin/pre-build-check.sh
 bash bin/install-ollama.sh
 ```
 
-[bin/install-ollama.sh](bin/install-ollama.sh) installs Ollama when it is missing, then pulls `qwen2.5-coder:7b`. A chat can also use the Grok API or Grok Build ACP via the pool. The Sovereign Desktop carries more than one conversation at the same time. Those conversations stay unified. The desktop can use more than one model at the same time. A later model is a name on the same command: `bash bin/install-ollama.sh llama3.2`.
+[bin/install-ollama.sh](bin/install-ollama.sh) installs Ollama when it is missing, then pulls `qwen2.5-coder:7b`. A chat can also use the Grok API or Grok Build ACP via the pool. A chat can also use a llama.cpp server on the llama-openapi family. That setup is [BitNet and the OpenAI-compatible llama server](bitnet/README.md). The Sovereign Desktop carries more than one conversation at the same time. Those conversations stay unified. The desktop can use more than one model at the same time. A later model is a name on the same command: `bash bin/install-ollama.sh llama3.2`.
 
 > **Failed line**
 >
@@ -718,7 +720,7 @@ Fix the failure and run that install again.
 bash app/start-casserole.sh
 ```
 
-[app/start-casserole.sh](app/start-casserole.sh) prints `casserole-server 1.0.0` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When `app/casserole.jar` is absent, start runs [bin/install.sh](bin/install.sh), then starts. In a second terminal, run [app/start-aetheris.sh](app/start-aetheris.sh) or [rust/aetheris/app/start.sh](rust/aetheris/app/start.sh).
+[app/start-casserole.sh](app/start-casserole.sh) prints `casserole-server 1.0.1` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When `app/casserole.jar` is absent, start runs [bin/install.sh](bin/install.sh), then starts. In a second terminal, run [app/start-aetheris.sh](app/start-aetheris.sh) or [rust/aetheris/app/start.sh](rust/aetheris/app/start.sh).
 
 ```bash
 bash app/start-aetheris.sh
@@ -728,7 +730,7 @@ bash app/start-aetheris.sh
 bash rust/aetheris/app/start.sh
 ```
 
-The Java Aetheris Client window prints `aetheris-java 1.0.0`. The Rust window prints `aetheris-client 1.0.0`. Sign in as the user `admin` with the password `demo-admin`.
+The Java Aetheris Client window prints `aetheris-java 1.0.1`. The Rust window prints `aetheris-client 1.0.1`. Sign in as the user `admin` with the password `demo-admin`.
 
 ### 6. Air gap and the demo
 
@@ -742,7 +744,7 @@ cp aetheris.yaml "$HOME/.aetheris.yaml"
 
 Open Terminal in the repository root, the folder that contains `pom.xml`. macOS is the operating system on a Mac. Mac OS X is that same family. zsh is the shell macOS ships. In that same terminal, run `source bin/java-env.zsh` and then `source bin/rust-env.zsh`. Source means the shell runs the file and keeps the values the file set. One of those values is `JAVA_HOME`, the folder where JDK 26 is installed. A terminal you open later has an empty `JAVA_HOME` until you source the two files again in that new terminal.
 
-After that, the steps are the Windows 11 steps, in the same order. The files are the `.zsh` scripts. Run the toolchain files with `source`. Run the rest with `zsh`. The finished lines are the same text the scripts print. The toolchain finishes with `java-env ready` and `rust-env ready`. The pre-build check finishes with `pre-build-check finished`. The Casserole Server finishes with `casserole-server 1.0.0` and stays in that terminal so the log remains visible.
+After that, the steps are the Windows 11 steps, in the same order. The files are the `.zsh` scripts. Run the toolchain files with `source`. Run the rest with `zsh`. The finished lines are the same text the scripts print. The toolchain finishes with `java-env ready` and `rust-env ready`. The pre-build check finishes with `pre-build-check finished`. The Casserole Server finishes with `casserole-server 1.0.1` and stays in that terminal so the log remains visible.
 
 [bin/java-env.zsh](bin/java-env.zsh) keeps a `JAVA_HOME` that already names a Java 26 JDK. An older JDK is set aside, and the script selects JDK 26. Homebrew is the package manager a Mac usually has. `brew --prefix` names an installed `openjdk@26`, `zulu@26`, `openjdk`, or `maven` formula. A formula counts only when it is the JDK or the `mvn` the script can run. The download is Azul Zulu 26, and it is a JDK, because Maven compiles with `javac`. Apple silicon asks for `arch=arm`. Intel asks for `arch=x64`. The script places that JDK's `bin` at the front of `PATH`. [bin/rust-env.zsh](bin/rust-env.zsh) keeps an installed Homebrew `rustup` and selects the Rust toolchain pinned in [rust/aetheris/rust-toolchain.toml](rust/aetheris/rust-toolchain.toml). The installer flag `--no-modify-path` leaves the shell startup file alone. A second run in the same terminal does not grow `PATH`.
 
@@ -778,7 +780,7 @@ zsh bin/install.zsh
 zsh rust/aetheris/bin/install.zsh
 ```
 
-The scripts are [bin/install.zsh](bin/install.zsh) and [rust/aetheris/bin/install.zsh](rust/aetheris/bin/install.zsh). The Java install copies the fat jar to `app/casserole.jar` and prints `casserole installed to app`. The Rust install copies `aetheris-client` into `rust/aetheris/app/` and prints `aetheris-client 1.0.0`. The binary name is `aetheris-client`.
+The scripts are [bin/install.zsh](bin/install.zsh) and [rust/aetheris/bin/install.zsh](rust/aetheris/bin/install.zsh). The Java install copies the fat jar to `app/casserole.jar` and prints `casserole installed to app`. The Rust install copies `aetheris-client` into `rust/aetheris/app/` and prints `aetheris-client 1.0.1`. The binary name is `aetheris-client`.
 
 ### 5. Start
 
@@ -786,7 +788,7 @@ The scripts are [bin/install.zsh](bin/install.zsh) and [rust/aetheris/bin/instal
 zsh app/start-casserole.zsh
 ```
 
-[app/start-casserole.zsh](app/start-casserole.zsh) prints `casserole-server 1.0.0` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When `app/casserole.jar` is absent, start runs [bin/install.zsh](bin/install.zsh), then starts. In a second terminal, run [app/start-aetheris.zsh](app/start-aetheris.zsh) or [rust/aetheris/app/start.zsh](rust/aetheris/app/start.zsh).
+[app/start-casserole.zsh](app/start-casserole.zsh) prints `casserole-server 1.0.1` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When `app/casserole.jar` is absent, start runs [bin/install.zsh](bin/install.zsh), then starts. In a second terminal, run [app/start-aetheris.zsh](app/start-aetheris.zsh) or [rust/aetheris/app/start.zsh](rust/aetheris/app/start.zsh).
 
 ```zsh
 zsh app/start-aetheris.zsh
@@ -796,7 +798,7 @@ zsh app/start-aetheris.zsh
 zsh rust/aetheris/app/start.zsh
 ```
 
-The Java Aetheris Client window prints `aetheris-java 1.0.0`. The Rust install prints `aetheris-client 1.0.0` when it copies the binary, and the start launches that binary. Sign in as the user `admin` with the password `demo-admin`.
+The Java Aetheris Client window prints `aetheris-java 1.0.1`. The Rust install prints `aetheris-client 1.0.1` when it copies the binary, and the start launches that binary. Sign in as the user `admin` with the password `demo-admin`.
 
 ### 6. Air gap and the demo
 
@@ -846,7 +848,9 @@ Two papers travel with this repository as reference material for the practice be
 | The specifications | [docs/specs/README.md](docs/specs/README.md) |
 | The whole map | [semantic key index](docs/specs/semantic-key-index.md) |
 | The version record | [VERSION.md](VERSION.md) |
+| What's new in 1.0.1 | [Release notes](release-notes/1.0.1.md) |
 | The Casserole Server | [Casserole Server](casserole-server/README.md) |
+| BitNet and a llama.cpp server | [BitNet and the OpenAI-compatible llama server](bitnet/README.md) |
 | The Java Aetheris Client | [Java Aetheris Client](aetheris/java/README.md) |
 | Casserole Server scripts | [casserole-server/bin/docs/README.md](casserole-server/bin/docs/README.md) |
 | The Java documentation | {project.home}/javadoc/index.html |

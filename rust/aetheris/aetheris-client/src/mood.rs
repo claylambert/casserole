@@ -12,12 +12,18 @@
 //!
 //! This module does not paint. The egui window stays in the chrome module. Canvas, group, and pipe call `splice_turn` to put the invitation on one user turn. The shell frame stays `shell_mood` and the line. The shaping sentences stay [`OPENER`] and [`CLOSER`]. A missing pin is the text `head`. A pending define is a move that the next send consumes through `consume_pin`.
 //!
-//! @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+//! @aa-sdd L40 aa-sdd-source-prose.md#RustMoodDesk
+//! @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-200
 //! @author clayl (2026-11-03)
 
 /// [`OPENER`] is the sentence placed before the constructed mood in the older splice, and after `shape:` in the current invitation.
-/// Canvas and the chrome window both use this line. The text asks whether to step into the atmosphere. // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// Canvas and the chrome window both use this line. The text asks whether to step in.
 pub const OPENER: &str =
+    "I'm opening a window with this atmosphere\u{2026} would you like to step in with me?";
+
+/// `PRIOR_OPENER` is the invitation sentence a stored head may still carry.
+/// A new send writes [`OPENER`]. A stored head that still uses this sentence is recognized and stripped.
+const PRIOR_OPENER: &str =
     "I'm opening a window with this atmosphere\u{2026} would you like to step into it with me?";
 
 /// [`CLOSER`] is the sentence placed after the constructed mood.
@@ -69,8 +75,16 @@ pub fn unsplice_turn(turn: &str) -> String {
     if let Some(rest) = turn.strip_prefix(&fresh) {
         return rest.to_string();
     }
+    let prior = format!("mood: {line}\nshape:\n{PRIOR_OPENER}\n{CLOSER}\n");
+    if let Some(rest) = turn.strip_prefix(&prior) {
+        return rest.to_string();
+    }
     let older = format!("{OPENER}\n{line}\n{CLOSER}\n");
     if let Some(rest) = turn.strip_prefix(&older) {
+        return rest.to_string();
+    }
+    let older_prior = format!("{PRIOR_OPENER}\n{line}\n{CLOSER}\n");
+    if let Some(rest) = turn.strip_prefix(&older_prior) {
         return rest.to_string();
     }
     turn.to_string()
@@ -88,18 +102,30 @@ fn invited_line(turn: &str) -> Option<String> {
     let rest = turn.strip_prefix("mood: ")?;
     let (line, rest) = rest.split_once('\n')?;
     let line = normalize(line)?;
-    let shape = format!("shape:\n{OPENER}\n{CLOSER}");
-    if rest == shape || rest.starts_with(&(shape + "\n")) {
+    if invitation_rest(rest, OPENER) || invitation_rest(rest, PRIOR_OPENER) {
         Some(line.to_string())
     } else {
         None
     }
 }
 
+/// The `invitation_rest` function reports whether `rest` is the shape block for `opener`.
+/// The block is `shape:`, the opener, and [`CLOSER`]. The rest may end there or continue after one newline.
+fn invitation_rest(rest: &str, opener: &str) -> bool {
+    let shape = format!("shape:\n{opener}\n{CLOSER}");
+    rest == shape || rest.starts_with(&(shape + "\n"))
+}
+
 /// The `older_splice_line` function reads the older invitation at the start of `turn`.
 /// The text must start with [`OPENER`] and a newline. The next line is the mood. The text after that line must be [`CLOSER`], alone or with more text after a newline. Any other shape returns `None`.
 fn older_splice_line(turn: &str) -> Option<String> {
-    let rest = turn.strip_prefix(&format!("{OPENER}\n"))?;
+    older_splice_line_for(turn, OPENER).or_else(|| older_splice_line_for(turn, PRIOR_OPENER))
+}
+
+/// The `older_splice_line_for` function reads an older invitation that starts with `opener`.
+/// The next line is the mood. The text after that line must be [`CLOSER`], alone or with more text after a newline. Any other shape returns `None`.
+fn older_splice_line_for(turn: &str, opener: &str) -> Option<String> {
+    let rest = turn.strip_prefix(&format!("{opener}\n"))?;
     let (line, rest) = rest.split_once('\n')?;
     let line = normalize(line)?;
     if rest == CLOSER || rest.starts_with(&format!("{CLOSER}\n")) {
@@ -114,7 +140,7 @@ fn older_splice_line(turn: &str) -> Option<String> {
 pub fn debug_lines(line: &str) -> Vec<String> {
     let Some(line) = normalize(line) else {
         return Vec::new();
-    }; // @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+    };
     splice_turn("", Some(line))
         .lines()
         .filter(|line| !line.is_empty())
@@ -122,7 +148,7 @@ pub fn debug_lines(line: &str) -> Vec<String> {
         .collect()
 }
 
-/// @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md
+/// @aa-sdd PK-1169 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-200
 /// The [`SendTurn`] struct is one turn the send may carry.
 /// `place` walks these values from oldest to newest and returns the first user turn at or after the pin.
 pub struct SendTurn<'a> {
@@ -217,6 +243,21 @@ mod tests {
         assert_eq!(lines[1], "shape:");
         assert_eq!(lines[2], OPENER);
         assert_eq!(lines[3], CLOSER);
+    }
+
+    #[test]
+    /// The `a_prior_opener_strips` test checks a stored head that still says `step into it`.
+    /// The mood line is read. The strip returns the turn. A new splice writes `step in with me` and does not keep `step into it`.
+    fn a_prior_opener_strips() {
+        let prior = "I'm opening a window with this atmosphere\u{2026} would you like to step into it with me?";
+        let stored = format!("mood: lantern-keep\nshape:\n{prior}\n{CLOSER}\nnext");
+        assert_eq!(line_at_turn_head(&stored).as_deref(), Some("lantern-keep"));
+        assert_eq!(unsplice_turn(&stored), "next");
+        let again = splice_turn(&stored, Some("lantern-keep"));
+        assert!(again.starts_with(&format!("mood: lantern-keep\nshape:\n{OPENER}\n")));
+        assert!(OPENER.contains("step in with me"));
+        assert!(!again.contains("step into it"));
+        assert!(again.ends_with("next"));
     }
 
     #[test]

@@ -12,6 +12,7 @@
 //!
 //! Java `GrokSettingsDocument` and `AetherisNotebookPanel` are the rule. The document is `aetheris-grok.yaml` under `.casserole` in the home directory. A test passes its own path. This module does not open a socket. This module does not call the Grok API.
 //!
+//! @aa-sdd G-12 rust-aetheris-client.draft.001.md
 //! @author clayl (2026-10-27)
 
 use std::path::{Path, PathBuf};
@@ -56,6 +57,18 @@ pub const GROK_LIST_MISS: &str = "Grok model list is empty.";
 /// The `OLLAMA_LIST_MISS` constant is the red notice when the Ollama tag list has no model lines.
 /// The words are `Ollama model list is empty.`
 pub const OLLAMA_LIST_MISS: &str = "Ollama model list is empty.";
+/// The `LLAMA_LIST_MISS` constant is the red notice when the llama-openapi catalog has no model lines.
+/// The words are `llama-openapi model list is empty.`
+pub const LLAMA_LIST_MISS: &str = "llama-openapi model list is empty.";
+/// The `LLAMA_MODEL_TIP` constant is the hover text on the llama model field.
+/// A chosen id is the model this cell calls. A path-shaped id shows the alias until the combo commits.
+pub const LLAMA_MODEL_TIP: &str = "Models from the llama-openapi catalog. A chosen id is the model this cell calls. A path-shaped id shows the alias until the combo commits.";
+/// The `LLAMA_TEMPERATURE_TIP` constant is the hover text on the llama temperature field.
+/// A blank field leaves temperature off the body.
+pub const LLAMA_TEMPERATURE_TIP: &str = "Temperature on the llama call. A blank field leaves temperature off the body.";
+/// The `LLAMA_CAP_TIP` constant is the hover text on the llama completion-cap field.
+/// A blank field leaves max_tokens off the body.
+pub const LLAMA_CAP_TIP: &str = "Completion cap on the llama call. A blank field leaves max_tokens off the body.";
 
 const FOUR: &[&str] = &["low", "medium", "high", "xhigh"];
 const THREE: &[&str] = &["low", "medium", "high"];
@@ -115,8 +128,17 @@ pub fn provider_id(target: &str) -> String {
 /// Pool returns `pool`. Grok returns `grok/` plus the id, or `grok` when the id is blank.
 /// Any other family returns `ollama/` plus the Ollama id, or `ollama` when that id is blank.
 /// An id that already begins with its family prefix is returned as stored. A canvas cell is not an input.
-/// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+/// A llama id is empty on this path. `engine_with_llama` carries that id.
+/// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
 pub fn engine_from_console(provider: &str, ollama_id: &str, grok_id: &str) -> String {
+    engine_with_llama(provider, ollama_id, grok_id, "")
+}
+
+/// The `engine_with_llama` function builds the SSH strip word, including llama-openapi.
+/// Pool returns `pool`. Grok returns `grok/` plus the id, or `grok` when the id is blank.
+/// Llama-openapi returns `llama-openapi/` plus the id, or `llama-openapi` when the id is blank.
+/// Any other family returns `ollama/` plus the Ollama id, or `ollama` when that id is blank.
+pub fn engine_with_llama(provider: &str, ollama_id: &str, grok_id: &str, llama_id: &str) -> String {
     let family = provider.trim();
     if family == "pool" {
         return "pool".to_string();
@@ -131,6 +153,16 @@ pub fn engine_from_console(provider: &str, ollama_id: &str, grok_id: &str) -> St
         }
         return format!("grok/{id}");
     }
+    if family == "llama-openapi" {
+        let id = llama_id.trim();
+        if id.is_empty() {
+            return "llama-openapi".to_string();
+        }
+        if id.starts_with("llama-openapi/") {
+            return id.to_string();
+        }
+        return format!("llama-openapi/{id}");
+    }
     let id = ollama_id.trim();
     if id.is_empty() {
         return "ollama".to_string();
@@ -144,7 +176,7 @@ pub fn engine_from_console(provider: &str, ollama_id: &str, grok_id: &str) -> St
 /// The `engine_from_shell_result` function reads a `shell_model_result:` body.
 /// A body that does not start with that prefix returns `None`. A missing provider line is Ollama.
 /// The Ollama id is `ollama_model:`, or `model:` when that line is empty. The Grok id is `grok_model:`.
-/// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+/// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
 pub fn engine_from_shell_result(text: &str) -> Option<String> {
     if !text.starts_with("shell_model_result:") {
         return None;
@@ -155,7 +187,11 @@ pub fn engine_from_shell_result(text: &str) -> Option<String> {
         ollama = shell_line(text, "model:");
     }
     let grok = shell_line(text, "grok_model:");
-    Some(engine_from_console(&provider, &ollama, &grok))
+    let mut llama = shell_line(text, "llama_model:");
+    if llama.is_empty() && provider == "llama-openapi" {
+        llama = shell_line(text, "model:");
+    }
+    Some(engine_with_llama(&provider, &ollama, &grok, &llama))
 }
 
 /// The `model_after_slash` function returns the text after the first slash.
@@ -177,6 +213,10 @@ pub fn short_model_name(target: &str) -> String {
             if id.is_empty() { provider } else { id }
         }
         "pool" => "pool".to_string(),
+        "llama-openapi" => {
+            let id = model_after_slash(target);
+            if id.is_empty() { "llama-openapi".to_string() } else { id }
+        }
         _ => String::new(),
     }
 }
@@ -192,11 +232,13 @@ pub fn outbound_target(stored: &str) -> String {
     }
 }
 
-/// The `no_model` function reports Grok with no model id.
-/// The client says `no-model` and does not send. An empty stored word is not this case.
+/// The `no_model` function reports Grok or llama-openapi with no model id.
+/// The client says `no-model` and does not send. An empty stored word is Ollama, and that word is not this case.
 pub fn no_model(stored: &str) -> bool {
     let outbound = outbound_target(stored);
-    provider_id(&outbound) == "grok" && model_after_slash(&outbound).is_empty()
+    let provider = provider_id(&outbound);
+    let missing = model_after_slash(&outbound).is_empty();
+    (provider == "grok" || provider == "llama-openapi") && missing
 }
 
 /// The `number_text` function prints a number for a field.
@@ -209,8 +251,9 @@ pub fn number_text(value: f64) -> String {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The [`Family`] enum is the provider family of the dialog.
-/// `Ollama` is the local catalog. `Grok` is the Grok table. `Pool` is the Heavy pool.
+/// `Ollama` is the local catalog. `Grok` is the Grok table. `Pool` is the Heavy pool. `Llama` is the llama-openapi catalog.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 // @aa-sdd PK-1320 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
 // @aa-sdd PK-1320 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
@@ -228,26 +271,29 @@ pub enum Family {
     Ollama,
     Grok,
     Pool,
+    Llama,
 }
 
 impl Family {
     /// The `label` method returns the visible family name.
-    /// The words are `Ollama`, `Grok`, and `Pool`.
+    /// The words are `Ollama`, `Grok`, `Pool`, and `llama-openapi`.
     pub fn label(self) -> &'static str {
         match self {
             Family::Ollama => "Ollama",
             Family::Grok => "Grok",
             Family::Pool => "Pool",
+            Family::Llama => "llama-openapi",
         }
     }
 
     /// The `word` method returns the stored family word.
-    /// The words are `ollama`, `grok`, and `pool`.
+    /// The words are `ollama`, `grok`, `pool`, and `llama-openapi`.
     pub fn word(self) -> &'static str {
         match self {
             Family::Ollama => "ollama",
             Family::Grok => "grok",
             Family::Pool => "pool",
+            Family::Llama => "llama-openapi",
         }
     }
 
@@ -258,13 +304,15 @@ impl Family {
             "ollama" => Some(Family::Ollama),
             "grok" => Some(Family::Grok),
             "pool" => Some(Family::Pool),
+            "llama-openapi" => Some(Family::Llama),
             _ => None,
         }
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The [`ThinkSnap`] struct is the think state for one cell.
-/// It is not a vault column. `ollama_on` is the Ollama checkbox. `ollama_level` is the Ollama effort. `ollama_id` is the Ollama model id. `grok_on` is the Grok checkbox. `pool_on` is the pool checkbox.
+/// It is not a vault column. `ollama_on` is the Ollama checkbox. `ollama_level` is the Ollama effort. `ollama_id` is the Ollama model id. `grok_on` is the Grok checkbox. `pool_on` is the pool checkbox. `llama_id` is the llama model id. `llama_temperature` and `llama_cap` are the llama card fields. A blank llama field stays off the body.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ThinkSnap {
     pub ollama_on: bool,
@@ -272,6 +320,9 @@ pub struct ThinkSnap {
     pub ollama_id: String,
     pub grok_on: bool,
     pub pool_on: bool,
+    pub llama_id: String,
+    pub llama_temperature: String,
+    pub llama_cap: String,
 }
 
 impl ThinkSnap {
@@ -284,6 +335,9 @@ impl ThinkSnap {
             ollama_id: String::new(),
             grok_on: false,
             pool_on: false,
+            llama_id: String::new(),
+            llama_temperature: String::new(),
+            llama_cap: String::new(),
         }
     }
 }
@@ -296,6 +350,7 @@ impl Default for ThinkSnap {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The [`GrokEntry`] struct is one Grok settings object.
 /// Factory values match the Grok plan. `api` is the API word. `model` is the model id. `reasoning_effort` is the effort word. `send_reasoning_effort` decides whether that word is written. `stream` and `burner_cloud` are flags. `temperature` and `max_completion_tokens` are the call numbers.
 #[derive(Clone, Debug, PartialEq)]
@@ -349,6 +404,7 @@ impl GrokEntry {
     }
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The [`GrokDoc`] struct is the Grok settings document.
 /// The file is `aetheris-grok.yaml` under `.casserole` in the home directory. A version other than 1 is left unread. A blocked document is not written. `path` is the file. `blocked` stops reads and writes. `standing` is the default entry. `cells` are the per-cell entries.
 pub struct GrokDoc {
@@ -524,6 +580,7 @@ pub fn grok_path(home: &Path) -> PathBuf {
     home.join(".casserole").join(GROK_FILE)
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The `Parse` enum is the result of reading one settings document.
 /// `Blocked` means the text is refused. `Doc` is a standing entry and the cell rows.
 // @aa-sdd PK-1305 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
@@ -766,7 +823,7 @@ fn yaml_scalar(value: &str) -> String {
 }
 
 /// The `canvas_tune` function builds the execute tune for a canvas run.
-/// Grok carries the document. Ollama carries `think` when the box is on. An empty Ollama level is the word `true`. Pool carries `think: true` when its box is on. Pool also carries `pool_boot`. An empty stored word is `ollama`.
+/// Grok carries the document. Ollama carries `think` when the box is on. An empty Ollama level is the word `true`. Pool carries `think: true` when its box is on. Pool also carries `pool_boot`. Llama carries a finite temperature and a cap of at least 1 when those card fields are set. A blank llama field stays off the body. Llama leaves `think` empty. An empty stored word is `ollama`.
 pub fn canvas_tune(
     stored: &str,
     ephemeral: bool,
@@ -792,6 +849,20 @@ pub fn canvas_tune(
             tune.think = "true".to_string();
         }
         tune.pool_boot = pool_boot.to_string();
+    } else if provider == "llama-openapi" {
+        tune.think.clear();
+        let temp_text = think.llama_temperature.trim();
+        if let Ok(temp) = temp_text.parse::<f64>() {
+            if temp.is_finite() {
+                tune.temperature = Some(temp);
+            }
+        }
+        let cap_text = think.llama_cap.trim();
+        if let Ok(max) = cap_text.parse::<i32>() {
+            if max >= 1 {
+                tune.max_completion_tokens = Some(max);
+            }
+        }
     }
     tune
 }
@@ -823,6 +894,10 @@ pub fn mood_tune(
         fill_grok(&mut tune, entry, false, &model_after_slash(&target));
     } else if provider_id(&target) == "pool" {
         tune.pool_boot = pool_boot.to_string();
+    } else if provider_id(&target) == "llama-openapi" {
+        tune.think.clear();
+        tune.temperature = None;
+        tune.max_completion_tokens = None;
     }
     tune
 }
@@ -921,6 +996,9 @@ pub fn target_keystroke(previous: &str, text: &str, think: &mut ThinkSnap) -> St
     if provider_id(prior) == "ollama" && provider_id(text) != "ollama" {
         think.ollama_id = model_after_slash(prior);
     }
+    if provider_id(prior) == "llama-openapi" && provider_id(text) != "llama-openapi" {
+        think.llama_id = model_after_slash(prior);
+    }
     text.to_string()
 }
 
@@ -937,6 +1015,9 @@ pub fn target_focus_loss(text: &str, think: &mut ThinkSnap) -> String {
     }
     if provider_id(&stored) == "ollama" {
         think.ollama_id = model_after_slash(&stored);
+    }
+    if provider_id(&stored) == "llama-openapi" {
+        think.llama_id = model_after_slash(&stored);
     }
     stored
 }
@@ -959,19 +1040,22 @@ pub fn sync_grok_model(doc: &mut GrokDoc, key: &str, stored: &str) {
     doc.write(key, &entry, false);
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// @aa-sdd PK-1280 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
 /// The [`ModelWire`] enum is one request the dialog wants written.
-/// `Tags` asks for the Ollama catalog. `GrokModels` asks for the Grok language-model catalog. `Show` asks for one Ollama model. `ShellModel` asks for the console model. `ShellSet` carries a console settings body.
+/// `Tags` asks for the Ollama catalog. `GrokModels` asks for the Grok language-model catalog. `LlamaModels` asks for the llama-openapi catalog. `Show` asks for one Ollama model. `ShellModel` asks for the console model. `ShellSet` carries a console settings body.
 #[derive(Clone, Debug, PartialEq, Eq)]
 // @aa-sdd PK-992 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
 pub enum ModelWire {
     Tags { cell: [u8; 16] },
     GrokModels { cell: [u8; 16] },
+    LlamaModels { cell: [u8; 16] },
     Show { cell: [u8; 16], id: String },
     ShellModel,
     ShellSet(String),
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The [`ModelEffect`] struct is the result of one dialog change.
 /// `target` is a new stored target. `think` is a new think snap. `wires` are the requests to write. `status` is a status word, or `None` when the change is quiet.
 #[derive(Clone, Debug, PartialEq)]
@@ -1037,6 +1121,14 @@ pub struct ModelSession {
     pub max_tokens: String,
     pub grok_think: bool,
     pub pool_think: bool,
+    /// The llama model id. Blank means the family word with no id.
+    pub llama_id: String,
+    /// Catalog rows for llama-openapi. The stored id stays when a typed id is absent from the reply.
+    pub llama_tags: Vec<String>,
+    /// Llama temperature text. Blank leaves temperature off the body. This is not the Grok default.
+    pub llama_temperature: String,
+    /// Llama completion cap text. Blank leaves max_tokens off the body. This is not the Grok default.
+    pub llama_cap: String,
     console_provider: String,
     console_ollama: String,
     /// The `console_think` field is the console Ollama think string.
@@ -1048,6 +1140,7 @@ pub struct ModelSession {
     console_grok: Option<GrokEntry>,
     console_grok_think: String,
     console_pool_on: bool,
+    console_llama: String,
 }
 
 impl ModelSession {
@@ -1081,6 +1174,10 @@ impl ModelSession {
             max_tokens: "128000".to_string(),
             grok_think: false,
             pool_think: false,
+            llama_id: String::new(),
+            llama_tags: Vec::new(),
+            llama_temperature: String::new(),
+            llama_cap: String::new(),
             console_provider: String::new(),
             console_ollama: String::new(),
             console_think: String::new(),
@@ -1088,6 +1185,7 @@ impl ModelSession {
             console_grok: None,
             console_grok_think: String::new(),
             console_pool_on: false,
+            console_llama: String::new(),
         }
     }
 
@@ -1148,25 +1246,32 @@ impl ModelSession {
 
     /// The `console_engine_word` method returns the SSH strip word for the stored console model.
     /// Pool, Grok, and Ollama use [`engine_from_console`]. A canvas cell is not this word.
-    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
     pub fn console_engine_word(&self) -> String {
         let grok = self
             .console_grok
             .as_ref()
             .map(|entry| entry.model.clone())
             .unwrap_or_default();
-        engine_from_console(&self.console_provider, &self.console_ollama, &grok)
+        engine_with_llama(
+            &self.console_provider,
+            &self.console_ollama,
+            &grok,
+            &self.console_llama,
+        )
     }
 
     /// The `show_list_miss` method clears the named list and stores the red notice.
     /// A Grok miss clears the Grok rows. An Ollama miss clears the Ollama rows.
     /// The stored model id stays. The generation increases so the slide can open again.
-    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
     pub fn show_list_miss(&mut self, words: &'static str) {
         if words == GROK_LIST_MISS {
             self.grok_choices.clear();
         } else if words == OLLAMA_LIST_MISS {
             self.ollama_tags.clear();
+        } else if words == LLAMA_LIST_MISS {
+            self.llama_tags.clear();
         }
         self.list_miss = Some(words);
         self.list_miss_gen = self.list_miss_gen.wrapping_add(1);
@@ -1217,10 +1322,19 @@ impl ModelSession {
         } else {
             think.ollama_id.clone()
         };
+        if provider == "llama-openapi" {
+            let id = model_after_slash(stored);
+            if !id.is_empty() {
+                think.llama_id = id;
+            }
+        }
         self.seat_family(provider.as_str());
         self.ollama_id = seed;
         self.ollama_think = think.ollama_on;
         self.pool_think = think.pool_on;
+        self.llama_id = think.llama_id.clone();
+        self.llama_temperature = think.llama_temperature.clone();
+        self.llama_cap = think.llama_cap.clone();
         self.load_grok(doc.entry(key).as_ref(), think.grok_on);
         self.open = true;
         let mut effect = ModelEffect::quiet();
@@ -1236,6 +1350,9 @@ impl ModelSession {
         if self.family == Some(Family::Grok) {
             // @aa-sdd PK-1281 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
             effect.wires.push(ModelWire::GrokModels { cell });
+        }
+        if self.family == Some(Family::Llama) {
+            effect.wires.push(ModelWire::LlamaModels { cell });
         }
         effect
     }
@@ -1275,12 +1392,22 @@ impl ModelSession {
         if provider.is_empty() {
             provider = "ollama".to_string();
         }
-        self.console_provider = provider;
+        self.console_provider = provider.clone();
         let mut ollama = shell_line(text, "ollama_model:");
-        if ollama.is_empty() {
+        if ollama.is_empty() && provider != "llama-openapi" {
             ollama = shell_line(text, "model:");
         }
         self.console_ollama = ollama;
+        let mut llama = shell_line(text, "llama_model:");
+        if llama.is_empty() && provider == "llama-openapi" {
+            llama = shell_line(text, "model:");
+        }
+        self.console_llama = llama;
+        if provider == "llama-openapi" {
+            self.llama_id = self.console_llama.trim().to_string();
+            self.llama_temperature = shell_line(text, "temperature:");
+            self.llama_cap = shell_line(text, "max_tokens:");
+        }
         let grok_model = shell_line(text, "grok_model:");
         let mut entry = GrokEntry::blank(&grok_model);
         let effort = shell_line(text, "effort:");
@@ -1369,6 +1496,10 @@ impl ModelSession {
             // @aa-sdd PK-1281 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
             effect.wires.push(ModelWire::GrokModels { cell: [0u8; 16] });
         }
+        if self.family == Some(Family::Llama) {
+            self.llama_id = self.console_llama.trim().to_string();
+            effect.wires.push(ModelWire::LlamaModels { cell: [0u8; 16] });
+        }
         let _ = doc;
         effect
     }
@@ -1389,7 +1520,7 @@ impl ModelSession {
     pub fn dismiss(&mut self) {
         self.dismissed = true;
         self.close();
-    } // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md
+    }
 
     /// The `choose_family` method selects a family and writes the matching target.
     /// The family is stored even when the dialog is shut. A console dialog uses the console path. Ollama stores `ollama/` plus the remembered id, or an empty target when that id is empty. Grok copies or adopts a document row. Pool stores the word `pool`. Ollama also queues tags and show. Grok also queues a language-model request.
@@ -1438,6 +1569,27 @@ impl ModelSession {
                 target = "pool".to_string();
                 self.pool_think = think.pool_on;
             }
+            Family::Llama => {
+                if provider_id(stored) == "ollama" {
+                    think.ollama_id = self.ollama_id.trim().to_string();
+                }
+                let id = if !think.llama_id.trim().is_empty() {
+                    think.llama_id.trim().to_string()
+                } else if provider_id(stored) == "llama-openapi" {
+                    model_after_slash(stored)
+                } else {
+                    self.llama_id.trim().to_string()
+                };
+                self.llama_id = id.clone();
+                self.llama_temperature = think.llama_temperature.clone();
+                self.llama_cap = think.llama_cap.clone();
+                think.llama_id = id.clone();
+                target = if id.is_empty() {
+                    "llama-openapi".to_string()
+                } else {
+                    format!("llama-openapi/{id}")
+                };
+            }
         }
         let mut effect = ModelEffect {
             target: Some(target),
@@ -1455,6 +1607,9 @@ impl ModelSession {
         if family == Family::Grok {
             // @aa-sdd PK-1281 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
             effect.wires.push(ModelWire::GrokModels { cell: self.cell });
+        }
+        if family == Family::Llama {
+            effect.wires.push(ModelWire::LlamaModels { cell: self.cell });
         }
         effect
     }
@@ -1479,6 +1634,9 @@ impl ModelSession {
         if family == Family::Grok {
             // @aa-sdd PK-1281 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
             effect.wires.insert(0, ModelWire::GrokModels { cell: [0u8; 16] });
+        }
+        if family == Family::Llama {
+            effect.wires.insert(0, ModelWire::LlamaModels { cell: [0u8; 16] });
         }
         effect
     }
@@ -1539,7 +1697,7 @@ impl ModelSession {
     /// When the box turns on and the family is Grok, stream becomes true.
     /// Turning the box off leaves stream as it is.
     /// A console dialog returns a shell set. Any other dialog returns the snap with `grok_on` set.
-    pub fn set_grok_think(&mut self, on: bool, think: &ThinkSnap) -> ModelEffect { // @aa-sdd PK-1404 docs/specs/rust/aetheris/aetheris-client/src/model.spec.md
+    pub fn set_grok_think(&mut self, on: bool, think: &ThinkSnap) -> ModelEffect {
         self.grok_think = on;
         if on && self.family == Some(Family::Grok) {
             self.stream = true;
@@ -1639,7 +1797,7 @@ impl ModelSession {
     /// The `ollama_pane_owns_cell` method reports that the Ollama pane may write the cell.
     /// The family must be Ollama or still unset. A missing family keeps the old write. The console path does not ask.
     fn ollama_pane_owns_cell(&self) -> bool {
-        // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md
+        // @aa-sdd PK-1085 docs/specs/common/formal-plan.spec.md FINESSE:f-195
         matches!(self.family, None | Some(Family::Ollama))
     }
 
@@ -1767,12 +1925,156 @@ impl ModelSession {
             think: Some(think),
             wires: Vec::new(),
             status: None,
-        } // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+        }
+    }
+
+    /// The `llama_pane_owns_cell` method reports that the llama pane may write the cell.
+    /// The family must be Llama. The console path does not ask.
+    fn llama_pane_owns_cell(&self) -> bool {
+        matches!(self.family, Some(Family::Llama))
+    }
+
+    /// The `type_llama` method updates the llama id on each character.
+    /// A cell dialog whose family is not Llama returns a quiet effect. A console dialog stores the id. An open cell returns `llama-openapi/` plus the id, or the word `llama-openapi` when the id is empty.
+    pub fn type_llama(&mut self, id: &str, think: &ThinkSnap) -> ModelEffect {
+        if !self.console && !self.llama_pane_owns_cell() {
+            return ModelEffect::quiet();
+        }
+        let id = id.trim().to_string();
+        self.llama_id = id.clone();
+        if self.console || !self.open {
+            return ModelEffect::quiet();
+        }
+        let mut think = think.clone();
+        think.llama_id = id.clone();
+        let target = if id.is_empty() {
+            "llama-openapi".to_string()
+        } else {
+            format!("llama-openapi/{id}")
+        };
+        ModelEffect {
+            target: Some(target),
+            think: Some(think),
+            wires: Vec::new(),
+            status: None,
+        }
+    }
+
+    /// The `commit_llama` method stores the llama id when focus leaves the field.
+    /// A shut dialog returns a quiet effect. A cell dialog whose family is not Llama returns a quiet effect. A console dialog returns a shell set.
+    pub fn commit_llama(&mut self, think: &ThinkSnap) -> ModelEffect {
+        if !self.open {
+            return ModelEffect::quiet();
+        }
+        if !self.console && !self.llama_pane_owns_cell() {
+            return ModelEffect::quiet();
+        }
+        let id = self.llama_id.trim().to_string();
+        self.llama_id = id.clone();
+        if self.console {
+            self.console_llama = id;
+            return self.shell_effect();
+        }
+        let mut think = think.clone();
+        think.llama_id = id.clone();
+        let target = if id.is_empty() {
+            "llama-openapi".to_string()
+        } else {
+            format!("llama-openapi/{id}")
+        };
+        ModelEffect {
+            target: Some(target),
+            think: Some(think),
+            wires: Vec::new(),
+            status: None,
+        }
+    }
+
+    /// The `set_llama_temperature` method stores the llama temperature text.
+    /// A blank field is stored blank and leaves temperature off the body. A value that is not a finite float returns the status word `settings`.
+    pub fn set_llama_temperature(&mut self, text: &str, think: &ThinkSnap) -> ModelEffect {
+        if !self.console && !self.llama_pane_owns_cell() {
+            return ModelEffect::quiet();
+        }
+        let text = text.trim();
+        if !text.is_empty() {
+            let Ok(temp) = text.parse::<f64>() else {
+                return ModelEffect {
+                    target: None,
+                    think: None,
+                    wires: Vec::new(),
+                    status: Some(SETTINGS_WORD),
+                };
+            };
+            if !temp.is_finite() {
+                return ModelEffect {
+                    target: None,
+                    think: None,
+                    wires: Vec::new(),
+                    status: Some(SETTINGS_WORD),
+                };
+            }
+            self.llama_temperature = number_text(temp);
+        } else {
+            self.llama_temperature.clear();
+        }
+        if self.console {
+            return self.shell_effect();
+        }
+        let mut think = think.clone();
+        think.llama_temperature = self.llama_temperature.clone();
+        ModelEffect {
+            target: None,
+            think: Some(think),
+            wires: Vec::new(),
+            status: None,
+        }
+    }
+
+    /// The `set_llama_cap` method stores the llama completion cap.
+    /// A blank field is stored blank and leaves max_tokens off the body. A value that is not an integer of at least 1 returns the status word `settings`.
+    pub fn set_llama_cap(&mut self, text: &str, think: &ThinkSnap) -> ModelEffect {
+        if !self.console && !self.llama_pane_owns_cell() {
+            return ModelEffect::quiet();
+        }
+        let text = text.trim();
+        if !text.is_empty() {
+            let Ok(max) = text.parse::<i32>() else {
+                return ModelEffect {
+                    target: None,
+                    think: None,
+                    wires: Vec::new(),
+                    status: Some(SETTINGS_WORD),
+                };
+            };
+            if max < 1 {
+                return ModelEffect {
+                    target: None,
+                    think: None,
+                    wires: Vec::new(),
+                    status: Some(SETTINGS_WORD),
+                };
+            }
+            self.llama_cap = max.to_string();
+        } else {
+            self.llama_cap.clear();
+        }
+        if self.console {
+            return self.shell_effect();
+        }
+        let mut think = think.clone();
+        think.llama_cap = self.llama_cap.clone();
+        ModelEffect {
+            target: None,
+            think: Some(think),
+            wires: Vec::new(),
+            status: None,
+        }
     }
 
     /// The `apply_grok_models` method stores Grok model ids from a catalog reply.
     /// A shut dialog returns. A key other than the open cell returns. A reply with no model lines clears the combo and stores the red miss. The stored id stays. A selected id that is not in the reply is placed first.
-    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
     pub fn apply_grok_models(&mut self, cell_key: &str, text: &str) {
         if !self.open || cell_key != self.cell_key {
             return;
@@ -1790,12 +2092,12 @@ impl ModelSession {
         }
         rows.extend(names);
         self.grok_choices = rows;
-        self.clear_list_miss(); // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+        self.clear_list_miss();
     }
 
     /// The `apply_tags` method stores the Ollama model names from a tags reply.
     /// A shut dialog returns. A key other than the open cell returns. The current Ollama id is kept. A reply with no model lines clears the rows and stores the red miss. The typed id is not added as a row.
-    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md
+    /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
     pub fn apply_tags(&mut self, cell_key: &str, text: &str) {
         if !self.open || cell_key != self.cell_key {
             return;
@@ -1808,6 +2110,27 @@ impl ModelSession {
             return;
         }
         self.ollama_tags = names;
+        self.clear_list_miss();
+    }
+
+    /// The `apply_llama_models` method stores llama-openapi model ids from a catalog reply.
+    /// A shut dialog returns. A key other than the open cell returns. A reply with no model lines stores the red miss. A typed id that is not in the reply stays first.
+    pub fn apply_llama_models(&mut self, cell_key: &str, text: &str) {
+        if !self.open || cell_key != self.cell_key {
+            return;
+        }
+        let names = tags_models(text);
+        if names.is_empty() {
+            self.show_list_miss(LLAMA_LIST_MISS);
+            return;
+        }
+        let current = self.llama_id.trim().to_string();
+        let mut rows = Vec::new();
+        if !current.is_empty() && !names.iter().any(|row| row == &current) {
+            rows.push(current);
+        }
+        rows.extend(names);
+        self.llama_tags = rows;
         self.clear_list_miss();
     }
 
@@ -2090,7 +2413,12 @@ fn shell_set_body(session: &mut ModelSession) -> Result<String, &'static str> {
     let Some(family) = session.family else {
         return Ok(String::new());
     };
-    let temp_text = session.temperature.trim().to_string();
+    let llama = family == Family::Llama;
+    let temp_text = if llama {
+        session.llama_temperature.trim().to_string()
+    } else {
+        session.temperature.trim().to_string()
+    };
     let mut temp_present = false;
     let mut temp = 0.0;
     if !temp_text.is_empty() {
@@ -2100,7 +2428,11 @@ fn shell_set_body(session: &mut ModelSession) -> Result<String, &'static str> {
         }
         temp_present = true;
     }
-    let max_text = session.max_tokens.trim().to_string();
+    let max_text = if llama {
+        session.llama_cap.trim().to_string()
+    } else {
+        session.max_tokens.trim().to_string()
+    };
     let mut max_present = false;
     let mut max = 0;
     if !max_text.is_empty() {
@@ -2124,26 +2456,31 @@ fn shell_set_body(session: &mut ModelSession) -> Result<String, &'static str> {
     if session.console_grok.is_none() {
         session.console_grok = Some(GrokEntry::blank(&grok_model));
     }
-    if let Some(entry) = session.console_grok.as_mut() {
-        entry.model = grok_model.clone();
-        entry.reasoning_effort = effort.clone();
-        entry.send_reasoning_effort = session.send_effort;
-        entry.stream = session.stream;
-        entry.burner_cloud = session.burner_cloud;
-        if temp_present {
-            entry.temperature = temp;
-        }
-        if max_present {
-            entry.max_completion_tokens = max;
+    if !llama {
+        if let Some(entry) = session.console_grok.as_mut() {
+            entry.model = grok_model.clone();
+            entry.reasoning_effort = effort.clone();
+            entry.send_reasoning_effort = session.send_effort;
+            entry.stream = session.stream;
+            entry.burner_cloud = session.burner_cloud;
+            if temp_present {
+                entry.temperature = temp;
+            }
+            if max_present {
+                entry.max_completion_tokens = max;
+            }
         }
     }
     session.console_grok_think = grok_think.to_string();
     session.console_pool_on = session.pool_think;
     session.console_provider = family.word().to_string();
     session.console_ollama = ollama_id.clone();
+    let llama_id = session.llama_id.trim().to_string();
+    session.console_llama = llama_id.clone();
+    let model_line = if llama { llama_id.clone() } else { ollama_id.clone() };
     let mut body = String::from("shell_model_set:\n");
     push_shell(&mut body, "provider", family.word());
-    push_shell(&mut body, "model", &ollama_id);
+    push_shell(&mut body, "model", &model_line);
     push_shell(&mut body, "ollama_model", &ollama_id);
     push_shell(&mut body, "think", &think);
     push_shell(&mut body, "grok_model", &grok_model);
@@ -2159,6 +2496,7 @@ fn shell_set_body(session: &mut ModelSession) -> Result<String, &'static str> {
     }
     push_shell(&mut body, "burner", if session.burner_cloud { "true" } else { "false" });
     push_shell(&mut body, "pool_think", pool_think);
+    push_shell(&mut body, "llama_model", &llama_id);
     Ok(body)
 }
 
@@ -2293,6 +2631,16 @@ pub fn console_result_tag(text: &str) -> Option<String> {
         }
         return Some(id);
     }
+    if provider == "llama-openapi" {
+        let mut id = shell_line(text, "llama_model:").trim().to_string();
+        if id.is_empty() {
+            id = shell_line(text, "model:").trim().to_string();
+        }
+        if id.is_empty() {
+            return Some("llama-openapi".to_string());
+        }
+        return Some(id);
+    }
     let id = shell_line(text, "ollama_model:").trim().to_string();
     if id.is_empty() {
         Some("ollama".to_string())
@@ -2302,14 +2650,21 @@ pub fn console_result_tag(text: &str) -> Option<String> {
 }
 
 /// The `model_note` function reports a model reply the dialog keeps.
-/// The prefixes are `effort_off:`, `show_result:`, `tags_result:`, `grok_models_result:`, and `shell_model_result:`.
+/// The prefixes are `effort_off:`, `show_result:`, `tags_result:`, `grok_models_result:`, `llama_models_result:`, and `shell_model_result:`.
 pub fn model_note(body: &[u8]) -> bool {
     let text = String::from_utf8_lossy(body);
     text.starts_with("effort_off:")
         || text.starts_with("show_result:")
         || text.starts_with("tags_result:")
         || text.starts_with("grok_models_result:")
+        || text.starts_with("llama_models_result:")
         || text.starts_with("shell_model_result:")
+}
+
+/// The `llama_models_body` function returns the llama-openapi catalog request.
+/// The text is `llama_models:` and a newline.
+pub fn llama_models_body() -> &'static str {
+    "llama_models:\n"
 }
 
 /// The `grok_models_body` function returns the Grok catalog request.
@@ -2336,12 +2691,14 @@ pub fn shell_model_body() -> &'static str {
     "shell_model:\n"
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The [`OscHold`] struct removes the private select-model sequence from Scope T bytes.
 /// `tail` holds a prefix that was cut off at the end of the last chunk.
 pub struct OscHold {
     tail: Vec<u8>,
 }
 
+/// @aa-sdd L37 rust-aetheris-client.draft.001.md
 /// The [`OscOpen`] struct is one select-model sequence peeled from the stream.
 /// `model` is the text before the semicolon. `think` is the text after it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -2470,6 +2827,14 @@ mod tests {
         assert_eq!(engine_from_console("grok", "deepseek-r1:7b", "grok-4.3"), "grok/grok-4.3");
         assert_eq!(engine_from_console("grok", "deepseek-r1:7b", "  "), "grok");
         assert_eq!(engine_from_console("pool", "deepseek-r1:7b", "grok-4.3"), "pool");
+        assert_eq!(
+            engine_with_llama("llama-openapi", "", "", "Falcon3-3B"),
+            "llama-openapi/Falcon3-3B"
+        );
+        assert_eq!(engine_with_llama("llama-openapi", "qwen", "", ""), "llama-openapi");
+        assert!(no_model("llama-openapi"));
+        assert!(no_model("llama-openapi/"));
+        assert!(!no_model("llama-openapi/m"));
         let grok = "shell_model_result:\nprovider: grok\nollama_model: qwen\ngrok_model: grok-4.3\n";
         assert_eq!(engine_from_shell_result(grok).as_deref(), Some("grok/grok-4.3"));
         let ollama = "shell_model_result:\nprovider: ollama\nmodel: deepseek-r1:7b\n";
@@ -2479,6 +2844,23 @@ mod tests {
             Some("pool")
         );
         assert!(engine_from_shell_result("vault: disk  engine: grok/m").is_none());
+    }
+
+    /// The `llama_family_word` test accepts the stored family word.
+    /// The label and the word are `llama-openapi`. Ollama still parses. An unknown word stays unknown.
+    #[test]
+    fn llama_family_word() {
+        assert_eq!(Family::parse("llama-openapi"), Some(Family::Llama));
+        assert_eq!(Family::parse(" Llama-OpenAPI "), Some(Family::Llama));
+        assert_eq!(Family::Llama.word(), "llama-openapi");
+        assert_eq!(Family::Llama.label(), "llama-openapi");
+        assert_eq!(Family::parse("ollama"), Some(Family::Ollama));
+        assert_eq!(Family::parse("grok"), Some(Family::Grok));
+        assert_eq!(Family::parse("pool"), Some(Family::Pool));
+        assert!(Family::parse("llama").is_none());
+        assert_eq!(short_model_name("llama-openapi/Falcon3-3B"), "Falcon3-3B");
+        assert_eq!(short_model_name("llama-openapi"), "llama-openapi");
+        assert_eq!(short_model_name("other/x"), "");
     }
 
     /// The `the_document_round_trips_and_a_foreign_version_stays` test writes a document and reloads it.
@@ -2984,6 +3366,11 @@ mod tests {
             Some(false),
         );
         assert_eq!(console_result_open("tags_result:\n"), None);
+    }
+
+    /// The `the_console_result_tag_names_the_pane` test reads the strip name from a console result.
+    #[test]
+    fn the_console_result_tag_names_the_pane() {
         assert_eq!(
             console_result_tag("shell_model_result:\nprovider: pool\npool_think: true\n"),
             Some("pool".to_string())

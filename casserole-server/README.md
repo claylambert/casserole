@@ -1,6 +1,6 @@
 # Casserole Server
 
-This page is the Casserole Server. The Casserole Server is the Java process both Aetheris Clients share. It listens for a Secure Shell login. Secure Shell, written SSH, is the encrypted login a terminal uses to reach a host. The Casserole Server keeps the conversation in paged memory, so a long session can spill to disk when it no longer fits in RAM. RAM is the memory the process holds while it is running. The Casserole Server sends a reply to any supported integration. A supported integration is the Grok API, Grok Build ACP via the pool, or Ollama. The Grok API is Grok's hosted programming interface. Grok Build ACP via the pool is Grok Build reached through the Agent Client Protocol. ACP is that protocol. The pool is the agent connection for that protocol. The Casserole Server opens that connection. Ollama is a program that runs a language model on this computer. The Aetheris Client is the Sovereign Desktop in this repository. That Aetheris Client is the Java program or the Rust program. One Aetheris Client carries more than one conversation at the same time. Those conversations stay unified on that desktop. The desktop can use more than one of those models at the same time.
+This page is the Casserole Server. The Casserole Server is the Java process both Aetheris Clients share. It listens for a Secure Shell login. Secure Shell, written SSH, is the encrypted login a terminal uses to reach a host. The Casserole Server keeps the conversation in paged memory, so a long session can spill to disk when it no longer fits in RAM. RAM is the memory the process holds while it is running. The Casserole Server sends a reply to any supported integration. A supported integration is the Grok API, Grok Build ACP via the pool, or Ollama. The Grok API is Grok's hosted programming interface. Grok Build ACP via the pool is Grok Build reached through the Agent Client Protocol. ACP is that protocol. The pool is the agent connection for that protocol. The Casserole Server opens that connection. Ollama is a program that runs a language model on this computer. llama-openapi is the family for a llama.cpp server that speaks the OpenAI chat routes. OpenAI chat is the request shape `POST /v1/chat/completions` and `GET /v1/models`. The Casserole Server implements that client. There is no Spring AI starter for it. That family is also a supported integration. The account is [BitNet and the OpenAI-compatible llama server](../bitnet/README.md). The Aetheris Client is the Sovereign Desktop in this repository. That Aetheris Client is the Java program or the Rust program. One Aetheris Client carries more than one conversation at the same time. Those conversations stay unified on that desktop. The desktop can use more than one of those models at the same time.
 
 This page is how you build the Casserole Server and start it. The path for the whole product, including both Aetheris Clients, is the [root page](../README.md). Those steps take about thirty minutes from a fresh clone. The introduction on that page says what Casserole is, what Aetheris is, and what the sovereign desktop means.
 
@@ -46,11 +46,11 @@ If that start runs into trouble, walk the checklist in this section, one script 
 
 The toolchain script is finished when the window shows a line beginning `JAVA_HOME=` and a JDK 26 folder, then the line `java-env ready`. `JAVA_HOME` is the folder where the JDK is installed. JDK 26 is the Java development kit this Casserole Server is built with. The line `java-env ready` means the script finished and that JDK is the one later commands will use. If the window says `Maven is not on PATH`, Maven is missing. Install Apache Maven 3.9 or newer, open a new terminal, and run the toolchain script again.
 
-The model script is finished when Ollama finishes pulling `qwen2.5-coder:7b`. That name is the Ollama model the Casserole Server calls when you do not name another Ollama model. The Grok API and Grok Build ACP via the pool stay available. On Windows, a path to `OllamaSetup.exe` means the script stopped so you can run the installer. Run that installer, open a new PowerShell, and run the model script again.
+The model script is finished when Ollama finishes pulling `qwen2.5-coder:7b`. That name is the Ollama model the Casserole Server calls when you do not name another Ollama model. The Grok API and Grok Build ACP via the pool stay available. A llama.cpp server on the llama-openapi family stays available the same way. That setup is [BitNet and the OpenAI-compatible llama server](../bitnet/README.md). On Windows, a path to `OllamaSetup.exe` means the script stopped so you can run the installer. Run that installer, open a new PowerShell, and run the model script again.
 
 The install script is finished when the window shows `casserole installed to app`. The fat jar is then `app/casserole.jar`. If a test fails, the script stops and prints the module name. Fix that failure and run the install script again.
 
-The start script is finished when the window shows `casserole-server 1.0.0` and the Casserole Server log, and the window stays open. `1.0.0` is the build identifier of the Casserole Server, the version string of the bits you just launched. The log staying open is the Casserole Server, waiting for a login. Port `2222` is that login. The first start creates `hostkey.ser` in the working directory. `hostkey.ser` is the host key the SSH login uses. Leave that file where it is. Sign in as the user `admin` with the password `demo-admin`. The other accounts are on the [root page](../README.md#accounts).
+The start script is finished when the window shows `casserole-server 1.0.1` and the Casserole Server log, and the window stays open. `1.0.1` is the build identifier of the Casserole Server, the version string of the bits you just launched. The log staying open is the Casserole Server, waiting for a login. Port `2222` is that login. The first start creates `hostkey.ser` in the working directory. `hostkey.ser` is the host key the SSH login uses. Leave that file where it is. Sign in as the user `admin` with the password `demo-admin`. The other accounts are on the [root page](../README.md#accounts).
 
 Windows 11, from the repository root, in Windows PowerShell. Windows PowerShell is the PowerShell that Windows 11 ships. The scripts are [bin/java-env.ps1](../bin/java-env.ps1), [bin/install-ollama.ps1](../bin/install-ollama.ps1), [bin/install.ps1](../bin/install.ps1), and [app/start-casserole.ps1](../app/start-casserole.ps1).
 
@@ -111,7 +111,7 @@ Install Apache Maven 3.9 or newer, open a new PowerShell, and run the command ag
 
 ### 2. Local model
 
-This step installs the local Ollama model. The Casserole Server can also answer through the Grok API or through Grok Build ACP via the pool. The Sovereign Desktop carries more than one conversation at the same time. Those conversations stay unified. The desktop can use more than one model at the same time. [bin/install-ollama.ps1](../bin/install-ollama.ps1) installs Ollama when it is missing, then pulls `qwen2.5-coder:7b` when you do not name another Ollama model.
+This step installs the local Ollama model. The Casserole Server can also answer through the Grok API or through Grok Build ACP via the pool. The Casserole Server can also answer through a llama.cpp server on the llama-openapi family. That setup is [BitNet and the OpenAI-compatible llama server](../bitnet/README.md). The Sovereign Desktop carries more than one conversation at the same time. Those conversations stay unified. The desktop can use more than one model at the same time. [bin/install-ollama.ps1](../bin/install-ollama.ps1) installs Ollama when it is missing, then pulls `qwen2.5-coder:7b` when you do not name another Ollama model.
 
 ```powershell
 powershell -File bin\install-ollama.ps1
@@ -149,7 +149,7 @@ Fix the failure and run the install again.
 
 ### 4. Start
 
-Leave this window open. The log in it is the Casserole Server the Aetheris Clients will find. [app/start-casserole.ps1](../app/start-casserole.ps1) prints the build identifier, loads the toolchain, and runs `java -jar app/casserole.jar` with the repository root as the working directory. The script prints `1.0.0`, the public version of the bits you are starting.
+Leave this window open. The log in it is the Casserole Server the Aetheris Clients will find. [app/start-casserole.ps1](../app/start-casserole.ps1) prints the build identifier, loads the toolchain, and runs `java -jar app/casserole.jar` with the repository root as the working directory. The script prints `1.0.1`, the public version of the bits you are starting.
 
 ```powershell
 powershell -File app\start-casserole.ps1
@@ -157,7 +157,7 @@ powershell -File app\start-casserole.ps1
 
 > **What appears**
 >
-> The line `casserole-server 1.0.0`, then the Casserole Server log.
+> The line `casserole-server 1.0.1`, then the Casserole Server log.
 
 The first start creates `hostkey.ser` in the working directory. That file stays on this machine. When `app/casserole.jar` is absent, start runs the install, then starts the Casserole Server. If port 2222 is already taken, another process is already listening there. Stop that other listener and start again.
 
@@ -169,7 +169,7 @@ An air gap, on this product, is a switch in the operator's home configuration. W
 Copy-Item aetheris.yaml "$env:USERPROFILE\.aetheris.yaml"
 ```
 
-`Copy-Item` writes the sample to `%USERPROFILE%\.aetheris.yaml`, which is the home file the Casserole Server reads. Restart the Casserole Server. A cloud target is refused, and the local model still answers. Turn the air gap off by setting `air-gap: false` in that home file and restarting. The value stored on a card stays as you left it. Ollama, the Grok API key, and the pool address are [Model settings](#model-settings).
+`Copy-Item` writes the sample to `%USERPROFILE%\.aetheris.yaml`, which is the home file the Casserole Server reads. Restart the Casserole Server. A cloud target is refused, and the local model still answers. Turn the air gap off by setting `air-gap: false` in that home file and restarting. The value stored on a card stays as you left it. Ollama, the Grok API key, and the pool address are [Model settings](#model-settings). A llama-openapi server is a local target. The air gap does not refuse that server. The llama-openapi base URL is on that same page.
 
 ## Linux
 
@@ -195,7 +195,7 @@ Install Maven 3.9 or newer, open a new shell, and source the script again.
 bash bin/install-ollama.sh
 ```
 
-[bin/install-ollama.sh](../bin/install-ollama.sh) installs Ollama if it is missing, then pulls `qwen2.5-coder:7b`. A chat can also use the Grok API or Grok Build ACP via the pool. The Sovereign Desktop carries more than one conversation at the same time. Those conversations stay unified. The desktop can use more than one model at the same time. A later model is a name on the same command: `bash bin/install-ollama.sh llama3.2`.
+[bin/install-ollama.sh](../bin/install-ollama.sh) installs Ollama if it is missing, then pulls `qwen2.5-coder:7b`. A chat can also use the Grok API or Grok Build ACP via the pool. A chat can also use a llama.cpp server on the llama-openapi family. That setup is [BitNet and the OpenAI-compatible llama server](../bitnet/README.md). The Sovereign Desktop carries more than one conversation at the same time. Those conversations stay unified. The desktop can use more than one model at the same time. A later model is a name on the same command: `bash bin/install-ollama.sh llama3.2`.
 
 > **Failed line**
 >
@@ -223,7 +223,7 @@ Fix the failure and run the install again.
 bash app/start-casserole.sh
 ```
 
-[app/start-casserole.sh](../app/start-casserole.sh) prints `casserole-server 1.0.0` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When the jar is absent, start runs the install, then starts. If port 2222 is already taken, stop the other listener and start again.
+[app/start-casserole.sh](../app/start-casserole.sh) prints `casserole-server 1.0.1` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When the jar is absent, start runs the install, then starts. If port 2222 is already taken, stop the other listener and start again.
 
 ### 5. Air gap
 
@@ -231,7 +231,7 @@ bash app/start-casserole.sh
 cp aetheris.yaml "$HOME/.aetheris.yaml"
 ```
 
-`cp` writes the sample to `$HOME/.aetheris.yaml`, which is the home file the Casserole Server reads. Restart the Casserole Server. A cloud target is refused, and the local model still answers. Ollama, the Grok API key, and the pool address are [Model settings](#model-settings).
+`cp` writes the sample to `$HOME/.aetheris.yaml`, which is the home file the Casserole Server reads. Restart the Casserole Server. A cloud target is refused, and the local model still answers. Ollama, the Grok API key, and the pool address are [Model settings](#model-settings). A llama-openapi server is a local target. The air gap does not refuse that server. The llama-openapi base URL is on that same page.
 
 ## macOS
 
@@ -259,17 +259,17 @@ zsh bin/install.zsh
 zsh app/start-casserole.zsh
 ```
 
-[app/start-casserole.zsh](../app/start-casserole.zsh) prints `casserole-server 1.0.0` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When the jar is absent, start runs the install, then starts. If port 2222 is already taken, stop the other listener and start again.
+[app/start-casserole.zsh](../app/start-casserole.zsh) prints `casserole-server 1.0.1` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When the jar is absent, start runs the install, then starts. If port 2222 is already taken, stop the other listener and start again.
 
 ```zsh
 cp aetheris.yaml "$HOME/.aetheris.yaml"
 ```
 
-`cp` writes the sample to `$HOME/.aetheris.yaml`, which is the home file the Casserole Server reads. Restart the Casserole Server. A cloud target is refused, and the local model still answers. Ollama, the Grok API key, and the pool address are [Model settings](#model-settings).
+`cp` writes the sample to `$HOME/.aetheris.yaml`, which is the home file the Casserole Server reads. Restart the Casserole Server. A cloud target is refused, and the local model still answers. Ollama, the Grok API key, and the pool address are [Model settings](#model-settings). A llama-openapi server is a local target. The air gap does not refuse that server. The llama-openapi base URL is on that same page.
 
 ## Model settings
 
-The example configuration is [application.yaml](../src/main/resources/application.yaml). The casserole process reads that file on its classpath. The **Casserole Server** configuration uses the `casserole` module. A jar from [bin/install.ps1](../bin/install.ps1) or [bin/install.sh](../bin/install.sh) carries that copy inside the fat jar. Edit that file. Build again when you start from the jar. Restart the Casserole Server after that build. The three blocks below are Ollama, the Grok API, and the pool.
+The example configuration is [application.yaml](../src/main/resources/application.yaml). The casserole process reads that file on its classpath. The **Casserole Server** configuration uses the `casserole` module. A jar from [bin/install.ps1](../bin/install.ps1) or [bin/install.sh](../bin/install.sh) carries that copy inside the fat jar. Edit that file. Build again when you start from the jar. Restart the Casserole Server after that build. The four blocks below are Ollama, the Grok API, the pool, and llama-openapi.
 
 ### Ollama
 
@@ -326,6 +326,25 @@ The remote pool option is experimental. A blank host starts one local `grok agen
 
 The home file still governs the air gap. That file is `%USERPROFILE%\.aetheris.yaml` on Windows. On Linux it is `$HOME/.aetheris.yaml`. On macOS it is `$HOME/.aetheris.yaml`. Set `air-gap` to `false` under `aetheris.network` when a pool turn may leave this machine. A missing key is a refusal. The turn answers `air-gap`. The copy steps and the agent commands are [Remote Grok agent](../README.md#remote-grok-agent). The air-gap sections above still copy the sample that sets the switch on.
 
+### llama-openapi
+
+llama-openapi is the family for a llama.cpp server that speaks the OpenAI chat routes. OpenAI chat is the request shape `POST /v1/chat/completions` and `GET /v1/models`. BitNet is Microsoft's 1.58-bit model family. A BitNet server is one llama.cpp server this block can name. Another llama.cpp server that speaks the same two routes uses this same block. The long account is [BitNet and the OpenAI-compatible llama server](../bitnet/README.md).
+
+```yaml
+spring:
+  ai:
+    llama-openapi:
+      base-url: http://127.0.0.1:3333
+      api-key: ""
+      chat:
+        options:
+          num-ctx: 4096
+          temperature: 0.8
+          num-predict: 512
+```
+
+`base-url` is the server root. The lean server listens at `http://127.0.0.1:3333`. A blank `api-key` omits the `Authorization` header. `num-ctx` records the context length beside the launcher. The chat body does not send `num-ctx`. When the card did not store a temperature, the value `0.8` is sent as `temperature`. When the card did not store a cap, the value `512` is sent as `max_tokens`. Restart the Casserole Server after you edit this block.
+
 ## Dev path
 
 From the repository root, with the toolchain loaded, this command runs the tests of the one Java module. It does not copy the fat jar into `app/`.
@@ -342,4 +361,4 @@ The command uses [pom.xml](../pom.xml). There is no second Java module to name. 
 
 The script page for the Casserole Server explains each Casserole Server script. It quotes the finished line and the failed line. The page is [casserole-server/bin/docs/README.md](bin/docs/README.md). The root script page, for the shared JDK and Rust toolchain, is [bin/docs/README.md](../bin/docs/README.md).
 
-The example [application.yaml](../src/main/resources/application.yaml) sets `casserole.grok.api-key` to `your-grok-api-key`. The SSH password in that file stays empty. Ollama, the Grok API key, and the pool address are [Model settings](#model-settings). The keys `casserole.chat.managed-tokens` and `casserole.chat.head-count` in that file are explained under [The Reichenbach sink](#the-reichenbach-sink). When a roster file is present, sign-in uses the roster. Logging for the Casserole Server process is [log4j2.properties](../src/main/resources/log4j2.properties). The way to add or remove a user is on the [root page](../README.md#accounts). [demo/first-canvas.toon](../demo/first-canvas.toon) is a version-1 canvas export with three cells. Import it from an Aetheris Client after you are connected. The cells are a hello, an air-gap question, and an empty next prompt. The vault file itself stays on your machine. It is not in this repository.
+The example [application.yaml](../src/main/resources/application.yaml) sets `casserole.grok.api-key` to `your-grok-api-key`. The SSH password in that file stays empty. Ollama, the Grok API key, and the pool address are [Model settings](#model-settings). The llama-openapi base URL is on that same page. The keys `casserole.chat.managed-tokens` and `casserole.chat.head-count` in that file are explained under [The Reichenbach sink](#the-reichenbach-sink). When a roster file is present, sign-in uses the roster. Logging for the Casserole Server process is [log4j2.properties](../src/main/resources/log4j2.properties). The way to add or remove a user is on the [root page](../README.md#accounts). [demo/first-canvas.toon](../demo/first-canvas.toon) is a version-1 canvas export with three cells. Import it from an Aetheris Client after you are connected. The cells are a hello, an air-gap question, and an empty next prompt. The vault file itself stays on your machine. It is not in this repository.

@@ -9,7 +9,11 @@ pub enum Family
 ```
 
 The [`Family`](enum.Family.md) enum is the provider family of the dialog.
-`Ollama` is the local catalog. `Grok` is the Grok table. `Pool` is the Heavy pool.
+`Ollama` is the local catalog. `Grok` is the Grok table. `Pool` is the Heavy pool. `Llama` is the llama-openapi catalog.
+
+| | |
+| --- | --- |
+| **Specification** | L37 rust-aetheris-client.draft.001.md |
 
 ## Enum Constant Summary
 
@@ -18,6 +22,7 @@ The [`Family`](enum.Family.md) enum is the provider family of the dialog.
 | Ollama | [`Ollama`](#member-ollama) |  |
 | Grok | [`Grok`](#member-grok) |  |
 | Pool | [`Pool`](#member-pool) |  |
+| Llama | [`Llama`](#member-llama) |  |
 
 ## Method Summary
 
@@ -53,6 +58,14 @@ Grok
 Pool
 ```
 
+### Llama
+
+<a id="member-llama"></a>
+
+```rust
+Llama
+```
+
 ## Method Detail
 
 ### label
@@ -64,7 +77,7 @@ pub fn label(self) -> &'static str
 ```
 
 The `label` method returns the visible family name.
-The words are `Ollama`, `Grok`, and `Pool`.
+The words are `Ollama`, `Grok`, `Pool`, and `llama-openapi`.
 
 ### word
 
@@ -75,7 +88,7 @@ pub fn word(self) -> &'static str
 ```
 
 The `word` method returns the stored family word.
-The words are `ollama`, `grok`, and `pool`.
+The words are `ollama`, `grok`, `pool`, and `llama-openapi`.
 
 ### parse
 

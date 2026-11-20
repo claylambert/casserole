@@ -69,8 +69,8 @@ import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PreDestroy;
 
-// @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
-// @aa-sdd PK-1263 docs/specs/java/org/roux/roux.spec.md
+// @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md FINESSE:f-170
+// @aa-sdd PK-1263 docs/specs/java/org/roux/roux.spec.md FINESSE:f-222
 /**
  * Roux is the paged memory beside the terminal.
  * The RouxEngine type is that memory.
@@ -85,6 +85,7 @@ import jakarta.annotation.PreDestroy;
  * The type refuses an empty conversation id.
  * The type refuses a snapshot, a heap dump, and defragment in this version.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-design.md
  *
  * @author clayl (2026-08-25)
  */
@@ -147,6 +148,7 @@ public class RouxEngine
      * The result kind is new for both a fresh id and an id that was already open.
      * The method does not take a pack lock and does not create a spill directory.
      *
+     * // @aa-sdd G-08 G-09 Q-S1-1 aetheris-stages-1-3.finalize.md
      *
      * @param regionId The region id is the conversation id to open.
      * @return The result is a new-kind open, or a refusal.
@@ -314,6 +316,7 @@ public class RouxEngine
      * The page pin is released before the method returns.
      * Success uses an empty message.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
      *
      * @param regionId The region id is the conversation id.
      * @param role The role is the role byte stored in the frame.
@@ -723,7 +726,8 @@ public class RouxEngine
      * A matching pack and manifest is restored with that manifest.
      * A refused restore unlocks the pack.
      *
-     // @aa-sdd PK-1401 docs/specs/java/org/roux/roux.spec.md
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
+     * // @aa-sdd PK-1401 docs/specs/java/org/roux/roux.spec.md
      *
      * @param regionId The region id is the conversation id.
      * @return The result is new, restored, or refused.
@@ -765,7 +769,7 @@ public class RouxEngine
             }
             return OpenResult.neu(created.regionUuid);
         }
-        if (!properties.sessionRestore()) { // @aa-sdd PK-1449 docs/specs/common/roux.spec.md
+        if (!properties.sessionRestore()) {
             regionPack.unlock(regionId);
             return OpenResult.refused("roux restore disabled; leftover pack not attached; delete " + dir
                     + " or enable restore");
@@ -800,7 +804,7 @@ public class RouxEngine
                 return OpenResult.refused("roux pack incomplete or corrupt; delete " + dir + " or revert yaml");
             }
         }
-        OpenResult scanned = restoreFromPack(regionId, man); // @aa-sdd PK-1449 docs/specs/common/roux.spec.md
+        OpenResult scanned = restoreFromPack(regionId, man);
         if (scanned.getKind() == OpenResult.REFUSED) {
             regionPack.unlock(regionId);
         }
@@ -819,6 +823,7 @@ public class RouxEngine
      * Persist off destroys the region and deletes the region directory.
      * Both disk paths mark the region closed, remove the id, and return success with {@code closed}.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
      *
      * @param regionId The region id is the conversation id.
      * @return The result is success with {@code already closed} or {@code closed}.
@@ -1018,7 +1023,7 @@ public class RouxEngine
      * Magic whose version is not {@link PageHeader#VERSION}, or whose page id is not this slot, returns {@code -1}.
      * A slot offset that overflows returns {@code -1}.
      *
-     // @aa-sdd PK-1401 docs/specs/java/org/roux/roux.spec.md
+     * // @aa-sdd PK-1401 docs/specs/java/org/roux/roux.spec.md
      *
      * @param regionId The region id is the conversation id.
      * @return The count is the number of accepted slots, or {@code -1} when a header is refused.
@@ -1228,6 +1233,7 @@ public class RouxEngine
      * A later atom that would pass the message cap is left out, and the scan stops.
      * A later atom that would pass the token cap is kept, and the scan then stops.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
      *
      * @param regionId The region id is the conversation id.
      * @param maxNonSystem The cap is the non-system message limit, and zero or less means no message cap.
@@ -1407,6 +1413,7 @@ public class RouxEngine
      * A failed rotation does not replace the hot page.
      * Success stores a new hot page, advances the next page id, increments the allocated-page counter, and returns an empty message.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md spillover-semantics.md
      *
      * @param region The region supplies the hot page.
      * @return The result is success, or the cipher, pin, I/O, or cap failure.
@@ -1535,6 +1542,7 @@ public class RouxEngine
      * Any other region publishes through {@link #checkpointHot} while the region lock is held.
      * The page stays mapped.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
      *
      * @param regionId The region id is the conversation id.
      */
@@ -1563,6 +1571,7 @@ public class RouxEngine
      * A null id returns {@code -1}.
      * An id that is not in the map returns {@code -1}.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
      *
      * @param regionId The region id is the conversation id.
      * @param id The id is the two-long identity.
@@ -1586,6 +1595,7 @@ public class RouxEngine
      * The text is filled only when the checksum matches and {@link ToonCodec#decode} returns a frame.
      * A short frame leaves the text empty and the checksum flag false.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
      *
      * @param regionId The region id is the conversation id.
      * @param seq The seq is the message id.
@@ -1629,6 +1639,7 @@ public class RouxEngine
      * A spilled page is spilled and has no segment.
      * A resident page has a segment.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
      *
      * @param regionId The region id is the conversation id.
      * @return The line is the status text.
@@ -1663,6 +1674,7 @@ public class RouxEngine
      * An {@link IOException} is swallowed.
      * The page stays mapped.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
      *
      * @param region The region supplies the hot page.
      */
@@ -1685,6 +1697,7 @@ public class RouxEngine
      * A used count of zero or less reads {@link RouxProperties#getPageBytes} bytes.
      * The bytes are mapped onto the page.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
      *
      * @param region The region holds the page.
      * @param page The page is the slot to map.
@@ -1717,6 +1730,7 @@ public class RouxEngine
      * The hot page is skipped.
      * The first remaining spilled page with a segment is unmapped, and the method returns.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
      *
      * @param region The region holds the pages.
      * @param keepId The kept id is the page that must stay mapped.
@@ -1875,13 +1889,13 @@ public class RouxEngine
         counters.usedBytesSpilled().set(spilled);
     }
 
-    // @aa-sdd PK-1264 docs/specs/java/org/roux/roux.spec.md
+    // @aa-sdd PK-1264 docs/specs/java/org/roux/roux.spec.md FINESSE:f-222
     /**
      * The SinkCut type holds one selection from {@link ReichenbachSink}.
      * The ordinals follow the selection order.
      * The headOver flag is true when the pin and the head exceed the allowance.
      * The tokenSum includes the live line when that line is in the selection.
-     * A refused selection is a null return from {@link #selectCut} or {@link #selectTape}.
+     * A refused selection is a null return from {@link #selectCut}, {@link #selectSlot}, or {@link #selectTape}.
      */
     public static final class SinkCut {
 
@@ -1935,6 +1949,51 @@ public class RouxEngine
             pieces[i] = new ReichenbachSink.Piece(i, seqs[i], roles[i], tokens[i], head, stay, live);
         }
         ReichenbachSink.Transcript transcript = ReichenbachSink.select(managedTokens, pieces);
+        if (transcript == null) {
+            return null;
+        }
+        int[] ordinals = new int[transcript.pieces.length];
+        for (int i = 0; i < ordinals.length; i++) {
+            ordinals[i] = transcript.pieces[i].ordinal;
+        }
+        return new SinkCut(ordinals, transcript.headOver, transcript.tokenSum);
+    }
+
+    // @aa-sdd aetheris-plan-f-282.001.md
+    /**
+     * The method selects pieces for a slot and returns their ordinals.
+     * The piece arrays are built the same way as {@link #selectCut}.
+     * A null seq array, role array, or token array returns null.
+     * Arrays of different lengths return null.
+     * A missing or shorter head, stay, or live array reads the missing flags as false.
+     * Each ordinal is the index in those arrays.
+     * A null transcript from {@link ReichenbachSink#selectSlot} returns null.
+     * A missing head still selects.
+     * A designated head matches {@link #selectCut}.
+     *
+     * @param allowance The allowance is the token limit passed to the selector.
+     * @param seqs The seqs are the message ids, and {@code 0} is the live line.
+     * @param roles The roles are the role bytes.
+     * @param tokens The tokens are the token counts.
+     * @param heads The heads mark the packed head, or null.
+     * @param stays The stays mark pieces that join the pin, or null.
+     * @param lives The lives mark the live line, or null.
+     * @return The cut is the selection, or null when the arrays are refused.
+     */
+    public static SinkCut selectSlot(int allowance, long[] seqs, byte[] roles, int[] tokens, boolean[] heads,
+            boolean[] stays, boolean[] lives) {
+        if (seqs == null || roles == null || tokens == null || seqs.length != roles.length
+                || seqs.length != tokens.length) {
+            return null;
+        }
+        ReichenbachSink.Piece[] pieces = new ReichenbachSink.Piece[seqs.length];
+        for (int i = 0; i < seqs.length; i++) {
+            boolean head = heads != null && i < heads.length && heads[i];
+            boolean stay = stays != null && i < stays.length && stays[i];
+            boolean live = lives != null && i < lives.length && lives[i];
+            pieces[i] = new ReichenbachSink.Piece(i, seqs[i], roles[i], tokens[i], head, stay, live);
+        }
+        ReichenbachSink.Transcript transcript = ReichenbachSink.selectSlot(allowance, pieces);
         if (transcript == null) {
             return null;
         }
@@ -2421,7 +2480,7 @@ public class RouxEngine
         }
     }
 
-    // @aa-sdd PK-1265 docs/specs/java/org/roux/roux.spec.md
+    // @aa-sdd PK-1265 docs/specs/java/org/roux/roux.spec.md FINESSE:f-222
     /**
      * The Region type holds one conversation.
      * The id is the conversation id.

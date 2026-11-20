@@ -10,8 +10,9 @@
 
 //! The `main` function starts the VT100 window for one Casserole session.
 //!
-//! The binary name is `aetheris-client`. The grid lives in the `aetheris-term` crate. The token ring reads `casserole.grok.context-windows` and `casserole.pool.context-window` from `application.yaml`. It drops every other key. This crate does not open a socket to Ollama. This crate does not call the Grok API. On startup the binary writes `.aetheris.yaml` in the home directory when that file is absent. An existing file is left as it stands.
+//! The binary name is `aetheris-client`. The grid lives in the `aetheris-term` crate. The token ring reads `casserole.grok.context-windows`, `casserole.pool.context-window`, `spring.ai.llama-openapi.chat.options.num-ctx`, and `spring.ai.llama-openapi.alias` from `application.yaml`. The Grok windows and the pool window stay in that read. This crate does not open a socket to Ollama. This crate does not call the Grok API. On startup the binary writes `.aetheris.yaml` in the home directory when that file is absent. An existing file is left as it stands.
 //!
+//! @aa-sdd L37 rust-aetheris-client.draft.001.md
 //! @author clayl (2026-10-23)
 
 #![forbid(unsafe_code)]
@@ -24,6 +25,8 @@ mod chrome;
 mod edit;
 /// The module paints the composer token bar.
 mod heatbar;
+/// The module holds the llama-openapi seats. The paint stays in `chrome`.
+mod llama;
 /// The module reads and writes the SSH client settings file.
 mod door;
 /// The module stores Model Config for one cell and the same dialog for the console.

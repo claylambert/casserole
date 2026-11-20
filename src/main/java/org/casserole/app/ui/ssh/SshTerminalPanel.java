@@ -463,6 +463,8 @@ public class SshTerminalPanel extends JPanel {
      * Backspace drops one character when the line is not empty.
      * Enter with Shift keeps the line and adds a newline.
      * Enter without Shift clears the line.
+     * The listener is {@link TerminalPanel#addCustomKeyListener}.
+     * An AWT key listener does not receive these keys.
      *
      * @param term The term is the widget that owns the keys.
      */
@@ -477,7 +479,8 @@ public class SshTerminalPanel extends JPanel {
          * Shift-Enter inserts a newline.
          * Enter without Shift clears the line.
          */
-        term.getTerminalPanel().addKeyListener(new KeyAdapter() {
+        // @aa-sdd aetheris-plan-f-280.001.md
+        term.getTerminalPanel().addCustomKeyListener(new KeyAdapter() {
             // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
             // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md FINESSE:f-176
             // @aa-sdd PK-1102 docs/specs/common/formal-plan.spec.md FINESSE:f-177

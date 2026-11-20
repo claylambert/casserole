@@ -12,9 +12,9 @@
 
 package org.casserole.chat.cmd;
 
-// @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1052 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
+// @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
+// @aa-sdd PK-1052 docs/specs/common/formal-plan.spec.md FINESSE:f-40
 /**
  * The {@code SelectModelCommand} type is the {@code select-model} command.
  * A bare command opens the Model Config modal for this console.
@@ -31,7 +31,7 @@ package org.casserole.chat.cmd;
 // @aa-sdd PK-1362 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-310 docs/specs/java/org/casserole/chat/cmd/cmd.spec.md
-public class SelectModelCommand implements Command { // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+public class SelectModelCommand implements Command {
 
     private static final char ESC = 0x1B;
     private static final char BEL = 0x07;
@@ -88,7 +88,7 @@ public class SelectModelCommand implements Command { // @aa-sdd PK-1056 docs/spe
      * If the trimmed remainder is empty, the method writes a private OSC sequence and then {@code Model Config}.
      * The sequence is ESC, {@code ]777;select-model;}, the model field, {@code ;}, the think field, and BEL.
      * {@link #oscField} strips separators from those two fields.
-     * If the word is not {@code grok}, {@code ollama}, or {@code pool}, the method throws {@code Exception} with {@code usage: select-model {grok, ollama, pool}}.
+     * If the word is not {@code grok}, {@code ollama}, {@code pool}, or {@code llama-openapi}, the method throws {@code Exception} with {@code usage: select-model {grok, ollama, pool, llama-openapi}}.
      * If {@link CommandContext#selectConsoleFamily} returns {@code false}, the method throws the same usage exception.
      *
      * @param ctx The shell resources for this connection.
@@ -105,11 +105,12 @@ public class SelectModelCommand implements Command { // @aa-sdd PK-1056 docs/spe
             ctx.write("Model Config\r\n");
             return;
         }
-        if (!"grok".equals(word) && !"ollama".equals(word) && !"pool".equals(word)) {
-            throw new Exception("usage: select-model {grok, ollama, pool}");
+        if (!"grok".equals(word) && !"ollama".equals(word) && !"pool".equals(word)
+                && !"llama-openapi".equals(word)) {
+            throw new Exception("usage: select-model {grok, ollama, pool, llama-openapi}");
         }
         if (!ctx.selectConsoleFamily(word)) {
-            throw new Exception("usage: select-model {grok, ollama, pool}");
+            throw new Exception("usage: select-model {grok, ollama, pool, llama-openapi}");
         }
     }
 

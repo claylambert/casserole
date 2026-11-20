@@ -10,6 +10,7 @@ Java `GrokSettingsDocument` and `AetherisNotebookPanel` are the rule. The docume
 
 | | |
 | --- | --- |
+| **Specification** | G-12 rust-aetheris-client.draft.001.md |
 | **Author** | clayl (2026-10-27) |
 
 ## Type Summary
@@ -51,6 +52,10 @@ Java `GrokSettingsDocument` and `AetherisNotebookPanel` are the rule. The docume
 | const | [`NO_MODEL`](#constant-no_model) |  |
 | const | [`GROK_LIST_MISS`](#constant-grok_list_miss) | The `GROK_LIST_MISS` constant is the red notice when the Grok catalog has no model lines. |
 | const | [`OLLAMA_LIST_MISS`](#constant-ollama_list_miss) | The `OLLAMA_LIST_MISS` constant is the red notice when the Ollama tag list has no model lines. |
+| const | [`LLAMA_LIST_MISS`](#constant-llama_list_miss) | The `LLAMA_LIST_MISS` constant is the red notice when the llama-openapi catalog has no model lines. |
+| const | [`LLAMA_MODEL_TIP`](#constant-llama_model_tip) | The `LLAMA_MODEL_TIP` constant is the hover text on the llama model field. |
+| const | [`LLAMA_TEMPERATURE_TIP`](#constant-llama_temperature_tip) | The `LLAMA_TEMPERATURE_TIP` constant is the hover text on the llama temperature field. |
+| const | [`LLAMA_CAP_TIP`](#constant-llama_cap_tip) | The `LLAMA_CAP_TIP` constant is the hover text on the llama completion-cap field. |
 | const | [`FOUR`](#constant-four) |  |
 | const | [`THREE`](#constant-three) |  |
 | const | [`ONE`](#constant-one) |  |
@@ -65,11 +70,12 @@ Java `GrokSettingsDocument` and `AetherisNotebookPanel` are the rule. The docume
 | fn | [`normalize_effort`](#function-normalize_effort) | The `normalize_effort` function keeps `value` when it is still a row for `model`. |
 | fn | [`provider_id`](#function-provider_id) | The `provider_id` function returns the provider word. |
 | fn | [`engine_from_console`](#function-engine_from_console) | The `engine_from_console` function builds the SSH strip word for one pane. |
+| fn | [`engine_with_llama`](#function-engine_with_llama) | The `engine_with_llama` function builds the SSH strip word, including llama-openapi. |
 | fn | [`engine_from_shell_result`](#function-engine_from_shell_result) | The `engine_from_shell_result` function reads a `shell_model_result:` body. |
 | fn | [`model_after_slash`](#function-model_after_slash) | The `model_after_slash` function returns the text after the first slash. |
 | fn | [`short_model_name`](#function-short_model_name) | The `short_model_name` function returns the label under the bar. |
 | fn | [`outbound_target`](#function-outbound_target) | The `outbound_target` function returns the target that goes out. |
-| fn | [`no_model`](#function-no_model) | The `no_model` function reports Grok with no model id. |
+| fn | [`no_model`](#function-no_model) | The `no_model` function reports Grok or llama-openapi with no model id. |
 | fn | [`number_text`](#function-number_text) | The `number_text` function prints a number for a field. |
 | fn | [`grok_path`](#function-grok_path) | The `grok_path` function joins the settings path under `home`. |
 | fn | [`parse_doc`](#function-parse_doc) | The `parse_doc` function reads YAML text into a [`Parse`]. |
@@ -305,6 +311,50 @@ pub const OLLAMA_LIST_MISS: &str = "Ollama model list is empty.";
 The `OLLAMA_LIST_MISS` constant is the red notice when the Ollama tag list has no model lines.
 The words are `Ollama model list is empty.`
 
+### LLAMA_LIST_MISS
+
+<a id="constant-llama_list_miss"></a>
+
+```rust
+pub const LLAMA_LIST_MISS: &str = "llama-openapi model list is empty.";
+```
+
+The `LLAMA_LIST_MISS` constant is the red notice when the llama-openapi catalog has no model lines.
+The words are `llama-openapi model list is empty.`
+
+### LLAMA_MODEL_TIP
+
+<a id="constant-llama_model_tip"></a>
+
+```rust
+pub const LLAMA_MODEL_TIP: &str = "Models from the llama-openapi catalog. A chosen id is the model this cell calls. A path-shaped id shows the alias until the combo commits.";
+```
+
+The `LLAMA_MODEL_TIP` constant is the hover text on the llama model field.
+A chosen id is the model this cell calls. A path-shaped id shows the alias until the combo commits.
+
+### LLAMA_TEMPERATURE_TIP
+
+<a id="constant-llama_temperature_tip"></a>
+
+```rust
+pub const LLAMA_TEMPERATURE_TIP: &str = "Temperature on the llama call. A blank field leaves temperature off the body.";
+```
+
+The `LLAMA_TEMPERATURE_TIP` constant is the hover text on the llama temperature field.
+A blank field leaves temperature off the body.
+
+### LLAMA_CAP_TIP
+
+<a id="constant-llama_cap_tip"></a>
+
+```rust
+pub const LLAMA_CAP_TIP: &str = "Completion cap on the llama call. A blank field leaves max_tokens off the body.";
+```
+
+The `LLAMA_CAP_TIP` constant is the hover text on the llama completion-cap field.
+A blank field leaves max_tokens off the body.
+
 ### FOUR
 
 <a id="constant-four"></a>
@@ -398,7 +448,21 @@ The `engine_from_console` function builds the SSH strip word for one pane.
 Pool returns `pool`. Grok returns `grok/` plus the id, or `grok` when the id is blank.
 Any other family returns `ollama/` plus the Ollama id, or `ollama` when that id is blank.
 An id that already begins with its family prefix is returned as stored. A canvas cell is not an input.
-// @aa-sdd PK-994 docs/specs/common/stages.spec.md
+A llama id is empty on this path. `engine_with_llama` carries that id.
+// @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
+
+### engine_with_llama
+
+<a id="function-engine_with_llama"></a>
+
+```rust
+pub fn engine_with_llama(provider: &str, ollama_id: &str, grok_id: &str, llama_id: &str) -> String
+```
+
+The `engine_with_llama` function builds the SSH strip word, including llama-openapi.
+Pool returns `pool`. Grok returns `grok/` plus the id, or `grok` when the id is blank.
+Llama-openapi returns `llama-openapi/` plus the id, or `llama-openapi` when the id is blank.
+Any other family returns `ollama/` plus the Ollama id, or `ollama` when that id is blank.
 
 ### engine_from_shell_result
 
@@ -411,7 +475,7 @@ pub fn engine_from_shell_result(text: &str) -> Option<String>
 The `engine_from_shell_result` function reads a `shell_model_result:` body.
 A body that does not start with that prefix returns `None`. A missing provider line is Ollama.
 The Ollama id is `ollama_model:`, or `model:` when that line is empty. The Grok id is `grok_model:`.
-// @aa-sdd PK-994 docs/specs/common/stages.spec.md
+// @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
 
 ### model_after_slash
 
@@ -454,8 +518,8 @@ Empty stored text goes out as the word `ollama`. That empty text is not written 
 pub fn no_model(stored: &str) -> bool
 ```
 
-The `no_model` function reports Grok with no model id.
-The client says `no-model` and does not send. An empty stored word is not this case.
+The `no_model` function reports Grok or llama-openapi with no model id.
+The client says `no-model` and does not send. An empty stored word is Ollama, and that word is not this case.
 
 ### number_text
 
