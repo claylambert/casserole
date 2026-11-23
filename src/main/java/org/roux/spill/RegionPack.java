@@ -32,14 +32,16 @@ import org.roux.page.PageHeader;
 import org.roux.session.RegionManifest;
 import org.springframework.stereotype.Component;
 
-// @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
+// @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md FINESSE:f-170
 /**
  * The RegionPack is the random-access {@code pages.bin} file for one region.
  * Slot {@code P} starts at {@code P} times the page size from the settings.
  * {@link #publishPage} writes the used bytes, pads to the alignment, and forces the channel.
  * The page stays mapped.
  * One channel stays open per region.
+ * A bound segment names the live pack folder, and the lock file stays on the username directory.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#RegionPack roux-v1.md
  *
  * @author clayl (2026-08-25)
  */
@@ -60,6 +62,7 @@ public class RegionPack {
     private final Map<String, FileChannel> channels;
     private final Map<String, FileChannel> lockChannels;
     private final Map<String, FileLock> locks;
+    private final Map<String, String> folders;
 
     /**
      * The constructor stores the settings and starts with no open files.
@@ -71,6 +74,51 @@ public class RegionPack {
         this.channels = new HashMap<String, FileChannel>();
         this.lockChannels = new HashMap<String, FileChannel>();
         this.locks = new HashMap<String, FileLock>();
+        this.folders = new HashMap<String, String>();
+    }
+
+    /**
+     * The method stores the live pack segment for one region.
+     * A null segment stores the region id.
+     * An empty segment stores the region id.
+     * The lock file is not moved.
+     *
+     * @param regionId The region id is the username.
+     * @param folderSegment The segment is the live folder name, or empty for the username folder.
+     */
+    // @aa-sdd PK-1465 docs/specs/java/org/roux/roux.spec.md
+    public synchronized void bindFolder(String regionId, String folderSegment) {
+        if (regionId == null || regionId.length() == 0) {
+            return;
+        }
+        if (folderSegment == null || folderSegment.length() == 0) {
+            folders.put(regionId, regionId);
+            return;
+        }
+        folders.put(regionId, folderSegment);
+    }
+
+    /**
+     * The method returns the live pack directory.
+     * An unbound region returns the username directory.
+     * A bound region returns the spill root plus the stored segment.
+     * The lock directory is not this path.
+     *
+     * @param regionId The region id is the username.
+     * @return The path is the live pack directory.
+     */
+    // @aa-sdd PK-1465 docs/specs/java/org/roux/roux.spec.md
+    public synchronized Path packDir(String regionId) {
+        String segment = folders.get(regionId);
+        if (segment == null || segment.length() == 0) {
+            return regionDir(regionId);
+        }
+        Path home = regionDir(regionId);
+        Path root = home.getParent();
+        if (root == null) {
+            return home;
+        }
+        return root.resolve(segment);
     }
 
     /**
@@ -105,7 +153,7 @@ public class RegionPack {
      * @return The path is {@code pages.bin} in that folder.
      */
     public Path packFile(String regionId) {
-        return regionDir(regionId).resolve("pages.bin");
+        return packDir(regionId).resolve("pages.bin");
     }
 
     /**
@@ -136,7 +184,7 @@ public class RegionPack {
      * @return The flag is true when that file exists.
      */
     public boolean manifestExists(String regionId) {
-        return Files.isRegularFile(RegionManifest.file(regionDir(regionId)));
+        return Files.isRegularFile(RegionManifest.file(packDir(regionId)));
     }
 
     /**
@@ -220,8 +268,8 @@ public class RegionPack {
         closeChannel(regionId);
         try {
             Files.deleteIfExists(packFile(regionId));
-            Files.deleteIfExists(RegionManifest.file(regionDir(regionId)));
-            Files.deleteIfExists(regionDir(regionId).resolve("manifest.bin.tmp"));
+            Files.deleteIfExists(RegionManifest.file(packDir(regionId)));
+            Files.deleteIfExists(packDir(regionId).resolve("manifest.bin.tmp"));
         } catch (IOException ignored) {
             // ignore
         }
@@ -248,6 +296,7 @@ public class RegionPack {
      * The page stays mapped.
      * A write that returns a negative count throws {@link IOException} with {@code pack write EOF}.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RegionPack roux-v1.md spillover-semantics.md
      *
      * @param regionId The region id is the folder name.
      * @param page The page is the page with a live segment.
@@ -370,7 +419,7 @@ public class RegionPack {
         if (existing != null && existing.isOpen()) {
             return existing;
         }
-        Path dir = regionDir(regionId);
+        Path dir = packDir(regionId);
         Files.createDirectories(dir);
         Path file = packFile(regionId);
         FileChannel channel = FileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.READ,

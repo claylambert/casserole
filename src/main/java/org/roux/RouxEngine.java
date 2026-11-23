@@ -16,8 +16,13 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.zip.CRC32C;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,6 +65,7 @@ import org.roux.page.Page;
 import org.roux.page.PageHeader;
 import org.roux.session.OpenResult;
 import org.roux.session.RegionManifest;
+import org.roux.session.RegionOwner;
 import org.roux.session.HeadFile;
 import org.roux.spill.RegionPack;
 import org.roux.token.HeuristicTokenCounter;
@@ -80,6 +86,8 @@ import jakarta.annotation.PreDestroy;
  * The hot page receives writes.
  * A disk region publishes through {@link RegionPack}.
  * A memory-only region stays mapped and does not take a pack lock.
+ * A named pack sits beside the username directory, and the region id stays the username.
+ * An edit of an existing message appends a later frame with the same message id, and the scan moves that row when the later frame is MSG, while a continuation of that id leaves the row.
  *
  * A caller opens a region, appends a message, reads a window, and closes the region.
  * The type refuses an empty conversation id.
@@ -759,7 +767,7 @@ public class RouxEngine
         }
         boolean pack = regionPack.packExists(regionId);
         boolean manFile = regionPack.manifestExists(regionId);
-        Path dir = regionPack.regionDir(regionId);
+        Path dir = regionPack.packDir(regionId);
         if (!pack && !manFile) {
             allocateRegion(regionId, 0);
             Region created = require(regionId);
@@ -820,7 +828,9 @@ public class RouxEngine
      *
      * Persist on publishes the hot page, writes the manifest, saves the head prefix, destroys the region, and unlocks the pack.
      * The files stay.
-     * Persist off destroys the region and deletes the region directory.
+     * The folder bind is cleared after those writes, so the next open uses the username directory.
+     * Persist off destroys the region and deletes the username directory.
+     * A named sibling stays.
      * Both disk paths mark the region closed, remove the id, and return success with {@code closed}.
      *
      * // @aa-sdd L40 aa-sdd-source-prose.md#RouxEngine roux-v1.md
@@ -854,9 +864,11 @@ public class RouxEngine
                 writeManifest(region);
                 saveHead(region);
                 destroyRegion(region);
+                regionPack.bindFolder(regionId, null);
                 regionPack.unlock(regionId);
             } else {
                 destroyRegion(region);
+                regionPack.bindFolder(regionId, null);
                 regionPack.deleteRegion(regionId);
             }
             region.closed = true;
@@ -905,12 +917,12 @@ public class RouxEngine
         try {
             taken = walkSlots(regionId);
         } catch (IOException ex) {
-            return OpenResult.refused("roux pack incomplete or corrupt; delete " + regionPack.regionDir(regionId)
+            return OpenResult.refused("roux pack incomplete or corrupt; delete " + regionPack.packDir(regionId)
                     + " or revert yaml");
         }
         int hotId;
         boolean repair;
-        String refuse = "roux pack incomplete or corrupt; delete " + regionPack.regionDir(regionId)
+        String refuse = "roux pack incomplete or corrupt; delete " + regionPack.packDir(regionId)
                 + " or revert yaml";
         if (taken < 0) {
             return OpenResult.refused(refuse);
@@ -987,12 +999,12 @@ public class RouxEngine
             }
         } catch (IOException ex) {
             destroyRegion(region);
-            return OpenResult.refused("roux pack incomplete or corrupt; delete " + regionPack.regionDir(regionId)
+            return OpenResult.refused("roux pack incomplete or corrupt; delete " + regionPack.packDir(regionId)
                     + " or revert yaml");
         }
         if (region.hot == null) {
             destroyRegion(region);
-            return OpenResult.refused("roux pack incomplete or corrupt; delete " + regionPack.regionDir(regionId)
+            return OpenResult.refused("roux pack incomplete or corrupt; delete " + regionPack.packDir(regionId)
                     + " or revert yaml");
         }
         region.nextMessageId = region.index.size() + 1;
@@ -1068,7 +1080,8 @@ public class RouxEngine
      * A payload length below zero, or a payload that does not fit in the frame, stops this page.
      * A checksum mismatch stops this page.
      * A message id equal to the index size plus one is appended, and its identity is stored.
-     * A message id from {@code 1} through the index size retargets that row's page, offset, length, and token count.
+     * A message id from {@code 1} through the index size, whose type is {@link FrameType#MSG}, retargets that row's page, offset, length, and token count.
+     * A message id from {@code 1} through the index size, whose type is {@link FrameType#CONT}, leaves the row and the scan reads the next frame.
      * Any other message id stops this page.
      *
      * @param region The region receives the index rows.
@@ -1076,6 +1089,7 @@ public class RouxEngine
      * @param pageId The page id is stored on each accepted row.
      * @param used The used count is the last byte to read.
      */
+    // @aa-sdd PK-1466 docs/specs/java/org/roux/roux.spec.md
     private void scanFrames(Region region, MemorySegment seg, int pageId, int used) {
         if (seg == null) {
             return;
@@ -1103,8 +1117,12 @@ public class RouxEngine
                         FrameHeader.timestamp(seg, offset), FrameHeader.role(seg, offset),
                         FrameHeader.type(seg, offset), (short) 0, rid);
                 region.byId.put(rid, Long.valueOf(seq));
-            } else if (seq >= 1L && seq <= region.index.size()) {
+            } else if (seq >= 1L && seq <= region.index.size()
+                    && FrameHeader.type(seg, offset) == FrameType.MSG) {
                 region.index.retarget(seq, pageId, (int) offset, total, tokens);
+            } else if (seq >= 1L && seq <= region.index.size()
+                    && FrameHeader.type(seg, offset) == FrameType.CONT) {
+                // A continuation leaves the row. The offset advance below reads the next frame.
             } else {
                 break;
             }
@@ -1137,7 +1155,7 @@ public class RouxEngine
         man.setRegionUuid(region.regionUuid);
         man.setOwner(region.id);
         try {
-            RegionManifest.write(regionPack.regionDir(region.id), man);
+            RegionManifest.write(regionPack.packDir(region.id), man);
         } catch (IOException ignored) {
             // persist best-effort; pack bytes are already forced
         }
@@ -2266,6 +2284,7 @@ public class RouxEngine
      * @param text The text is the new body.
      * @return The result is success, or the empty-body, missing, size, or rotation failure.
      */
+    // @aa-sdd PK-1466 docs/specs/java/org/roux/roux.spec.md
     public OperationResult editMessage(String regionId, long seq, String text) {
         if (text == null || text.length() == 0) {
             return OperationResult.fail(OperationStatus.NOT_FOUND, "An empty body is refused.");
@@ -2453,7 +2472,7 @@ public class RouxEngine
         if (region == null || properties.isRamOnly() || isRamRegion(region.id)) {
             return;
         }
-        HeadFile file = HeadFile.read(regionPack.regionDir(region.id));
+        HeadFile file = HeadFile.read(regionPack.packDir(region.id));
         if (file == null || file.count <= 0 || file.seqs == null || file.seqs.length == 0) {
             return;
         }
@@ -2474,10 +2493,500 @@ public class RouxEngine
             return;
         }
         try {
-            HeadFile.write(regionPack.regionDir(region.id), region.headCount, region.headSeqs);
+            HeadFile.write(regionPack.packDir(region.id), region.headCount, region.headSeqs);
         } catch (IOException ignored) {
             // the RAM prefix stays. The next lock writes again.
         }
+    }
+
+    /**
+     * The method leaves the open region and opens another pack for the same login.
+     * The region must already be open.
+     * The method does not take the pack lock and it does not release that lock.
+     * An empty session name selects the username folder.
+     * Any other name selects the username, a tilde, and that name.
+     * A name that is not a safe folder name is refused with {@code invalid session name}.
+     * A name longer than 32 bytes is refused with that same text.
+     * A memory-only engine, a spill that is off, or persist false is refused with {@code named session needs a spill pack}.
+     * A half-present target, a bad checksum, or a manifest this engine already refuses is refused, and the live folder stays.
+     * The same live folder returns the current kind and count and does not write again.
+     * Any other target writes the live pack, closes its pages, and loads the target into this same region id.
+     * An absent folder is created empty.
+     * A present folder is restored with the indexed count.
+     * A load that fails returns to the folder that was live and loads the checkpoint.
+     *
+     * @param regionId The region id is the username that already holds the lock.
+     * @param sessionName The session name is the shelf name, or empty for the username pack.
+     * @return The result is new, restored, or refused.
+     */
+    // @aa-sdd PK-1465 docs/specs/java/org/roux/roux.spec.md
+    public OpenResult switchPack(String regionId, String sessionName) {
+        if (regionId == null || regionId.length() == 0) {
+            return OpenResult.refused("invalid session name");
+        }
+        Region region = require(regionId);
+        if (region == null || region.closed) {
+            return OpenResult.refused("region not found");
+        }
+        if (properties.isRamOnly() || !regionPack.isEnabled() || !properties.sessionPersist()) {
+            return OpenResult.refused("named session needs a spill pack");
+        }
+        String segment = sessionSegment(regionId, sessionName);
+        if (segment == null) {
+            return OpenResult.refused("invalid session name");
+        }
+        String refusal = probeSegment(regionId, segment);
+        if (refusal != null) {
+            return OpenResult.refused(refusal);
+        }
+        region.lock.lock();
+        try {
+            if (region.closed) {
+                return OpenResult.refused("region not found");
+            }
+            String live = liveSegment(regionId);
+            if (live.equals(segment)) {
+                if (region.index.size() == 0) {
+                    return OpenResult.neu(region.regionUuid);
+                }
+                return OpenResult.restored(region.index.size(), region.regionUuid);
+            }
+            checkpointHot(region);
+            writeManifest(region);
+            saveHead(region);
+            closePages(region);
+            regionPack.closeChannel(regionId);
+            String previous = live;
+            regionPack.bindFolder(regionId, segment);
+            OpenResult loaded = openBound(region);
+            if (loaded.getKind() == OpenResult.REFUSED) {
+                regionPack.bindFolder(regionId, previous);
+                openBound(region);
+                return loaded;
+            }
+            return loaded;
+        } finally {
+            region.lock.unlock();
+        }
+    }
+
+    /**
+     * The method returns the live shelf name.
+     * The username folder returns the region id.
+     * A named folder returns the text after the tilde.
+     * A missing region returns an empty string.
+     *
+     * @param regionId The region id is the username.
+     * @return The name is the live session name.
+     */
+    // @aa-sdd PK-1465 docs/specs/java/org/roux/roux.spec.md
+    public String liveSessionName(String regionId) {
+        if (regionId == null || regionId.length() == 0) {
+            return "";
+        }
+        if (require(regionId) == null) {
+            return "";
+        }
+        String segment = liveSegment(regionId);
+        int mark = segment.indexOf('~');
+        if (mark < 0) {
+            return regionId;
+        }
+        return segment.substring(mark + 1);
+    }
+
+    /**
+     * The method builds the folder segment for a session name.
+     * An empty name returns the region id.
+     * A name that is not a safe folder name returns null.
+     * A name longer than 32 bytes returns null.
+     *
+     * @param regionId The region id is the username.
+     * @param sessionName The session name is the shelf name, or empty.
+     * @return The segment is the folder name, or null when the name is refused.
+     */
+    private static String sessionSegment(String regionId, String sessionName) {
+        if (sessionName == null || sessionName.length() == 0) {
+            return regionId;
+        }
+        if (!RegionOwner.isValid(sessionName)) {
+            return null;
+        }
+        byte[] raw = sessionName.getBytes(StandardCharsets.UTF_8);
+        if (raw.length > 32) {
+            return null;
+        }
+        return regionId + "~" + sessionName;
+    }
+
+    /**
+     * The method returns the live folder name.
+     * An unbound region returns the region id.
+     *
+     * @param regionId The region id is the username.
+     * @return The segment is the live folder name.
+     */
+    private String liveSegment(String regionId) {
+        Path dir = regionPack.packDir(regionId);
+        Path name = dir.getFileName();
+        if (name == null) {
+            return regionId;
+        }
+        return name.toString();
+    }
+
+    /**
+     * The method checks a target folder before the bind changes.
+     * An absent folder returns null.
+     * A manifest without a pack file returns the incomplete-pack sentence.
+     * A bad checksum returns that same sentence.
+     * A manifest this engine already refuses returns that refusal.
+     *
+     * @param regionId The region id is the username.
+     * @param segment The segment is the target folder name.
+     * @return The text is the refusal, or null when the target may be opened.
+     */
+    private String probeSegment(String regionId, String segment) {
+        Path home = regionPack.regionDir(regionId);
+        Path root = home.getParent();
+        if (root == null) {
+            return "named session needs a spill pack";
+        }
+        Path dir = root.resolve(segment);
+        boolean pack = Files.isRegularFile(dir.resolve("pages.bin"));
+        boolean manFile = Files.isRegularFile(dir.resolve(RegionManifest.FILE_NAME));
+        if (!pack && !manFile) {
+            return null;
+        }
+        if (!pack && manFile) {
+            return incomplete(dir);
+        }
+        if (manFile) {
+            RegionManifest man;
+            try {
+                man = RegionManifest.read(dir);
+            } catch (IOException ex) {
+                return incomplete(dir);
+            }
+            if (man == null || man.getFormatVersion() != PageHeader.VERSION) {
+                return incomplete(dir);
+            }
+            if (man.getPageBytes() != pageBytes()) {
+                return "roux pack page-bytes mismatch (manifest " + man.getPageBytes()
+                        + ", yaml " + pageBytes() + ")";
+            }
+            if (man.getOwner() != null && man.getOwner().length() > 0 && !man.getOwner().equals(regionId)) {
+                return incomplete(dir);
+            }
+        }
+        if (!slotsAgree(dir)) {
+            return incomplete(dir);
+        }
+        return null;
+    }
+
+    /**
+     * The method reports whether each stored page agrees with its checksum.
+     * A missing pack file returns true.
+     * A header that ends the file returns true.
+     * A bad version, a bad page id, or a bad checksum returns false.
+     *
+     * @param dir The directory is the target pack folder.
+     * @return The flag is true when the pack can be opened.
+     */
+    private boolean slotsAgree(Path dir) {
+        Path file = dir.resolve("pages.bin");
+        if (!Files.isRegularFile(file)) {
+            return true;
+        }
+        FileChannel channel = null;
+        try {
+            long size = Files.size(file);
+            long pitch = pageBytes();
+            channel = FileChannel.open(file, StandardOpenOption.READ);
+            int pageId = 0;
+            while (pageId >= 0) {
+                long at = (long) pageId * pitch;
+                if (at < 0) {
+                    return false;
+                }
+                if (size < at + PageHeader.SIZE) {
+                    return true;
+                }
+                byte[] header = readAt(channel, at, PageHeader.SIZE);
+                if (header[0] != (byte) 'R' || header[1] != (byte) 'O' || header[2] != (byte) 'U'
+                        || header[3] != (byte) 'X') {
+                    return true;
+                }
+                int version = (header[4] & 0xFF) | ((header[5] & 0xFF) << 8);
+                int id = leInt(header, PageHeader.OFF_PAGE_ID);
+                if (version != PageHeader.VERSION || id != pageId) {
+                    return false;
+                }
+                int used = leInt(header, PageHeader.OFF_USED);
+                if (used < PageHeader.SIZE || used > pageBytes()) {
+                    return false;
+                }
+                byte[] body = readAt(channel, at, used);
+                if (!crcMatches(body, used)) {
+                    return false;
+                }
+                pageId++;
+            }
+            return false;
+        } catch (IOException ex) {
+            return false;
+        } finally {
+            if (channel != null) {
+                try {
+                    channel.close();
+                } catch (IOException ignored) {
+                    // the probe is finished
+                }
+            }
+        }
+    }
+
+    /**
+     * The method copies bytes from an absolute file position.
+     * A short read leaves the unread tail as zeros.
+     *
+     * @param channel The channel is the open pack file.
+     * @param pos The position is the first byte to copy.
+     * @param length The length is the number of bytes to copy.
+     * @return The array is the heap copy.
+     * @throws IOException The read failed.
+     */
+    private static byte[] readAt(FileChannel channel, long pos, int length) throws IOException {
+        byte[] dest = new byte[length];
+        ByteBuffer buf = ByteBuffer.wrap(dest);
+        while (buf.hasRemaining()) {
+            int at = buf.position();
+            int n = channel.read(buf, pos + at);
+            if (n < 0) {
+                break;
+            }
+        }
+        return dest;
+    }
+
+    /**
+     * The method reports whether the page checksum matches the used bytes.
+     * The checksum skips its own four bytes.
+     *
+     * @param page The page is the used prefix of one slot.
+     * @param used The used count is the last byte covered by the checksum.
+     * @return The flag is true when the stored checksum matches.
+     */
+    private static boolean crcMatches(byte[] page, int used) {
+        if (page == null || used < PageHeader.OFF_CRC + 4 || used > page.length) {
+            return false;
+        }
+        CRC32C crc = new CRC32C();
+        crc.update(page, 0, PageHeader.OFF_CRC);
+        int rest = used - (PageHeader.OFF_CRC + 4);
+        if (rest > 0) {
+            crc.update(page, PageHeader.OFF_CRC + 4, rest);
+        }
+        int stored = leInt(page, PageHeader.OFF_CRC);
+        return stored == (int) crc.getValue();
+    }
+
+    /**
+     * The method reads a little-endian integer.
+     *
+     * @param raw The raw bytes hold the integer.
+     * @param off The offset is the first byte.
+     * @return The value is the integer.
+     */
+    private static int leInt(byte[] raw, int off) {
+        return (raw[off] & 0xFF)
+                | ((raw[off + 1] & 0xFF) << 8)
+                | ((raw[off + 2] & 0xFF) << 16)
+                | ((raw[off + 3] & 0xFF) << 24);
+    }
+
+    /**
+     * The method builds the incomplete-pack sentence for one directory.
+     *
+     * @param dir The directory is the pack folder named in the sentence.
+     * @return The text is the refusal.
+     */
+    private static String incomplete(Path dir) {
+        return "roux pack incomplete or corrupt; delete " + dir + " or revert yaml";
+    }
+
+    /**
+     * The method opens the folder that is already bound.
+     * An absent folder is created empty and written as a new pack.
+     * A present folder is loaded into the same region.
+     * The pack lock stays as it is.
+     *
+     * @param region The region receives the loaded pages.
+     * @return The result is new, restored, or refused.
+     */
+    private OpenResult openBound(Region region) {
+        boolean pack = regionPack.packExists(region.id);
+        boolean manFile = regionPack.manifestExists(region.id);
+        if (!pack && !manFile) {
+            Path dir = regionPack.packDir(region.id);
+            try {
+                Files.createDirectories(dir);
+            } catch (IOException ex) {
+                return OpenResult.refused(incomplete(dir));
+            }
+            blankRegion(region);
+            checkpointHot(region);
+            writeManifest(region);
+            saveHead(region);
+            recountUsed();
+            return OpenResult.neu(region.regionUuid);
+        }
+        return fillBound(region);
+    }
+
+    /**
+     * The method clears the live pages and starts an empty region.
+     * The region id and the region lock stay.
+     * The region receives a new identifier.
+     *
+     * @param region The region is reset in place.
+     */
+    private void blankRegion(Region region) {
+        closePages(region);
+        region.index.reset();
+        region.byId.clear();
+        region.hot = new Page(0, pageBytes());
+        region.pages.put(Integer.valueOf(0), region.hot);
+        region.nextMessageId = 1;
+        region.nextPageId = 1;
+        region.headCount = 0;
+        region.headSeqs = new long[0];
+        region.regionUuid = UUID.randomUUID();
+        region.createdEpochMs = System.currentTimeMillis();
+        region.regionPinned = false;
+        counters.pagesAllocated().incrementAndGet();
+    }
+
+    /**
+     * The method loads the bound pack into the region that is already open.
+     * The region stays in the map.
+     * The pack lock stays held.
+     * A failure leaves the pages unloaded and does not close the index.
+     *
+     * @param region The region receives the stored pages.
+     * @return The result is restored, or refused.
+     */
+    private OpenResult fillBound(Region region) {
+        Path dir = regionPack.packDir(region.id);
+        String refuse = incomplete(dir);
+        RegionManifest man = null;
+        if (regionPack.manifestExists(region.id)) {
+            try {
+                man = RegionManifest.read(dir);
+            } catch (IOException ex) {
+                return OpenResult.refused(refuse);
+            }
+            if (man == null) {
+                return OpenResult.refused(refuse);
+            }
+        }
+        int taken;
+        try {
+            taken = walkSlots(region.id);
+        } catch (IOException ex) {
+            return OpenResult.refused(refuse);
+        }
+        int hotId;
+        boolean repair;
+        if (taken < 0) {
+            return OpenResult.refused(refuse);
+        }
+        if (man == null) {
+            if (taken < 1) {
+                return OpenResult.refused(refuse);
+            }
+            hotId = taken - 1;
+            repair = true;
+        } else if (taken < man.getPageCount()) {
+            return OpenResult.refused(refuse);
+        } else if (taken > man.getPageCount()) {
+            hotId = taken - 1;
+            repair = true;
+        } else {
+            hotId = man.getHotPageId();
+            if (man.getPageCount() < 1 || hotId < 0 || hotId >= man.getPageCount()) {
+                return OpenResult.refused(refuse);
+            }
+            repair = false;
+        }
+        closePages(region);
+        region.index.reset();
+        region.byId.clear();
+        region.nextMessageId = 1;
+        region.nextPageId = taken;
+        if (man != null) {
+            region.regionUuid = man.getRegionUuid();
+            region.createdEpochMs = man.getCreatedEpochMs();
+        } else {
+            region.regionUuid = UUID.randomUUID();
+            region.createdEpochMs = System.currentTimeMillis();
+        }
+        Path pack = regionPack.packFile(region.id);
+        try {
+            for (int pageId = 0; pageId < taken; pageId++) {
+                byte[] header = regionPack.readRange(region.id, pageId, 0, PageHeader.SIZE);
+                Arena headerArena = Arena.ofConfined();
+                int used;
+                try {
+                    MemorySegment hs = headerArena.allocate(PageHeader.SIZE, 8);
+                    MemorySegment.copy(header, 0, hs, ValueLayout.JAVA_BYTE, 0, header.length);
+                    used = PageHeader.usedBytes(hs);
+                } finally {
+                    headerArena.close();
+                }
+                if (used < PageHeader.SIZE) {
+                    used = PageHeader.SIZE;
+                }
+                if (used > pageBytes()) {
+                    used = pageBytes();
+                }
+                byte[] slot = regionPack.readRange(region.id, pageId, 0, used);
+                if (pageId == hotId) {
+                    Page hot = new Page(pageId, pageBytes());
+                    hot.mapFromBytes(slot);
+                    hot.adoptAsHot();
+                    hot.setFile(pack);
+                    region.hot = hot;
+                    region.pages.put(Integer.valueOf(pageId), hot);
+                    scanFrames(region, hot.getSegment(), pageId, used);
+                } else {
+                    Page spilled = Page.spilled(pageId, pageBytes(), pack);
+                    region.pages.put(Integer.valueOf(pageId), spilled);
+                    Arena slotArena = Arena.ofConfined();
+                    try {
+                        MemorySegment seg = slotArena.allocate(used < 8 ? 8 : used, 8);
+                        MemorySegment.copy(slot, 0, seg, ValueLayout.JAVA_BYTE, 0, slot.length);
+                        scanFrames(region, seg, pageId, used);
+                    } finally {
+                        slotArena.close();
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            return OpenResult.refused(refuse);
+        }
+        if (region.hot == null) {
+            return OpenResult.refused(refuse);
+        }
+        region.nextMessageId = region.index.size() + 1;
+        counters.pagesAllocated().addAndGet(region.pages.size());
+        recountUsed();
+        if (repair) {
+            writeManifest(region);
+        }
+        loadHead(region);
+        return OpenResult.restored(region.index.size(), region.regionUuid);
     }
 
     // @aa-sdd PK-1265 docs/specs/java/org/roux/roux.spec.md FINESSE:f-222

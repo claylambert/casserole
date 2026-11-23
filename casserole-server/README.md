@@ -50,7 +50,7 @@ The model script is finished when Ollama finishes pulling `qwen2.5-coder:7b`. Th
 
 The install script is finished when the window shows `casserole installed to app`. The fat jar is then `app/casserole.jar`. If a test fails, the script stops and prints the module name. Fix that failure and run the install script again.
 
-The start script is finished when the window shows `casserole-server 1.0.1` and the Casserole Server log, and the window stays open. `1.0.1` is the build identifier of the Casserole Server, the version string of the bits you just launched. The log staying open is the Casserole Server, waiting for a login. Port `2222` is that login. The first start creates `hostkey.ser` in the working directory. `hostkey.ser` is the host key the SSH login uses. Leave that file where it is. Sign in as the user `admin` with the password `demo-admin`. The other accounts are on the [root page](../README.md#accounts).
+The start script is finished when the window shows `casserole-server 1.0.2` and the Casserole Server log, and the window stays open. `1.0.2` is the build identifier of the Casserole Server, the version string of the bits you just launched. The log staying open is the Casserole Server, waiting for a login. Port `2222` is that login. The first start creates `hostkey.ser` in the working directory. `hostkey.ser` is the host key the SSH login uses. Leave that file where it is. Sign in as the user `admin` with the password `demo-admin`. The other accounts are on the [root page](../README.md#accounts).
 
 Windows 11, from the repository root, in Windows PowerShell. Windows PowerShell is the PowerShell that Windows 11 ships. The scripts are [bin/java-env.ps1](../bin/java-env.ps1), [bin/install-ollama.ps1](../bin/install-ollama.ps1), [bin/install.ps1](../bin/install.ps1), and [app/start-casserole.ps1](../app/start-casserole.ps1).
 
@@ -149,7 +149,7 @@ Fix the failure and run the install again.
 
 ### 4. Start
 
-Leave this window open. The log in it is the Casserole Server the Aetheris Clients will find. [app/start-casserole.ps1](../app/start-casserole.ps1) prints the build identifier, loads the toolchain, and runs `java -jar app/casserole.jar` with the repository root as the working directory. The script prints `1.0.1`, the public version of the bits you are starting.
+Leave this window open. The log in it is the Casserole Server the Aetheris Clients will find. [app/start-casserole.ps1](../app/start-casserole.ps1) prints the build identifier, loads the toolchain, and runs `java -jar app/casserole.jar` with the repository root as the working directory. The script prints `1.0.2`, the public version of the bits you are starting.
 
 ```powershell
 powershell -File app\start-casserole.ps1
@@ -157,7 +157,7 @@ powershell -File app\start-casserole.ps1
 
 > **What appears**
 >
-> The line `casserole-server 1.0.1`, then the Casserole Server log.
+> The line `casserole-server 1.0.2`, then the Casserole Server log.
 
 The first start creates `hostkey.ser` in the working directory. That file stays on this machine. When `app/casserole.jar` is absent, start runs the install, then starts the Casserole Server. If port 2222 is already taken, another process is already listening there. Stop that other listener and start again.
 
@@ -223,7 +223,7 @@ Fix the failure and run the install again.
 bash app/start-casserole.sh
 ```
 
-[app/start-casserole.sh](../app/start-casserole.sh) prints `casserole-server 1.0.1` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When the jar is absent, start runs the install, then starts. If port 2222 is already taken, stop the other listener and start again.
+[app/start-casserole.sh](../app/start-casserole.sh) prints `casserole-server 1.0.2` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When the jar is absent, start runs the install, then starts. If port 2222 is already taken, stop the other listener and start again.
 
 ### 5. Air gap
 
@@ -259,7 +259,7 @@ zsh bin/install.zsh
 zsh app/start-casserole.zsh
 ```
 
-[app/start-casserole.zsh](../app/start-casserole.zsh) prints `casserole-server 1.0.1` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When the jar is absent, start runs the install, then starts. If port 2222 is already taken, stop the other listener and start again.
+[app/start-casserole.zsh](../app/start-casserole.zsh) prints `casserole-server 1.0.2` and the Casserole Server log. The Casserole Server listens on port 2222. The first start creates `hostkey.ser` in the working directory. When the jar is absent, start runs the install, then starts. If port 2222 is already taken, stop the other listener and start again.
 
 ```zsh
 cp aetheris.yaml "$HOME/.aetheris.yaml"

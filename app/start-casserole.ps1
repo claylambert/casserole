@@ -14,7 +14,7 @@
 
     bin/java-env.ps1 is dot-sourced, so the JDK it selects stays in this
     process. The launch runs the java inside that home. The script prints
-    casserole-server 1.0.1. A missing jar runs bin/install.ps1 once. A jar
+    casserole-server 1.0.2. A missing jar runs bin/install.ps1 once. A jar
     that is already present is not rebuilt.
 
     Ollama is installed only when the ollama command is missing, when
@@ -47,7 +47,7 @@ Set-Location $root
 # Dot-source. An ordinary call would drop JAVA_HOME when that call returned.
 . (Join-Path $root "bin\java-env.ps1")
 
-Write-Output "casserole-server 1.0.1"
+Write-Output "casserole-server 1.0.2"
 
 $jar = Join-Path $root "app\casserole.jar"
 

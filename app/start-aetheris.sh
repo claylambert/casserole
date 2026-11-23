@@ -16,7 +16,7 @@
 #
 # java-env.sh is sourced, so the JDK it selects stays in this process.
 # The launch runs the java inside that home. The script prints
-# aetheris-java 1.0.1. A missing jar runs bin/install.sh
+# aetheris-java 1.0.2. A missing jar runs bin/install.sh
 # once. A jar that is already present is not rebuilt. This start does not
 # install Ollama and does not pull a model.
 #
@@ -39,7 +39,7 @@ cd "$root"
 # shellcheck disable=SC1091
 . "$root/bin/java-env.sh"
 
-printf 'aetheris-java 1.0.1\n'
+printf 'aetheris-java 1.0.2\n'
 
 # Install builds the jar only when app/casserole.jar is absent.
 if [ ! -f "$root/app/casserole.jar" ]; then

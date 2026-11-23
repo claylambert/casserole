@@ -8,11 +8,11 @@ This window chooses the llama-openapi family. llama-openapi is the family for a 
 
 This directory is the Rust workspace. It has its own build script, its own install script, and its own start script. It calls the shared Rust toolchain at the repository root, then does the Rust Aetheris Client's work. The repository root is the folder that contains `pom.xml`.
 
-The workspace file [Cargo.toml](Cargo.toml) names two crates. A crate is one Rust package. Cargo, the Rust build tool, compiles that package. [aetheris-term](aetheris-term/Cargo.toml) is the terminal library. [aetheris-client](aetheris-client/Cargo.toml) is the window. The binary you launch is the window crate.
+The workspace file [Cargo.toml](../../rust/aetheris/Cargo.toml) names two crates. A crate is one Rust package. Cargo, the Rust build tool, compiles that package. [aetheris-term](../../rust/aetheris/aetheris-term/Cargo.toml) is the terminal library. [aetheris-client](../../rust/aetheris/aetheris-client/Cargo.toml) is the window. The binary you launch is the window crate.
 
 The behavior the Rust Aetheris Client must match is written with the source. The window crate is [aetheris-client](../../docs/specs/rust/aetheris/aetheris-client/aetheris-client.spec.md). The terminal library is [aetheris-term](../../docs/specs/rust/aetheris/aetheris-term/aetheris-term.spec.md). The window chrome is [chrome](../../docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md). The chrome is the frame around that terminal and that canvas. Those pages, in [docs/specs/](../../docs/specs/README.md), are the specifications for the Rust Aetheris Client, and they are the source for a later enhancement of the Rust Aetheris Client. [The index](../../docs/specs/semantic-key-index.md) lists every requirement and the source lines that cite it. [docs/specs/README.md](../../docs/specs/README.md) is the entry page for that directory. The build version of this tree is on the [root page](../../README.md).
 
-The binary starts at [main.rs](aetheris-client/src/main.rs). That file is the Rust file that contains the program entry point. The toolchain pin is [rust-toolchain.toml](rust-toolchain.toml). A pin is a file that names the exact Rust compiler this directory expects. The channel in that file is `1.99.1`. The root Rust script installs that channel when Cargo is missing.
+The binary starts at [main.rs](../../rust/aetheris/aetheris-client/src/main.rs). That file is the Rust file that contains the program entry point. The toolchain pin is [rust-toolchain.toml](../../rust/aetheris/rust-toolchain.toml). A pin is a file that names the exact Rust compiler this directory expects. The channel in that file is `1.99.1`. The root Rust script installs that channel when Cargo is missing.
 
 ![One Casserole Server, two Aetheris Clients](../../figures/01-three-silos.png)
 
@@ -36,11 +36,11 @@ The sink chooses this slice only when the allowance is greater than `0` and at l
 
 ## Fast path
 
-[app/start.ps1](../../rust/aetheris/app/start.ps1) on Windows and [app/start.sh](../../rust/aetheris/app/start.sh) on Linux are the start scripts for the Rust Aetheris Client. A start script is designed to check the environment, check the pre-build, build, bind and install, and run the Rust Aetheris Client in one operation. Check the environment selects the Rust toolchain. Check the pre-build prints the tools on one screen. Build compiles the Rust Aetheris Client. Bind and install places the binary in the app folder the start launches. The goal is to get you up and running fast. Run the start from the repository root when the Casserole Server is already running. The Casserole Server is up when its terminal still shows `casserole-server 1.0.1`, the log is still printing, and port `2222` is open on this machine. Port `2222` is the SSH port the Casserole Server opens. The Rust Aetheris Client will ask for `localhost` and that port. `localhost` means this same machine.
+[app/start.ps1](../../rust/aetheris/app/start.ps1) on Windows and [app/start.sh](../../rust/aetheris/app/start.sh) on Linux are the start scripts for the Rust Aetheris Client. A start script is designed to check the environment, check the pre-build, build, bind and install, and run the Rust Aetheris Client in one operation. Check the environment selects the Rust toolchain. Check the pre-build prints the tools on one screen. Build compiles the Rust Aetheris Client. Bind and install places the binary in the app folder the start launches. The goal is to get you up and running fast. Run the start from the repository root when the Casserole Server is already running. The Casserole Server is up when its terminal still shows `casserole-server 1.0.2`, the log is still printing, and port `2222` is open on this machine. Port `2222` is the SSH port the Casserole Server opens. The Rust Aetheris Client will ask for `localhost` and that port. `localhost` means this same machine.
 
-If that start runs into trouble, walk the checklist in this section, one script at a time. The numbered sections repeat the scripts and put the finished lines beside them. Match the window to the quote after each script. The finished lines to recognize are `rust-env ready`, the installed line, and `aetheris-client 1.0.1`.
+If that start runs into trouble, walk the checklist in this section, one script at a time. The numbered sections repeat the scripts and put the finished lines beside them. Match the window to the quote after each script. The finished lines to recognize are `rust-env ready`, the installed line, and `aetheris-client 1.0.2`.
 
-The toolchain script is finished when the window shows `rust-env ready` and a line that prints the Cargo version. `cargo is not on PATH after rustup` means the install landed and the current window cannot see Cargo yet. rustup is the installer that places the Rust compiler and Cargo on the machine. Open a new PowerShell and run the toolchain script again. The install script is finished when the window shows `aetheris-client installed to rust\aetheris\app`. On Windows the build reads [aetheris.jpg](../../src/main/resources/icons/aetheris.jpg). A missing file stops the build. The start script is finished when the window shows `aetheris-client 1.0.1` and the Rust Aetheris Client window opens. `1.0.1` is the version of the Rust Aetheris Client crate. The login is `localhost` port `2222`, user `admin`, password `demo-admin`.
+The toolchain script is finished when the window shows `rust-env ready` and a line that prints the Cargo version. `cargo is not on PATH after rustup` means the install landed and the current window cannot see Cargo yet. rustup is the installer that places the Rust compiler and Cargo on the machine. Open a new PowerShell and run the toolchain script again. The install script is finished when the window shows `aetheris-client installed to rust\aetheris\app`. On Windows the build reads [aetheris.jpg](../../src/main/resources/icons/aetheris.jpg). A missing file stops the build. The start script is finished when the window shows `aetheris-client 1.0.2` and the Rust Aetheris Client window opens. `1.0.2` is the version of the Rust Aetheris Client crate. The login is `localhost` port `2222`, user `admin`, password `demo-admin`.
 
 Windows 11, from the repository root. The scripts are [bin/rust-env.ps1](../../bin/rust-env.ps1), [bin/install.ps1](../../rust/aetheris/bin/install.ps1), and [app/start.ps1](../../rust/aetheris/app/start.ps1).
 
@@ -91,7 +91,7 @@ Run these commands from the repository root. These numbered sections are the che
 powershell -File bin\rust-env.ps1
 ```
 
-[bin/rust-env.ps1](../../bin/rust-env.ps1) prints `rust-env ready` and a Cargo version. When Cargo is missing, the script installs rustup with toolchain `1.99.1` from [rust-toolchain.toml](rust-toolchain.toml).
+[bin/rust-env.ps1](../../bin/rust-env.ps1) prints `rust-env ready` and a Cargo version. When Cargo is missing, the script installs rustup with toolchain `1.99.1` from [rust-toolchain.toml](../../rust/aetheris/rust-toolchain.toml).
 
 > **What appears**
 >
@@ -123,7 +123,7 @@ The line `aetheris-client installed to rust\aetheris\app` confirms the copy.
 >
 > A test failure or a compile error stops the script and names the crate.
 
-`release build failed` means the release compile did not produce the binary. Fix the failure and run the install again. On Windows the build embeds [aetheris.jpg](../../src/main/resources/icons/aetheris.jpg). [build.rs](aetheris-client/build.rs) reads that file. A missing JPEG stops the build. The binary name on Windows is `aetheris-client.exe`.
+`release build failed` means the release compile did not produce the binary. Fix the failure and run the install again. On Windows the build embeds [aetheris.jpg](../../src/main/resources/icons/aetheris.jpg). [build.rs](../../rust/aetheris/aetheris-client/build.rs) reads that file. A missing JPEG stops the build. The binary name on Windows is `aetheris-client.exe`.
 
 ### 3. Start
 
@@ -131,7 +131,7 @@ The line `aetheris-client installed to rust\aetheris\app` confirms the copy.
 powershell -File rust\aetheris\app\start.ps1
 ```
 
-[app/start.ps1](../../rust/aetheris/app/start.ps1) prints `aetheris-client 1.0.1` and opens the window. The binary's entry point is [main.rs](aetheris-client/src/main.rs). When the Rust Aetheris Client binary is absent, start runs the install, then opens the window. Connect to `localhost` port `2222` as the user `admin` with the password `demo-admin`. Import [demo/first-canvas.toon](../../demo/first-canvas.toon) after you are connected. The file is a version-1 canvas export with three cells. The cells are a hello, an air-gap question, and an empty next prompt. The vault file stays on your machine.
+[app/start.ps1](../../rust/aetheris/app/start.ps1) prints `aetheris-client 1.0.2` and opens the window. The binary's entry point is [main.rs](../../rust/aetheris/aetheris-client/src/main.rs). When the Rust Aetheris Client binary is absent, start runs the install, then opens the window. Connect to `localhost` port `2222` as the user `admin` with the password `demo-admin`. Import [demo/first-canvas.toon](../../demo/first-canvas.toon) after you are connected. The file is a version-1 canvas export with three cells. The cells are a hello, an air-gap question, and an empty next prompt. The vault file stays on your machine.
 
 ## Linux
 
@@ -143,7 +143,7 @@ bash rust/aetheris/bin/install.sh
 bash rust/aetheris/app/start.sh
 ```
 
-[bin/rust-env.sh](../../bin/rust-env.sh) prints `rust-env ready`. [bin/install.sh](../../rust/aetheris/bin/install.sh) places the release binary in `rust/aetheris/app`. [app/start.sh](../../rust/aetheris/app/start.sh) prints `aetheris-client 1.0.1` and opens the window. The binary name on Linux is `aetheris-client`.
+[bin/rust-env.sh](../../bin/rust-env.sh) prints `rust-env ready`. [bin/install.sh](../../rust/aetheris/bin/install.sh) places the release binary in `rust/aetheris/app`. [app/start.sh](../../rust/aetheris/app/start.sh) prints `aetheris-client 1.0.2` and opens the window. The binary name on Linux is `aetheris-client`.
 
 ## macOS
 
@@ -155,7 +155,7 @@ zsh rust/aetheris/bin/install.zsh
 zsh rust/aetheris/app/start.zsh
 ```
 
-[bin/rust-env.zsh](../../bin/rust-env.zsh) prints `rust-env ready`. An installed Homebrew `rustup` stays. Homebrew is the package manager a Mac usually has. [bin/install.zsh](../../rust/aetheris/bin/install.zsh) runs `cargo build --release` and copies `aetheris-client` into `rust/aetheris/app`. The install prints `aetheris-client 1.0.1`. [app/start.zsh](../../rust/aetheris/app/start.zsh) launches that binary. The binary name is `aetheris-client` on macOS.
+[bin/rust-env.zsh](../../bin/rust-env.zsh) prints `rust-env ready`. An installed Homebrew `rustup` stays. Homebrew is the package manager a Mac usually has. [bin/install.zsh](../../rust/aetheris/bin/install.zsh) runs `cargo build --release` and copies `aetheris-client` into `rust/aetheris/app`. The install prints `aetheris-client 1.0.2`. [app/start.zsh](../../rust/aetheris/app/start.zsh) launches that binary. The binary name is `aetheris-client` on macOS.
 
 > **Failed line**
 >
@@ -185,4 +185,4 @@ cargo test
 cargo build -p aetheris-client
 ```
 
-The workspace file is [Cargo.toml](Cargo.toml). The Rust Aetheris Client package is [aetheris-client/Cargo.toml](aetheris-client/Cargo.toml). The script page for the Rust Aetheris Client explains each script. It quotes the finished line and the failed line. The page is [bin/docs/README.md](../../rust/aetheris/bin/docs/README.md).
+The workspace file is [Cargo.toml](../../rust/aetheris/Cargo.toml). The Rust Aetheris Client package is [aetheris-client/Cargo.toml](../../rust/aetheris/aetheris-client/Cargo.toml). The script page for the Rust Aetheris Client explains each script. It quotes the finished line and the failed line. The page is [bin/docs/README.md](../../rust/aetheris/bin/docs/README.md).

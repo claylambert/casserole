@@ -245,3 +245,13 @@ A clean hangup with persist on is already a reattach. The next open sees a manif
 **semantic-key:** PK-1401
 **semantic-key:** PK-1401
 
+
+## Named session
+
+A named session is a shelf of packs for one login. One window holds one live pack. The username pack is the pack a reconnect opens. A chosen name is another pack that same login can leave and reload. The named folder sits beside the username folder as one path segment. The lock stays on the username directory for the whole connection. The region id stays the username. A switch checkpoints the pack that is live and opens the other folder under that same lock. The two packs are never mapped together. Clear and chat start wipe only the live pack. A reconnect opens the username pack. A mode with no spill pack refuses the switch. A half-present pack refuses the switch and leaves the current pack live. A bad checksum refuses the switch and leaves the current pack live.
+**semantic-key:** PK-1465
+
+## Retarget
+
+An edit of a stored message appends a later frame with the same sequence. The index row points at that later frame. The older frame stays in the pack and keeps no live row. A continuation frame with that sequence leaves the row on the message.
+**semantic-key:** PK-1466

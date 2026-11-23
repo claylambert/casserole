@@ -16,7 +16,7 @@
 # target/release/aetheris-client. A missing file prints
 # aetheris-client is missing and exits 1. The file is copied to
 # rust/aetheris/app/aetheris-client, overwriting an older copy.
-# Success prints aetheris-client 1.0.1.
+# Success prints aetheris-client 1.0.2.
 #
 # The start script calls this script only when the app copy is missing
 # or is not executable.
@@ -45,4 +45,4 @@ if [[ ! -e "$src" ]]; then
 fi
 mkdir -p "$root/rust/aetheris/app"
 cp "$src" "$root/rust/aetheris/app/aetheris-client"
-printf 'aetheris-client 1.0.1\n'
+printf 'aetheris-client 1.0.2\n'

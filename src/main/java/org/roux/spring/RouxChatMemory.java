@@ -24,14 +24,16 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Component;
 
-// @aa-sdd PK-1269 docs/specs/java/org/roux/spring/spring.spec.md
+// @aa-sdd PK-1269 docs/specs/java/org/roux/spring/spring.spec.md FINESSE:f-222
 /**
  * The RouxChatMemory stores Spring chat messages by calling {@link RouxEngine}.
  * The full history is stored.
  * A window is applied when a caller reads.
  * {@link #add} maps each message, counts its tokens, and appends it.
  * {@link #closeConversation} asks the engine to close the region.
+ * A caller can switch the live pack and read the live session name.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#RouxChatMemory roux-design.md
  *
  * @author clayl (2026-08-25)
  */
@@ -124,10 +126,37 @@ public class RouxChatMemory implements ChatMemory {
     }
 
     /**
+     * The method leaves the open pack and opens the named pack.
+     * The region id stays the conversation id.
+     * The result count is the engine count.
+     *
+     * @param regionId The region id is the conversation name.
+     * @param sessionName The session name is the shelf name, or empty for the username pack.
+     * @return The result is new, restored, or refused.
+     */
+    // @aa-sdd PK-1465 docs/specs/java/org/roux/roux.spec.md
+    public OpenResult switchPack(String regionId, String sessionName) {
+        return engine.switchPack(regionId, sessionName);
+    }
+
+    /**
+     * The method returns the live shelf name.
+     * The username pack returns the region id.
+     *
+     * @param regionId The region id is the conversation name.
+     * @return The name is the live session name.
+     */
+    // @aa-sdd PK-1465 docs/specs/java/org/roux/roux.spec.md
+    public String liveSessionName(String regionId) {
+        return engine.liveSessionName(regionId);
+    }
+
+    /**
      * The method opens a region that stays in memory.
      * The call does not take a file lock.
      * The call does not open a disk pack.
      *
+     * // @aa-sdd G-08 aetheris-stages-1-3.finalize.md
      *
      * @param regionId The region id is the name passed to the engine.
      * @return The result is the open result from the engine.

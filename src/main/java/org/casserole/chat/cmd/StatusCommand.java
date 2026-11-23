@@ -16,7 +16,7 @@ import org.casserole.chat.ChatSession;
 import org.casserole.ssh.shell.Ansi;
 import org.springframework.ai.chat.messages.MessageType;
 
-// @aa-sdd PK-1053 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1053 docs/specs/common/formal-plan.spec.md FINESSE:f-39
 /**
  * The {@code StatusCommand} type is the {@code status} command.
  * The command prints the session state and the selected model.
@@ -82,6 +82,7 @@ public class StatusCommand implements Command {
      * The {@code conversation} line is the conversation id.
      * If the region id is present, the {@code region-uuid} line is that id.
      * The {@code ssh-user} line is the SSH login name.
+     * The {@code session} line is the live session name.
      * {@link CommandContext#writeModelStatus} prints the selected family and its stored options.
      * The {@code messages} line reports the total and the system, user, and assistant counts.
      * The {@code roux} line is {@link ChatSession#memoryStatusLine}.
@@ -101,6 +102,8 @@ public class StatusCommand implements Command {
             line(ctx, "region-uuid", session.getRegionUuid().toString());
         }
         line(ctx, "ssh-user", ctx.getSshUsername());
+        // @aa-sdd PK-1465 docs/specs/java/org/roux/roux.spec.md
+        line(ctx, "session", session.liveSessionName());
         ctx.writeModelStatus();
         line(ctx, "messages", "total=" + session.getMessages().size()
                 + " system=" + session.countByType(MessageType.SYSTEM)

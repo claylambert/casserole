@@ -15,7 +15,8 @@ package org.casserole.chat.cmd;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-// @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md
+// @aa-sdd GK-0958 aetheris-stage-2-finessing.001.md FINESSE:f-222
+// @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
 // @aa-sdd PK-1245 docs/specs/java/org/casserole/chat/cmd/cmd.spec.md
 /**
  * The {@code CommandProcessorFactory} type builds one {@link CommandProcessor} for an SSH session.
@@ -65,7 +66,7 @@ public class CommandProcessorFactory {
 
     /**
      * The {@code create} method returns a new processor with this session's command set.
-     * The registered order is chat start, chat stop, help, message show, message find, message list, message lock, message unlock, and message edit.
+     * The registered order is chat start, chat session, chat stop, help, message show, message find, message list, message lock, message unlock, and message edit.
      * The same processor then registers clear, status, exit, ollama load, ollama stop, ollama, swap, and select-model.
      * Ollama load and swap receive the stored base URL and the stored token window.
      *
@@ -74,6 +75,8 @@ public class CommandProcessorFactory {
     public CommandProcessor create() {
         CommandProcessor processor = new CommandProcessor();
         processor.register(new ChatStartCommand());
+        // @aa-sdd PK-1465 docs/specs/java/org/roux/roux.spec.md
+        processor.register(new ChatSessionCommand());
         processor.register(new ChatStopCommand());
         processor.register(new HelpCommand());
         processor.register(new MessageShowCommand());

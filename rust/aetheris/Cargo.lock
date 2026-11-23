@@ -117,7 +117,7 @@ dependencies = [
 
 [[package]]
 name = "aetheris-client"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "aetheris-term",
  "chrono",
@@ -139,7 +139,7 @@ dependencies = [
 
 [[package]]
 name = "aetheris-term"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "unicode-width 0.2.2",
  "vte",

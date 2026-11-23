@@ -30,10 +30,10 @@ import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
- // @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1094 PK-1092 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1092 PK-1243 docs/specs/common/formal-plan.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-1243 docs/specs/java/org/casserole/chat/chat.spec.md
+
+// @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md FINESSE:f-185
+// @aa-sdd PK-1092 docs/specs/common/formal-plan.spec.md FINESSE:f-187
+// @aa-sdd PK-1243 docs/specs/java/org/casserole/chat/chat.spec.md FINESSE:f-222
 // @aa-sdd PK-1243 docs/specs/java/org/casserole/chat/chat.spec.md
 /**
  * The {@code ChatSession} type is the chat state for one SSH connection.
@@ -42,58 +42,59 @@ import org.springframework.ai.chat.prompt.Prompt;
  * Roux is the store that holds the conversation messages.
  * This object holds the session id, the active flag, the system prompt, and the prompt assembly.
  * A caller appends turns, builds the next prompt, and locks, unlocks, or edits a stored message.
+ * A caller can leave the live pack and open a named pack for the same login.
  * A blank system prompt leaves no system message in a new region.
  *
  * @author clayl (2026-08-25)
  */ // @aa-sdd PK-685 docs/specs/common/grok.spec.md
-// @aa-sdd PK-685 PK-286 docs/specs/common/grok.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-286 PK-730 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-730 PK-287 docs/specs/common/stages.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-287 PK-743 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-743 PK-745 docs/specs/common/stages.spec.md
-// @aa-sdd PK-745 PK-955 docs/specs/common/stages.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-955 PK-637 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-637 PK-641 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-641 PK-691 docs/specs/common/formal-plan.spec.md docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-691 PK-692 docs/specs/common/pre-plan.spec.md
-// @aa-sdd PK-692 PK-292 docs/specs/common/pre-plan.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-292 PK-719 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/server.spec.md
-// @aa-sdd PK-719 PK-293 docs/specs/common/server.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-293 PK-723 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/server.spec.md
-// @aa-sdd PK-723 PK-294 docs/specs/common/server.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-294 PK-701 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/roux.spec.md
-// @aa-sdd PK-701 PK-296 docs/specs/common/roux.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-296 PK-297 docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-297 PK-705 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/roux.spec.md
-// @aa-sdd PK-705 PK-298 docs/specs/common/roux.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-298 PK-804 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/roux.spec.md
-// @aa-sdd PK-804 PK-806 docs/specs/common/roux.spec.md
-// @aa-sdd PK-806 PK-299 docs/specs/common/roux.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-299 PK-300 docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-300 PK-301 docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-301 PK-810 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/roux.spec.md
-// @aa-sdd PK-810 PK-302 docs/specs/common/roux.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-302 PK-816 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/roux.spec.md
-// @aa-sdd PK-816 PK-303 docs/specs/common/roux.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-303 PK-304 docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-304 PK-821 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/roux.spec.md
-// @aa-sdd PK-821 PK-822 docs/specs/common/roux.spec.md
-// @aa-sdd PK-822 PK-305 docs/specs/common/roux.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-305 PK-823 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/common/roux.spec.md
-// @aa-sdd PK-823 PK-824 docs/specs/common/roux.spec.md
-// @aa-sdd PK-824 PK-306 docs/specs/common/roux.spec.md docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-306 PK-307 docs/specs/java/org/casserole/chat/chat.spec.md
-// @aa-sdd PK-307 PK-1385 docs/specs/java/org/casserole/chat/chat.spec.md docs/specs/java/org/aetheris/ssh/ssh.spec.md
-// @aa-sdd PK-1385 PK-707 docs/specs/java/org/aetheris/ssh/ssh.spec.md docs/specs/common/rust.spec.md
-// @aa-sdd PK-707 PK-708 docs/specs/common/rust.spec.md
-// @aa-sdd PK-708 PK-711 docs/specs/common/rust.spec.md
-// @aa-sdd PK-711 PK-771 docs/specs/common/rust.spec.md docs/specs/common/stages.spec.md
-// @aa-sdd PK-771 PK-643 docs/specs/common/stages.spec.md docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-685 docs/specs/common/grok.spec.md
+// @aa-sdd PK-286 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-730 docs/specs/common/stages.spec.md
+// @aa-sdd PK-287 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-743 docs/specs/common/stages.spec.md
+// @aa-sdd PK-745 docs/specs/common/stages.spec.md
+// @aa-sdd PK-955 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-637 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-641 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-691 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-692 docs/specs/common/pre-plan.spec.md
+// @aa-sdd PK-292 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-719 docs/specs/common/server.spec.md
+// @aa-sdd PK-293 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-723 docs/specs/common/server.spec.md
+// @aa-sdd PK-294 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-701 docs/specs/common/roux.spec.md
+// @aa-sdd PK-296 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-297 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-705 docs/specs/common/roux.spec.md
+// @aa-sdd PK-298 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-804 docs/specs/common/roux.spec.md
+// @aa-sdd PK-806 docs/specs/common/roux.spec.md
+// @aa-sdd PK-299 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-300 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-301 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-810 docs/specs/common/roux.spec.md
+// @aa-sdd PK-302 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-816 docs/specs/common/roux.spec.md
+// @aa-sdd PK-303 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-304 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-821 docs/specs/common/roux.spec.md
+// @aa-sdd PK-822 docs/specs/common/roux.spec.md
+// @aa-sdd PK-305 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-823 docs/specs/common/roux.spec.md
+// @aa-sdd PK-824 docs/specs/common/roux.spec.md
+// @aa-sdd PK-306 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-307 docs/specs/java/org/casserole/chat/chat.spec.md
+// @aa-sdd PK-1385 docs/specs/java/org/aetheris/ssh/ssh.spec.md
+// @aa-sdd PK-707 docs/specs/common/rust.spec.md
+// @aa-sdd PK-708 docs/specs/common/rust.spec.md
+// @aa-sdd PK-711 docs/specs/common/rust.spec.md
+// @aa-sdd PK-771 docs/specs/common/stages.spec.md
 // @aa-sdd PK-643 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1084 PK-648 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-648 PK-649 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-649 PK-725 docs/specs/common/formal-plan.spec.md docs/specs/common/server.spec.md
-// @aa-sdd PK-725 PK-1084 docs/specs/common/server.spec.md docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-648 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-649 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-725 docs/specs/common/server.spec.md
 public class ChatSession {
 
     private final String conversationId;
@@ -109,7 +110,7 @@ public class ChatSession {
      * The opener, the mood line, and the closer are written at the head of one user turn.
      * A transcript of one user turn, or of no user turns, puts that text on the first user turn.
      * A longer transcript puts a new or updated line on the user turn that is being sent.
-     // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
      */
     private String moodLine;
 
@@ -373,7 +374,7 @@ public class ChatSession {
         int ordinal = countStoredUsers();
         String storedText = text == null ? "" : text;
         if (moodLine != null && !moodMovePending && ordinal == moodPinOrdinal) {
-            // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
             storedText = MoodDesk.spliceTurn(storedText, moodLine);
         }
         List<Message> batch = new ArrayList<Message>();
@@ -400,7 +401,7 @@ public class ChatSession {
      * Otherwise {@link #clearTurns} runs, each row is appended, and the method returns {@code true}.
      * A {@code null} text is stored as the empty string.
      * After a successful replace, a user row that carries the invitation adopts that mood when the session mood is empty.
-     * // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+     *
      * @param roles The role of each row, which must be {@code user} or {@code assistant}.
      * @param texts The text of each row, in the same order and length as {@code roles}.
      * @return {@code true} when the region was replaced, or {@code false} when the lists were rejected.
@@ -578,7 +579,7 @@ public class ChatSession {
             memory.applyHeadCount(conversationId, headCount);
         }
         if (moodLine != null && moodMovePending && countStoredUsers() > 1) {
-            // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
             dropSystemMoodRows();
             stripStoredSplice();
             moodPinOrdinal = countStoredUsers();
@@ -727,7 +728,7 @@ public class ChatSession {
         moodLine = next;
         moodHeld = next;
         if (turns > 1) {
-            // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md FINESSE:f-196
             moodMovePending = true;
             return;
         }
@@ -1119,6 +1120,39 @@ public class ChatSession {
      */
     public void close() {
         memory.persistClose(conversationId);
+    }
+
+    /**
+     * The {@code switchPack} method leaves the live pack and opens the named pack.
+     * An empty name returns to the username pack.
+     * A successful switch seats the system prompt when that pack has none.
+     * A restored pack that already holds a system message stays as it is.
+     * A blank prompt leaves no system message.
+     * The returned count is the engine count from before that prompt is seated.
+     * A refusal leaves the live pack as the engine left it.
+     *
+     * @param sessionName The shelf name, or empty for the username pack.
+     * @return The result is new, restored, or refused.
+     */
+    // @aa-sdd PK-1465 docs/specs/java/org/roux/roux.spec.md
+    public synchronized OpenResult switchPack(String sessionName) {
+        OpenResult result = memory.switchPack(conversationId, sessionName);
+        if (result != null && result.isOk()) {
+            ensureSystemPrompt();
+        }
+        return result;
+    }
+
+    /**
+     * The {@code liveSessionName} method returns the live shelf name.
+     * The username pack returns the login name.
+     * A named pack returns its name.
+     *
+     * @return The live session name.
+     */
+    // @aa-sdd PK-1465 docs/specs/java/org/roux/roux.spec.md
+    public synchronized String liveSessionName() {
+        return memory.liveSessionName(conversationId);
     }
 
     /**
