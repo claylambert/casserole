@@ -17,6 +17,7 @@ import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+// @aa-sdd L40 app-design.md
 /**
  * The {@code CasseroleProperties} type is the bound {@code casserole.*} configuration.
  * The type holds the SSH listen settings, the chat settings, the Lamina settings, the Grok settings, and the pool settings.
@@ -137,6 +138,7 @@ public class CasseroleProperties {
         this.pool = pool == null ? new Pool() : pool;
     }
 
+    // @aa-sdd L40 app-design.md
     /**
      * The {@code Ssh} type holds the SSH server bind and password defaults.
      * The port starts at {@code 2222}.
@@ -251,7 +253,7 @@ public class CasseroleProperties {
         }
     }
 
-    // @aa-sdd PK-1252 docs/specs/java/org/casserole/config/config.spec.md
+    // @aa-sdd PK-1252 docs/specs/java/org/casserole/config/config.spec.md FINESSE:f-222
     /**
      * The {@code Chat} type holds the chat session defaults.
      * The system prompt starts empty, so a new session has no system message until a prompt is set.
@@ -264,6 +266,7 @@ public class CasseroleProperties {
      * The table style starts at {@code ascii}.
      * {@code historySize} starts at {@code 500}.
      * {@code listPreviewChars} starts at {@code 120}.
+     * {@code clipRemainingPercent} starts at {@code 1}.
      */
     public static class Chat {
 
@@ -280,6 +283,7 @@ public class CasseroleProperties {
         private String tableStyle = "ascii";
         private int historySize = 500;
         private int listPreviewChars = 120;
+        private int clipRemainingPercent = 1;
 
         /**
          * The {@code getSystemPrompt} method returns the system prompt for a new session.
@@ -527,8 +531,38 @@ public class CasseroleProperties {
         public void setListPreviewChars(int listPreviewChars) {
             this.listPreviewChars = listPreviewChars;
         }
+
+        /**
+         * The {@code getClipRemainingPercent} method returns the percent that fires a roll.
+         * A missing key reads as {@code 1}.
+         * A value below {@code 0} reads as {@code 0}.
+         *
+         * @return The percent, which starts at {@code 1}.
+         */
+        public int getClipRemainingPercent() {
+            if (clipRemainingPercent < 0) {
+                return 0;
+            }
+            return clipRemainingPercent;
+        }
+
+        /**
+         * The {@code setClipRemainingPercent} method stores the percent.
+         * A value below {@code 0} is stored as {@code 0}.
+         * The method does not throw.
+         *
+         * @param clipRemainingPercent The percent to store.
+         */
+        public void setClipRemainingPercent(int clipRemainingPercent) {
+            if (clipRemainingPercent < 0) {
+                this.clipRemainingPercent = 0;
+            } else {
+                this.clipRemainingPercent = clipRemainingPercent;
+            }
+        }
     }
 
+    // @aa-sdd L40 app-design.md
     /**
      * The {@code Lamina} type holds the executor settings.
      * Metrics start off.
@@ -556,6 +590,7 @@ public class CasseroleProperties {
         }
     }
 
+    // @aa-sdd L40 app-design.md
     /**
      * The {@code Grok} type holds the API settings from {@code casserole.grok}.
      * A blank key is absent.
@@ -628,6 +663,7 @@ public class CasseroleProperties {
         }
     }
 
+    // @aa-sdd L40 app-design.md
     // @aa-sdd PK-1273 docs/specs/java/org/casserole/config/config.spec.md
     /**
      * The {@code Pool} type holds the pool settings from {@code casserole.pool}.

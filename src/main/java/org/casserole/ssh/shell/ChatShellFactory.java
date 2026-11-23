@@ -62,6 +62,7 @@ public class ChatShellFactory implements ShellFactory {
     private final Lamina lamina;
     private final AmwpFacade amwpFacade;
     private final String modelName;
+    private final int ollamaNumCtx;
 
     /**
      * The constructor stores the settings, the factories, the model services, and the shared turn path.
@@ -86,7 +87,8 @@ public class ChatShellFactory implements ShellFactory {
             RouxChatMemory rouxMemory,
             Lamina lamina,
             AmwpFacade amwpFacade,
-            @Value("${spring.ai.ollama.chat.options.model:qwen2.5-coder:7b}") String modelName) {
+            @Value("${spring.ai.ollama.chat.options.model:qwen2.5-coder:7b}") String modelName,
+            @Value("${spring.ai.ollama.chat.options.num-ctx:0}") int ollamaNumCtx) {
         this.properties = properties;
         this.commandProcessorFactory = commandProcessorFactory;
         this.formatRouterFactory = formatRouterFactory;
@@ -96,6 +98,7 @@ public class ChatShellFactory implements ShellFactory {
         this.lamina = lamina;
         this.amwpFacade = amwpFacade;
         this.modelName = modelName;
+        this.ollamaNumCtx = ollamaNumCtx;
     }
 
     /**
@@ -151,7 +154,7 @@ public class ChatShellFactory implements ShellFactory {
             CommandProcessor processor = commandProcessorFactory.create();
             FormatRouter router = formatRouterFactory.create(properties.getChat().isSmartFormat());
             ChatShell shell = new ChatShell(session, processor, llmService, properties, modelName, router, lamina,
-                    llmRouter, amwpFacade);
+                    llmRouter, amwpFacade, ollamaNumCtx);
             ChatShell.seat(user, shell);
             return new AmwpAwareShell(shell, amwpFacade, lamina, user);
         } catch (RuntimeException ex) {

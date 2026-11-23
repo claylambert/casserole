@@ -224,6 +224,7 @@ It holds the SSH client settings store, the connection fields, the focused termi
 | u8 | [`heat_kind`](#member-heat_kind) | 0 none, 1 canvas, 2 vt. A plate change posts again. |
 | HeatQueue | [`heat`](#member-heat) | Newest-only heatbar queue. The walk runs off the frame. |
 | String | [`token_pick`](#member-token_pick) | Combo label while the token window is open. Empty selects the focused turn. |
+| String | [`token_bound`](#member-token_bound) | Model word `token_pick` was bound to. A different cell or pane clears the pick. |
 | crate::model::ModelSession | [`model`](#member-model) | The one Model Config modal. |
 | String | [`engine_label`](#member-engine_label) | The focused pane's selected model. Empty prints as ollama. A canvas cell is not this word. |
 | Option<String> | [`armed_transfer_model`](#member-armed_transfer_model) | Model captured from the selected cell when a canvas copy is sent. Absent until that send. |
@@ -1704,6 +1705,17 @@ token_pick: String
 ```
 
 Combo label while the token window is open. Empty selects the focused turn.
+
+### token_bound
+
+<a id="member-token_bound"></a>
+
+```rust
+token_bound: String
+```
+
+Model word `token_pick` was bound to. A different cell or pane clears the pick.
+// @aa-sdd aetheris-plan-f-286.001.md FINESSE:f-286
 
 ### model
 

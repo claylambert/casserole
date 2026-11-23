@@ -71,6 +71,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 
 // @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md FINESSE:f-173
 // @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md FINESSE:f-185
+// @aa-sdd GK-1015 aetheris-stage-2-finessing.001.md FINESSE:f-222
 // @aa-sdd PK-1056 docs/specs/common/formal-plan.spec.md FINESSE:f-36
 // @aa-sdd PK-1054 docs/specs/common/formal-plan.spec.md FINESSE:f-38
 // @aa-sdd PK-1053 docs/specs/common/formal-plan.spec.md FINESSE:f-39
@@ -218,6 +219,8 @@ public class ChatShell implements Command, Runnable, CommandContext {
     private final LlmService llmService;
     private final LlmRouter llmRouter;
     private final CasseroleProperties properties;
+    /** The field is the Ollama context window. A value of {@code 0} means the percent trigger uses max-tokens only. */
+    private final int ollamaNumCtx;
     private String modelName;
     /** The field is the think string for this console. An empty string means off. */
     private String consoleThink;
@@ -333,6 +336,7 @@ public class ChatShell implements Command, Runnable, CommandContext {
      * @param lamina The lamina submits the read loop and the model turn.
      * @param llmRouter The router is the provider map. The console turn calls {@link AmwpFacade#completeTurn} and does not take the execute permit.
      * @param amwpFacade The facade runs a console turn and a framed turn on the same path.
+     * @param ollamaNumCtx The context window is the Ollama {@code num-ctx} value, or {@code 0}.
      */
     public ChatShell(
             ChatSession session,
@@ -343,11 +347,13 @@ public class ChatShell implements Command, Runnable, CommandContext {
             FormatRouter formatRouter,
             Lamina lamina,
             LlmRouter llmRouter,
-            AmwpFacade amwpFacade) {
+            AmwpFacade amwpFacade,
+            int ollamaNumCtx) {
         this.session = session;
         this.processor = processor;
         this.llmService = llmService;
         this.properties = properties;
+        this.ollamaNumCtx = ollamaNumCtx;
         this.modelName = modelName;
         this.consoleThink = "";
         this.consoleProvider = "ollama";
@@ -974,6 +980,11 @@ public class ChatShell implements Command, Runnable, CommandContext {
                 return;
             }
             Prompt prompt = session.buildPrompt(maxMessages, maxTokens, managedTokens, headCount, line);
+            String family;
+            synchronized (this) {
+                family = consoleProvider == null || consoleProvider.length() == 0 ? "ollama" : consoleProvider;
+            }
+            prompt = rollIfTight(prompt, line, maxMessages, maxTokens, managedTokens, headCount, family);
             if (session.headOverAllowance()) {
                 write("The head is over the allowance.\r\n");
             }
@@ -1041,6 +1052,7 @@ public class ChatShell implements Command, Runnable, CommandContext {
                 stopSpinner();
                 session.appendUser(line);
                 session.appendAssistant(text);
+                session.noteClipSuccess();
                 session.checkpoint();
                 // The stored turn is in Roux. The heatbar hears that count.
                 // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-163
@@ -1065,6 +1077,9 @@ public class ChatShell implements Command, Runnable, CommandContext {
                     } else if (ex.getMessage() != null && ex.getMessage().startsWith("pool ceiling")) {
                         write(Ansi.yellow(ex.getMessage()) + "\r\n");
                     } else {
+                        if (truncationMatch(ex.getMessage())) {
+                            rollForTruncation(line, maxMessages, maxTokens);
+                        }
                         writeError(formatError(ex));
                     }
                     writePrompt();
@@ -1092,6 +1107,136 @@ public class ChatShell implements Command, Runnable, CommandContext {
             consoleSendEffort = false;
             saveConsoleModel();
         }
+    }
+
+    /**
+     * The {@code rollIfTight} method rolls once when the remaining percent fires.
+     * The rebuilt prompt is the one that is sent.
+     * A quiet percent returns the prompt that was passed in.
+     *
+     * @param prompt The prompt is the walk before the roll.
+     * @param line The line is the live user text.
+     * @param maxMessages The limit is the history cap.
+     * @param maxTokens The limit is the token cap.
+     * @param managedTokens The limit is the managed token cap.
+     * @param headCount The count is the head size.
+     * @param provider The provider is the seated family.
+     * @return The prompt is the head that will be sent.
+     */
+    private Prompt rollIfTight(Prompt prompt, String line, int maxMessages, int maxTokens, int managedTokens,
+            int headCount, String provider) {
+        int extra = new HeuristicTokenCounter().count(line);
+        String moodMark = session.moodOn() ? MoodDesk.OPENER : null;
+        int capacity = clipCapacity(provider, properties.getChat().getMaxTokens(), ollamaNumCtx);
+        int percent = properties.getChat().getClipRemainingPercent();
+        int estimate = session.clipEstimate(maxMessages, maxTokens, extra);
+        int remaining = 0;
+        if (capacity > 0 && estimate < capacity) {
+            remaining = capacity - estimate;
+        }
+        if (!percentFires(remaining, capacity, percent)) {
+            return prompt;
+        }
+        session.rollHead(maxMessages, maxTokens, capacity, extra, moodMark);
+        return session.buildPrompt(maxMessages, maxTokens, managedTokens, headCount, line);
+    }
+
+    /**
+     * The {@code rollForTruncation} method rolls after a provider truncation.
+     * The turn is not sent again.
+     *
+     * @param line The line is the live user text.
+     * @param maxMessages The limit is the history cap.
+     * @param maxTokens The limit is the token cap.
+     */
+    private void rollForTruncation(String line, int maxMessages, int maxTokens) {
+        int extra = new HeuristicTokenCounter().count(line);
+        String moodMark = session.moodOn() ? MoodDesk.OPENER : null;
+        String family;
+        synchronized (this) {
+            family = consoleProvider == null || consoleProvider.length() == 0 ? "ollama" : consoleProvider;
+        }
+        int capacity = clipCapacity(family, properties.getChat().getMaxTokens(), ollamaNumCtx);
+        session.rollHead(maxMessages, maxTokens, capacity, extra, moodMark);
+    }
+
+    /**
+     * The {@code percentFires} method reports the integer percent test.
+     * Percent {@code 0} does not run the comparison.
+     * A capacity of {@code 0} or less stays quiet.
+     *
+     * @param remaining The remaining count is the unused capacity.
+     * @param capacity The capacity is the token window.
+     * @param percent The percent is the configured trigger.
+     * @return The flag is true when {@code remaining * 100} is at most {@code capacity * percent}.
+     */
+    public static boolean percentFires(int remaining, int capacity, int percent) {
+        if (percent <= 0 || capacity <= 0) {
+            return false;
+        }
+        return (long) remaining * 100L <= (long) capacity * (long) percent;
+    }
+
+    /**
+     * The {@code clipCapacity} method chooses the token window.
+     * Ollama uses the smaller of a positive max-tokens and a positive num-ctx.
+     * Any other family uses max-tokens only.
+     *
+     * @param provider The provider is the seated family.
+     * @param maxTokens The max-tokens value is the first integer.
+     * @param numCtx The num-ctx value is the Ollama context window.
+     * @return The capacity is the chosen window, or {@code 0}.
+     */
+    public static int clipCapacity(String provider, int maxTokens, int numCtx) {
+        int first = maxTokens > 0 ? maxTokens : 0;
+        int second = 0;
+        if ("ollama".equals(provider) && numCtx > 0) {
+            second = numCtx;
+        }
+        if (first > 0 && second > 0) {
+            if (first < second) {
+                return first;
+            }
+            return second;
+        }
+        if (first > 0) {
+            return first;
+        }
+        return second;
+    }
+
+    /**
+     * The {@code truncationMatch} method classifies a provider failure.
+     * A match contains {@code context length}, {@code truncat}, {@code maximum context}, or {@code num_ctx}.
+     * Text that contains {@code AMWP} or {@code paste exceeds} is not a match.
+     *
+     * @param text The text is the provider message.
+     * @return The flag is true when the failure should roll.
+     */
+    public static boolean truncationMatch(String text) {
+        if (text == null) {
+            return false;
+        }
+        String lower = text.toLowerCase(java.util.Locale.ROOT);
+        if (lower.indexOf("amwp") >= 0) {
+            return false;
+        }
+        if (lower.indexOf("paste exceeds") >= 0) {
+            return false;
+        }
+        if (lower.indexOf("context length") >= 0) {
+            return true;
+        }
+        if (lower.indexOf("truncat") >= 0) {
+            return true;
+        }
+        if (lower.indexOf("maximum context") >= 0) {
+            return true;
+        }
+        if (lower.indexOf("num_ctx") >= 0) {
+            return true;
+        }
+        return false;
     }
 
     /**

@@ -226,6 +226,130 @@ public class RouxChatMemory implements ChatMemory {
     }
 
     /**
+     * The method returns a window at or after one floor.
+     * A floor of {@code 0} or less uses the four-argument window.
+     * The forward gains no tag.
+     *
+     * @param conversationId The conversation id is the region name.
+     * @param maxNonSystem The cap is the maximum number of non-system messages.
+     * @param pinSystem The flag is true when system messages stay in front.
+     * @param maxTokens The cap is the token budget, or {@code 0} for no token limit.
+     * @param floorSeq The floor is the first eligible tail sequence.
+     * @return The list is the selected messages.
+     */
+    public List<Message> getWindow(String conversationId, int maxNonSystem, boolean pinSystem, int maxTokens,
+            long floorSeq) {
+        List<Message> out = new ArrayList<Message>();
+        if (conversationId == null) {
+            return out;
+        }
+        if (floorSeq <= 0L) {
+            return getWindow(conversationId, maxNonSystem, pinSystem, maxTokens);
+        }
+        long[] ids = engine.windowIds(conversationId, maxNonSystem, pinSystem, maxTokens, floorSeq);
+        for (int i = 0; i < ids.length; i++) {
+            DecodedFrame frame = engine.readMessage(conversationId, ids[i]);
+            if (frame != null) {
+                out.add(RouxMessageMapper.toSpring(frame));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * The method returns the live head origin.
+     * A null conversation id returns {@code 0}.
+     *
+     * @param conversationId The conversation id is the region name.
+     * @return The origin is the floor, or {@code 0}.
+     */
+    public long clipOrigin(String conversationId) {
+        if (conversationId == null) {
+            return 0L;
+        }
+        return engine.clipOrigin(conversationId);
+    }
+
+    /**
+     * The method returns the clip status line.
+     * A null conversation id returns {@code head: 0 auto 0 0 0}.
+     *
+     * @param conversationId The conversation id is the region name.
+     * @return The line is the head line from the engine.
+     */
+    public String headLine(String conversationId) {
+        if (conversationId == null) {
+            return "head: 0 auto 0 0 0";
+        }
+        return engine.headLine(conversationId);
+    }
+
+    /**
+     * The method sums the token count of the current head.
+     *
+     * @param conversationId The conversation id is the region name.
+     * @param maxNonSystem The cap is the maximum number of non-system messages.
+     * @param maxTokens The cap is the token budget.
+     * @param extraTokens The extra count is the live line.
+     * @return The estimate is the token count from the engine.
+     */
+    public int clipEstimate(String conversationId, int maxNonSystem, int maxTokens, int extraTokens) {
+        if (conversationId == null) {
+            return extraTokens > 0 ? extraTokens : 0;
+        }
+        return engine.clipEstimate(conversationId, maxNonSystem, maxTokens, extraTokens);
+    }
+
+    /**
+     * The method rolls the head for one region.
+     * A null conversation id returns without a change.
+     *
+     * @param conversationId The conversation id is the region name.
+     * @param maxNonSystem The cap is the maximum number of non-system messages.
+     * @param maxTokens The cap is the token budget.
+     * @param capacity The capacity is the token window.
+     * @param extraTokens The extra count is the live line.
+     * @param moodMark The mark is text that keeps a mood atom, or null.
+     */
+    public void rollHead(String conversationId, int maxNonSystem, int maxTokens, int capacity, int extraTokens,
+            String moodMark) {
+        if (conversationId == null) {
+            return;
+        }
+        engine.rollHead(conversationId, maxNonSystem, maxTokens, capacity, extraTokens, moodMark);
+    }
+
+    /**
+     * The method sets or clears a rewind.
+     *
+     * @param conversationId The conversation id is the region name.
+     * @param bare The flag is true when no sequence was named.
+     * @param seq The sequence is the requested origin.
+     * @return The text is null when the origin was stored, or the refusal sentence.
+     */
+    public String rewind(String conversationId, boolean bare, long seq) {
+        if (conversationId == null) {
+            if (bare) {
+                return null;
+            }
+            return "No message seq " + seq;
+        }
+        return engine.rewind(conversationId, bare, seq);
+    }
+
+    /**
+     * The method clears a rewind after a successful complete.
+     *
+     * @param conversationId The conversation id is the region name.
+     */
+    public void noteClipSuccess(String conversationId) {
+        if (conversationId == null) {
+            return;
+        }
+        engine.noteClipSuccess(conversationId);
+    }
+
+    /**
      * The method applies a head count on the region.
      * A null conversation id returns without a change.
      *

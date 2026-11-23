@@ -110,6 +110,7 @@ public class StatusCommand implements Command {
                 + " user=" + session.countByType(MessageType.USER)
                 + " assistant=" + session.countByType(MessageType.ASSISTANT));
         line(ctx, "roux", session.memoryStatusLine());
+        ctx.write(session.headLine() + "\r\n");
     }
 
     /**

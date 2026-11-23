@@ -80,6 +80,7 @@ public class CommandProcessorFactory {
         processor.register(new ChatStopCommand());
         processor.register(new HelpCommand());
         processor.register(new MessageShowCommand());
+        processor.register(new MessageRewindCommand());
         processor.register(new MessageFindCommand());
         processor.register(new MessageListCommand());
         processor.register(new MessageLockCommand());

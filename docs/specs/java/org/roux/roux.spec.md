@@ -270,3 +270,8 @@ A continuation is a message larger than one frame. The first chunk is a message 
 
 A prune is the sweep that releases a spilled page no live span keeps. The hot page stays. Page identities stay. A tail of dead pages is truncated. A dead page between live pages becomes a hole. The sweep reads the stored last page and leaves a continuation frame unread.
 **semantic-key:** PK-1469
+
+## Clip
+
+A clip is the head origin for the next prompt. The roll is automatic. The origin is a sequence. Frames behind that sequence stay indexed. The leading system run stays on the head. A rewind moves the origin. A show leaves the origin. The record is a sibling of the manifest.
+**semantic-key:** PK-1470

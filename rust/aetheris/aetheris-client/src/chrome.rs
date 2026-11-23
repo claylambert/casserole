@@ -9295,6 +9295,71 @@ fn selected_heat_budget(
     }
 }
 
+/// The function `token_pick_for` returns the bound model word and the combo label.
+/// The string `bound` is the word the open window was last bound to. The string `pick` is the combo label. The string `focused` is the selected cell's target, or the SSH pane's model word. The slice `rows` is the token-window rows.
+///
+/// A `bound` that differs from `focused` stores `focused` and clears `pick`. An empty pick, or a pick that is not a row label, becomes the label at `token_model_index` for `focused`. A pick that is still a row label stays. Changing the row swaps the window. The estimate stays.
+/// // @aa-sdd aetheris-plan-f-286.001.md FINESSE:f-286
+fn token_pick_for(bound: &str, pick: &str, focused: &str, rows: &[TokenModel]) -> (String, String) {
+    let mut next_bound = bound.to_string();
+    let mut next_pick = pick.to_string();
+    if bound != focused {
+        next_bound = focused.to_string();
+        next_pick.clear();
+    }
+    if next_pick.is_empty() || rows.iter().all(|row| row.label != next_pick) {
+        let index = token_model_index(rows, focused);
+        if let Some(row) = rows.get(index) {
+            next_pick = row.label.clone();
+        }
+    }
+    (next_bound, next_pick)
+}
+
+/// The function `canvas_cell_tokens` returns the token estimate for one canvas cell.
+/// The slices are the card rows. The index `focus` is the selected cell. The record `mood` is the mood. The slice `locks` is the lock flags. The integer `managed` is the budget. The preview width is [`LINE_CHARS`].
+///
+/// Unequal slices, or a focus past the rows, return `(0, 0, 0)`. Any other focus calls `inspect_body_pane_gate` for that cell. The pin view is not this count. The three integers are the estimate, the character count, and the block count.
+/// // @aa-sdd aetheris-plan-f-286.001.md FINESSE:f-286
+fn canvas_cell_tokens(
+    prompts: &[String],
+    replies: &[String],
+    marks: &[Mark],
+    groups: &[u64],
+    columns: &[u32],
+    focus: usize,
+    mood: &MoodYaml,
+    locks: &[bool],
+    managed: i32,
+) -> (i32, i32, i32) {
+    if prompts.len() != replies.len()
+        || prompts.len() != marks.len()
+        || prompts.len() != groups.len()
+        || prompts.len() != columns.len()
+        || focus >= prompts.len()
+    {
+        return (0, 0, 0);
+    }
+    let pane = inspect_body_pane_gate(
+        prompts,
+        replies,
+        marks,
+        groups,
+        columns,
+        focus,
+        mood,
+        LINE_CHARS,
+        None,
+        locks,
+        managed,
+    );
+    (
+        count_i32(pane.estimate),
+        count_i32(pane.chars),
+        count_i32(pane.blocks),
+    )
+}
+
 /// The function `token_model_index` returns the row to select for the focused target.
 /// The slice `rows` is the token-window rows. The string `focused_target` is the model word. An empty slice returns 0.
 ///
@@ -18990,23 +19055,38 @@ fn shown_target(target: &str) -> String {
 }
 
 /// The SSH heat budget. A managed count above zero is that count.
-/// A word that starts with `llama-openapi` uses `num-ctx`, or 4096 when that key is absent or 0.
 /// A blank engine counts as ollama. An engine that contains ollama uses 131072.
+/// The word `pool` uses the pool window. A word that starts with `grok/` uses that id's window.
+/// A word that starts with `llama-openapi` uses `num-ctx`, or 4096 when that key is absent or 0.
 /// Any other engine uses zero. A canvas window is not this number.
 /// // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
-fn ssh_heat_budget(managed: i32, engine: &str) -> i32 {
+/// // @aa-sdd PK-1471 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-286
+fn ssh_heat_budget(
+    managed: i32,
+    engine: &str,
+    pool: i32,
+    grok: &[(String, i32)],
+    llama: i32,
+) -> i32 {
     if managed > 0 {
         return managed;
     }
     let shown = shown_target(engine);
-    if shown.starts_with("llama-openapi") {
-        return crate::llama::llama_window(application_yaml_budgets().llama);
-    }
     if shown.contains("ollama") {
-        131072
-    } else {
-        0
+        return 131072;
     }
+    if shown == "pool" {
+        return if pool > 0 { pool } else { 0 };
+    }
+    if let Some(id) = shown.strip_prefix("grok/") {
+        if !id.is_empty() {
+            return grok_budget(grok, id);
+        }
+    }
+    if shown.starts_with("llama-openapi") {
+        return crate::llama::llama_window(llama);
+    }
+    0
 }
 
 /// The function `air_gap_word` returns the air-gap word shown on the status line.
@@ -20103,6 +20183,7 @@ struct ShellNotice {
 /// @aa-sdd PK-1100 docs/specs/common/formal-plan.spec.md FINESSE:f-179
 /// @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-211
 /// @aa-sdd PK-1070 docs/specs/common/formal-plan.spec.md FINESSE:f-221
+/// @aa-sdd GK-0095 aetheris-stage-2-finessing.001.md FINESSE:f-222
 /// @aa-sdd PK-1018 docs/specs/common/formal-plan.spec.md FINESSE:f-77
 /// @aa-sdd PK-1016 docs/specs/common/formal-plan.spec.md FINESSE:f-79
 /// @aa-sdd PK-1015 docs/specs/common/formal-plan.spec.md FINESSE:f-80
@@ -20382,6 +20463,9 @@ struct App {
     heat: HeatQueue,
     /// Combo label while the token window is open. Empty selects the focused turn.
     token_pick: String,
+    /// Model word `token_pick` was bound to. A different cell or pane clears the pick.
+    /// // @aa-sdd aetheris-plan-f-286.001.md FINESSE:f-286
+    token_bound: String,
     /// The one Model Config modal.
     model: crate::model::ModelSession,
     /// The focused pane's selected model. Empty prints as ollama. A canvas cell is not this word.
@@ -20649,6 +20733,7 @@ impl App {
             heat_kind: 0,
             heat: HeatQueue::idle(),
             token_pick: String::new(),
+            token_bound: String::new(),
             model: crate::model::ModelSession::shut(),
             engine_label: String::new(),
             armed_transfer_model: None,
@@ -22044,6 +22129,8 @@ impl App {
             tools.response.on_hover_text(TOOLS_MENU_TIP);
             if ui.button(TOKEN_CALC).on_hover_text(TOKEN_CALC_TIP).clicked() {
                 self.token_open = true;
+                self.token_pick.clear();
+                self.token_bound.clear();
             }
             let help = ui.menu_button("Help", |ui| {
                 seat_bar_font(ui, points);
@@ -23979,12 +24066,9 @@ impl App {
             budgets.llama,
             &budgets.llama_alias,
         );
-        if self.token_pick.is_empty() || rows.iter().all(|row| row.label != self.token_pick) {
-            let index = token_model_index(&rows, &focused);
-            if let Some(row) = rows.get(index) {
-                self.token_pick = row.label.clone();
-            }
-        }
+        let (bound, picked) = token_pick_for(&self.token_bound, &self.token_pick, &focused, &rows);
+        self.token_bound = bound;
+        self.token_pick = picked;
         let pick = self.token_pick.clone();
         let mut still = true;
         let mut dismiss = false;
@@ -24062,6 +24146,7 @@ impl App {
         if dismiss || !still {
             self.token_open = false;
             self.token_pick.clear();
+            self.token_bound.clear();
         }
     }
 
@@ -26047,8 +26132,10 @@ impl App {
                     .as_ref()
                     .map(|facts| facts.managed_tokens)
                     .unwrap_or(0);
-                // A blank pane word counts as ollama. Another engine uses zero when managed is zero.
+                // A blank pane word counts as ollama. Pool uses the yaml pool window.
+                // A grok/ id uses that id's yaml window. Any other engine uses zero when managed is zero.
                 // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
+                // @aa-sdd aetheris-plan-f-286.001.md FINESSE:f-286
                 let (known, window) = session_window(self.facts.as_ref());
                 let budgets = application_yaml_budgets();
                 let targets = canvas_token_targets(&self.cards);
@@ -26074,7 +26161,13 @@ impl App {
                         )
                     }
                 } else {
-                    ssh_heat_budget(managed, &self.engine_label)
+                    ssh_heat_budget(
+                        managed,
+                        &self.engine_label,
+                        budgets.pool,
+                        &budgets.grok,
+                        budgets.llama,
+                    )
                 };
                 let strip = egui::Rect::from_min_size(bar.min, egui::vec2(bar.width(), 9.0));
                 let text_bar = egui::Rect::from_min_max(bar.min + egui::vec2(0.0, 9.0), bar.max);
@@ -28580,9 +28673,36 @@ impl App {
         if open_token {
             self.token_open = true;
             self.token_pick.clear();
+            self.token_bound.clear();
         }
+        let (dialog_used, dialog_chars, dialog_blocks) = if self.token_open {
+            let prompts: Vec<String> = self.cards.iter().map(|card| card.prompt.clone()).collect();
+            let replies: Vec<String> = self.cards.iter().map(|card| card.reply.clone()).collect();
+            let marks: Vec<Mark> = self.cards.iter().map(|card| card.mark).collect();
+            let groups: Vec<u64> = self.cards.iter().map(|card| card.group).collect();
+            let columns: Vec<u32> = self.cards.iter().map(|card| card.column).collect();
+            let locks: Vec<bool> = self.cards.iter().map(|card| card.locked).collect();
+            let managed = self
+                .facts
+                .as_ref()
+                .map(|facts| facts.managed_tokens)
+                .unwrap_or(0);
+            canvas_cell_tokens(
+                &prompts,
+                &replies,
+                &marks,
+                &groups,
+                &columns,
+                self.focus,
+                &self.mood,
+                &locks,
+                managed,
+            )
+        } else {
+            (token_used, token_chars, token_blocks)
+        };
         self.ring_used = token_used;
-        self.paint_token(ui.ctx(), token_used, token_chars, token_blocks);
+        self.paint_token(ui.ctx(), dialog_used, dialog_chars, dialog_blocks);
         if ui.input(|input| input.pointer.primary_pressed()) {
             let bar = ui.style().spacing.scroll.bar_width;
             let pos = ui.input(|input| input.pointer.latest_pos());
@@ -39457,11 +39577,17 @@ mod tests {
         assert_eq!(super::status_user_name(true, "a/b"), "anon");
         assert_eq!(super::shown_target(""), "ollama");
         assert_eq!(super::shown_target("  grok/m  "), "grok/m");
-        assert_eq!(super::ssh_heat_budget(0, ""), 131072);
-        assert_eq!(super::ssh_heat_budget(0, "ollama/deepseek-r1:7b"), 131072);
-        assert_eq!(super::ssh_heat_budget(0, "grok/m"), 0);
-        assert_eq!(super::ssh_heat_budget(0, "pool"), 0);
-        assert_eq!(super::ssh_heat_budget(40, "grok/m"), 40);
+        assert_eq!(super::ssh_heat_budget(0, "", 0, &[], 0), 131072);
+        assert_eq!(
+            super::ssh_heat_budget(0, "ollama/deepseek-r1:7b", 0, &[], 0),
+            131072
+        );
+        assert_eq!(super::ssh_heat_budget(0, "grok/m", 0, &[], 0), 0);
+        assert_eq!(super::ssh_heat_budget(0, "pool", 0, &[], 0), 0);
+        assert_eq!(
+            super::ssh_heat_budget(40, "grok/m", 256000, &[("m".to_string(), 1_000_000)], 8192),
+            40
+        );
         let facts = super::shell_status_line("vt100", "true", false, "ollama/deepseek-r1:7b", "");
         assert_eq!(
             facts,
@@ -39552,6 +39678,104 @@ mod tests {
         assert_ne!(super::estimate_tokens(&left), super::estimate_tokens(&right));
         assert_eq!(super::session_memory_lines(&left), 1);
         assert_eq!(super::shell_status_with_tokens("", 1), "est. tokens: 1");
+    }
+
+    /// `the_token_window_follows_the_selected_cell` locks the cell estimate and the SSH window.
+    /// Two prompts of different lengths have different estimates.
+    /// The longer prompt estimates higher.
+    /// The first cell is one block. The second cell keeps that earlier turn, so it is two blocks.
+    /// A focus past the rows is `(0, 0, 0)`.
+    /// An empty bound on `pool` selects the label `pool`.
+    /// A bound that still matches `pool` keeps a chosen Ollama row.
+    /// A move to `ollama/qwen2.5-coder:7b` selects that row.
+    /// A pool window of `256000` is the SSH budget for `pool`.
+    /// A Grok id `grok-4.3` with window `1000000` is the SSH budget for `grok/grok-4.3`.
+    /// A missing Grok id uses `0`.
+    /// A llama word with a stored window of `0` uses `4096`.
+    /// A llama word with a stored window of `8192` uses `8192`.
+    /// A padded `pool` word uses `256000`.
+    #[test]
+    fn the_token_window_follows_the_selected_cell() {
+        let prompts = vec!["aaaa".to_string(), "abcdefghij".to_string()];
+        let replies = vec![String::new(), String::new()];
+        let marks = vec![super::Mark::Included, super::Mark::Included];
+        let groups = vec![0u64, 0];
+        let columns = vec![0u32, 0];
+        let locks = vec![false, false];
+        let mood = super::MoodYaml::fresh();
+        let left = super::canvas_cell_tokens(
+            &prompts,
+            &replies,
+            &marks,
+            &groups,
+            &columns,
+            0,
+            &mood,
+            &locks,
+            0,
+        );
+        let right = super::canvas_cell_tokens(
+            &prompts,
+            &replies,
+            &marks,
+            &groups,
+            &columns,
+            1,
+            &mood,
+            &locks,
+            0,
+        );
+        assert_ne!(left.0, right.0);
+        assert!(right.0 > left.0);
+        assert_eq!(left.2, 1);
+        assert_eq!(right.2, 2);
+        assert_eq!(
+            super::canvas_cell_tokens(
+                &prompts,
+                &replies,
+                &marks,
+                &groups,
+                &columns,
+                2,
+                &mood,
+                &locks,
+                0,
+            ),
+            (0, 0, 0)
+        );
+        let targets = vec![
+            "pool".to_string(),
+            "ollama/qwen2.5-coder:7b".to_string(),
+        ];
+        let rows = super::token_models(true, 131072, &targets, "pool", 0, 256000, &[], 0, "");
+        let (bound, pick) = super::token_pick_for("", "", "pool", &rows);
+        assert_eq!(bound, "pool");
+        assert_eq!(pick, "pool");
+        let (stay_bound, stay_pick) =
+            super::token_pick_for("pool", "ollama/qwen2.5-coder:7b", "pool", &rows);
+        assert_eq!(stay_bound, "pool");
+        assert_eq!(stay_pick, "ollama/qwen2.5-coder:7b");
+        let (moved_bound, moved_pick) =
+            super::token_pick_for("pool", "pool", "ollama/qwen2.5-coder:7b", &rows);
+        assert_eq!(moved_bound, "ollama/qwen2.5-coder:7b");
+        assert_eq!(moved_pick, "ollama/qwen2.5-coder:7b");
+        let grok = [("grok-4.3".to_string(), 1_000_000)];
+        assert_eq!(super::ssh_heat_budget(0, "pool", 256000, &grok, 0), 256000);
+        assert_eq!(
+            super::ssh_heat_budget(0, "grok/grok-4.3", 256000, &grok, 0),
+            1_000_000
+        );
+        assert_eq!(super::ssh_heat_budget(0, "grok/missing", 256000, &grok, 0), 0);
+        assert_eq!(
+            super::ssh_heat_budget(0, "llama-openapi/x", 256000, &grok, 0),
+            4096
+        );
+        assert_eq!(
+            super::ssh_heat_budget(0, "llama-openapi/x", 256000, &grok, 8192),
+            8192
+        );
+        assert_eq!(super::ssh_heat_budget(0, "  pool  ", 256000, &grok, 0), 256000);
+        assert_eq!(super::ssh_heat_budget(0, "", 256000, &grok, 8192), 131072);
     }
 
     /// `the_input_edge_seats_the_model` locks the time text, the model caption, and the right-edge placement.

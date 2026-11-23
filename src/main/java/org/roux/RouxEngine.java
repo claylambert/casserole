@@ -63,6 +63,7 @@ import org.roux.model.SnapshotOptions;
 import org.roux.model.MessageInspect;
 import org.roux.page.Page;
 import org.roux.page.PageHeader;
+import org.roux.session.ClipRecord;
 import org.roux.session.OpenResult;
 import org.roux.session.RegionManifest;
 import org.roux.session.RegionOwner;
@@ -540,12 +541,18 @@ public class RouxEngine
             region.pages.clear();
             region.pages.put(Integer.valueOf(0), region.hot);
             region.nextPageId = 1;
+            region.clip = null;
             counters.pagesAllocated().incrementAndGet();
             if (properties.isRamOnly()) {
                 recountUsed();
                 return;
             }
             regionPack.wipePack(regionId);
+            try {
+                Files.deleteIfExists(regionPack.packDir(regionId).resolve(ClipRecord.FILE_NAME));
+            } catch (IOException ignored) {
+                // a leftover clip is unread on the next open when the checksum fails
+            }
             writeManifest(region);
             recountUsed();
         } finally {
@@ -890,6 +897,7 @@ public class RouxEngine
                 regionPack.unlock(regionId);
                 return OpenResult.refused("region not found");
             }
+            loadClip(created);
             return OpenResult.neu(created.regionUuid);
         }
         if (!properties.sessionRestore()) {
@@ -1149,6 +1157,7 @@ public class RouxEngine
         loadHead(region);
         region.restored = true;
         noteOpened(regionId);
+        loadClip(region);
         return OpenResult.restored(region.index.size(), region.regionUuid);
     }
 
@@ -1648,6 +1657,110 @@ public class RouxEngine
                 atomTokens = entry.getTokenCount();
                 atomCount = 1;
                 id--;
+            }
+            if (maxNonSystem > 0 && nonSystem + atomCount > maxNonSystem && nonSystem > 0) {
+                break;
+            }
+            boolean overTokens = maxTokens > 0 && tokens + atomTokens > maxTokens && nonSystem > 0;
+            for (int a = atom.size() - 1; a >= 0; a--) {
+                tail.add(atom.get(a));
+            }
+            tokens += atomTokens;
+            nonSystem += atomCount;
+            if (overTokens) {
+                break;
+            }
+        }
+        int outSize = tail.size() + pinned.length;
+        long[] ids = new long[outSize];
+        int pos = 0;
+        for (int p = 0; p < pinned.length; p++) {
+            ids[pos++] = pinned[p];
+        }
+        for (int i = tail.size() - 1; i >= 0; i--) {
+            ids[pos++] = tail.get(i).longValue();
+        }
+        return ids;
+    }
+
+    /**
+     * The method returns the window ids at or after one floor.
+     * A floor of {@code 0} or less uses {@link #windowIds(String, int, boolean, int)}.
+     * A pinned system id stays even when it is behind the floor.
+     * A tail atom is kept only when every id in the atom is at or after the floor.
+     * An atom that straddles the floor is left out.
+     * The walk does not split that atom.
+     *
+     * @param regionId The region id is the conversation id.
+     * @param maxNonSystem The cap is the non-system message limit, and zero or less means no message cap.
+     * @param pinSystem The flag includes the system pin when it is true.
+     * @param maxTokens The budget is the token limit, and zero or less means no token cap.
+     * @param floorSeq The floor is the first eligible tail sequence.
+     * @return The ids are the pinned ids followed by the ascending tail.
+     */
+    // @aa-sdd PK-1470 docs/specs/java/org/roux/roux.spec.md
+    public long[] windowIds(String regionId, int maxNonSystem, boolean pinSystem, int maxTokens, long floorSeq) {
+        if (floorSeq <= 0L) {
+            return windowIds(regionId, maxNonSystem, pinSystem, maxTokens);
+        }
+        Region region = require(regionId);
+        if (region == null) {
+            return new long[0];
+        }
+        int size = region.index.size();
+        if (size == 0) {
+            return new long[0];
+        }
+        long[] pinned = pinSystem ? pinnedSystemIds(region) : new long[0];
+        int tokens = 0;
+        for (int p = 0; p < pinned.length; p++) {
+            IndexEntry sys = region.index.get(pinned[p]);
+            if (sys != null) {
+                tokens += sys.getTokenCount();
+            }
+        }
+        ArrayList<Long> tail = new ArrayList<Long>();
+        int nonSystem = 0;
+        long id = size;
+        while (id >= 1) {
+            if (isPinned(pinned, id)) {
+                id--;
+                continue;
+            }
+            IndexEntry entry = region.index.get(id);
+            if (entry == null || entry.getType() != FrameType.MSG) {
+                id--;
+                continue;
+            }
+            ArrayList<Long> atom = new ArrayList<Long>();
+            int atomTokens = 0;
+            int atomCount = 0;
+            if (entry.getRole() == Role.ASSISTANT && id - 1 >= 1 && !isPinned(pinned, id - 1)) {
+                IndexEntry prev = region.index.get(id - 1);
+                if (prev != null && (prev.getRole() == Role.USER || prev.getRole() == Role.TOOL
+                        || prev.getRole() == Role.TOOL_CALL)) {
+                    atom.add(Long.valueOf(id - 1));
+                    atom.add(Long.valueOf(id));
+                    atomTokens = prev.getTokenCount() + entry.getTokenCount();
+                    atomCount = 2;
+                    id -= 2;
+                }
+            }
+            if (atomCount == 0) {
+                atom.add(Long.valueOf(id));
+                atomTokens = entry.getTokenCount();
+                atomCount = 1;
+                id--;
+            }
+            boolean underFloor = false;
+            for (int a = 0; a < atom.size(); a++) {
+                if (atom.get(a).longValue() < floorSeq) {
+                    underFloor = true;
+                    break;
+                }
+            }
+            if (underFloor) {
+                break;
             }
             if (maxNonSystem > 0 && nonSystem + atomCount > maxNonSystem && nonSystem > 0) {
                 break;
@@ -3147,6 +3260,7 @@ public class RouxEngine
             writeManifest(region);
             saveHead(region);
             recountUsed();
+            loadClip(region);
             return OpenResult.neu(region.regionUuid);
         }
         return fillBound(region);
@@ -3173,6 +3287,7 @@ public class RouxEngine
         region.createdEpochMs = System.currentTimeMillis();
         region.regionPinned = false;
         region.restored = false;
+        region.clip = null;
         counters.pagesAllocated().incrementAndGet();
     }
 
@@ -3304,6 +3419,7 @@ public class RouxEngine
         loadHead(region);
         region.restored = true;
         noteOpened(region.id);
+        loadClip(region);
         return OpenResult.restored(region.index.size(), region.regionUuid);
     }
 
@@ -3677,6 +3793,523 @@ public class RouxEngine
      * The region UUID is random, and the creation time is the current epoch milliseconds.
      * The closed flag starts false.
      */
+    /**
+     * The method returns the live head origin.
+     * An absent clip returns {@code 0}.
+     *
+     * @param regionId The region id is the conversation id.
+     * @return The origin is the floor, or {@code 0}.
+     */
+    public long clipOrigin(String regionId) {
+        Region region = require(regionId);
+        if (region == null || region.clip == null || !region.clip.isLive()) {
+            return 0L;
+        }
+        return region.clip.getOrigin();
+    }
+
+    /**
+     * The method returns one status line for the clip.
+     * An absent clip returns {@code head: 0 auto 0 0 0}.
+     *
+     * @param regionId The region id is the conversation id.
+     * @return The line is the head origin, the mode, the capacity, the estimate, and the remaining count.
+     */
+    public String headLine(String regionId) {
+        Region region = require(regionId);
+        if (region == null || region.clip == null || !region.clip.isLive()) {
+            return "head: 0 auto 0 0 0";
+        }
+        String mode = region.clip.isRewind() ? "rewind" : "auto";
+        return "head: " + region.clip.getOrigin() + " " + mode + " " + region.clip.getCapacity() + " "
+                + region.clip.getEstimate() + " " + region.clip.getRemaining();
+    }
+
+    /**
+     * The method sums the token count of the current head.
+     * A stored count above zero is used as it is.
+     * A missing count uses {@link HeuristicTokenCounter#count}.
+     * The extra count is added after the stored messages.
+     *
+     * @param regionId The region id is the conversation id.
+     * @param maxNonSystem The cap is the non-system message limit.
+     * @param maxTokens The budget is the token limit.
+     * @param extraTokens The extra count is the live line and any mood line that is not stored.
+     * @return The estimate is the token count of that head.
+     */
+    public int clipEstimate(String regionId, int maxNonSystem, int maxTokens, int extraTokens) {
+        Region region = require(regionId);
+        int extra = extraTokens > 0 ? extraTokens : 0;
+        if (region == null) {
+            return extra;
+        }
+        long floor = clipOrigin(regionId);
+        long[] ids;
+        if (floor > 0L) {
+            ids = windowIds(regionId, maxNonSystem, true, maxTokens, floor);
+        } else {
+            ids = windowIds(regionId, maxNonSystem, true, maxTokens);
+        }
+        int estimate = extra;
+        for (int i = 0; i < ids.length; i++) {
+            estimate += storedTokens(region, ids[i]);
+        }
+        return estimate;
+    }
+
+    /**
+     * The method rolls the head until the remaining count is above one percent.
+     * The pre-roll ids are not the origin this method stores.
+     * A roll sets bit 0 and clears bit 1.
+     * A roll origin does not move backward.
+     * The live line is the extra token count and is not dropped.
+     * An atom is dropped whole.
+     * A hot page whose last message id is behind the origin is published when it holds no leading system frame and no mood frame.
+     *
+     * @param regionId The region id is the conversation id.
+     * @param maxNonSystem The cap is the non-system message limit.
+     * @param maxTokens The budget is the token limit.
+     * @param capacity The capacity is the token window, or {@code 0}.
+     * @param extraTokens The extra count is the live line and any mood line that is not stored.
+     * @param moodMark The mark is text that keeps a mood atom, or null.
+     */
+    // @aa-sdd PK-1470 docs/specs/java/org/roux/roux.spec.md
+    public void rollHead(String regionId, int maxNonSystem, int maxTokens, int capacity, int extraTokens,
+            String moodMark) {
+        Region region = require(regionId);
+        if (region == null) {
+            return;
+        }
+        int extra = extraTokens > 0 ? extraTokens : 0;
+        int cap = capacity > 0 ? capacity : 0;
+        region.lock.lock();
+        try {
+            long previous = 0L;
+            boolean previousAuto = false;
+            boolean previousRewind = false;
+            if (region.clip != null && region.clip.isLive()) {
+                previous = region.clip.getOrigin();
+                previousAuto = !region.clip.isRewind();
+                previousRewind = region.clip.isRewind();
+            }
+            long[] ids;
+            if (previous > 0L) {
+                ids = windowIds(regionId, maxNonSystem, true, maxTokens, previous);
+            } else {
+                ids = windowIds(regionId, maxNonSystem, true, maxTokens);
+            }
+            long[] pinned = pinnedSystemIds(region);
+            ArrayList<long[]> atoms = tailAtoms(region, ids, pinned);
+            boolean dropped = false;
+            while (true) {
+                int estimate = tokenIds(region, pinned) + tokenAtoms(region, atoms) + extra;
+                int remaining = 0;
+                if (cap > 0 && estimate < cap) {
+                    remaining = cap - estimate;
+                }
+                boolean above = cap > 0 && (long) remaining * 100L > (long) cap;
+                if (above) {
+                    break;
+                }
+                if (atoms.isEmpty()) {
+                    break;
+                }
+                if (moodAtom(region, atoms.get(0), moodMark)) {
+                    break;
+                }
+                if (atoms.size() == 1 && extra == 0) {
+                    break;
+                }
+                atoms.remove(0);
+                dropped = true;
+            }
+            if (!dropped && previousRewind) {
+                return;
+            }
+            long origin;
+            if (!dropped) {
+                origin = previousAuto ? previous : 0L;
+            } else if (atoms.isEmpty()) {
+                origin = region.nextMessageId;
+            } else {
+                origin = atoms.get(0)[0];
+            }
+            if (previousAuto && origin < previous) {
+                origin = previous;
+            }
+            long[] after;
+            if (origin > 0L) {
+                after = windowIds(regionId, maxNonSystem, true, maxTokens, origin);
+            } else {
+                after = windowIds(regionId, maxNonSystem, true, maxTokens);
+            }
+            int estimate = extra;
+            for (int i = 0; i < after.length; i++) {
+                estimate += storedTokens(region, after[i]);
+            }
+            int remaining = 0;
+            if (cap > 0 && estimate < cap) {
+                remaining = cap - estimate;
+            }
+            region.clip = ClipRecord.auto(origin, cap, estimate, remaining, System.currentTimeMillis());
+            publishReel(region, origin, moodMark);
+            writeClip(region);
+        } finally {
+            if (region.lock.isHeldByCurrentThread()) {
+                region.lock.unlock();
+            }
+        }
+    }
+
+    /**
+     * The method sets or clears a rewind.
+     * A bare rewind stores origin {@code 0} and clears bit 1.
+     * A sequence rewind sets bit 1.
+     * A missing sequence returns {@code No message seq } plus the number.
+     * A sequence in the leading system run returns {@code seq is in the leading system run}.
+     *
+     * @param regionId The region id is the conversation id.
+     * @param bare The flag is true when the command named no sequence.
+     * @param seq The sequence is the requested origin when {@code bare} is false.
+     * @return The text is null when the origin was stored, or the refusal sentence.
+     */
+    public String rewind(String regionId, boolean bare, long seq) {
+        Region region = require(regionId);
+        if (region == null) {
+            if (bare) {
+                return null;
+            }
+            return "No message seq " + seq;
+        }
+        region.lock.lock();
+        try {
+            long origin = 0L;
+            boolean rewind = false;
+            if (!bare) {
+                IndexEntry entry = region.index.get(seq);
+                if (entry == null || entry.getType() != FrameType.MSG) {
+                    return "No message seq " + seq;
+                }
+                if (isPinned(leadingRun(region), seq)) {
+                    return "seq is in the leading system run";
+                }
+                origin = seq;
+                rewind = true;
+            }
+            int cap = 0;
+            if (region.clip != null) {
+                cap = region.clip.getCapacity();
+            }
+            long[] ids;
+            if (origin > 0L) {
+                ids = windowIds(regionId, 0, true, 0, origin);
+            } else {
+                ids = windowIds(regionId, 0, true, 0);
+            }
+            int estimate = 0;
+            for (int i = 0; i < ids.length; i++) {
+                estimate += storedTokens(region, ids[i]);
+            }
+            int remaining = 0;
+            if (cap > 0 && estimate < cap) {
+                remaining = cap - estimate;
+            }
+            if (rewind) {
+                region.clip = ClipRecord.rewind(origin, cap, estimate, remaining, System.currentTimeMillis());
+            } else {
+                region.clip = ClipRecord.auto(origin, cap, estimate, remaining, System.currentTimeMillis());
+            }
+            writeClip(region);
+            return null;
+        } finally {
+            if (region.lock.isHeldByCurrentThread()) {
+                region.lock.unlock();
+            }
+        }
+    }
+
+    /**
+     * The method clears a rewind after a successful complete.
+     * Bit 1 clear leaves a roll origin where it is.
+     * Bit 1 set stores origin {@code 0} and clears bit 1.
+     *
+     * @param regionId The region id is the conversation id.
+     */
+    public void noteClipSuccess(String regionId) {
+        Region region = require(regionId);
+        if (region == null || region.clip == null || !region.clip.isRewind()) {
+            return;
+        }
+        region.lock.lock();
+        try {
+            if (region.clip == null || !region.clip.isRewind()) {
+                return;
+            }
+            int cap = region.clip.getCapacity();
+            long[] ids = windowIds(regionId, 0, true, 0);
+            int estimate = 0;
+            for (int i = 0; i < ids.length; i++) {
+                estimate += storedTokens(region, ids[i]);
+            }
+            int remaining = 0;
+            if (cap > 0 && estimate < cap) {
+                remaining = cap - estimate;
+            }
+            region.clip = ClipRecord.auto(0L, cap, estimate, remaining, System.currentTimeMillis());
+            writeClip(region);
+        } finally {
+            if (region.lock.isHeldByCurrentThread()) {
+                region.lock.unlock();
+            }
+        }
+    }
+
+    /**
+     * The method loads {@code clip.bin} into the open region.
+     * A RAM-only region is left unchanged.
+     * An absent file or a checksum miss leaves the clip unset.
+     *
+     * @param region The region receives the record.
+     */
+    private void loadClip(Region region) {
+        if (region == null) {
+            return;
+        }
+        if (!properties.isDiskBacked() || isRamRegion(region.id)) {
+            return;
+        }
+        region.clip = ClipRecord.read(regionPack.packDir(region.id));
+    }
+
+    /**
+     * The method writes the live clip beside the manifest.
+     * Spill off writes no file.
+     * A RAM-only region writes no file.
+     *
+     * @param region The region holds the record.
+     */
+    private void writeClip(Region region) {
+        if (region == null || region.clip == null) {
+            return;
+        }
+        if (!properties.isDiskBacked() || isRamRegion(region.id)) {
+            return;
+        }
+        try {
+            ClipRecord.write(regionPack.packDir(region.id), region.clip);
+        } catch (IOException ignored) {
+            // the in-memory record still clips the next prompt
+        }
+    }
+
+    /**
+     * The method publishes a hot page that sits entirely behind the origin.
+     * A page that holds a leading system frame stays.
+     * A page that holds a mood frame stays.
+     * A page that is already unmapped stays.
+     * {@link RegionPack#publishPage} is called and is not changed.
+     *
+     * @param region The region holds the pages.
+     * @param origin The origin is the head sequence.
+     * @param moodMark The mark is text that keeps a page, or null.
+     */
+    private void publishReel(Region region, long origin, String moodMark) {
+        if (origin <= 0L || region == null) {
+            return;
+        }
+        if (!properties.isDiskBacked() || !regionPack.isEnabled() || isRamRegion(region.id)) {
+            return;
+        }
+        long[] leading = leadingRun(region);
+        ArrayList<Page> copy = new ArrayList<Page>();
+        java.util.Iterator<Page> it = region.pages.values().iterator();
+        while (it.hasNext()) {
+            copy.add(it.next());
+        }
+        for (int p = 0; p < copy.size(); p++) {
+            Page page = copy.get(p);
+            if (page.getSegment() == null || !"HOT".equals(page.residency())) {
+                continue;
+            }
+            long last = 0L;
+            boolean blocked = false;
+            boolean any = false;
+            long size = region.index.size();
+            for (long id = 1; id <= size; id++) {
+                IndexEntry entry = region.index.get(id);
+                if (entry == null || entry.getPageId() != page.getPageId() || entry.getType() != FrameType.MSG) {
+                    continue;
+                }
+                any = true;
+                if (id > last) {
+                    last = id;
+                }
+                if (isPinned(leading, id)) {
+                    blocked = true;
+                }
+                if (moodMark != null && moodMark.length() > 0) {
+                    DecodedFrame frame = readMessage(region.id, id);
+                    if (frame != null && frame.getText() != null && frame.getText().indexOf(moodMark) >= 0) {
+                        blocked = true;
+                    }
+                }
+            }
+            if (!any || blocked || last >= origin) {
+                continue;
+            }
+            try {
+                regionPack.publishPage(region.id, page);
+            } catch (IOException ignored) {
+                // a page that cannot be published stays hot
+            }
+        }
+    }
+
+    /**
+     * The method returns the opening system run.
+     * The run stops at the first row that is not a system message.
+     *
+     * @param region The region supplies the index.
+     * @return The ids are the leading system run.
+     */
+    private static long[] leadingRun(Region region) {
+        int size = region.index.size();
+        ArrayList<Long> leading = new ArrayList<Long>();
+        for (long id = 1; id <= size; id++) {
+            IndexEntry entry = region.index.get(id);
+            if (entry == null || entry.getType() != FrameType.MSG || entry.getRole() != Role.SYSTEM) {
+                break;
+            }
+            leading.add(Long.valueOf(id));
+        }
+        long[] ids = new long[leading.size()];
+        for (int i = 0; i < leading.size(); i++) {
+            ids[i] = leading.get(i).longValue();
+        }
+        return ids;
+    }
+
+    /**
+     * The method groups the tail of a window into atoms.
+     * A user, tool, or tool-call row keeps the following assistant row when the ids are consecutive.
+     *
+     * @param region The region supplies the roles.
+     * @param ids The ids are the current window.
+     * @param pinned The pinned ids stay out of the tail.
+     * @return The atoms are oldest first.
+     */
+    private static ArrayList<long[]> tailAtoms(Region region, long[] ids, long[] pinned) {
+        ArrayList<long[]> atoms = new ArrayList<long[]>();
+        int i = 0;
+        while (i < ids.length) {
+            long id = ids[i];
+            if (isPinned(pinned, id)) {
+                i++;
+                continue;
+            }
+            if (i + 1 < ids.length) {
+                long next = ids[i + 1];
+                IndexEntry left = region.index.get(id);
+                IndexEntry right = region.index.get(next);
+                if (left != null && right != null && next == id + 1L && right.getRole() == Role.ASSISTANT
+                        && (left.getRole() == Role.USER || left.getRole() == Role.TOOL
+                                || left.getRole() == Role.TOOL_CALL)
+                        && !isPinned(pinned, next)) {
+                    long[] pair = new long[2];
+                    pair[0] = id;
+                    pair[1] = next;
+                    atoms.add(pair);
+                    i += 2;
+                    continue;
+                }
+            }
+            long[] one = new long[1];
+            one[0] = id;
+            atoms.add(one);
+            i++;
+        }
+        return atoms;
+    }
+
+    /**
+     * The method sums stored tokens for pinned ids.
+     *
+     * @param region The region supplies the index.
+     * @param ids The ids are the pinned rows.
+     * @return The count is the token sum.
+     */
+    private int tokenIds(Region region, long[] ids) {
+        int sum = 0;
+        if (ids == null) {
+            return 0;
+        }
+        for (int i = 0; i < ids.length; i++) {
+            sum += storedTokens(region, ids[i]);
+        }
+        return sum;
+    }
+
+    /**
+     * The method sums stored tokens for tail atoms.
+     *
+     * @param region The region supplies the index.
+     * @param atoms The atoms are the tail.
+     * @return The count is the token sum.
+     */
+    private int tokenAtoms(Region region, ArrayList<long[]> atoms) {
+        int sum = 0;
+        for (int i = 0; i < atoms.size(); i++) {
+            long[] atom = atoms.get(i);
+            for (int a = 0; a < atom.length; a++) {
+                sum += storedTokens(region, atom[a]);
+            }
+        }
+        return sum;
+    }
+
+    /**
+     * The method returns the token count of one stored message.
+     * A count above zero is used as it is.
+     * A missing count uses {@link HeuristicTokenCounter#count}.
+     *
+     * @param region The region supplies the index.
+     * @param id The id is the message sequence.
+     * @return The count is at least {@code 0}.
+     */
+    private int storedTokens(Region region, long id) {
+        IndexEntry entry = region.index.get(id);
+        if (entry == null) {
+            return 0;
+        }
+        if (entry.getTokenCount() > 0) {
+            return entry.getTokenCount();
+        }
+        DecodedFrame frame = readMessage(region.id, id);
+        String text = frame == null ? "" : frame.getText();
+        return new HeuristicTokenCounter().count(text);
+    }
+
+    /**
+     * The method reports whether an atom carries the mood mark.
+     *
+     * @param region The region supplies the text.
+     * @param atom The atom is one tail group.
+     * @param moodMark The mark is the mood text, or null.
+     * @return The flag is true when the mark appears in the atom.
+     */
+    private boolean moodAtom(Region region, long[] atom, String moodMark) {
+        if (moodMark == null || moodMark.length() == 0) {
+            return false;
+        }
+        for (int i = 0; i < atom.length; i++) {
+            DecodedFrame frame = readMessage(region.id, atom[i]);
+            if (frame != null && frame.getText() != null && frame.getText().indexOf(moodMark) >= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // @aa-sdd PK-499 docs/specs/java/org/roux/roux.spec.md
     // @aa-sdd PK-1306 docs/specs/java/org/roux/roux.spec.md
     // @aa-sdd PK-501 docs/specs/java/org/roux/roux.spec.md
@@ -3706,6 +4339,7 @@ public class RouxEngine
         private long createdEpochMs;
         private boolean closed;
         private boolean restored;
+        private ClipRecord clip;
 
         /**
          * The constructor opens page {@code 0} as the hot page.

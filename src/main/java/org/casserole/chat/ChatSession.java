@@ -46,7 +46,7 @@ import org.springframework.ai.chat.prompt.Prompt;
  * A blank system prompt leaves no system message in a new region.
  *
  * @author clayl (2026-08-25)
- */ // @aa-sdd PK-685 docs/specs/common/grok.spec.md
+ */
 // @aa-sdd PK-685 docs/specs/common/grok.spec.md
 // @aa-sdd PK-286 docs/specs/java/org/casserole/chat/chat.spec.md
 // @aa-sdd PK-730 docs/specs/common/stages.spec.md
@@ -103,7 +103,7 @@ public class ChatSession {
     private final boolean restored;
     private final int restoredCount;
     private final UUID regionUuid;
-    private boolean active; // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+    private boolean active;
     /**
      * The {@code moodLine} field is the console mood text for this SSH session.
      * The empty value means the next prompt carries the system prompt and the turns, without mood text.
@@ -245,7 +245,7 @@ public class ChatSession {
      * A table that does not parse returns the table unchanged.
      * A table that already opens with this invitation and the directive returns the table unchanged.
      * The two new rows use a timestamp of zero and a token count of zero.
-     * The rows after those two stay as they were. // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+     * The rows after those two stay as they were.
      *
      * @param toon The table is the message table.
      * @return The table with the header rows, or the original table when no header is written.
@@ -529,7 +529,7 @@ public class ChatSession {
      * @param seq The stored sequence number.
      * @param text The new body.
      * @throws Exception The body was empty, or the sequence number was missing.
-     */ // @aa-sdd PK-1084 docs/specs/common/formal-plan.spec.md
+     */
     public synchronized void editMessage(long seq, String text) throws Exception {
         if (text == null || text.length() == 0) {
             throw new Exception("An empty body is refused.");
@@ -631,7 +631,84 @@ public class ChatSession {
                 return memory.sinkMessages(conversationId, cut);
             }
         }
+        long floor = memory.clipOrigin(conversationId);
+        if (floor > 0L) {
+            return memory.getWindow(conversationId, maxMessages, true, maxTokens, floor);
+        }
         return memory.getWindow(conversationId, maxMessages, true, maxTokens);
+    }
+
+    /**
+     * The {@code headLine} method returns the clip status line.
+     * An absent clip returns {@code head: 0 auto 0 0 0}.
+     *
+     * @return The line is the origin, the mode, the capacity, the estimate, and the remaining count.
+     */
+    // @aa-sdd PK-1470 docs/specs/java/org/roux/roux.spec.md
+    public synchronized String headLine() {
+        return memory.headLine(conversationId);
+    }
+
+    /**
+     * The {@code clipEstimate} method sums the current head.
+     *
+     * @param maxMessages The cap on non-system history.
+     * @param maxTokens The token cap.
+     * @param extraTokens The extra count is the live line.
+     * @return The estimate is the token count of that head.
+     */
+    public synchronized int clipEstimate(int maxMessages, int maxTokens, int extraTokens) {
+        return memory.clipEstimate(conversationId, maxMessages, maxTokens, extraTokens);
+    }
+
+    /**
+     * The {@code rollHead} method rolls the stored head.
+     * The live line stays in the extra count.
+     *
+     * @param maxMessages The cap on non-system history.
+     * @param maxTokens The token cap.
+     * @param capacity The capacity is the token window.
+     * @param extraTokens The extra count is the live line.
+     * @param moodMark The mark is text that keeps a mood atom, or null.
+     */
+    public synchronized void rollHead(int maxMessages, int maxTokens, int capacity, int extraTokens, String moodMark) {
+        memory.rollHead(conversationId, maxMessages, maxTokens, capacity, extraTokens, moodMark);
+    }
+
+    /**
+     * The {@code rewindBare} method clears the head origin.
+     *
+     * @return The text is null when the origin was cleared, or the refusal sentence.
+     */
+    public synchronized String rewindBare() {
+        return memory.rewind(conversationId, true, 0L);
+    }
+
+    /**
+     * The {@code rewindTo} method sets the head origin to one sequence.
+     *
+     * @param seq The sequence is the requested origin.
+     * @return The text is null when the origin was stored, or the refusal sentence.
+     */
+    public synchronized String rewindTo(long seq) {
+        return memory.rewind(conversationId, false, seq);
+    }
+
+    /**
+     * The {@code noteClipSuccess} method clears a rewind after a stored turn.
+     * A roll origin stays.
+     */
+    public synchronized void noteClipSuccess() {
+        memory.noteClipSuccess(conversationId);
+    }
+
+    /**
+     * The {@code moodOn} method reports whether a console mood is set.
+     *
+     * @return {@code true} when a mood line is set.
+     */
+    public synchronized boolean moodOn() {
+        return moodLine != null;
     }
 
     /**

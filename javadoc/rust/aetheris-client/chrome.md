@@ -1014,6 +1014,8 @@ Collapse All keeps the one-line card on the deck. Expand All keeps the one-line 
 | fn | [`add_token_target`](#function-add_token_target) | The function `add_token_target` appends the token-window row for one stored target. |
 | fn | [`token_models`](#function-token_models) | The function `token_models` returns the rows the token window can calculate against. |
 | fn | [`selected_heat_budget`](#function-selected_heat_budget) | The function `selected_heat_budget` returns the context window Token Calc opens on for the focused card. |
+| fn | [`token_pick_for`](#function-token_pick_for) | The function `token_pick_for` returns the bound model word and the combo label. |
+| fn | [`canvas_cell_tokens`](#function-canvas_cell_tokens) | The function `canvas_cell_tokens` returns the token estimate for one canvas cell. |
 | fn | [`token_model_index`](#function-token_model_index) | The function `token_model_index` returns the row to select for the focused target. |
 | fn | [`token_source`](#function-token_source) | The function `token_source` returns the words that name where the context window came from. |
 | fn | [`token_stats`](#function-token_stats) | The function `token_stats` returns the lines beside the token ring. |
@@ -11631,6 +11633,44 @@ The arguments are the same inputs `token_models` uses. The row comes from `token
 A selected row whose window is known and above 0 returns that window. An unknown window returns 0. A known window of 0 or less returns 0. A missing row returns 0.
 // @aa-sdd PK-1165 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-207
 
+### token_pick_for
+
+<a id="function-token_pick_for"></a>
+
+```rust
+fn token_pick_for(bound: &str, pick: &str, focused: &str, rows: &[TokenModel]) -> (String, String)
+```
+
+The function `token_pick_for` returns the bound model word and the combo label.
+The string `bound` is the word the open window was last bound to. The string `pick` is the combo label. The string `focused` is the selected cell's target, or the SSH pane's model word. The slice `rows` is the token-window rows.
+
+A `bound` that differs from `focused` stores `focused` and clears `pick`. An empty pick, or a pick that is not a row label, becomes the label at `token_model_index` for `focused`. A pick that is still a row label stays. Changing the row swaps the window. The estimate stays.
+// @aa-sdd aetheris-plan-f-286.001.md FINESSE:f-286
+
+### canvas_cell_tokens
+
+<a id="function-canvas_cell_tokens"></a>
+
+```rust
+fn canvas_cell_tokens(
+    prompts: &[String],
+    replies: &[String],
+    marks: &[Mark],
+    groups: &[u64],
+    columns: &[u32],
+    focus: usize,
+    mood: &MoodYaml,
+    locks: &[bool],
+    managed: i32,
+) -> (i32, i32, i32)
+```
+
+The function `canvas_cell_tokens` returns the token estimate for one canvas cell.
+The slices are the card rows. The index `focus` is the selected cell. The record `mood` is the mood. The slice `locks` is the lock flags. The integer `managed` is the budget. The preview width is [`LINE_CHARS`](#constant-line_chars).
+
+Unequal slices, or a focus past the rows, return `(0, 0, 0)`. Any other focus calls `inspect_body_pane_gate` for that cell. The pin view is not this count. The three integers are the estimate, the character count, and the block count.
+// @aa-sdd aetheris-plan-f-286.001.md FINESSE:f-286
+
 ### token_model_index
 
 <a id="function-token_model_index"></a>
@@ -16968,14 +17008,22 @@ Empty stored target shows as `ollama`. Java `AetherisStage2.shownTarget`.
 <a id="function-ssh_heat_budget"></a>
 
 ```rust
-fn ssh_heat_budget(managed: i32, engine: &str) -> i32
+fn ssh_heat_budget(
+    managed: i32,
+    engine: &str,
+    pool: i32,
+    grok: &[(String, i32)],
+    llama: i32,
+) -> i32
 ```
 
 The SSH heat budget. A managed count above zero is that count.
-A word that starts with `llama-openapi` uses `num-ctx`, or 4096 when that key is absent or 0.
 A blank engine counts as ollama. An engine that contains ollama uses 131072.
+The word `pool` uses the pool window. A word that starts with `grok/` uses that id's window.
+A word that starts with `llama-openapi` uses `num-ctx`, or 4096 when that key is absent or 0.
 Any other engine uses zero. A canvas window is not this number.
 // @aa-sdd PK-994 docs/specs/common/stages.spec.md FINESSE:f-230
+// @aa-sdd PK-1471 docs/specs/rust/aetheris/aetheris-client/src/chrome.spec.md FINESSE:f-286
 
 ### air_gap_word
 

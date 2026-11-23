@@ -358,3 +358,8 @@ A fresh user keeps their own thinking pane. The canvas key is the user, a separa
 
 A modal stays on top. A child of that modal sits on the modal. An open menu is a sublayer of the top modal. The menu paints above the modal and takes the pointer. The pin strip stays under the modal. The call is `set_sublayer`. The file is [chrome.rs](../../../../../../rust/aetheris/aetheris-client/src/chrome.rs).
 **semantic-key:** PK-1459
+
+## The SSH heatbar uses the Java window
+
+The SSH heat budget follows the Java window. A managed count above zero is that count. A blank engine counts as ollama. An engine that contains ollama uses 131072. The word `pool` uses the pool window. A word that starts with `grok/` uses that id's window. A word that starts with `llama-openapi` uses `num-ctx`, or 4096 when that key is absent or 0. Any other engine uses zero. A canvas window stays on the selected cell. The function is `ssh_heat_budget`. The file is `chrome.rs`.
+**semantic-key:** PK-1471
