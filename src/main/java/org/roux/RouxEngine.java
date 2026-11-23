@@ -122,6 +122,7 @@ public class RouxEngine
     private final ReentrantLock mapLock;
     private final Map<String, Region> regions;
     private final Set<String> ramRegions;
+    private DeadPagePrune prune;
 
     /**
      * The constructor stores the collaborators and creates the region map.
@@ -199,20 +200,28 @@ public class RouxEngine
         if (regionId == null || regionId.length() == 0) {
             return new AllocationResult(false, null, AllocationStatus.OUT_OF_ADDRESS_SPACE, "regionId required");
         }
+        boolean created = false;
+        AllocationResult result;
         mapLock.lock();
         try {
             Region existing = regions.get(regionId);
             if (existing != null) {
-                return new AllocationResult(true, describe(existing), AllocationStatus.SUCCESS, "");
+                result = new AllocationResult(true, describe(existing), AllocationStatus.SUCCESS, "");
+            } else {
+                Region region = new Region(regionId, pageBytes());
+                regions.put(regionId, region);
+                counters.pagesAllocated().incrementAndGet();
+                loadHead(region);
+                result = new AllocationResult(true, describe(region), AllocationStatus.SUCCESS, "");
+                created = true;
             }
-            Region region = new Region(regionId, pageBytes());
-            regions.put(regionId, region);
-            counters.pagesAllocated().incrementAndGet();
-            loadHead(region);
-            return new AllocationResult(true, describe(region), AllocationStatus.SUCCESS, "");
         } finally {
             mapLock.unlock();
         }
+        if (created) {
+            noteOpened(regionId);
+        }
+        return result;
     }
 
     /**
@@ -307,7 +316,8 @@ public class RouxEngine
      * The region is allocated first, and the capacity hint is {@code 0}.
      * A missing region returns {@link OperationStatus#NOT_FOUND} and {@code region not found}.
      * The payload is encoded by {@link ToonCodec}.
-     * A frame larger than {@link #maxFrameBytes} returns {@link OperationStatus#CORRUPTED_SEGMENT} and {@code frame larger than max-frame-bytes}.
+     * A message that needs more than 32 chunks returns {@link OperationStatus#CORRUPTED_SEGMENT} and {@code more than 32 chunks}.
+     * One frame stores chunk word 1.
      * A new {@link RouxId} is minted for the message.
      * The wait for the region lock is added to the lock-wait counter.
      *
@@ -342,16 +352,60 @@ public class RouxEngine
             return OperationResult.fail(OperationStatus.NOT_FOUND, "region not found");
         }
         byte[] payload = ToonCodec.encode(role, timestampEpochMs, tokenCount, text);
-        int total = FrameHeader.totalLength(payload.length);
-        int maxFrame = maxFrameBytes();
-        if (total > maxFrame) {
-            return OperationResult.fail(OperationStatus.CORRUPTED_SEGMENT, "frame larger than max-frame-bytes");
-        }
-        RouxId rouxId = idGenerator.next();
         long waitStart = System.nanoTime();
         region.lock.lock();
         counters.lockWaitNanos().addAndGet(System.nanoTime() - waitStart);
         try {
+            return writeChunks(region, region.nextMessageId, role, timestampEpochMs, tokenCount, null, payload, true);
+        } finally {
+            region.lock.unlock();
+        }
+    }
+
+    /**
+     * The method cuts one encoded payload into frames.
+     * The first frame is a message frame and stores the chunk count.
+     * Each later frame is a continuation and stores its place.
+     * A count above 32 is refused before any byte of this message is written.
+     * One frame stores chunk word 1.
+     * The index row is written when the message frame is written.
+     * A fresh message advances the next id once and stores the identity.
+     * An edit retargets the row and does not advance the next id.
+     *
+     * @param region The region receives the frames.
+     * @param messageId The message id is the sequence shared by every chunk.
+     * @param role The role is the role byte stored in every chunk.
+     * @param timestamp The time is the epoch milliseconds stored in every chunk.
+     * @param tokenCount The token count is the number stored in every chunk.
+     * @param rouxId The identity is the stored identity for an edit, or null for a fresh message.
+     * @param payload The payload is the one encoding of the message.
+     * @param fresh The flag is true when the message is new and false when the message is an edit.
+     * @return The result is success, or the size or rotation failure.
+     */
+    // @aa-sdd PK-1468 docs/specs/java/org/roux/roux.spec.md
+    private OperationResult writeChunks(Region region, long messageId, byte role, long timestamp, int tokenCount,
+            RouxId rouxId, byte[] payload, boolean fresh) {
+        int[] lengths = chunkLengths(payload, maxFrameBytes());
+        if (lengths == null) {
+            return OperationResult.fail(OperationStatus.CORRUPTED_SEGMENT, "hot page too small");
+        }
+        if (lengths.length > 32) {
+            return OperationResult.fail(OperationStatus.CORRUPTED_SEGMENT, "more than 32 chunks");
+        }
+        RouxId id = rouxId;
+        if (fresh) {
+            id = idGenerator.next();
+        }
+        int at = 0;
+        int msgPage = -1;
+        int lastPageId = -1;
+        for (int i = 0; i < lengths.length; i++) {
+            int n = lengths[i];
+            byte[] slice = new byte[n];
+            if (n > 0) {
+                System.arraycopy(payload, at, slice, 0, n);
+            }
+            int total = FrameHeader.totalLength(n);
             if (region.hot.remaining() < total) {
                 OperationResult rotated = rotateHot(region);
                 if (!rotated.isSuccess()) {
@@ -362,38 +416,99 @@ public class RouxEngine
                 return OperationResult.fail(OperationStatus.CORRUPTED_SEGMENT, "hot page too small");
             }
             int offset = region.hot.usedBytes();
-            long messageId = region.nextMessageId;
             Page page = region.hot;
             region.pins.pin(page.getPageId());
             try {
                 page.beginWrite();
-                FrameHeader.write(page.getSegment(), offset, total, FrameType.MSG, role, messageId, timestampEpochMs,
-                        tokenCount, rouxId, payload);
+                byte type = i == 0 ? FrameType.MSG : FrameType.CONT;
+                FrameHeader.write(page.getSegment(), offset, total, type, role, messageId, timestamp, tokenCount, id,
+                        slice);
+                int word = i == 0 ? lengths.length : i;
+                FrameHeader.setChunk(page.getSegment(), offset, word);
                 int used = offset + total;
                 PageHeader.setUsedBytes(page.getSegment(), used);
                 PageHeader.setFrameCount(page.getSegment(), PageHeader.frameCount(page.getSegment()) + 1);
                 if (PageHeader.frameCount(page.getSegment()) == 1) {
                     PageHeader.setFirstId(page.getSegment(), messageId);
                 }
-                PageHeader.setLastId(page.getSegment(), messageId);
-                page.endWrite();
-                region.index.append(messageId, page.getPageId(), offset, total, tokenCount, timestampEpochMs, role,
-                        FrameType.MSG, (short) 0, rouxId);
-                region.byId.put(rouxId, Long.valueOf(messageId));
-                region.nextMessageId = messageId + 1;
-                counters.framesAppended().incrementAndGet();
-                counters.indexEntries().incrementAndGet();
-                recountUsed();
-                if ("append".equals(properties.normalizedDurability()) && regionPack.isEnabled()) {
-                    checkpointHot(region);
+                if (fresh) {
+                    PageHeader.setLastId(page.getSegment(), messageId);
+                } else {
+                    long last = PageHeader.lastId(page.getSegment());
+                    if (messageId >= last) {
+                        PageHeader.setLastId(page.getSegment(), messageId);
+                    }
                 }
-                return OperationResult.ok("");
+                page.endWrite();
             } finally {
                 region.pins.unpin(page.getPageId());
             }
-        } finally {
-            region.lock.unlock();
+            if (i == 0) {
+                if (fresh) {
+                    region.index.append(messageId, page.getPageId(), offset, total, tokenCount, timestamp, role,
+                            FrameType.MSG, (short) 0, id);
+                    region.byId.put(id, Long.valueOf(messageId));
+                    region.nextMessageId = messageId + 1;
+                    counters.indexEntries().incrementAndGet();
+                } else {
+                    region.index.retarget(messageId, page.getPageId(), offset, total, tokenCount);
+                }
+                msgPage = page.getPageId();
+            }
+            lastPageId = page.getPageId();
+            counters.framesAppended().incrementAndGet();
+            at += n;
         }
+        int storedLast = lastPageId == msgPage ? 0 : lastPageId;
+        region.index.setLastPage(messageId, storedLast);
+        recountUsed();
+        if ("append".equals(properties.normalizedDurability()) && regionPack.isEnabled()) {
+            checkpointHot(region);
+        }
+        return OperationResult.ok("");
+    }
+
+    /**
+     * The method lists the payload length of each chunk.
+     * Each chunk takes the most bytes that fit in one frame.
+     * A chunk that cannot be formed returns null.
+     * A count above 32 returns an array of length 33 and does not list the bytes.
+     *
+     * @param payload The payload is the one encoding.
+     * @param maxFrame The max frame is the cap of one chunk.
+     * @return The lengths are the chunk sizes, or null when a chunk cannot be formed.
+     */
+    private int[] chunkLengths(byte[] payload, int maxFrame) {
+        int room = maxFrame - FrameHeader.SIZE;
+        while (room >= 0 && FrameHeader.totalLength(room) > maxFrame) {
+            room--;
+        }
+        if (room < 0 || FrameHeader.totalLength(0) > maxFrame) {
+            return null;
+        }
+        if (payload.length == 0) {
+            int[] one = new int[1];
+            one[0] = 0;
+            return one;
+        }
+        if (room == 0) {
+            return null;
+        }
+        int count = (payload.length + room - 1) / room;
+        if (count > 32) {
+            return new int[33];
+        }
+        int[] lengths = new int[count];
+        int at = 0;
+        for (int i = 0; i < count; i++) {
+            int n = payload.length - at;
+            if (n > room) {
+                n = room;
+            }
+            lengths[i] = n;
+            at += n;
+        }
+        return lengths;
     }
 
     /**
@@ -933,6 +1048,8 @@ public class RouxEngine
             }
             hotId = taken - 1;
             repair = true;
+        } else if (man.getPageCount() < 1) {
+            return OpenResult.refused(refuse);
         } else if (taken < man.getPageCount()) {
             return OpenResult.refused(refuse);
         } else if (taken > man.getPageCount()) {
@@ -962,10 +1079,12 @@ public class RouxEngine
                 byte[] header = regionPack.readRange(regionId, pageId, 0, PageHeader.SIZE);
                 Arena headerArena = Arena.ofConfined();
                 int used;
+                boolean magic;
                 try {
                     MemorySegment hs = headerArena.allocate(PageHeader.SIZE, 8);
                     MemorySegment.copy(header, 0, hs, ValueLayout.JAVA_BYTE, 0, header.length);
                     used = PageHeader.usedBytes(hs);
+                    magic = PageHeader.hasMagic(hs);
                 } finally {
                     headerArena.close();
                 }
@@ -983,17 +1102,21 @@ public class RouxEngine
                     hot.setFile(pack);
                     region.hot = hot;
                     region.pages.put(Integer.valueOf(pageId), hot);
-                    scanFrames(region, hot.getSegment(), pageId, used);
+                    if (magic) {
+                        scanFrames(region, hot.getSegment(), pageId, used);
+                    }
                 } else {
                     Page spilled = Page.spilled(pageId, pageBytes(), pack);
                     region.pages.put(Integer.valueOf(pageId), spilled);
-                    Arena slotArena = Arena.ofConfined();
-                    try {
-                        MemorySegment seg = slotArena.allocate(used < 8 ? 8 : used, 8);
-                        MemorySegment.copy(slot, 0, seg, ValueLayout.JAVA_BYTE, 0, slot.length);
-                        scanFrames(region, seg, pageId, used);
-                    } finally {
-                        slotArena.close();
+                    if (magic) {
+                        Arena slotArena = Arena.ofConfined();
+                        try {
+                            MemorySegment seg = slotArena.allocate(used < 8 ? 8 : used, 8);
+                            MemorySegment.copy(slot, 0, seg, ValueLayout.JAVA_BYTE, 0, slot.length);
+                            scanFrames(region, seg, pageId, used);
+                        } finally {
+                            slotArena.close();
+                        }
                     }
                 }
             }
@@ -1024,14 +1147,17 @@ public class RouxEngine
             writeManifest(region);
         }
         loadHead(region);
+        region.restored = true;
+        noteOpened(regionId);
         return OpenResult.restored(region.index.size(), region.regionUuid);
     }
 
     /**
      * The method counts page headers in the pack from page {@code 0}.
      * The file length is not the count.
-     * A slot whose header does not fit in the file returns that page id.
-     * A header without the page magic returns that page id.
+     * A slot whose header does not fit in the file returns that page id when an earlier slot had the page magic.
+     * A file whose slots have no page magic returns {@code 0}.
+     * A header without the page magic is skipped while a later slot still fits.
      * Magic whose version is not {@link PageHeader#VERSION}, or whose page id is not this slot, returns {@code -1}.
      * A slot offset that overflows returns {@code -1}.
      *
@@ -1045,12 +1171,16 @@ public class RouxEngine
         long size = Files.size(regionPack.packFile(regionId));
         long pitch = pageBytes();
         int pageId = 0;
+        boolean saw = false;
         while (pageId >= 0) {
             long at = (long) pageId * pitch;
             if (at < 0) {
                 return -1;
             }
             if (size < at + PageHeader.SIZE) {
+                if (!saw) {
+                    return 0;
+                }
                 return pageId;
             }
             byte[] header = regionPack.readRange(regionId, pageId, 0, PageHeader.SIZE);
@@ -1059,12 +1189,14 @@ public class RouxEngine
                 MemorySegment seg = arena.allocate(PageHeader.SIZE, 8);
                 MemorySegment.copy(header, 0, seg, ValueLayout.JAVA_BYTE, 0, header.length);
                 if (!PageHeader.hasMagic(seg)) {
-                    return pageId;
+                    pageId++;
+                    continue;
                 }
                 int version = seg.get(RouxLayout.SHORT_LE, 4) & 0xFFFF;
                 if (version != PageHeader.VERSION || PageHeader.pageId(seg) != pageId) {
                     return -1;
                 }
+                saw = true;
             } finally {
                 arena.close();
             }
@@ -1080,8 +1212,10 @@ public class RouxEngine
      * A payload length below zero, or a payload that does not fit in the frame, stops this page.
      * A checksum mismatch stops this page.
      * A message id equal to the index size plus one is appended, and its identity is stored.
+     * A next sequence whose type is {@link FrameType#CONT} stops this page.
      * A message id from {@code 1} through the index size, whose type is {@link FrameType#MSG}, retargets that row's page, offset, length, and token count.
      * A message id from {@code 1} through the index size, whose type is {@link FrameType#CONT}, leaves the row and the scan reads the next frame.
+     * An existing continuation whose present identity differs from the row stops this page.
      * Any other message id stops this page.
      *
      * @param region The region receives the index rows.
@@ -1112,6 +1246,9 @@ public class RouxEngine
             long seq = FrameHeader.messageId(seg, offset);
             int tokens = FrameHeader.tokens(seg, offset);
             if (seq == region.index.size() + 1L) {
+                if (continuationStops(region, seg, offset, seq)) {
+                    break;
+                }
                 RouxId rid = RouxId.read(seg, offset + FrameHeader.OFF_ID_HI);
                 region.index.append(seq, pageId, (int) offset, total, tokens,
                         FrameHeader.timestamp(seg, offset), FrameHeader.role(seg, offset),
@@ -1122,12 +1259,46 @@ public class RouxEngine
                 region.index.retarget(seq, pageId, (int) offset, total, tokens);
             } else if (seq >= 1L && seq <= region.index.size()
                     && FrameHeader.type(seg, offset) == FrameType.CONT) {
-                // A continuation leaves the row. The offset advance below reads the next frame.
+                if (continuationStops(region, seg, offset, seq)) {
+                    break;
+                }
             } else {
                 break;
             }
             offset += total;
         }
+    }
+
+    /**
+     * The method decides whether a continuation stops the page.
+     * A next sequence whose type is a continuation stops the page.
+     * An absent identity is two zero longs and does not stop the page.
+     * A present identity that differs from the row stops the page.
+     *
+     * @param region The region holds the index row.
+     * @param seg The segment is the page bytes.
+     * @param offset The offset is the first byte of the frame.
+     * @param seq The sequence is the message id on the frame.
+     * @return The flag is true when the scan stops.
+     */
+    // @aa-sdd PK-1468 docs/specs/java/org/roux/roux.spec.md
+    private boolean continuationStops(Region region, MemorySegment seg, long offset, long seq) {
+        byte type = FrameHeader.type(seg, offset);
+        if (seq == region.index.size() + 1L) {
+            return type == FrameType.CONT;
+        }
+        if (type != FrameType.CONT) {
+            return false;
+        }
+        RouxId frameId = RouxId.read(seg, offset + FrameHeader.OFF_ID_HI);
+        if (frameId.getHi() == 0L && frameId.getLo() == 0L) {
+            return false;
+        }
+        IndexEntry row = region.index.get(seq);
+        if (row == null || row.getRouxId() == null) {
+            return true;
+        }
+        return !frameId.equals(row.getRouxId());
     }
 
     /**
@@ -1177,6 +1348,23 @@ public class RouxEngine
     }
 
     /**
+     * The method returns the last page id stored for one message.
+     * A stored 0 means the message occupies the page the row already names.
+     * A missing region returns 0.
+     *
+     * @param regionId The region id is the conversation id.
+     * @param messageId The message id is the index key.
+     * @return The id is the stored last page, or 0.
+     */
+    int lastPage(String regionId, long messageId) {
+        Region region = require(regionId);
+        if (region == null) {
+            return 0;
+        }
+        return region.index.lastPage(messageId);
+    }
+
+    /**
      * The method counts index rows of one role.
      * A missing region returns {@code 0}.
      *
@@ -1199,7 +1387,8 @@ public class RouxEngine
      * A row whose type is not {@link FrameType#MSG} returns null.
      * Missing bytes, or a frame shorter than the header, return null.
      * A checksum mismatch increments the dirty-frame counter and returns null.
-     * A match is decoded by {@link ToonCodec}.
+     * A chunk word above 1 walks forward, joins the payloads, and decodes once.
+     * A stored 0 on a message frame is read as 1.
      *
      * @param regionId The region id is the conversation id.
      * @param messageId The message id is the index key.
@@ -1222,14 +1411,165 @@ public class RouxEngine
             return null;
         }
         byte[] payload = FrameHeader.payloadFromHeap(frameBytes);
-        int crc = java.nio.ByteBuffer.wrap(frameBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
-                .getInt(FrameHeader.OFF_CRC);
+        int crc = ByteBuffer.wrap(frameBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt(FrameHeader.OFF_CRC);
         if (!FrameHeader.crcMatches(payload, crc)) {
             counters.dirtyFrames().incrementAndGet();
             return null;
         }
-        return ToonCodec.decode(payload, entry.getMessageId(), entry.getRole(), entry.getTimestamp(),
+        int word = ByteBuffer.wrap(frameBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                .getInt(FrameHeader.OFF_CHUNK);
+        int count = word == 0 ? 1 : word;
+        if (count == 1) {
+            return ToonCodec.decode(payload, entry.getMessageId(), entry.getRole(), entry.getTimestamp(),
+                    entry.getTokenCount());
+        }
+        if (count < 1) {
+            return null;
+        }
+        return walkMessage(region, entry, payload, count);
+    }
+
+    /**
+     * The method walks the continuation frames of one message.
+     * Each stepped frame is a continuation of the same sequence and the same identity.
+     * The chunk word of each step is that step's number.
+     * The payloads are joined and decoded once.
+     * A short walk, a bad checksum, a wrong type, a wrong identity, or a wrong place returns null.
+     *
+     * @param region The region holds the pages.
+     * @param entry The entry is the message row.
+     * @param firstPayload The payload is the message frame already checked.
+     * @param count The count is the number of frames, and it is greater than 1.
+     * @return The frame is the decoded message, or null.
+     */
+    // @aa-sdd PK-1468 docs/specs/java/org/roux/roux.spec.md
+    private DecodedFrame walkMessage(Region region, IndexEntry entry, byte[] firstPayload, int count) {
+        java.io.ByteArrayOutputStream joined = new java.io.ByteArrayOutputStream();
+        joined.write(firstPayload, 0, firstPayload.length);
+        int pageId = entry.getPageId();
+        int offset = entry.getOffset();
+        int length = entry.getLength();
+        for (int step = 1; step < count; step++) {
+            int nextOffset = offset + length;
+            int used = usedOn(region, pageId);
+            if (used < 0 || nextOffset + FrameHeader.SIZE > used) {
+                int nextPage = nextOf(region, pageId);
+                if (nextPage == 0) {
+                    return null;
+                }
+                pageId = nextPage;
+                offset = PageHeader.SIZE;
+            } else {
+                offset = nextOffset;
+            }
+            byte[] header = frameAt(region, pageId, offset, FrameHeader.SIZE);
+            if (header == null || header.length < FrameHeader.SIZE) {
+                return null;
+            }
+            int total = ByteBuffer.wrap(header).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt(FrameHeader.OFF_LENGTH);
+            if (total < FrameHeader.SIZE) {
+                return null;
+            }
+            byte[] frame = frameAt(region, pageId, offset, total);
+            if (frame == null || frame.length < total) {
+                return null;
+            }
+            Arena arena = Arena.ofConfined();
+            try {
+                long bytes = frame.length;
+                long aligned = (bytes + 7L) & ~7L;
+                if (aligned < 8L) {
+                    aligned = 8L;
+                }
+                MemorySegment seg = arena.allocate(aligned, 8);
+                MemorySegment.copy(frame, 0, seg, ValueLayout.JAVA_BYTE, 0, frame.length);
+                byte[] piece = FrameHeader.payloadFromHeap(frame);
+                int crc = ByteBuffer.wrap(frame).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt(FrameHeader.OFF_CRC);
+                if (!FrameHeader.crcMatches(piece, crc)) {
+                    counters.dirtyFrames().incrementAndGet();
+                    return null;
+                }
+                if (FrameHeader.type(seg, 0) != FrameType.CONT) {
+                    return null;
+                }
+                if (FrameHeader.messageId(seg, 0) != entry.getMessageId()) {
+                    return null;
+                }
+                if (FrameHeader.chunk(seg, 0) != step) {
+                    return null;
+                }
+                RouxId frameId = RouxId.read(seg, FrameHeader.OFF_ID_HI);
+                if (frameId.getHi() == 0L && frameId.getLo() == 0L) {
+                    return null;
+                }
+                if (entry.getRouxId() == null || !frameId.equals(entry.getRouxId())) {
+                    return null;
+                }
+                joined.write(piece, 0, piece.length);
+                length = total;
+            } finally {
+                arena.close();
+            }
+        }
+        return ToonCodec.decode(joined.toByteArray(), entry.getMessageId(), entry.getRole(), entry.getTimestamp(),
                 entry.getTokenCount());
+    }
+
+    /**
+     * The method returns the used-byte count of one page.
+     * A mapped page reads the header in memory.
+     * Any other page reads the header through the frame reader.
+     *
+     * @param region The region holds the page.
+     * @param pageId The page id is the page to read.
+     * @return The count is the used bytes, or -1 when the header is missing.
+     */
+    private int usedOn(Region region, int pageId) {
+        Page page = region.pages.get(Integer.valueOf(pageId));
+        if (page != null && page.getSegment() != null) {
+            return PageHeader.usedBytes(page.getSegment());
+        }
+        byte[] header = frameAt(region, pageId, 0, PageHeader.SIZE);
+        if (header == null || header.length < PageHeader.SIZE) {
+            return -1;
+        }
+        return ByteBuffer.wrap(header).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt(PageHeader.OFF_USED);
+    }
+
+    /**
+     * The method returns the next page id stored on one page.
+     * A mapped page reads the header in memory.
+     * Any other page reads the header through the frame reader.
+     *
+     * @param region The region holds the page.
+     * @param pageId The page id is the page to read.
+     * @return The id is the follower, or 0 when the header is missing.
+     */
+    private int nextOf(Region region, int pageId) {
+        Page page = region.pages.get(Integer.valueOf(pageId));
+        if (page != null && page.getSegment() != null) {
+            return PageHeader.nextPageId(page.getSegment());
+        }
+        byte[] header = frameAt(region, pageId, 0, PageHeader.SIZE);
+        if (header == null || header.length < PageHeader.SIZE) {
+            return 0;
+        }
+        return ByteBuffer.wrap(header).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt(PageHeader.OFF_NEXT_PAGE);
+    }
+
+    /**
+     * The method copies one range out of a page.
+     * The copy uses the same reader as a frame read.
+     *
+     * @param region The region holds the page.
+     * @param pageId The page id is the page to read.
+     * @param offset The offset is the first byte of the range.
+     * @param length The length is the number of bytes to copy.
+     * @return The bytes are the range, or null.
+     */
+    private byte[] frameAt(Region region, int pageId, int offset, int length) {
+        IndexEntry seat = new IndexEntry(0L, pageId, offset, length, 0, 0L, (byte) 0, FrameType.MSG, (short) 0, null);
+        return readFrameBytes(region, seat);
     }
 
     /**
@@ -1465,6 +1805,9 @@ public class RouxEngine
             if (resident >= residentPages()) {
                 return OperationResult.fail(OperationStatus.RESOURCE_BUSY,
                         "resident-pages cap reached and spill is disabled");
+            }
+            if (old.getSegment() != null) {
+                PageHeader.setNextPageId(old.getSegment(), region.nextPageId);
             }
         }
         int newId = region.nextPageId;
@@ -2264,7 +2607,8 @@ public class RouxEngine
      * A missing region, or a row that is missing or is not {@link FrameType#MSG}, returns {@link OperationStatus#NOT_FOUND} and {@code No message seq } plus the id.
      * The token count comes from a new {@link HeuristicTokenCounter}.
      * The payload keeps the stored role, the stored time, and the stored {@link RouxId}.
-     * A frame larger than {@link #maxFrameBytes} returns {@link OperationStatus#CORRUPTED_SEGMENT} and {@code frame larger than max-frame-bytes}.
+     * A message that needs more than 32 chunks returns {@link OperationStatus#CORRUPTED_SEGMENT} and {@code more than 32 chunks}.
+     * One frame stores chunk word 1.
      * A hot page that cannot hold the frame is rotated first.
      * A failed rotation is returned as that failure.
      * A page that is still too small returns {@link OperationStatus#CORRUPTED_SEGMENT} and {@code hot page too small}.
@@ -2301,45 +2645,8 @@ public class RouxEngine
             }
             int tokenCount = new HeuristicTokenCounter().count(text);
             byte[] payload = ToonCodec.encode(entry.getRole(), entry.getTimestamp(), tokenCount, text);
-            int total = FrameHeader.totalLength(payload.length);
-            int maxFrame = maxFrameBytes();
-            if (total > maxFrame) {
-                return OperationResult.fail(OperationStatus.CORRUPTED_SEGMENT, "frame larger than max-frame-bytes");
-            }
-            if (region.hot.remaining() < total) {
-                OperationResult rotated = rotateHot(region);
-                if (!rotated.isSuccess()) {
-                    return rotated;
-                }
-            }
-            if (region.hot.remaining() < total) {
-                return OperationResult.fail(OperationStatus.CORRUPTED_SEGMENT, "hot page too small");
-            }
-            int offset = region.hot.usedBytes();
-            Page page = region.hot;
-            region.pins.pin(page.getPageId());
-            try {
-                page.beginWrite();
-                FrameHeader.write(page.getSegment(), offset, total, FrameType.MSG, entry.getRole(), seq,
-                        entry.getTimestamp(), tokenCount, entry.getRouxId(), payload);
-                int used = offset + total;
-                PageHeader.setUsedBytes(page.getSegment(), used);
-                PageHeader.setFrameCount(page.getSegment(), PageHeader.frameCount(page.getSegment()) + 1);
-                long last = PageHeader.lastId(page.getSegment());
-                if (seq >= last) {
-                    PageHeader.setLastId(page.getSegment(), seq);
-                }
-                page.endWrite();
-                region.index.retarget(seq, page.getPageId(), offset, total, tokenCount);
-                counters.framesAppended().incrementAndGet();
-                recountUsed();
-                if ("append".equals(properties.normalizedDurability()) && regionPack.isEnabled()) {
-                    checkpointHot(region);
-                }
-                return OperationResult.ok("");
-            } finally {
-                region.pins.unpin(page.getPageId());
-            }
+            return writeChunks(region, seq, entry.getRole(), entry.getTimestamp(), tokenCount, entry.getRouxId(),
+                    payload, false);
         } finally {
             region.lock.unlock();
         }
@@ -2865,6 +3172,7 @@ public class RouxEngine
         region.regionUuid = UUID.randomUUID();
         region.createdEpochMs = System.currentTimeMillis();
         region.regionPinned = false;
+        region.restored = false;
         counters.pagesAllocated().incrementAndGet();
     }
 
@@ -2908,6 +3216,8 @@ public class RouxEngine
             }
             hotId = taken - 1;
             repair = true;
+        } else if (man.getPageCount() < 1) {
+            return OpenResult.refused(refuse);
         } else if (taken < man.getPageCount()) {
             return OpenResult.refused(refuse);
         } else if (taken > man.getPageCount()) {
@@ -2938,10 +3248,12 @@ public class RouxEngine
                 byte[] header = regionPack.readRange(region.id, pageId, 0, PageHeader.SIZE);
                 Arena headerArena = Arena.ofConfined();
                 int used;
+                boolean magic;
                 try {
                     MemorySegment hs = headerArena.allocate(PageHeader.SIZE, 8);
                     MemorySegment.copy(header, 0, hs, ValueLayout.JAVA_BYTE, 0, header.length);
                     used = PageHeader.usedBytes(hs);
+                    magic = PageHeader.hasMagic(hs);
                 } finally {
                     headerArena.close();
                 }
@@ -2959,17 +3271,21 @@ public class RouxEngine
                     hot.setFile(pack);
                     region.hot = hot;
                     region.pages.put(Integer.valueOf(pageId), hot);
-                    scanFrames(region, hot.getSegment(), pageId, used);
+                    if (magic) {
+                        scanFrames(region, hot.getSegment(), pageId, used);
+                    }
                 } else {
                     Page spilled = Page.spilled(pageId, pageBytes(), pack);
                     region.pages.put(Integer.valueOf(pageId), spilled);
-                    Arena slotArena = Arena.ofConfined();
-                    try {
-                        MemorySegment seg = slotArena.allocate(used < 8 ? 8 : used, 8);
-                        MemorySegment.copy(slot, 0, seg, ValueLayout.JAVA_BYTE, 0, slot.length);
-                        scanFrames(region, seg, pageId, used);
-                    } finally {
-                        slotArena.close();
+                    if (magic) {
+                        Arena slotArena = Arena.ofConfined();
+                        try {
+                            MemorySegment seg = slotArena.allocate(used < 8 ? 8 : used, 8);
+                            MemorySegment.copy(slot, 0, seg, ValueLayout.JAVA_BYTE, 0, slot.length);
+                            scanFrames(region, seg, pageId, used);
+                        } finally {
+                            slotArena.close();
+                        }
                     }
                 }
             }
@@ -2986,7 +3302,361 @@ public class RouxEngine
             writeManifest(region);
         }
         loadHead(region);
+        region.restored = true;
+        noteOpened(region.id);
         return OpenResult.restored(region.index.size(), region.regionUuid);
+    }
+
+    /**
+     * The method stores the prune bean.
+     * A null bean leaves opens without a sweep.
+     *
+     * @param bean The bean is the sweep owner.
+     */
+    void attachPrune(DeadPagePrune bean) {
+        this.prune = bean;
+    }
+
+    /**
+     * The method copies the open region ids.
+     *
+     * @return The ids are the regions in the map.
+     */
+    List<String> openRegionIds() {
+        ArrayList<String> ids = new ArrayList<String>();
+        mapLock.lock();
+        try {
+            for (String id : regions.keySet()) {
+                ids.add(id);
+            }
+        } finally {
+            mapLock.unlock();
+        }
+        return ids;
+    }
+
+    /**
+     * The method pins one page.
+     * A missing region returns without a change.
+     *
+     * @param regionId The region id is the conversation id.
+     * @param pageId The page id is the page to pin.
+     */
+    void pinPage(String regionId, int pageId) {
+        Region region = require(regionId);
+        if (region == null) {
+            return;
+        }
+        region.pins.pin(pageId);
+    }
+
+    /**
+     * The method drops one pin.
+     * A missing region returns without a change.
+     *
+     * @param regionId The region id is the conversation id.
+     * @param pageId The page id is the page to unpin.
+     */
+    void unpinPage(String regionId, int pageId) {
+        Region region = require(regionId);
+        if (region == null) {
+            return;
+        }
+        region.pins.unpin(pageId);
+    }
+
+    /**
+     * The method releases dead slots in one region.
+     * A region with no pack returns {@code 0}.
+     * A restored region returns {@code 0}.
+     * The hot page stays.
+     * A pinned page stays.
+     * A slot without the page magic stays.
+     * A page inside a stored span stays.
+     * A hot page that is ahead of the last force releases nothing.
+     * A pass that releases nothing stays quiet.
+     *
+     * @param regionId The region id is the conversation id.
+     * @return The count is the number of slots released.
+     */
+    // @aa-sdd PK-1469 docs/specs/java/org/roux/roux.spec.md
+    int sweepDead(String regionId) {
+        if (regionId == null || regionId.length() == 0) {
+            return 0;
+        }
+        if (!regionPack.isEnabled() || properties.isRamOnly() || isRamRegion(regionId)) {
+            return 0;
+        }
+        if (!regionPack.packExists(regionId)) {
+            return 0;
+        }
+        Region region = require(regionId);
+        if (region == null || region.restored) {
+            return 0;
+        }
+        int[] dead;
+        region.lock.lock();
+        try {
+            dead = copyDead(region);
+        } finally {
+            region.lock.unlock();
+        }
+        int released = 0;
+        for (int i = 0; i < dead.length; i++) {
+            if (prune != null && prune.stopRequested()) {
+                break;
+            }
+            int pageId = dead[i];
+            region.lock.lock();
+            try {
+                if (!isDead(region, pageId)) {
+                    continue;
+                }
+                if (!hotForced(region)) {
+                    return released;
+                }
+                boolean tail;
+                try {
+                    tail = slotIsTail(region, pageId);
+                    regionPack.releaseSlot(region.id, pageId, tail);
+                } catch (IOException ex) {
+                    return released;
+                }
+                if (tail) {
+                    try {
+                        long size = Files.size(regionPack.packFile(region.id));
+                        region.nextPageId = (int) (size / (long) pageBytes());
+                    } catch (IOException ex) {
+                        region.nextPageId = pageId;
+                    }
+                    dropFrom(region, region.nextPageId);
+                    writeManifest(region);
+                } else {
+                    dropOne(region, pageId);
+                }
+                released++;
+                counters.pagesReleased().incrementAndGet();
+            } finally {
+                region.lock.unlock();
+            }
+        }
+        return released;
+    }
+
+    /**
+     * The method asks the bean to sweep one region.
+     * A missing bean returns without a sweep.
+     *
+     * @param regionId The region id is the conversation id.
+     */
+    private void noteOpened(String regionId) {
+        DeadPagePrune bean = this.prune;
+        if (bean == null) {
+            return;
+        }
+        bean.sweepOne(regionId);
+    }
+
+    /**
+     * The method copies the dead page ids from the highest id downward.
+     *
+     * @param region The region holds the index and the pages.
+     * @return The ids are the dead slots.
+     */
+    private int[] copyDead(Region region) {
+        int count = 0;
+        for (int pageId = region.nextPageId - 1; pageId >= 0; pageId--) {
+            if (isDead(region, pageId)) {
+                count++;
+            }
+        }
+        int[] dead = new int[count];
+        int at = 0;
+        for (int pageId = region.nextPageId - 1; pageId >= 0; pageId--) {
+            if (isDead(region, pageId)) {
+                dead[at] = pageId;
+                at++;
+            }
+        }
+        return dead;
+    }
+
+    /**
+     * The method reports whether one issued page is dead.
+     * The hot page is not dead.
+     * A pin count above zero is not dead.
+     * A page inside a stored span is not dead.
+     * A slot without the page magic is not dead.
+     *
+     * @param region The region holds the index and the pages.
+     * @param pageId The page id is the slot to test.
+     * @return The flag is true when the slot may be released.
+     */
+    private boolean isDead(Region region, int pageId) {
+        if (pageId < 0 || pageId >= region.nextPageId) {
+            return false;
+        }
+        if (region.hot != null && region.hot.getPageId() == pageId) {
+            return false;
+        }
+        if (region.pins.count(pageId) > 0) {
+            return false;
+        }
+        if (spanKeeps(region, pageId)) {
+            return false;
+        }
+        return slotHasMagic(region, pageId);
+    }
+
+    /**
+     * The method reports whether a stored span covers one page.
+     * A stored last page of {@code 0} means the page the row already names.
+     *
+     * @param region The region holds the index.
+     * @param pageId The page id is the slot to test.
+     * @return The flag is true when a live row keeps the page.
+     */
+    private boolean spanKeeps(Region region, int pageId) {
+        int size = region.index.size();
+        for (long seq = 1; seq <= size; seq++) {
+            IndexEntry entry = region.index.get(seq);
+            if (entry == null) {
+                continue;
+            }
+            int start = entry.getPageId();
+            int last = region.index.lastPage(seq);
+            int end = last == 0 ? start : last;
+            if (end < start) {
+                int swap = start;
+                start = end;
+                end = swap;
+            }
+            if (pageId >= start && pageId <= end) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The method checks the page magic.
+     * A mapped page uses its segment.
+     * Any other page uses the slot header.
+     *
+     * @param region The region holds the pages.
+     * @param pageId The page id is the slot to read.
+     * @return The flag is true when the first four bytes are the page magic.
+     */
+    private boolean slotHasMagic(Region region, int pageId) {
+        Page page = region.pages.get(Integer.valueOf(pageId));
+        if (page != null && page.getSegment() != null) {
+            return PageHeader.hasMagic(page.getSegment());
+        }
+        try {
+            byte[] header = regionPack.readRange(region.id, pageId, 0, PageHeader.SIZE);
+            Arena arena = Arena.ofConfined();
+            try {
+                MemorySegment seg = arena.allocate(PageHeader.SIZE, 8);
+                int n = header.length;
+                if (n > PageHeader.SIZE) {
+                    n = PageHeader.SIZE;
+                }
+                MemorySegment.copy(header, 0, seg, ValueLayout.JAVA_BYTE, 0, n);
+                return PageHeader.hasMagic(seg);
+            } finally {
+                arena.close();
+            }
+        } catch (IOException ex) {
+            return false;
+        }
+    }
+
+    /**
+     * The method compares the hot page with its slot.
+     * A missing segment, a missing file, a short slot, or any different byte returns false.
+     *
+     * @param region The region holds the hot page.
+     * @return The flag is true when the used bytes match the slot.
+     */
+    private boolean hotForced(Region region) {
+        if (region.hot == null || region.hot.getSegment() == null) {
+            return false;
+        }
+        int used = region.hot.usedBytes();
+        if (used < PageHeader.SIZE) {
+            return false;
+        }
+        try {
+            if (!regionPack.packExists(region.id)) {
+                return false;
+            }
+            long size = Files.size(regionPack.packFile(region.id));
+            long off = regionPack.slotOffset(region.hot.getPageId());
+            if (size < off + used) {
+                return false;
+            }
+            byte[] slot = regionPack.readRange(region.id, region.hot.getPageId(), 0, used);
+            MemorySegment seg = region.hot.getSegment();
+            for (int i = 0; i < used; i++) {
+                if (seg.get(ValueLayout.JAVA_BYTE, i) != slot[i]) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
+    }
+
+    /**
+     * The method reports whether a slot is the current tail.
+     * The slot is a tail when no later page header fits in the file.
+     *
+     * @param region The region names the pack.
+     * @param pageId The page id is the slot to test.
+     * @return The flag is true when the file ends at or before the slot end.
+     * @throws IOException The pack file could not be sized.
+     */
+    private boolean slotIsTail(Region region, int pageId) throws IOException {
+        long size = Files.size(regionPack.packFile(region.id));
+        long end = regionPack.slotOffset(pageId) + pageBytes();
+        return size <= end;
+    }
+
+    /**
+     * The method closes pages whose ids are at or above a bound.
+     * The hot page stays.
+     *
+     * @param region The region holds the pages.
+     * @param first The first id is the lowest id to drop.
+     */
+    private void dropFrom(Region region, int first) {
+        ArrayList<Integer> gone = new ArrayList<Integer>();
+        for (Integer id : region.pages.keySet()) {
+            if (id.intValue() >= first && (region.hot == null || id.intValue() != region.hot.getPageId())) {
+                gone.add(id);
+            }
+        }
+        for (int i = 0; i < gone.size(); i++) {
+            dropOne(region, gone.get(i).intValue());
+        }
+    }
+
+    /**
+     * The method closes one page and removes it from the map.
+     * The hot page stays.
+     *
+     * @param region The region holds the pages.
+     * @param pageId The page id is the page to drop.
+     */
+    private void dropOne(Region region, int pageId) {
+        if (region.hot != null && region.hot.getPageId() == pageId) {
+            return;
+        }
+        Page page = region.pages.remove(Integer.valueOf(pageId));
+        if (page != null) {
+            page.close();
+        }
     }
 
     // @aa-sdd PK-1265 docs/specs/java/org/roux/roux.spec.md FINESSE:f-222
@@ -3035,6 +3705,7 @@ public class RouxEngine
         private UUID regionUuid;
         private long createdEpochMs;
         private boolean closed;
+        private boolean restored;
 
         /**
          * The constructor opens page {@code 0} as the hot page.
@@ -3062,6 +3733,7 @@ public class RouxEngine
             this.regionUuid = UUID.randomUUID();
             this.createdEpochMs = System.currentTimeMillis();
             this.closed = false;
+            this.restored = false;
         }
     }
 }

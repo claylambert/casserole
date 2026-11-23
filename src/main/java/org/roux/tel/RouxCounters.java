@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
  * {@link #snapshot} copies them into a {@link MemoryTelemetry}.
  * Later increments stay on these counters.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#RouxCounters roux-design.md
  *
  * @author clayl (2026-08-25)
  */
@@ -43,6 +44,7 @@ public class RouxCounters {
     private final AtomicLong lockWaitNanos = new AtomicLong();
     private final AtomicLong usedBytesHot = new AtomicLong();
     private final AtomicLong usedBytesSpilled = new AtomicLong();
+    private final AtomicLong pagesReleased = new AtomicLong();
 
     /**
      * The method copies the counters into a {@link MemoryTelemetry}.
@@ -186,6 +188,15 @@ public class RouxCounters {
      */
     public AtomicLong usedBytesSpilled() {
         return usedBytesSpilled;
+    }
+
+    /**
+     * The method returns the live released-page counter.
+     *
+     * @return The counter is the number of slots the sweep released.
+     */
+    public AtomicLong pagesReleased() {
+        return pagesReleased;
     }
 }
 /*****************************************************************************************

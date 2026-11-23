@@ -12,16 +12,23 @@
 
 package org.roux;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-// @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
+// @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md FINESSE:f-170
 /**
  * The RouxProperties type holds the settings whose prefix is {@code roux}.
  * The page size starts at {@code 1048576} bytes.
  * The maximum frame size starts at {@code 0}.
  * The resident page cap starts at {@code 2}.
  * The durability text starts as {@code commit}.
- * A {@link Spill} object, a {@link Crypto} object, and a {@link Session} object are created with the settings.
+ * A {@link Spill} object, a {@link Crypto} object, a {@link Session} object, an {@link Ack} object, and a {@link Prune} object are created with the settings.
+ * The ack count is {@code roux.ack.copies}.
+ * A missing count and a count of 1 wait for one copy.
+ * A count below 1 is refused.
+ * A count above 1 is logged and the runtime count is 1.
+ * The prune interval starts as {@code 20m}.
  *
  * A caller reads a value or replaces it.
  * {@link #normalizedDurability} returns {@code hot-only}, {@code commit}, or {@code append}.
@@ -29,6 +36,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * A missing session block keeps persist, restore, and exclusive on.
  * The setters store the value they receive.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#RouxProperties roux-design.md
  *
  * @author clayl (2026-08-25)
  */
@@ -38,6 +46,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 // @aa-sdd PK-811 docs/specs/common/roux.spec.md
 public class RouxProperties {
 
+    private static final Logger LOG = LogManager.getLogger(RouxProperties.class);
+
     private int pageBytes = 1048576;
     private int maxFrameBytes = 0;
     private int residentPages = 2;
@@ -45,6 +55,10 @@ public class RouxProperties {
     private Spill spill = new Spill();
     private Crypto crypto = new Crypto();
     private Session session = new Session();
+    private Ack ack = new Ack();
+    private Prune prune = new Prune();
+    private boolean ackResolved;
+    private int runtimeAckCopies = 1;
 
     /**
      * The method returns the stored page size.
@@ -255,12 +269,91 @@ public class RouxProperties {
     }
 
     /**
+     * The method returns the ack settings.
+     * A caller replaces the object with {@link #setAck}.
+     *
+     * @return The settings are the {@link Ack} object.
+     */
+    public Ack getAck() {
+        return ack;
+    }
+
+    /**
+     * The method stores the ack settings.
+     *
+     * @param ack The settings are the {@link Ack} object to store.
+     */
+    public void setAck(Ack ack) {
+        this.ack = ack;
+    }
+
+    /**
+     * The method returns the prune settings.
+     * A caller replaces the object with {@link #setPrune}.
+     *
+     * @return The settings are the {@link Prune} object.
+     */
+    public Prune getPrune() {
+        return prune;
+    }
+
+    /**
+     * The method stores the prune settings.
+     *
+     * @param prune The settings are the {@link Prune} object to store.
+     */
+    public void setPrune(Prune prune) {
+        this.prune = prune;
+    }
+
+    /**
+     * The method resolves {@code roux.ack.copies} once.
+     * A missing ack and a stored count of 1 store the runtime count 1 and return 1.
+     * A stored count below 1 throws {@link IllegalArgumentException} with {@code ack copies below 1}.
+     * That exception is not caught.
+     * A stored count above 1 throws {@link UnsupportedOperationException} with {@code only 1 copy is presently supported}.
+     * The catch logs that exception, stores the runtime count 1, and returns 1.
+     * A later call returns the stored runtime count.
+     *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxProperties roux-design.md
+     *
+     * @return The count is the runtime copy count.
+     */
+    // @aa-sdd PK-1467 docs/specs/java/org/roux/roux.spec.md
+    public int ackCopies() {
+        if (ackResolved) {
+            return runtimeAckCopies;
+        }
+        int copies = 1;
+        if (ack != null) {
+            copies = ack.getCopies();
+        }
+        if (copies < 1) {
+            throw new IllegalArgumentException("ack copies below 1");
+        }
+        if (copies > 1) {
+            try {
+                throw new UnsupportedOperationException("only 1 copy is presently supported");
+            } catch (UnsupportedOperationException ex) {
+                LOG.error(ex.getMessage(), ex);
+                runtimeAckCopies = 1;
+                ackResolved = true;
+                return runtimeAckCopies;
+            }
+        }
+        runtimeAckCopies = 1;
+        ackResolved = true;
+        return runtimeAckCopies;
+    }
+
+    /**
      * The Spill type holds the pack settings.
      * The enabled flag starts as true.
      * The directory starts as the {@code user.home} property plus {@code /.casserole/roux}.
      * The alignment starts at {@code 4096} bytes.
      * A caller reads a value or replaces it.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxProperties.Spill roux-design.md
      */
     // @aa-sdd PK-500 docs/specs/java/org/roux/roux.spec.md
     // @aa-sdd PK-502 docs/specs/java/org/roux/roux.spec.md
@@ -284,7 +377,7 @@ public class RouxProperties {
     // @aa-sdd PK-808 docs/specs/common/roux.spec.md
     // @aa-sdd PK-809 docs/specs/common/roux.spec.md
     // @aa-sdd PK-810 docs/specs/common/roux.spec.md
-    public static class Spill { // @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
+    public static class Spill {
 
         private boolean enabled = true;
         private String dir = System.getProperty("user.home") + "/.casserole/roux";
@@ -352,9 +445,10 @@ public class RouxProperties {
      * The flag starts as false.
      * An enabled flag is refused by {@link org.roux.crypto.CryptoSink}.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxProperties.Crypto roux-design.md
      */
     // @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
-    public static class Crypto { // @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
+    public static class Crypto {
 
         private boolean enabled = false;
 
@@ -383,6 +477,7 @@ public class RouxProperties {
      * Each flag starts as true.
      * A caller reads a flag or replaces it.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxProperties.Session roux-design.md
      */
     // @aa-sdd PK-515 docs/specs/java/org/roux/roux.spec.md
     public static class Session {
@@ -446,6 +541,127 @@ public class RouxProperties {
          */
         public void setExclusive(boolean exclusive) {
             this.exclusive = exclusive;
+        }
+    }
+
+    /**
+     * The Ack type holds {@code roux.ack.copies}.
+     * The count starts at 1.
+     * A caller reads the count or replaces it.
+     *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxProperties.Ack roux-design.md
+     */
+    // @aa-sdd PK-1467 docs/specs/java/org/roux/roux.spec.md
+    public static class Ack {
+
+        private int copies = 1;
+
+        /**
+         * The method returns the stored copy count.
+         * The starting value is 1.
+         *
+         * @return The count is the stored copy count.
+         */
+        public int getCopies() {
+            return copies;
+        }
+
+        /**
+         * The method stores the copy count.
+         *
+         * @param copies The count is the copy count to store.
+         */
+        public void setCopies(int copies) {
+            this.copies = copies;
+        }
+    }
+
+    /**
+     * The Prune type holds the enabled flag and the interval text.
+     * The flag starts as true.
+     * The interval starts as {@code 20m}.
+     * {@link #minutes} accepts a positive integer and the suffix {@code m}.
+     * Any other form returns a negative number.
+     *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#RouxProperties.Prune roux-dead-page-prune.md
+     */
+    // @aa-sdd PK-1469 docs/specs/java/org/roux/roux.spec.md
+    public static class Prune {
+
+        private boolean enabled = true;
+        private String interval = "20m";
+
+        /**
+         * The method returns the enabled flag.
+         * The starting value is true.
+         *
+         * @return The flag is true when the sweep thread may start.
+         */
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        /**
+         * The method stores the enabled flag.
+         *
+         * @param enabled The flag is true when the sweep thread may start.
+         */
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        /**
+         * The method returns the interval text.
+         * The starting value is {@code 20m}.
+         *
+         * @return The text is the stored interval.
+         */
+        public String getInterval() {
+            return interval;
+        }
+
+        /**
+         * The method stores the interval text.
+         * The text is stored as it arrives.
+         *
+         * @param interval The text is the interval to store.
+         */
+        public void setInterval(String interval) {
+            this.interval = interval;
+        }
+
+        /**
+         * The method reads a positive number of minutes from the interval text.
+         * The text is a positive integer and the suffix {@code m}.
+         * A value below one minute returns a negative number.
+         * Any other form returns a negative number.
+         *
+         * @return The count is the number of minutes, or a negative number when the text is refused.
+         */
+        public int minutes() {
+            if (interval == null || interval.length() < 2) {
+                return -1;
+            }
+            if (interval.charAt(interval.length() - 1) != 'm') {
+                return -1;
+            }
+            int n = 0;
+            int digits = 0;
+            for (int i = 0; i < interval.length() - 1; i++) {
+                char c = interval.charAt(i);
+                if (c < '0' || c > '9') {
+                    return -1;
+                }
+                if (n > (Integer.MAX_VALUE - (c - '0')) / 10) {
+                    return -1;
+                }
+                n = n * 10 + (c - '0');
+                digits++;
+            }
+            if (digits < 1 || n < 1) {
+                return -1;
+            }
+            return n;
         }
     }
 }

@@ -255,3 +255,18 @@ A named session is a shelf of packs for one login. One window holds one live pac
 
 An edit of a stored message appends a later frame with the same sequence. The index row points at that later frame. The older frame stays in the pack and keeps no live row. A continuation frame with that sequence leaves the row on the message.
 **semantic-key:** PK-1466
+
+## Acknowledgement
+
+An acknowledgement is the wait until the force has landed on this disk. The count is one copy. A missing count is one copy. A count below one is refused before any byte is written. A count above one is logged and the runtime count is one. The page publish still writes the slot and forces the channel before it returns.
+**semantic-key:** PK-1467
+
+## Continuation
+
+A continuation is a message larger than one frame. The first chunk is a message frame. Each later chunk is a continuation frame. The header stays 56 bytes. The type byte stays 5. The reader joins the payloads and decodes once. One index row points at the first chunk.
+**semantic-key:** PK-1468
+
+## Prune
+
+A prune is the sweep that releases a spilled page no live span keeps. The hot page stays. Page identities stay. A tail of dead pages is truncated. A dead page between live pages becomes a hole. The sweep reads the stored last page and leaves a continuation frame unread.
+**semantic-key:** PK-1469

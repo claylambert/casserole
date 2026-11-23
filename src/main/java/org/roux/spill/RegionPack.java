@@ -13,18 +13,26 @@
 package org.roux.spill;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
+import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.roux.RouxProperties;
 import org.roux.page.Page;
@@ -37,6 +45,7 @@ import org.springframework.stereotype.Component;
  * The RegionPack is the random-access {@code pages.bin} file for one region.
  * Slot {@code P} starts at {@code P} times the page size from the settings.
  * {@link #publishPage} writes the used bytes, pads to the alignment, and forces the channel.
+ * A page publish waits until the force returns for the one copy on this disk.
  * The page stays mapped.
  * One channel stays open per region.
  * A bound segment names the live pack folder, and the lock file stays on the username directory.
@@ -63,6 +72,14 @@ public class RegionPack {
     private final Map<String, FileChannel> lockChannels;
     private final Map<String, FileLock> locks;
     private final Map<String, String> folders;
+    private final Set<String> sparseMarked;
+
+    private static final int FSCTL_SET_SPARSE = 0x000900C4;
+    private static final int FSCTL_SET_ZERO_DATA = 0x000980C8;
+    private static final int GENERIC_READ_WRITE = 0xC0000000;
+    private static final int SHARE_ALL = 7;
+    private static final int OPEN_EXISTING = 3;
+    private static final int FILE_ATTRIBUTE_NORMAL = 128;
 
     /**
      * The constructor stores the settings and starts with no open files.
@@ -75,6 +92,7 @@ public class RegionPack {
         this.lockChannels = new HashMap<String, FileChannel>();
         this.locks = new HashMap<String, FileLock>();
         this.folders = new HashMap<String, String>();
+        this.sparseMarked = new HashSet<String>();
     }
 
     /**
@@ -292,7 +310,8 @@ public class RegionPack {
      * The checksum is written first.
      * The used bytes are padded up to the alignment, and not past the page size.
      * A missing spill block, or an alignment of {@code 1} or less, uses {@code 4096}.
-     * The channel is forced.
+     * The count is read before any byte is written.
+     * The channel is still forced before the method returns.
      * The page stays mapped.
      * A write that returns a negative count throws {@link IOException} with {@code pack write EOF}.
      *
@@ -300,11 +319,17 @@ public class RegionPack {
      *
      * @param regionId The region id is the folder name.
      * @param page The page is the page with a live segment.
-     * @throws IOException The page has no mapped bytes, or the write failed.
+     * @throws IOException The page has no mapped bytes, the copy count is below 1, or the write failed.
      */
+    // @aa-sdd PK-1467 docs/specs/java/org/roux/roux.spec.md
     public void publishPage(String regionId, Page page) throws IOException {
         if (page.getSegment() == null) {
             throw new IOException("page has no RAM segment");
+        }
+        try {
+            properties.ackCopies();
+        } catch (IllegalArgumentException ex) {
+            throw new IOException(ex.getMessage());
         }
         PageHeader.writeCrc(page.getSegment());
         int used = page.usedBytes();
@@ -426,6 +451,118 @@ public class RegionPack {
                 StandardOpenOption.WRITE);
         channels.put(regionId, channel);
         return channel;
+    }
+
+    /**
+     * The method releases one slot.
+     * A tail slot is truncated back to the slot offset.
+     * Any other slot is written as zeros and then punched.
+     * The logical length of a hole stays.
+     * A punch that fails leaves the zeros in place.
+     * The channel is forced before the method returns.
+     *
+     * @param regionId The region id is the folder name.
+     * @param pageId The page id is the slot to release.
+     * @param tail The flag is true when the slot end is the file length.
+     * @throws IOException The truncate, the zero write, or the force failed.
+     */
+    // @aa-sdd PK-1469 docs/specs/java/org/roux/roux.spec.md
+    public synchronized void releaseSlot(String regionId, int pageId, boolean tail) throws IOException {
+        FileChannel channel = open(regionId);
+        long off = slotOffset(pageId);
+        if (tail) {
+            channel.truncate(off);
+        } else {
+            int pageBytes = properties.getPageBytes();
+            byte[] zeros = new byte[pageBytes];
+            ByteBuffer buf = ByteBuffer.wrap(zeros);
+            while (buf.hasRemaining()) {
+                int n = channel.write(buf, off + buf.position());
+                if (n < 0) {
+                    throw new IOException("pack write EOF");
+                }
+            }
+            punch(regionId, off, off + pageBytes);
+        }
+        channel.force(true);
+    }
+
+    /**
+     * The method marks the pack sparse and punches one range.
+     * The first hole in this process marks the file sparse.
+     * A failed call leaves the zeros that were already written.
+     *
+     * @param regionId The region id is the folder name.
+     * @param offset The offset is the first byte of the hole.
+     * @param beyond The beyond value is the first byte after the hole.
+     */
+    private void punch(String regionId, long offset, long beyond) {
+        String path = packFile(regionId).toAbsolutePath().toString();
+        Linker linker = Linker.nativeLinker();
+        Arena arena = Arena.ofConfined();
+        try {
+            SymbolLookup kernel = SymbolLookup.libraryLookup("kernel32", arena);
+            MemorySegment createSym = kernel.find("CreateFileW").orElse(null);
+            MemorySegment controlSym = kernel.find("DeviceIoControl").orElse(null);
+            MemorySegment closeSym = kernel.find("CloseHandle").orElse(null);
+            if (createSym == null || controlSym == null || closeSym == null) {
+                return;
+            }
+            MethodHandle create = linker.downcallHandle(createSym, FunctionDescriptor.of(
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.ADDRESS));
+            MethodHandle control = linker.downcallHandle(controlSym, FunctionDescriptor.of(
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS));
+            MethodHandle close = linker.downcallHandle(closeSym, FunctionDescriptor.of(
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.ADDRESS));
+            MemorySegment name = arena.allocateFrom(path, StandardCharsets.UTF_16LE);
+            MemorySegment handle = (MemorySegment) create.invoke(name, Integer.valueOf(GENERIC_READ_WRITE),
+                    Integer.valueOf(SHARE_ALL), MemorySegment.NULL, Integer.valueOf(OPEN_EXISTING),
+                    Integer.valueOf(FILE_ATTRIBUTE_NORMAL), MemorySegment.NULL);
+            if (handle == null || handle.address() == -1L) {
+                return;
+            }
+            try {
+                MemorySegment returned = arena.allocate(ValueLayout.JAVA_INT);
+                if (!sparseMarked.contains(regionId)) {
+                    int marked = (Integer) control.invoke(handle, Integer.valueOf(FSCTL_SET_SPARSE), MemorySegment.NULL,
+                            Integer.valueOf(0), MemorySegment.NULL, Integer.valueOf(0), returned, MemorySegment.NULL);
+                    if (marked != 0) {
+                        sparseMarked.add(regionId);
+                    }
+                }
+                MemorySegment range = arena.allocate(16, 8);
+                range.set(ValueLayout.JAVA_LONG, 0, offset);
+                range.set(ValueLayout.JAVA_LONG, 8, beyond);
+                control.invoke(handle, Integer.valueOf(FSCTL_SET_ZERO_DATA), range, Integer.valueOf(16),
+                        MemorySegment.NULL, Integer.valueOf(0), returned, MemorySegment.NULL);
+            } finally {
+                try {
+                    close.invoke(handle);
+                } catch (Throwable ignored) {
+                    // the zeros stay
+                }
+            }
+        } catch (Throwable ignored) {
+            // the zeros stay. The sweep still counts the release.
+        } finally {
+            arena.close();
+        }
     }
 }
 /*****************************************************************************************

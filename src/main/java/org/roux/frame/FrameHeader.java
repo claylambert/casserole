@@ -20,7 +20,7 @@ import java.util.zip.CRC32C;
 import org.roux.id.RouxId;
 import org.roux.layout.RouxLayout;
 
-// @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
+// @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md FINESSE:f-170
 /**
  * The FrameHeader type reads and writes the 56-byte header in front of a message payload.
  * The payload is the text encoding that follows the header.
@@ -33,6 +33,7 @@ import org.roux.layout.RouxLayout;
  *
  * The type refuses construction.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#FrameHeader roux-v1.md
  *
  * @author clayl (2026-08-25)
  */
@@ -40,7 +41,7 @@ import org.roux.layout.RouxLayout;
 // @aa-sdd PK-638 docs/specs/common/formal-plan.spec.md
 public final class FrameHeader {
 
-    public static final int SIZE = 56; // @aa-sdd PK-1426 docs/specs/java/org/roux/frame/frame.spec.md
+    public static final int SIZE = 56;
     public static final int OFF_LENGTH = 0;
     public static final int OFF_TYPE = 4;
     public static final int OFF_FLAGS = 5;
@@ -52,9 +53,10 @@ public final class FrameHeader {
     public static final int OFF_PAYLOAD_LEN = 28;
     public static final int OFF_CRC = 32;
     /**
-     * The bytes at 36 through 39 are unused.
+     * The bytes at 36 through 39 hold the chunk word.
      * The next long starts at byte 40 so it sits on an 8-byte boundary.
      */
+    public static final int OFF_CHUNK = 36;
     public static final int OFF_ID_HI = 40;
     public static final int OFF_ID_LO = 48;
 
@@ -93,6 +95,7 @@ public final class FrameHeader {
      * A null identity writes two zero longs.
      * Bytes after the payload are set to {@code 0} until the padded length.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#FrameHeader roux-v1.md
      *
      * @param segment The segment is the page.
      * @param offset The offset is the first byte of the frame.
@@ -253,6 +256,34 @@ public final class FrameHeader {
         byte[] payload = new byte[payloadLen];
         System.arraycopy(buffer, SIZE, payload, 0, payloadLen);
         return payload;
+    }
+
+    /**
+     * The method stores the chunk word.
+     * The word is a little-endian int at byte 36 of the frame.
+     * A message frame stores the number of frames.
+     * A continuation frame stores that chunk's place.
+     *
+     * @param segment The segment is the page.
+     * @param offset The offset is the first byte of the frame.
+     * @param word The word is the chunk count or the chunk place.
+     */
+    // @aa-sdd PK-1468 docs/specs/java/org/roux/roux.spec.md
+    public static void setChunk(MemorySegment segment, long offset, int word) {
+        segment.set(RouxLayout.INT_LE, offset + OFF_CHUNK, word);
+    }
+
+    /**
+     * The method returns the chunk word.
+     * The word is the little-endian int at byte 36 of the frame.
+     * A new page leaves the word at 0.
+     *
+     * @param segment The segment is the page.
+     * @param offset The offset is the first byte of the frame.
+     * @return The word is the stored chunk count or the stored place.
+     */
+    public static int chunk(MemorySegment segment, long offset) {
+        return segment.get(RouxLayout.INT_LE, offset + OFF_CHUNK);
     }
 }
 /*****************************************************************************************

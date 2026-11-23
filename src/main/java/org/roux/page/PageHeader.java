@@ -18,7 +18,7 @@ import java.util.zip.CRC32C;
 import org.roux.layout.RouxLayout;
 import org.roux.model.PageFlags;
 
-// @aa-sdd PK-1267 docs/specs/java/org/roux/page/page.spec.md
+// @aa-sdd PK-1267 docs/specs/java/org/roux/page/page.spec.md FINESSE:f-222
 /**
  * The PageHeader type reads and writes the 64-byte header at the start of a page.
  * {@link #init} writes the bytes {@code R}, {@code O}, {@code U}, and {@code X}.
@@ -30,6 +30,7 @@ import org.roux.model.PageFlags;
  *
  * The type refuses construction.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#PageHeader roux-design.md
  *
  * @author clayl (2026-08-25)
  */
@@ -227,6 +228,18 @@ public final class PageHeader {
      */
     public static void setNextPageId(MemorySegment segment, int nextPageId) {
         segment.set(RouxLayout.INT_LE, OFF_NEXT_PAGE, nextPageId);
+    }
+
+    /**
+     * The method returns the next page id.
+     * The id is the little-endian int at byte 48 of the page header.
+     * A stored 0 means this page does not name a follower.
+     *
+     * @param segment The segment is the page.
+     * @return The id is the page that follows this one, or 0.
+     */
+    public static int nextPageId(MemorySegment segment) {
+        return segment.get(RouxLayout.INT_LE, OFF_NEXT_PAGE);
     }
 
     /**

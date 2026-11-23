@@ -346,7 +346,7 @@ class RouxWindowSpillTest { // @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/
     }
 
     /**
-     * The method deletes the manifest and zeroes the first four pack bytes in region {@code noslot}.
+     * The method deletes the manifest and zeroes the magic of every page in region {@code noslot}.
      * The open kind is refused.
      * The reason contains {@code incomplete or corrupt}.
      * The pack file remains.
@@ -361,6 +361,9 @@ class RouxWindowSpillTest { // @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/
         Seat seat = spilled("noslot");
         Files.delete(manifest(seat));
         zero(pack(seat), 0, 4);
+        zero(pack(seat), PAGE, 4);
+        zero(pack(seat), 2 * PAGE, 4);
+        zero(pack(seat), 3 * PAGE, 4);
         RouxEngine engine = reopen(seat);
         OpenResult opened = engine.openRegion(seat.region);
         assertRefused(opened);
@@ -553,39 +556,44 @@ class RouxWindowSpillTest { // @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/
 
     /**
      * The method zeroes four bytes at the second page of region {@code hole} and leaves the manifest count.
-     * The open kind is refused.
+     * The open kind is restored.
+     * Message {@code 1} starts with {@code b}.
+     * Messages {@code 2} and {@code 3} read as null.
      * The manifest bytes are unchanged.
      * Both files remain.
-     * Message {@code 1} reads as null.
      *
      * @return The method returns nothing.
      * @throws IOException The method declares {@link IOException} because the file calls can throw that failure.
      */
     @Test
-    void aHoleRefusesWhenTheManifestStillCountsIt() throws IOException {
+    void aHoleRestoresWhenTheManifestStillCountsIt() throws IOException {
         Seat seat = spilled("hole");
         zero(pack(seat), PAGE, 4);
         byte[] before = Files.readAllBytes(manifest(seat));
         RouxEngine engine = reopen(seat);
         OpenResult opened = engine.openRegion(seat.region);
-        assertRefused(opened);
+        assertEquals(OpenResult.RESTORED, opened.getKind());
+        assertEquals(1, opened.getMessageCount());
         assertArrayEquals(before, Files.readAllBytes(manifest(seat)));
         filesRemain(seat);
-        assertNull(engine.readMessage(seat.region, 1L));
+        assertTrue(engine.readMessage(seat.region, 1L).getText().startsWith("b"));
+        assertNull(engine.readMessage(seat.region, 2L));
+        assertNull(engine.readMessage(seat.region, 3L));
     }
 
     /**
      * The method zeroes four bytes at the second page and stores page count {@code 1} for region {@code skip}.
+     * The walk skips the hole.
      * The open kind is {@link OpenResult#RESTORED} with message count {@code 1}.
      * Message {@code 1} starts with {@code b}.
      * Messages {@code 2} and {@code 3} read as null.
-     * The status contains {@code hot=0} and {@code seq=1}.
+     * The hot page is the last slot.
      *
      * @return The method returns nothing.
      * @throws IOException The method declares {@link IOException} because the file calls can throw that failure.
      */
     @Test
-    void aHoleEndsTheWalkAndDoesNotSkip() throws IOException {
+    void aHoleSkipsAndTheLaterSequenceStaysUnindexed() throws IOException {
         Seat seat = spilled("skip");
         zero(pack(seat), PAGE, 4);
         RegionManifest man = load(seat);
@@ -600,7 +608,7 @@ class RouxWindowSpillTest { // @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/
         assertNull(engine.readMessage(seat.region, 2L));
         assertNull(engine.readMessage(seat.region, 3L));
         String line = engine.memoryStatusLine(seat.region);
-        assertTrue(line.contains("hot=0"));
+        assertTrue(line.contains("hot=3"));
         assertTrue(line.contains("seq=1"));
     }
 

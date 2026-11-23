@@ -20,8 +20,8 @@ import org.roux.layout.RouxLayout;
 import org.roux.model.IndexEntry;
 import org.roux.model.Role;
 
-// @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md
-// @aa-sdd PK-1266 docs/specs/java/org/roux/index/index.spec.md
+// @aa-sdd PK-970 docs/specs/java/org/casserole/ssh/shell/shell.spec.md FINESSE:f-170
+// @aa-sdd PK-1266 docs/specs/java/org/roux/index/index.spec.md FINESSE:f-222
 /**
  * The MonotonicIndex is the off-heap list of message rows.
  * A message id starts at {@code 1}.
@@ -34,6 +34,7 @@ import org.roux.model.Role;
  * A new index holds {@code 256} rows.
  * The backing memory grows by doubling.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#MonotonicIndex roux-v1.md
  *
  * @author clayl (2026-08-25)
  */
@@ -53,9 +54,11 @@ public class MonotonicIndex {
     private static final int OFF_TYPE = 33;
     private static final int OFF_FLAGS = 34;
     /**
-     * The bytes at 36 through 39 are padding.
+     * The bytes at 36 through 39 hold the last page id.
+     * A stored 0 means the message occupies the page the row already names.
      * The identity longs start at byte 40 so each long sits on an 8-byte boundary.
      */
+    private static final int OFF_LAST_PAGE = 36;
     private static final int OFF_ID_HI = 40;
     private static final int OFF_ID_LO = 48;
 
@@ -90,6 +93,7 @@ public class MonotonicIndex {
      * A full index doubles its capacity before the write.
      * A null identity leaves the identity bytes unchanged.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#MonotonicIndex roux-v1.md
      *
      * @param messageId The message id is the number stored on the row.
      * @param pageId The page id is the page that holds the frame.
@@ -130,6 +134,7 @@ public class MonotonicIndex {
      * A message id below {@code 1} returns without a change.
      * A message id above the size returns without a change.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md#MonotonicIndex reichenbach-sink.draft.001.md
      *
      * @param messageId The message id is the existing row to retarget.
      * @param pageId The page id is the page of the new frame.
@@ -146,6 +151,40 @@ public class MonotonicIndex {
         segment.set(RouxLayout.INT_LE, base + OFF_OFFSET, offset);
         segment.set(RouxLayout.INT_LE, base + OFF_LENGTH, length);
         segment.set(RouxLayout.INT_LE, base + OFF_TOKENS, tokenCount);
+    }
+
+    /**
+     * The method stores the last page id on an existing row.
+     * The word is a little-endian int at bytes 36 through 39.
+     * A stored 0 means the message occupies the page the row already names.
+     * A message id outside the index returns without a change.
+     *
+     * @param messageId The message id is the existing row.
+     * @param pageId The page id is the page of the last chunk, or 0.
+     */
+    // @aa-sdd PK-1468 docs/specs/java/org/roux/roux.spec.md
+    public void setLastPage(long messageId, int pageId) {
+        if (messageId < 1 || messageId > size) {
+            return;
+        }
+        long base = (messageId - 1) * STRIDE;
+        segment.set(RouxLayout.INT_LE, base + OFF_LAST_PAGE, pageId);
+    }
+
+    /**
+     * The method returns the last page id stored on a row.
+     * A stored 0 means the message occupies the page the row already names.
+     * A message id outside the index returns 0.
+     *
+     * @param messageId The message id is the row to read.
+     * @return The id is the stored last page, or 0.
+     */
+    public int lastPage(long messageId) {
+        if (messageId < 1 || messageId > size) {
+            return 0;
+        }
+        long base = (messageId - 1) * STRIDE;
+        return segment.get(RouxLayout.INT_LE, base + OFF_LAST_PAGE);
     }
 
     /**
