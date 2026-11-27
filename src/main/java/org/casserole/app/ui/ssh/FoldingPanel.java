@@ -40,12 +40,12 @@ import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 
-// @aa-sdd PK-1154 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1149 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1159 docs/specs/common/stages.spec.md
-// @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-997 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1154 docs/specs/common/formal-plan.spec.md FINESSE:f-102
+// @aa-sdd PK-1149 docs/specs/common/formal-plan.spec.md FINESSE:f-108
+// @aa-sdd PK-1159 docs/specs/common/stages.spec.md FINESSE:f-157
+// @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
+// @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
+// @aa-sdd PK-997 docs/specs/common/formal-plan.spec.md FINESSE:f-98
 /**
  * The {@code FoldingPanel} is the connection bar that can fold.
  * Open, the mark button shows {@code v}.
@@ -61,6 +61,7 @@ import javax.swing.plaf.basic.BasicTabbedPaneUI;
  * The bar starts open.
  * The link starts down.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#FoldingPanel
  */
 // @aa-sdd PK-766 docs/specs/common/stages.spec.md
 // @aa-sdd PK-939 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
@@ -91,13 +92,13 @@ import javax.swing.plaf.basic.BasicTabbedPaneUI;
 // @aa-sdd PK-228 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-237 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-241 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/formal-plan.spec.md
+final class FoldingPanel extends JPanel {
 
     /**
      * The {@code FOLD_TIP} is the tooltip while the bar is open.
      * The text says a click folds the connection bar and the fields leave the window.
      * The text says the canvas then uses that height.
-     * The text says {@code ^} brings the bar back. // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+     * The text says {@code ^} brings the bar back.
      *
      * The text says Connect folds the bar.
      * The text says a resize while connected folds the bar.
@@ -106,7 +107,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
      */
     static final String FOLD_TIP = "Fold the connection bar. The fields leave the window. "
             + "The canvas uses that height. ^ brings the bar back. Connect folds the bar. "
-            + "A resize while connected folds it. Disconnect opens it. The choice is not saved."; // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+            + "A resize while connected folds it. Disconnect opens it. The choice is not saved.";
 
     /**
      * The {@code SHOW_TIP} is the tooltip while the bar is folded.
@@ -126,7 +127,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
     private static final Color CONNECTED_HI = new Color(0x9a, 0xe6, 0xbc);
     private static final Color CONNECTED_LO = new Color(0x1b, 0x5c, 0x38);
 
-    // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
     /**
      * The {@code Beat} names one change the bar can apply.
      * {@code CONNECTED} means the link came up.
@@ -142,7 +143,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
         MARK
     }
 
-    // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
     /**
      * The {@code BarPick} receives a press on a folded product button.
      * The panel does not change the selected tab itself.
@@ -162,7 +163,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
     private final JTabbedPane tabs;
     private final BarPick pick;
     private final JButton markButton;
-    private final JPanel markWrap; // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+    private final JPanel markWrap;
     private final JPanel openHead;
     private final JPanel foldedHead;
     private final JPanel foldedLeft;
@@ -176,20 +177,31 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
     private final LinkChip chip;
     private final JButton sshButton;
     private final JButton aetherisButton;
+    private final JButton graphButton;
     /**
      * The {@code platePoints} value is the font size used for SSH, Aetheris, and the tab strip.
      * A later fold paints the buttons again and puts this size back.
      * {@code 0} means no size has been stored yet.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-164
      */
     private int platePoints;
     private JMenuBar menuBar;
     /**
-     * The {@code thinkCluster} is the spinner and clock passed to {@link #seatThink}.
-     * While the bar is open, the cluster stays with the connection fields.
-     * While the bar is folded, the cluster sits on the east side of the folded row.
+     * The spinner for the focused SSH pane.
+     * The SSH tab is the only tab that shows it.
      */
-    private JComponent thinkCluster;
+    private JComponent sshCluster;
+    /**
+     * The spinner seat for the open canvas.
+     * The Aetheris tab is the only tab that shows it.
+     */
+    private JComponent canvasCluster;
+    /**
+     * The rendering spinner for the graph that is seated.
+     * The graph tab is the only tab that shows it.
+     */
+    private JComponent renderingCluster;
     private boolean open = true;
     private boolean linkUp;
     private boolean spanNoted;
@@ -209,7 +221,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
      * Its preferred size and minimum size are one by one.
      * Its maximum height stays one pixel.
      *
-     * The constructor creates a link chip, an SSH button at index {@code 0}, and an Aetheris button at index {@code 1}.
+     * The constructor creates a link chip, an SSH button at index {@code 0}, an Aetheris button at index {@code 1}, and a Graph button at index {@code 2}.
      * The folded divider is one pixel wide and eighteen pixels tall.
      * The divider uses the split background.
      * The folded left row uses a left flow layout with a six-pixel horizontal gap and a two-pixel vertical gap.
@@ -218,7 +230,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
      * {@link #showChrome} applies the open layout.
      *
      * @param connection The connection fields shown on the open bar.
-     * @param tabs The product tabs. Index {@code 0} is SSH. Index {@code 1} is Aetheris.
+     * @param tabs The product tabs. Index {@code 0} is SSH. Index {@code 1} is Aetheris. Index {@code 2} is Graph.
      * @param theme The dark painter for this panel and its buttons.
      * @param pick The receiver for a folded SSH or Aetheris press. The constructor stores a null receiver.
      */
@@ -238,7 +250,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
          * Each press applies {@link Beat#MARK}.
          */
         markButton.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
             @Override
             public void actionPerformed(ActionEvent e) {
                 apply(Beat.MARK);
@@ -268,6 +280,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
         chip = new LinkChip();
         sshButton = plateButton("SSH", 0);
         aetherisButton = plateButton("Aetheris", 1);
+        graphButton = plateButton("Graph", 2);
         rule = new JPanel();
         rule.setOpaque(true);
         rule.setBackground(theme.getSplitBackground());
@@ -462,6 +475,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
      * {@link #seatPlateFont} stores the same size on SSH, Aetheris, and the tabs.
      * The menu is then revalidated and repainted.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-144
      *
      * @param points The live font-control size, in points.
      */
@@ -478,6 +492,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
         }
         paintMenuFont(menuBar, font);
         fitMenuWidth();
+        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-164
         seatPlateFont(points);
         menuBar.revalidate();
         menuBar.repaint();
@@ -490,9 +505,10 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
      * The clamped size is stored in {@code platePoints}.
      * The face is SansSerif, plain, at that size.
      *
-     * The preferred, minimum, and maximum sizes of both buttons are cleared.
+     * The preferred, minimum, and maximum sizes of the SSH, Aetheris, and Graph buttons are cleared.
      * The panel is revalidated and repainted.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-164
      *
      * @param points The requested control-bar size, in points.
      */
@@ -508,12 +524,16 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
         Font font = new Font(Font.SANS_SERIF, Font.PLAIN, size);
         sshButton.setFont(font);
         aetherisButton.setFont(font);
+        graphButton.setFont(font);
         sshButton.setPreferredSize(null);
         sshButton.setMinimumSize(null);
         sshButton.setMaximumSize(null);
         aetherisButton.setPreferredSize(null);
         aetherisButton.setMinimumSize(null);
         aetherisButton.setMaximumSize(null);
+        graphButton.setPreferredSize(null);
+        graphButton.setMinimumSize(null);
+        graphButton.setMaximumSize(null);
         tabs.setFont(font);
         revalidate();
         repaint();
@@ -593,6 +613,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
      * That resize uses the current height when it is already at least the height floor.
      * A shorter frame is raised to the height floor.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-150
      */
     private void fitMenuWidth() {
         if (menuBar == null) {
@@ -632,7 +653,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
                 }
                 if (pref.height > height) {
                     height = pref.height;
-                } // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+                }
             }
             item.setMinimumSize(new Dimension(width, height));
             item.setPreferredSize(new Dimension(width, height));
@@ -700,7 +721,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
             if (min.height > floorH) {
                 floorH = min.height;
             }
-        } // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+        }
         if (need > floorW) {
             frame.setMinimumSize(new Dimension(need, floorH));
         }
@@ -737,10 +758,11 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
 
     /**
      * The {@code showFields} method opens the connection fields.
-     * An already open bar returns immediately. // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
-     * The stored link word is left unchanged. // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+     * An already open bar returns immediately.
+     * The stored link word is left unchanged.
      * {@link #showChrome} rebuilds the open bar.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-132
      */
     void showFields() {
         if (open) {
@@ -756,7 +778,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
      * A height of zero or less returns immediately.
      * The first positive size is stored and does not fold the bar.
      *
-     * A later call stores the new size. // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+     * A later call stores the new size.
      * A width change or a height change applies {@link Beat#RESIZED}.
      * An unchanged size does not apply a beat.
      *
@@ -809,12 +831,15 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
      * The SSH button is selected when the selected tab index is {@code 0}.
      * The Aetheris button is enabled only when the strip has more than one tab and index {@code 1} is enabled.
      * The Aetheris button is selected when the selected tab index is {@code 1}.
+     * The Graph button is selected when the selected tab index is {@code 2}.
      */
     void syncPlates() {
         int index = tabs.getSelectedIndex();
         boolean aetheris = tabs.getTabCount() > 1 && tabs.isEnabledAt(1);
         paintPlate(sshButton, index == 0, true);
         paintPlate(aetherisButton, index == 1, aetheris);
+        paintPlate(graphButton, index == 2, true);
+        placeThink();
     }
 
     /**
@@ -822,6 +847,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
      * The theme installs the plate face with the button unselected.
      * The label {@code SSH} gets the tooltip {@code Show the SSH terminal.}
      * The label {@code Aetheris} gets the tooltip {@code Show the Aetheris canvas. The mux has to be up.}
+     * The label {@code Graph} gets the tooltip {@code Show the graph.}
      * Any other label gets no tooltip.
      *
      * A press calls {@link BarPick#pressed} when a receiver was stored.
@@ -839,6 +865,8 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
             button.setToolTipText("Show the SSH terminal.");
         } else if ("Aetheris".equals(label)) {
             button.setToolTipText("Show the Aetheris canvas. The mux has to be up.");
+        } else if ("Graph".equals(label)) {
+            button.setToolTipText("Show the graph.");
         }
         /**
          * The listener reports the folded button and refreshes both buttons.
@@ -847,7 +875,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
          * {@link #syncPlates} runs after that call.
          */
         button.addActionListener(new ActionListener() {
-            // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (pick != null) {
@@ -888,7 +916,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
      * A folded bar uses {@link #SHOW_TIP}.
      * A tab strip that is not using {@link HiddenTabs} is given that painter.
      * The folded left row is cleared.
-     * The row then adds the mark, the link chip, SSH, Aetheris, and the divider, in that order.
+     * The row then adds the mark, the link chip, SSH, Aetheris, Graph, and the divider, in that order.
      * The menu moves to the center of the folded head.
      * An open head that is still on this panel is removed.
      * The folded head is added on the north when it is not already there.
@@ -925,6 +953,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
             foldedLeft.add(chip);
             foldedLeft.add(sshButton);
             foldedLeft.add(aetherisButton);
+            foldedLeft.add(graphButton);
             foldedLeft.add(rule);
             seat(menuBar, foldedHead, BorderLayout.CENTER);
             if (openHead.getParent() == this) {
@@ -937,6 +966,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
         if (tabs.getParent() != this) {
             add(tabs, BorderLayout.CENTER);
         }
+        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-164
         if (platePoints > 0) {
             seatPlateFont(platePoints);
         }
@@ -947,36 +977,119 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
     }
 
     /**
-     * The {@code seatThink} method stores the thinking cluster.
-     * {@link SshConnectionPanel#holdThink} keeps that cluster for the open bar.
-     * {@link #placeThink} moves it to the row that is visible now.
-     * A null cluster clears the stored cluster.
+     * The method stores the focused SSH pane spinner.
+     * The SSH tab is the only tab that shows it.
+     * A null cluster clears that spinner.
      *
-     // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
-     *
-     * @param cluster The spinner and clock, or null.
+     * @param cluster The spinner for the focused pane, or null.
      */
-    void seatThink(JComponent cluster) {
-        thinkCluster = cluster;
+    void seatSsh(JComponent cluster) {
+        if (sshCluster != null && sshCluster != cluster && sshCluster.getParent() != null) {
+            sshCluster.getParent().remove(sshCluster);
+        }
+        sshCluster = cluster;
+        connection.holdSsh(cluster);
+        placeThink();
+    }
+
+    /**
+     * The method stores the open canvas spinner seat.
+     * The Aetheris tab is the only tab that shows it.
+     * A null cluster clears that seat.
+     *
+     * @param cluster The seat for the open canvas, or null.
+     */
+    void seatCanvas(JComponent cluster) {
+        canvasCluster = cluster;
         connection.holdThink(cluster);
         placeThink();
     }
 
     /**
-     * The {@code placeThink} method moves one cluster between the two bars.
-     * A null cluster returns immediately.
-     * An open bar calls {@link SshConnectionPanel#parkThink}.
-     * A folded bar places the cluster on the east side of the folded head.
+     * The method stores the rendering spinner.
+     * The graph tab is the only tab that shows it.
+     * A null cluster clears the rendering spinner.
+     *
+     * @param cluster The rendering spinner for the seated graph, or null.
+     */
+    void seatRendering(JComponent cluster) {
+        if (renderingCluster != null && renderingCluster != cluster && renderingCluster.getParent() != null) {
+            renderingCluster.getParent().remove(renderingCluster);
+        }
+        renderingCluster = cluster;
+        connection.holdRender(cluster);
+        placeThink();
+    }
+
+    /**
+     * The method chooses the spinner for the tab that is showing.
+     * Index {@code 0} is the focused SSH pane.
+     * Index {@code 1} is the open canvas.
+     * Index {@code 2} is the seated graph.
+     *
+     * @return The spinner for this tab, or null.
+     */
+    private JComponent liveCluster() {
+        return liveSeat(tabs.getSelectedIndex(), sshCluster, canvasCluster, renderingCluster);
+    }
+
+    /**
+     * The method names the spinner for a product tab.
+     * Index {@code 1} is the canvas spinner.
+     * Index {@code 2} is the graph spinner.
+     * Every other index is the SSH spinner.
+     *
+     * @param tab The selected product-tab index.
+     * @param ssh The focused SSH pane spinner.
+     * @param canvas The open canvas spinner.
+     * @param graph The seated graph spinner.
+     * @return The spinner for that tab.
+     */
+    static JComponent liveSeat(int tab, JComponent ssh, JComponent canvas, JComponent graph) {
+        if (tab == 1) {
+            return canvas;
+        }
+        if (tab == 2) {
+            return graph;
+        }
+        return ssh;
+    }
+
+    /**
+     * The method moves the front spinner onto the row that is visible now.
+     * The other spinners leave the bar.
+     * An open bar calls {@link SshConnectionPanel#parkOnBar}.
+     * A folded bar places the spinner on the east side of the folded head, to the right of the menu bar.
      */
     private void placeThink() {
-        if (thinkCluster == null) {
+        JComponent live = liveCluster();
+        retire(sshCluster, live);
+        retire(canvasCluster, live);
+        retire(renderingCluster, live);
+        if (live == null) {
             return;
         }
         if (open) {
-            connection.parkThink();
+            connection.parkOnBar(live);
         } else {
-            seat(thinkCluster, foldedHead, BorderLayout.EAST);
+            seat(live, foldedHead, BorderLayout.EAST);
         }
+    }
+
+    /**
+     * The method takes a spinner off the bar when it is not the front spinner.
+     *
+     * @param cluster The spinner to retire, or null.
+     * @param live The spinner that stays.
+     */
+    private static void retire(JComponent cluster, JComponent live) {
+        if (cluster == null || cluster == live || cluster.getParent() == null) {
+            return;
+        }
+        Container was = cluster.getParent();
+        was.remove(cluster);
+        was.revalidate();
+        was.repaint();
     }
 
     /**
@@ -1004,8 +1117,8 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
         parent.add(child, where);
     }
 
-    // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
+    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
     /**
      * The {@code HiddenTabs} painter removes the tab strip while the bar is folded.
      * The product names stay on the folded row.
@@ -1050,7 +1163,7 @@ final class FoldingPanel extends JPanel { // @aa-sdd PK-1117 docs/specs/common/f
         }
     }
 
-    // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1017 docs/specs/common/formal-plan.spec.md FINESSE:f-78
     /**
      * The {@code LinkChip} paints the link word on the folded row.
      * The exact word {@code Connected} uses a green chip and white text.

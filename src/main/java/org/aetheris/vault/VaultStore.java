@@ -23,14 +23,17 @@ import java.util.List;
 import java.util.UUID;
 
 import org.aetheris.config.AetherisYaml;
+import org.aetheris.lcarsgraph.GraphSql;
+import org.aetheris.lcarsgraph.GraphStore;
 import org.roux.session.RegionOwner;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-// @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md
-// @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md
+// @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-10
+// @aa-sdd GK-0727 aetheris-stage-2-finessing.001.md FINESSE:f-222
+// @aa-sdd PK-1057 docs/specs/common/formal-plan.spec.md FINESSE:f-35
+// @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-9
 // @aa-sdd PK-1224 docs/specs/java/org/aetheris/vault/vault.spec.md
 /**
  * The {@code VaultStore} class is the H2 vault for the shell process.
@@ -40,7 +43,9 @@ import com.zaxxer.hikari.HikariDataSource;
  * {@link #open} creates the tables and migrates missing columns.
  * A later {@link #load} selects the canvases.
  * Version 2 is the {@code group_id} column and the {@code execution_status} column.
+ * Version 3 is the graph tables in the same file.
  * A caller loads canvases, saves cells, and deletes turns through this type.
+ * // @aa-sdd G-12 aetheris-stages-1-3.finalize.md
  *
  * @author clayl (2026-09-02)
  */
@@ -122,7 +127,7 @@ public final class VaultStore {
      * The pool name is {@code aetheris-vault}.
      * The method then runs the workspace, canvas, cell, and trace statements from {@link VaultSql}.
      * It adds {@code collapsed} and {@code head_lock} when those columns are missing.
-     * It then runs {@link #ensureSchemaVersion}.
+     * It then runs {@link #applySchema}.
      *
      * @throws SQLException The exception is a failure to open the pool or to run a statement.
      */
@@ -161,7 +166,7 @@ public final class VaultStore {
             } finally {
                 st.close();
             }
-            ensureSchemaVersion(c);
+            applySchema(c);
         } finally {
             c.close();
         }
@@ -341,6 +346,7 @@ public final class VaultStore {
 
     /**
      * The {@code clearCanvas} method deletes every turn on one canvas.
+     * Feed rows for that canvas go in the same transaction.
      * Trace rows for those cells are deleted first.
      * Ephemeral cells are deleted with the rest.
      * The method then inserts one empty included cell at turn 1.
@@ -351,7 +357,10 @@ public final class VaultStore {
      */
     public CellRecord clearCanvas(String canvasId) throws SQLException {
         Connection c = dataSource.getConnection();
+        boolean prior = c.getAutoCommit();
         try {
+            c.setAutoCommit(false);
+            new GraphStore(c).deleteFeedForCanvas(canvasId);
             PreparedStatement traces = c.prepareStatement(VaultSql.DELETE_TRACE_FOR_CANVAS);
             try {
                 traces.setString(1, canvasId);
@@ -368,8 +377,21 @@ public final class VaultStore {
             }
             CellRecord cell = newCell(canvasId, 1);
             insertCell(c, cell);
+            c.commit();
             return cell;
+        } catch (SQLException ex) {
+            try {
+                c.rollback();
+            } catch (SQLException ignored) {
+                // the thrown failure is the one the caller sees
+            }
+            throw ex;
         } finally {
+            try {
+                c.setAutoCommit(prior);
+            } catch (SQLException ignored) {
+                // the connection is closing
+            }
             c.close();
         }
     }
@@ -381,6 +403,7 @@ public final class VaultStore {
      * Lists of different lengths throw the same exception.
      * The message is {@code replace failed: the table is not a message table}.
      * The copy is one transaction.
+     * Feed rows for that canvas go in the same transaction.
      * Trace rows for the canvas are deleted.
      * The old cells are deleted.
      * An empty prompt list leaves one empty included cell.
@@ -399,7 +422,7 @@ public final class VaultStore {
      * @return The return value is the new cells, in order.
      * @throws SQLException The exception is a JDBC failure, or the two lists disagree.
      */
-    public List<CellRecord> replaceCanvas(String canvasId, List<String> prompts, List<String> replies, // @aa-sdd PK-1417 docs/specs/java/org/aetheris/vault/vault.spec.md
+    public List<CellRecord> replaceCanvas(String canvasId, List<String> prompts, List<String> replies,
             String model)
             throws SQLException {
         if (prompts == null || replies == null || prompts.size() != replies.size()) {
@@ -409,6 +432,7 @@ public final class VaultStore {
         boolean prior = c.getAutoCommit();
         try {
             c.setAutoCommit(false);
+            new GraphStore(c).deleteFeedForCanvas(canvasId);
             PreparedStatement traces = c.prepareStatement(VaultSql.DELETE_TRACE_FOR_CANVAS);
             try {
                 traces.setString(1, canvasId);
@@ -427,7 +451,7 @@ public final class VaultStore {
             ArrayList<CellRecord> born = new ArrayList<CellRecord>();
             if (prompts.size() == 0) {
                 CellRecord cell = newCell(canvasId, 1);
-                cell.executionTarget = seated; // @aa-sdd PK-1417 docs/specs/java/org/aetheris/vault/vault.spec.md
+                cell.executionTarget = seated;
                 insertCell(c, cell);
                 born.add(cell);
             } else {
@@ -483,6 +507,7 @@ public final class VaultStore {
      * A null id list skips the deletes.
      * A null id is skipped.
      * An empty id is skipped.
+     * Feed rows for a removed id go in the same transaction.
      * Trace rows for a removed id are deleted.
      * The cell delete matches both the cell id and the canvas id.
      * Each remaining cell stores a turn index from 1 in list order.
@@ -508,6 +533,7 @@ public final class VaultStore {
                     if (cellId == null || cellId.length() == 0) {
                         continue;
                     }
+                    new GraphStore(c).deleteFeed(cellId);
                     PreparedStatement traces = c.prepareStatement(VaultSql.DELETE_TRACE_FOR_CELL);
                     try {
                         traces.setString(1, cellId);
@@ -618,6 +644,7 @@ public final class VaultStore {
      * A column that is still missing throws {@link SQLException}.
      * The message is {@code vault version 2 columns are missing}.
      * A successful alter writes version 2 on row id 1.
+     * Once version 2 holds, the method creates the graph tables and writes version 3 on row id 1.
      *
      * @param c The connection is an open connection on this vault.
      * @throws SQLException The exception is a JDBC failure, or the version-2 columns are still missing.
@@ -656,7 +683,69 @@ public final class VaultStore {
             } finally {
                 merge.close();
             }
+            version = 2;
         }
+        if (version >= 2) {
+            Statement graph = c.createStatement();
+            try {
+                graph.execute(GraphSql.DDL_NODE);
+                graph.execute(GraphSql.DDL_REFERENT);
+                graph.execute(GraphSql.DDL_WORD);
+                graph.execute(GraphSql.DDL_RELATION);
+                graph.execute(GraphSql.DDL_RELATION_END);
+                graph.execute(GraphSql.DDL_EVIDENCE);
+                graph.execute(GraphSql.DDL_CELL_FEED);
+                graph.execute(GraphSql.DDL_CELL_FEED_INDEX);
+                graph.execute(GraphSql.DDL_ACT);
+                graph.execute(GraphSql.DDL_SEAT);
+            } finally {
+                graph.close();
+            }
+            if (version < 3) {
+                PreparedStatement graphVersion = c.prepareStatement(VaultSql.MERGE_SCHEMA_VERSION);
+                try {
+                    graphVersion.setInt(1, 3);
+                    graphVersion.executeUpdate();
+                } finally {
+                    graphVersion.close();
+                }
+            }
+            if (version < 4) {
+                PreparedStatement seatVersion = c.prepareStatement(VaultSql.MERGE_SCHEMA_VERSION);
+                try {
+                    seatVersion.setInt(1, 4);
+                    seatVersion.executeUpdate();
+                } finally {
+                    seatVersion.close();
+                }
+            }
+        }
+    }
+
+    /**
+     * The {@code applySchema} method records the vault version on an open connection.
+     * {@link #open} delegates here after the shell tables exist.
+     * A memory connection reaches the same step.
+     * Once version 2 holds, the graph tables are created and the version row becomes 4.
+     *
+     * @param c The connection is an open connection on this vault.
+     * @throws SQLException The exception is a JDBC failure, or the version-2 columns are still missing.
+     */
+    public void applySchema(Connection c) throws SQLException {
+        ensureSchemaVersion(c);
+    }
+
+    /**
+     * The {@code borrow} method returns a connection from the pool {@link #open} started.
+     *
+     * @return The return value is an open connection.
+     * @throws SQLException The exception is a closed vault or a JDBC failure.
+     */
+    public Connection borrow() throws SQLException {
+        if (dataSource == null) {
+            throw new SQLException("vault is closed");
+        }
+        return dataSource.getConnection();
     }
 
     /**

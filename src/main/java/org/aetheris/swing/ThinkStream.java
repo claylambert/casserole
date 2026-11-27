@@ -44,7 +44,7 @@ public final class ThinkStream {
      * @param model the banner word
      * @param text the chunk
      */
-    public synchronized void offer(ThinkStrip pane, String cellId, String model, String text) { // @aa-sdd PK-1455 docs/specs/java/org/aetheris/swing/swing.spec.md
+    public synchronized void offer(ThinkStrip pane, String cellId, String model, String text) {
         if (pane == null || text == null || text.length() == 0) {
             return;
         }
@@ -62,6 +62,41 @@ public final class ThinkStream {
             return;
         }
         pane.append(text);
+    }
+
+    /**
+     * The method writes one chunk on {@code pane} and leaves the log alone.
+     * A null pane returns without writing.
+     * A null or empty chunk returns without writing.
+     * A new block calls {@link ThinkStrip#beginLive}.
+     * An open block on that pane calls {@link ThinkStrip#appendLive}.
+     * The host is not asked to lay the picture out.
+     * The host is not asked to store the log.
+     *
+     * @param pane the thinking pane for this context
+     * @param cellId the cell that produced the chunk, or the SSH surface id
+     * @param model the banner word
+     * @param text the chunk
+     */
+    synchronized void offerLive(ThinkStrip pane, String cellId, String model, String text) {
+        // @aa-sdd L40 aetheris-plan-f-327.001.md FINESSE:f-327
+        if (pane == null || text == null || text.length() == 0) {
+            return;
+        }
+        String word = model == null ? "" : model;
+        String cell = cellId == null ? "" : cellId;
+        Block block = live.get(pane);
+        boolean fresh = block == null || !block.live || !cell.equals(block.cell) || !word.equals(block.word);
+        if (fresh) {
+            Block opened = new Block();
+            opened.cell = cell;
+            opened.word = word;
+            opened.live = true;
+            live.put(pane, opened);
+            pane.beginLive(word, text);
+            return;
+        }
+        pane.appendLive(text);
     }
 
     /**

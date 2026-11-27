@@ -21,6 +21,7 @@ The map of the whole spine is [the spine map](../../../README.md).
 <pre>
 org.aetheris/
 ├── <a href="config/config.spec.md">org.aetheris.config</a>
+├── <a href="lcarsgraph/lcarsgraph.spec.md">org.aetheris.lcarsgraph</a>
 ├── <a href="ssh/ssh.spec.md">org.aetheris.ssh</a>
 ├── <a href="swing/swing.spec.md">org.aetheris.swing</a>
 ├── <a href="vault/vault.spec.md">org.aetheris.vault</a>

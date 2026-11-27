@@ -63,6 +63,8 @@ import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.util.ArrayDeque;
@@ -100,9 +102,14 @@ import javax.swing.event.ChangeListener;
 import org.yaml.snakeyaml.Yaml;
 
 import org.aetheris.config.AetherisYaml;
+import org.casserole.llm.GrokCallOptions;
+import org.casserole.llm.GrokLlmService;
 import org.casserole.llm.LlamaCppLlmService;
 import org.casserole.mood.MoodDesk;
 import org.casserole.ssh.shell.ChatShell;
+import org.aetheris.lcarsgraph.GraphDesk;
+import org.aetheris.lcarsgraph.GraphDoor;
+import org.aetheris.lcarsgraph.GraphPane;
 import org.aetheris.swing.AetherisNotebookPanel;
 import org.aetheris.swing.AetherisWorker;
 import org.aetheris.swing.ThinkPaneManager;
@@ -135,6 +142,7 @@ import com.jediterm.core.util.TermSize;
 // @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md FINESSE:f-173
 // @aa-sdd PK-1100 docs/specs/common/formal-plan.spec.md FINESSE:f-179
 // @aa-sdd PK-1094 docs/specs/common/formal-plan.spec.md FINESSE:f-185
+// @aa-sdd GK-0810 aetheris-stage-2-finessing.001.md FINESSE:f-222
 // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md FINESSE:f-37
 // @aa-sdd PK-1050 docs/specs/common/formal-plan.spec.md FINESSE:f-42
 // @aa-sdd PK-1049 docs/specs/common/formal-plan.spec.md FINESSE:f-43
@@ -284,6 +292,7 @@ public class SshClientApp extends JFrame
     private TerminalSession focused;
     private final JPanel terminalHost;
     private final JTabbedPane productTabs;
+    private JPanel graphHost;
     private final FoldingPanel foldingPanel;
     private final JLabel statusLabel;
     private final JLabel statusUserLabel;
@@ -400,12 +409,16 @@ public class SshClientApp extends JFrame
         productTabs = new JTabbedPane();
         productTabs.addTab("SSH", terminalHost);
         productTabs.addTab("Aetheris", aetherisPanel);
+        graphHost = new JPanel(new BorderLayout());
+        theme.applyPanel(graphHost);
+        productTabs.addTab("Graph", graphHost);
         productTabs.setEnabledAt(1, false);
         /**
          * The listener stores the product tab and repaints the status.
          * A suppressed write skips the store and clears nothing.
          * Any other change clears {@code restoreAetheris}.
          * Index {@code 1} stores the Aetheris product tab.
+         * Index {@code 2} stores the Graph product tab.
          * Any other index stores the SSH product tab.
          * {@link FoldingPanel#syncPlates} runs when the folding panel exists.
          */
@@ -417,10 +430,7 @@ public class SshClientApp extends JFrame
             public void stateChanged(ChangeEvent e) {
                 if (!suppressProductTabWrite) {
                     restoreAetheris = false;
-                    String word = productTabs.getSelectedIndex() == 1
-                            ? SshClientProperties.PRODUCT_TAB_AETHERIS
-                            : SshClientProperties.PRODUCT_TAB_SSH;
-                    properties.setProductTab(word);
+                    properties.setProductTab(productWord(productTabs.getSelectedIndex()));
                 }
                 paintFrameStatus();
                 if (foldingPanel != null) {
@@ -488,7 +498,8 @@ public class SshClientApp extends JFrame
         add(foldingPanel, BorderLayout.CENTER);
         installMenu();
         // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md FINESSE:f-180
-        foldingPanel.seatThink(aetherisPanel.thinkCluster());
+        foldingPanel.seatCanvas(aetherisPanel.thinkCluster());
+        seatFocusedThink();
 
         statusLabel = new JLabel();
         statusUserLabel = new JLabel("");
@@ -639,6 +650,11 @@ public class SshClientApp extends JFrame
         selectSession(this.focused);
         if (SshClientProperties.PRODUCT_TAB_AETHERIS.equals(properties.getProductTab())) {
             restoreAetheris = true;
+        } else if (SshClientProperties.PRODUCT_TAB_GRAPH.equals(properties.getProductTab())) {
+            suppressProductTabWrite = true;
+            productTabs.setSelectedIndex(2);
+            suppressProductTabWrite = false;
+            foldingPanel.syncPlates();
         }
     }
 
@@ -808,7 +824,7 @@ public class SshClientApp extends JFrame
 
     /**
      * The {@code fontSizeChanged} method applies one font size.
-     * The connection bar, the menu, every terminal pane, and the notebook all receive it.
+     * The connection bar, the menu, every terminal pane, the notebook, and the open graph all receive it.
      *
      * @param fontSize The size from the font control, in points.
      */
@@ -820,6 +836,23 @@ public class SshClientApp extends JFrame
             sessions.get(i).getPanel().setFontSize(fontSize);
         }
         aetherisPanel.setUiFontSize(fontSize);
+        seatGraphType(fontSize);
+    }
+
+    /**
+     * The method seats the master size on the open graph.
+     * A graph that is not on the tab waits until the canvas is seated.
+     *
+     * @param fontSize The size from the font control, in points.
+     */
+    private void seatGraphType(int fontSize) {
+        if (graphHost == null || graphHost.getComponentCount() == 0) {
+            return;
+        }
+        Component child = graphHost.getComponent(0);
+        if (child instanceof GraphPane) {
+            ((GraphPane) child).typeSize(fontSize);
+        }
     }
 
     /**
@@ -2676,6 +2709,226 @@ public class SshClientApp extends JFrame
     }
 
     /**
+     * The {@code seatGraph} method puts this login's graph on the Graph tab.
+     * A missing username clears the tab and does not mint a model.
+     * The conversation is the vault name for that login.
+     */
+    private void seatGraph() {
+        seatGraphCanvas(null);
+    }
+
+    /**
+     * The {@code seatGraphCanvas} method loads the focused canvas before the graph is drawn.
+     * A null canvas id reads the canvas the notebook has focused.
+     * A missing username clears the tab and does not mint a model.
+     * The notebook is the one listener on that login's model.
+     *
+     * @param canvasId The canvas id, or null to read the focused canvas.
+     */
+    private void seatGraphCanvas(String canvasId) {
+        if (graphHost == null) {
+            return;
+        }
+        String username = liveUserName(focused);
+        if (username == null || username.isEmpty()) {
+            if (graphHost.getComponentCount() > 0) {
+                graphHost.removeAll();
+                graphHost.revalidate();
+                graphHost.repaint();
+            }
+            if (foldingPanel != null) {
+                foldingPanel.seatRendering(null);
+            }
+            return;
+        }
+        String canvas = canvasId;
+        if (aetherisPanel != null && (canvas == null || canvas.isEmpty())) {
+            canvas = aetherisPanel.focusedCanvasId();
+        }
+        final String focusedCanvas = canvas;
+        String conversation = sessionVaultUser(focused);
+        GraphPane pane = GraphDesk.pane(username, conversation);
+        if (pane != null && pane.model() != null && aetherisPanel != null) {
+            pane.model().hear(aetherisPanel);
+            aetherisPanel.hearGraphSeat(new Runnable() {
+                @Override
+                public void run() {
+                    pane.foot(aetherisPanel.graphBand(aetherisPanel.openUsername()));
+                }
+            });
+            pane.hearModel(new Runnable() {
+                @Override
+                public void run() {
+                    if (aetherisPanel != null) {
+                        aetherisPanel.openGraphModel();
+                        pane.foot(aetherisPanel.graphBand(aetherisPanel.openUsername()));
+                    }
+                }
+            });
+            pane.hearReload(new Runnable() {
+                @Override
+                public void run() {
+                    GraphDesk.model(username, new Runnable() {
+                        @Override
+                        public void run() {
+                            if (aetherisPanel != null) {
+                                GraphDesk.reload(username, aetherisPanel.graphTurns(), graphDoor());
+                            }
+                        }
+                    });
+                }
+            });
+            pane.foot(aetherisPanel.graphBand(aetherisPanel.openUsername()));
+        }
+        if (pane != null && connectionPanel != null) {
+            pane.typeSize(connectionPanel.getFontSize());
+        }
+        if (pane != null) {
+            theme.applyScrollPane(pane.canvasScroll());
+            // @aa-sdd L40 aetheris-plan-f-311.001.md FINESSE:f-311
+            theme.applyScrollPane(pane.inspectorScroll());
+        }
+        if (pane != null && foldingPanel != null) {
+            foldingPanel.seatRendering(pane.renderingCluster());
+        }
+        if (aetherisPanel != null && focusedCanvas != null && !focusedCanvas.isEmpty()) {
+            // @aa-sdd L40 aetheris-plan-f-306.001.md FINESSE:f-306
+            GraphDesk.hold(username);
+            GraphDesk.vault(username, new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Connection connection = aetherisPanel.borrowVault();
+                        GraphDesk.seat(username, connection, focusedCanvas);
+                    } catch (SQLException ex) {
+                        GraphDesk.seat(username, null, focusedCanvas);
+                    }
+                }
+            });
+            GraphDesk.model(username, new Runnable() {
+                @Override
+                public void run() {
+                    if (aetherisPanel != null) {
+                        GraphDesk.hydrate(username, aetherisPanel.graphTurns(), graphDoor());
+                    }
+                }
+            });
+        }
+        if (pane == null || pane.getParent() == graphHost) {
+            return;
+        }
+        graphHost.removeAll();
+        graphHost.add(pane, BorderLayout.CENTER);
+        graphHost.revalidate();
+        graphHost.repaint();
+    }
+
+    /**
+     * The {@code graphDoor} method builds the door for the engine named now.
+     * The word pool opens the pool door. Any other word opens the Grok door.
+     * Thinking on passes the reasoning ear.
+     * Thinking off leaves the call unstreamed.
+     *
+     * @return The door for this walk.
+     */
+    private GraphDoor graphDoor() {
+        String engine = aetherisPanel == null ? "" : aetherisPanel.graphEngine();
+        String user = aetherisPanel == null ? "" : aetherisPanel.openUsername();
+        boolean thinking = aetherisPanel != null && aetherisPanel.graphThinking();
+        GrokCallOptions options = aetherisPanel == null ? null : aetherisPanel.graphCallOptions();
+        if (thinking) {
+            return GraphDoors.openSeated(engine, user, true, new GrokLlmService.DeltaSink() {
+                @Override
+                public void delta(char kind, String text) {
+                    if (aetherisPanel == null || text == null || text.length() == 0) {
+                        return;
+                    }
+                    aetherisPanel.graphThought(text);
+                }
+            }, new Runnable() {
+                @Override
+                public void run() {
+                    if (aetherisPanel != null) {
+                        aetherisPanel.graphThoughtEnd();
+                    }
+                }
+            }, options);
+        }
+        return GraphDoors.openSeated(engine, user, false, null, null, options);
+    }
+
+    /**
+     * The {@code graphCanvas} method loads the graph for the canvas that just gained focus.
+     *
+     * @param canvasId The canvas id the vault already stores.
+     */
+    @Override
+    public void graphCanvas(String canvasId) {
+        seatGraphCanvas(canvasId);
+    }
+
+    /**
+     * The method zeros the focused login's graph for one canvas.
+     * The desk vacates that graph and arms a fresh turn, then each later turn.
+     * A missing login closes the fallback connection.
+     *
+     * @param canvasId The canvas whose graph goes.
+     * @param fallback A vault connection for an unseated graph, or null.
+     */
+    @Override
+    public void graphZero(String canvasId, Connection fallback) {
+        String username = liveUserName(focused);
+        if (username == null || username.isEmpty()) {
+            if (fallback != null) {
+                try {
+                    fallback.close();
+                } catch (SQLException ex) {
+                    // the pool takes the connection back on a later borrow
+                }
+            }
+            return;
+        }
+        // @aa-sdd L40 aetheris-plan-f-310.001.md FINESSE:f-310
+        GraphDesk.zero(username, canvasId, fallback);
+    }
+
+    /**
+     * The method folds the sealed turns into the graph Clear Turns armed.
+     * A graph that was not zeroed returns without an ask.
+     */
+    @Override
+    public void graphSealed() {
+        if (aetherisPanel == null) {
+            return;
+        }
+        String username = liveUserName(focused);
+        if (username == null || username.isEmpty()) {
+            return;
+        }
+        // @aa-sdd L40 aetheris-plan-f-310.001.md FINESSE:f-310
+        GraphDesk.grow(username, aetherisPanel.graphTurns(), graphDoor());
+    }
+
+    /**
+     * The {@code productWord} method names the stored product tab for one index.
+     * Index {@code 1} is Aetheris.
+     * Index {@code 2} is Graph.
+     * Any other index is SSH.
+     *
+     * @param index The selected product tab.
+     * @return The stored word.
+     */
+    private String productWord(int index) {
+        if (index == 1) {
+            return SshClientProperties.PRODUCT_TAB_AETHERIS;
+        }
+        if (index == 2) {
+            return SshClientProperties.PRODUCT_TAB_GRAPH;
+        }
+        return SshClientProperties.PRODUCT_TAB_SSH;
+    }
+
+    /**
      * The {@code confirmAndExit} method asks before closing.
      * The question is {@code Exit the SSH client?}.
      * The title is {@code Confirm exit}.
@@ -2684,6 +2937,7 @@ public class SshClientApp extends JFrame
      * A false restore flag stores the selected product tab.
      * The restore flag is cleared.
      * The frame, the connection fields, and the vault are saved or closed.
+     * A graph pool chat is shut down.
      * The worker is shut down.
      * Each session's thinking pane leaves the manager.
      * Every session is disposed.
@@ -2702,15 +2956,13 @@ public class SshClientApp extends JFrame
         }
         suppressProductTabWrite = true;
         if (!restoreAetheris) {
-            String tabWord = productTabs.getSelectedIndex() == 1
-                    ? SshClientProperties.PRODUCT_TAB_AETHERIS
-                    : SshClientProperties.PRODUCT_TAB_SSH;
-            properties.setProductTab(tabWord);
+            properties.setProductTab(productWord(productTabs.getSelectedIndex()));
         }
         restoreAetheris = false;
         saveFrameState();
         connectionPanel.persistConnectionFields();
         aetherisPanel.closeVault();
+        GraphDoors.release();
         aetherisWorker.shutdown();
         for (int i = 0; i < sessions.size(); i++) {
             releaseSessionThought(sessions.get(i));
@@ -2800,6 +3052,26 @@ public class SshClientApp extends JFrame
             aetherisPanel.requestSessionTokens();
             askPaneEngine(session);
         }
+        seatGraph();
+        seatFocusedThink();
+    }
+
+    /**
+     * The method seats the focused SSH pane spinner.
+     * A missing bar clears nothing.
+     * A missing pane clears the SSH spinner.
+     * The canvas tab does not show this spinner.
+     * The graph tab does not show this spinner.
+     */
+    private void seatFocusedThink() {
+        if (foldingPanel == null) {
+            return;
+        }
+        if (focused == null || focused.getPanel() == null) {
+            foldingPanel.seatSsh(null);
+            return;
+        }
+        foldingPanel.seatSsh(focused.getPanel().thinkCluster());
     }
 
     /**
@@ -3061,6 +3333,7 @@ public class SshClientApp extends JFrame
         if (panel == null) {
             return;
         }
+        panel.quietThought();
         aetherisPanel.thinkPanes().releaseStrip(panel.thoughtPane());
     }
 
@@ -3562,6 +3835,7 @@ public class SshClientApp extends JFrame
         }
         aetherisPanel.applyPending(username);
         aetherisPanel.showRunFor(username);
+        seatGraph();
     }
 
     /**

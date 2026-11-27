@@ -73,24 +73,25 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
-// @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1149 PK-1151 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1142 PK-1149 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1093 PK-1142 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1013 PK-1093 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1011 PK-1013 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1004 PK-1011 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1003 PK-1004 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1002 PK-1003 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1000 PK-1002 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-999 PK-1000 docs/specs/common/formal-plan.spec.md
-/** // @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md FINESSE:f-105
+// @aa-sdd PK-1149 docs/specs/common/formal-plan.spec.md FINESSE:f-108
+// @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md FINESSE:f-115
+// @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md FINESSE:f-186
+// @aa-sdd PK-1013 docs/specs/common/formal-plan.spec.md FINESSE:f-82
+// @aa-sdd PK-1011 docs/specs/common/formal-plan.spec.md FINESSE:f-84
+// @aa-sdd PK-1004 docs/specs/common/formal-plan.spec.md FINESSE:f-91
+// @aa-sdd PK-1003 docs/specs/common/formal-plan.spec.md FINESSE:f-92
+// @aa-sdd PK-1002 docs/specs/common/formal-plan.spec.md FINESSE:f-93
+// @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
+// @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md FINESSE:f-96
+/**
  * The {@code SshClientTheme} is the dark Metal look for the SSH window and the Aetheris window.
  * Metal is the Swing look and feel this class customizes.
  * The colors come from {@link SshClientProperties}.
  * A menu hover paints a grey tab.
  * A canvas scroll pane uses the quiet bevel.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#SshClientTheme
  *
  * @author clayl (2026-08-24)
  */
@@ -117,7 +118,7 @@ import javax.swing.border.LineBorder;
 // @aa-sdd PK-1002 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-237 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-239 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/formal-plan.spec.md
+public class SshClientTheme {
 
     /**
      * The {@code DIVIDER_SIZE} constant is the split-bar thickness, in pixels.
@@ -265,8 +266,8 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
      *
      * {@code CheckBox.background} receives the panel background.
      * {@code CheckBox.foreground} receives the panel foreground.
-     * {@code Spinner.background} receives the field background. // @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md
-     * {@code Spinner.foreground} receives the field foreground. // @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md
+     * {@code Spinner.background} receives the field background.
+     * {@code Spinner.foreground} receives the field foreground.
      * {@code OptionPane.background} receives the panel background.
      * {@code OptionPane.messageForeground} and {@code OptionPane.foreground} receive the panel foreground.
      * {@code OptionPane.buttonForeground} receives the panel foreground.
@@ -304,12 +305,13 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         UIManager.put("ComboBox.foreground", fieldForeground);
         UIManager.put("CheckBox.background", panelBackground);
         UIManager.put("CheckBox.foreground", panelForeground);
-        UIManager.put("Spinner.background", fieldBackground); // @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md
+        UIManager.put("Spinner.background", fieldBackground);
         UIManager.put("Spinner.foreground", fieldForeground);
         UIManager.put("OptionPane.background", panelBackground);
         UIManager.put("OptionPane.messageForeground", panelForeground);
         UIManager.put("OptionPane.foreground", panelForeground);
         // Modal buttons take the panel foreground.
+        // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-144
         UIManager.put("OptionPane.buttonForeground", panelForeground);
         UIManager.put("PopupMenu.background", panelBackground);
         UIManager.put("PopupMenu.foreground", menuForeground);
@@ -318,7 +320,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         UIManager.put("MenuItem.background", panelBackground);
         UIManager.put("MenuItem.foreground", menuForeground);
         UIManager.put("SplitPane.background", splitBackground);
-        UIManager.put("ScrollBar.background", panelBackground); // @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md
+        UIManager.put("ScrollBar.background", panelBackground);
         UIManager.put("control", panelBackground);
         UIManager.put("text", fieldForeground);
         UIManager.put("nimbusBase", panelBackground);
@@ -362,8 +364,8 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
          * The saved ink key is cleared on exit.
          */
         Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
-            // @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md
-            // @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1151 docs/specs/common/formal-plan.spec.md FINESSE:f-105
+            // @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md FINESSE:f-96
             @Override
             public void eventDispatched(AWTEvent event) {
                 if (!(event instanceof MouseEvent)) {
@@ -408,7 +410,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
          * The face is applied later on the Swing event thread.
          */
         Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
-            // @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md
+            // @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md FINESSE:f-115
             @Override
             public void eventDispatched(AWTEvent event) {
                 if (!(event instanceof ContainerEvent)) {
@@ -427,7 +429,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
                  * {@link #seatPlateFace} receives the button that was added.
                  */
                 SwingUtilities.invokeLater(new Runnable() {
-                    // @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md
+                    // @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md FINESSE:f-115
                     @Override
                     public void run() {
                         seatPlateFace(button);
@@ -476,6 +478,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
      * A true {@code aetheris.rust} property returns true.
      * A true {@code aetheris.mark} property returns true.
      * A true {@code aetheris.choice} property returns true.
+     * A true {@code aetheris.graph} property returns true.
      *
      * A non-null {@code aetheris.plate.selected} property returns true.
      * A button whose painter is {@link PlateButtonUi} returns true.
@@ -500,6 +503,9 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
             return true;
         }
         if (Boolean.TRUE.equals(button.getClientProperty("aetheris.choice"))) {
+            return true;
+        }
+        if (Boolean.TRUE.equals(button.getClientProperty("aetheris.graph"))) {
             return true;
         }
         if (button.getClientProperty("aetheris.plate.selected") != null) {
@@ -746,7 +752,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         Component[] items = menu.getComponents();
         for (int i = 0; i < items.length; i++) {
             paintMenuComponent(items[i]);
-        } // @aa-sdd PK-1115 docs/specs/common/formal-plan.spec.md
+        }
     }
 
     /**
@@ -844,7 +850,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
     }
 
     /**
-     * The {@code applyScrollPane} method arms the overlay scroll bars. // @aa-sdd PK-1114 docs/specs/common/formal-plan.spec.md
+     * The {@code applyScrollPane} method arms the overlay scroll bars.
      * {@link AppleScrollBar#install} receives the pane.
      *
      * @param pane The scroll pane.
@@ -863,6 +869,8 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
      * The dark edge is the bevel shadow.
      * The viewport border is removed.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-138
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-139
      *
      * @param pane The scroll pane under the canvas tab.
      */
@@ -870,9 +878,9 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         if (pane == null) {
             return;
         }
-        applyScrollPane(pane); // @aa-sdd PK-1149 docs/specs/common/formal-plan.spec.md
-        pane.setBackground(getPanelBackground()); // @aa-sdd PK-1114 docs/specs/common/formal-plan.spec.md
-        pane.setBorder(new BevelBorder(BevelBorder.RAISED, BEVEL_HIGHLIGHT, BEVEL_SHADOW)); // @aa-sdd PK-1004 docs/specs/common/formal-plan.spec.md
+        applyScrollPane(pane);
+        pane.setBackground(getPanelBackground());
+        pane.setBorder(new BevelBorder(BevelBorder.RAISED, BEVEL_HIGHLIGHT, BEVEL_SHADOW));
         pane.setViewportBorder(null);
     }
 
@@ -900,7 +908,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         checkBox.setDisabledIcon(check);
         checkBox.setDisabledSelectedIcon(check);
     }
- // @aa-sdd PK-1002 docs/specs/common/formal-plan.spec.md
+
     /**
      * The {@code applyMenuBar} method paints the window menu.
      * A null bar returns immediately.
@@ -911,6 +919,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
      * {@link #seatMenuHover} installs the grey hover tab on each menu item.
      * A child that is not a menu item is skipped.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-130
      *
      * @param bar The menu bar.
      */
@@ -962,7 +971,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         comboBox.setForeground(fieldForeground);
         comboBox.setOpaque(true);
         seatComboArrow(comboBox);
-    } // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+    }
 
     /**
      * The {@code seatComboArrow} method replaces each Metal arrow button.
@@ -970,6 +979,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
      * The arrow is a triangle in the hover green.
      * The field colors are left unchanged.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-154
      *
      * @param comboBox The combo box whose arrow is replaced.
      */
@@ -990,7 +1000,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
              * The graphics copy is disposed.
              */
             button.setComboIcon(new Icon() {
-                // @aa-sdd PK-1115 docs/specs/common/formal-plan.spec.md
+                // @aa-sdd PK-1115 docs/specs/common/formal-plan.spec.md FINESSE:f-154
                 @Override
                 public void paintIcon(Component c, Graphics g, int x, int y) {
                     Graphics2D pen = (Graphics2D) g.create();
@@ -1067,8 +1077,8 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
 
     /**
      * The {@code installPlateButton} method paints a folded SSH or Aetheris button.
-     * The property {@code aetheris.plate.selected} stores the selected flag. // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
-     * The button is not opaque. // @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md
+     * The property {@code aetheris.plate.selected} stores the selected flag.
+     * The button is not opaque.
      * The content area is not filled by the stock painter.
      * The focus ring is not painted.
      * The border is an empty border of two, eight, two, and eight.
@@ -1093,7 +1103,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         }
     }
 
-    // @aa-sdd PK-1114 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1114 docs/specs/common/formal-plan.spec.md FINESSE:f-155
     /**
      * The {@code DarkSplitUi} builds the dark divider.
      * The bar fill comes from the theme, or from the SSH divider color.
@@ -1134,14 +1144,14 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
     /**
      * The {@code SSH_DIVIDER} color is the SSH terminal split bar.
      * The red, green, and blue values are 58, 58, and 58.
-     * // @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md
-     // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
+     *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-155
      */
     private static final Color SSH_DIVIDER = new Color(0x3a, 0x3a, 0x3a);
 
-    // @aa-sdd PK-1149 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1114 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1004 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1149 docs/specs/common/formal-plan.spec.md FINESSE:f-108
+    // @aa-sdd PK-1114 docs/specs/common/formal-plan.spec.md FINESSE:f-155
+    // @aa-sdd PK-1004 docs/specs/common/formal-plan.spec.md FINESSE:f-91
     /**
      * The {@code DarkDivider} paints the grab bar.
      * An SSH terminal split uses {@link SshClientTheme} divider color {@code 0x3a3a3a}.
@@ -1200,7 +1210,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         }
     }
 
-    // @aa-sdd PK-1002 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1002 docs/specs/common/formal-plan.spec.md FINESSE:f-93
     /**
      * The {@code QuietOcean} theme keeps Metal and replaces the light edges.
      * The secondary colors and the white color become the bevel highlight.
@@ -1235,7 +1245,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
             return lip;
         }
 
-        /** // @aa-sdd PK-1131 docs/specs/common/formal-plan.spec.md
+        /**
          * The {@code getSecondary3} method returns the bevel highlight.
          * @return The quiet edge color.
          */
@@ -1246,7 +1256,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
 
         /**
          * The {@code getWhite} method returns the bevel highlight.
-         * @return The quiet edge color. // @aa-sdd PK-1131 docs/specs/common/formal-plan.spec.md
+         * @return The quiet edge color.
          */
         @Override
         protected ColorUIResource getWhite() {
@@ -1332,7 +1342,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
      */
     private static final Color PLATE_PRESS = new Color(0x4a, 0x4a, 0x4a);
 
-    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
     /**
      * The {@code PlateTabUi} paints the product tabs.
      * A selected tab uses the sapphire fill.
@@ -1548,8 +1558,8 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         }
     }
 
-    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1000 docs/specs/common/formal-plan.spec.md FINESSE:f-95
+    // @aa-sdd PK-999 docs/specs/common/formal-plan.spec.md FINESSE:f-96
     /**
      * The {@code PlateButtonUi} paints a folded product button.
      * The fills match {@link PlateTabUi}.
@@ -1651,8 +1661,8 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         }
     }
 
-    // @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md FINESSE:f-115
+    // @aa-sdd PK-1093 docs/specs/common/formal-plan.spec.md FINESSE:f-186
     /**
      * The {@code PlateFaceUi} paints a command button.
      * The idle fill is the grey plate.
@@ -1668,7 +1678,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
     // @aa-sdd PK-201 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
     // @aa-sdd PK-216 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
     // @aa-sdd PK-217 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-    private static final class PlateFaceUi extends BasicButtonUI { // @aa-sdd PK-1142 docs/specs/common/formal-plan.spec.md
+    private static final class PlateFaceUi extends BasicButtonUI {
 
         /**
          * The {@code installDefaults} method keeps the stock button defaults.
@@ -1789,7 +1799,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         }
     }
 
-    // @aa-sdd PK-1131 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1131 docs/specs/common/formal-plan.spec.md FINESSE:f-130
     /**
      * The {@code HoverMenuUi} paints a menu title on the bar.
      * A hover paints the grey tab.
@@ -1811,7 +1821,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
         }
     }
 
-    // @aa-sdd PK-1131 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1131 docs/specs/common/formal-plan.spec.md FINESSE:f-130
     /**
      * The {@code HoverMenuItemUi} paints a row inside a menu.
      * The same grey tab is used on hover.
@@ -1877,6 +1887,7 @@ public class SshClientTheme { // @aa-sdd PK-1002 PK-1128 docs/specs/common/forma
      * The mark is the emerald color.
      * The icon is fourteen pixels on each side.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-136
      */
     private static final class SapphireCheck implements Icon {
         private static final int EDGE = 14;

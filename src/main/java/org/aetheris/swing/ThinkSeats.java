@@ -126,9 +126,39 @@ final class ThinkSeats {
      * @param canvasId the canvas id
      * @return the key
      */
-    static String canvasKey(String user, String canvasId) { // @aa-sdd PK-1455 docs/specs/java/org/aetheris/swing/swing.spec.md
+    static String canvasKey(String user, String canvasId) {
         String name = user == null ? "" : user;
         return name + SEP + canvasScope(canvasId);
+    }
+
+    /**
+     * The method returns the scope token for one graph walk.
+     * The token is {@code d:} plus the engine word.
+     * An empty engine uses {@code grok/grok-4.7}.
+     * A slash in the engine word stays. {@link #SEP} does not belong in the word.
+     *
+     * @param engine the DSL engine word
+     * @return the scope token
+     */
+    static String graphScope(String engine) {
+        String word = engine == null ? "" : engine.trim();
+        if (word.length() == 0) {
+            word = "grok/grok-4.7";
+        }
+        return "d:" + word;
+    }
+
+    /**
+     * The method returns the map key for one user and one graph walk.
+     * The user and the graph scope are joined with {@link #SEP}.
+     *
+     * @param user the sanitized user
+     * @param engine the DSL engine word
+     * @return the key
+     */
+    static String graphKey(String user, String engine) {
+        String name = user == null ? "" : user;
+        return name + SEP + graphScope(engine);
     }
 
     /**
@@ -307,6 +337,27 @@ final class ThinkSeats {
         String name = user == null ? "" : user;
         load(name);
         String mapKey = canvasKey(name, canvasId);
+        ThinkPane one = panes.get(mapKey);
+        if (one == null) {
+            one = new ThinkPane();
+            panes.put(mapKey, one);
+        }
+        return one;
+    }
+
+    /**
+     * The method returns the stored log for one graph walk.
+     * The user's file loads on the first touch.
+     * The scope is {@code d:} plus the engine word.
+     *
+     * @param user the sanitized user
+     * @param engine the DSL engine word
+     * @return the stored row
+     */
+    synchronized ThinkPane graphLog(String user, String engine) {
+        String name = user == null ? "" : user;
+        load(name);
+        String mapKey = graphKey(name, engine);
         ThinkPane one = panes.get(mapKey);
         if (one == null) {
             one = new ThinkPane();

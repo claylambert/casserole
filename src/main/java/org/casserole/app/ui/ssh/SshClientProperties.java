@@ -32,11 +32,11 @@ import java.util.Properties;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-// @aa-sdd PK-1143 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1162 docs/specs/common/stages.spec.md
-// @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-// @aa-sdd PK-1004 docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1143 docs/specs/common/formal-plan.spec.md FINESSE:f-114
+// @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md FINESSE:f-37
+// @aa-sdd PK-1162 docs/specs/common/stages.spec.md FINESSE:f-62
+// @aa-sdd PK-1231 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md FINESSE:f-7
+// @aa-sdd PK-1004 docs/specs/common/formal-plan.spec.md FINESSE:f-91
 // @aa-sdd PK-1241 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 /**
  * The {@code SshClientProperties} store is the per-user SSH client file.
@@ -45,6 +45,7 @@ import org.yaml.snakeyaml.Yaml;
  * That import runs only when the YAML file is not already there.
  * The theme reads its colors from this store.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#SshClientProperties
  *
  * @author clayl (2026-08-24)
  */
@@ -67,7 +68,7 @@ import org.yaml.snakeyaml.Yaml;
 // @aa-sdd PK-226 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-677 docs/specs/common/formal-plan.spec.md
 // @aa-sdd PK-681 docs/specs/common/formal-plan.spec.md
-public class SshClientProperties { // @aa-sdd PK-1055 docs/specs/common/formal-plan.spec.md
+public class SshClientProperties {
 
     /**
      * The constant is the absolute path of the per-user YAML file.
@@ -88,6 +89,7 @@ public class SshClientProperties { // @aa-sdd PK-1055 docs/specs/common/formal-p
     public static final String UI_PRODUCT_TAB = "ui.product.tab";
     public static final String PRODUCT_TAB_SSH = "ssh";
     public static final String PRODUCT_TAB_AETHERIS = "aetheris";
+    public static final String PRODUCT_TAB_GRAPH = "graph";
 
     public static final String UI_CONNECTION_HOST = "ui.connection.host";
     public static final String UI_CONNECTION_PORT = "ui.connection.port";
@@ -114,6 +116,7 @@ public class SshClientProperties { // @aa-sdd PK-1055 docs/specs/common/formal-p
     public static final String UI_TERMINAL_COLOR_FOREGROUND = "ui.terminal.color.foreground";
     public static final String UI_TERMINAL_COLOR_SELECTION_BACKGROUND = "ui.terminal.color.selection.background";
     public static final String UI_TERMINAL_COLOR_SELECTION_FOREGROUND = "ui.terminal.color.selection.foreground";
+    /** // @aa-sdd G-25 */
     public static final String UI_TERMINAL_COLOR_CURSOR = "ui.terminal.color.cursor";
     public static final String UI_TERMINAL_COLOR_CURSOR_INACTIVE = "ui.terminal.color.cursor.inactive";
     public static final String UI_COLOR_MENU_FOREGROUND = "ui.color.menu.foreground";
@@ -942,27 +945,37 @@ public class SshClientProperties { // @aa-sdd PK-1055 docs/specs/common/formal-p
     /**
      * The method returns the stored product tab.
      * The word {@code aetheris} is returned only when that exact word is stored.
+     * The word {@code graph} is returned only when that exact word is stored.
      * Every other value returns {@code ssh}.
      *
-     * @return The return value is {@code aetheris} or {@code ssh}.
+     * @return The return value is {@code aetheris}, {@code graph}, or {@code ssh}.
      */
     public String getProductTab() {
         String word = getString(UI_PRODUCT_TAB, PRODUCT_TAB_SSH);
         if (PRODUCT_TAB_AETHERIS.equals(word)) {
             return PRODUCT_TAB_AETHERIS;
         }
+        if (PRODUCT_TAB_GRAPH.equals(word)) {
+            return PRODUCT_TAB_GRAPH;
+        }
         return PRODUCT_TAB_SSH;
     }
 
     /**
-     * The method stores {@code ssh} or {@code aetheris} and writes the file.
+     * The method stores {@code ssh}, {@code graph}, or {@code aetheris} and writes the file.
      * Only the exact word {@code aetheris} is stored as {@code aetheris}.
+     * Only the exact word {@code graph} is stored as {@code graph}.
      * Every other value is stored as {@code ssh}.
      *
      * @param tab The tab is the product-tab word.
      */
     public void setProductTab(String tab) {
-        String word = PRODUCT_TAB_AETHERIS.equals(tab) ? PRODUCT_TAB_AETHERIS : PRODUCT_TAB_SSH;
+        String word = PRODUCT_TAB_SSH;
+        if (PRODUCT_TAB_AETHERIS.equals(tab)) {
+            word = PRODUCT_TAB_AETHERIS;
+        } else if (PRODUCT_TAB_GRAPH.equals(tab)) {
+            word = PRODUCT_TAB_GRAPH;
+        }
         setString(UI_PRODUCT_TAB, word);
         save();
     }
@@ -1224,6 +1237,7 @@ public class SshClientProperties { // @aa-sdd PK-1055 docs/specs/common/formal-p
         }
     }
 
+    // @aa-sdd L40 aa-sdd-source-prose.md#SshClientProperties
     /**
      * The {@code SavedAccount} is one remembered SSH account.
      * The account holds a username and a password.

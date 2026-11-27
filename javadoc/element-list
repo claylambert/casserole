@@ -1,4 +1,5 @@
 org.aetheris.config
+org.aetheris.lcarsgraph
 org.aetheris.ssh
 org.aetheris.swing
 org.aetheris.vault

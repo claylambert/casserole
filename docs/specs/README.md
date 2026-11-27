@@ -86,6 +86,7 @@ spine/
 │   └── <a href="java/org/README.md">org</a>
 │       ├── <a href="java/org/aetheris/aetheris.spec.md">org.aetheris</a>
 │       │   ├── <a href="java/org/aetheris/config/config.spec.md">org.aetheris.config</a>
+│       │   ├── <a href="java/org/aetheris/lcarsgraph/lcarsgraph.spec.md">org.aetheris.lcarsgraph</a>
 │       │   ├── <a href="java/org/aetheris/ssh/ssh.spec.md">org.aetheris.ssh</a>
 │       │   ├── <a href="java/org/aetheris/swing/swing.spec.md">org.aetheris.swing</a>
 │       │   ├── <a href="java/org/aetheris/vault/vault.spec.md">org.aetheris.vault</a>

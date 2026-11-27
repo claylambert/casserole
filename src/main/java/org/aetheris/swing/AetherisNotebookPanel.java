@@ -19,6 +19,7 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Dialog;
@@ -60,6 +61,8 @@ import java.beans.PropertyChangeListener;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -67,7 +70,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -152,6 +154,8 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import org.aetheris.config.AetherisYaml;
+import org.aetheris.lcarsgraph.GraphModelListener;
+import org.aetheris.lcarsgraph.GraphTurn;
 import org.aetheris.vault.CanvasHead;
 import org.aetheris.vault.CanvasRecord;
 import org.aetheris.vault.CellRecord;
@@ -180,8 +184,9 @@ import org.casserole.app.ui.ssh.AppleScrollBar;
 import org.casserole.app.ui.ssh.DarkJediTermSettings;
 import org.casserole.app.ui.ssh.SshClientProperties;
 import org.casserole.app.ui.ssh.SshClientTheme;
-import org.casserole.chat.ThinkingClock;
+import org.casserole.chat.ReasonSpinner;
 import org.casserole.edit.EditMemory;
+import org.casserole.llm.GrokCallOptions;
 import org.casserole.llm.LlamaCppLlmService;
 import org.casserole.mood.MoodDesk;
 import org.casserole.app.ui.ssh.SshTtyConnector;
@@ -211,6 +216,7 @@ import org.casserole.app.ui.ssh.Vt100StatusLine;
 // @aa-sdd PK-1083 docs/specs/common/formal-plan.spec.md FINESSE:f-198
 // @aa-sdd PK-1080 docs/specs/common/formal-plan.spec.md FINESSE:f-203
 // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+// @aa-sdd GK-0207 aetheris-stage-2-finessing.001.md FINESSE:f-222
 // @aa-sdd PK-1184 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-23
 // @aa-sdd PK-53 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-24
 // @aa-sdd PK-1065 docs/specs/common/formal-plan.spec.md FINESSE:f-25
@@ -447,7 +453,7 @@ import org.casserole.app.ui.ssh.Vt100StatusLine;
 // @aa-sdd PK-102 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-103 docs/specs/java/org/aetheris/swing/swing.spec.md
 // @aa-sdd PK-725 docs/specs/common/server.spec.md
-public class AetherisNotebookPanel extends JPanel implements AmwpClientListener {
+public class AetherisNotebookPanel extends JPanel implements AmwpClientListener, GraphModelListener {
 
     // @aa-sdd PK-1104 docs/specs/common/formal-plan.spec.md FINESSE:f-175
     // @aa-sdd PK-1103 docs/specs/common/formal-plan.spec.md FINESSE:f-176
@@ -689,6 +695,29 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * @param connector the pane whose ask failed
          */
         void clearPaneEngineAsk(SshTtyConnector connector);
+
+        /**
+         * The method seats the graph on the focused canvas.
+         * The canvas id is the id the vault already stores.
+         *
+         * @param canvasId the focused canvas
+         */
+        void graphCanvas(String canvasId);
+
+        /**
+         * The method zeros the graph for one canvas and arms the per-turn cycle.
+         * A null fallback is allowed when the graph seat already holds a connection.
+         *
+         * @param canvasId the canvas whose graph goes
+         * @param fallback a vault connection for an unseated graph, or null
+         */
+        void graphZero(String canvasId, Connection fallback);
+
+        /**
+         * The method folds the newest sealed turns into the graph Clear Turns armed.
+         * A graph that was not zeroed stays as it stands.
+         */
+        void graphSealed();
     }
 
     // @aa-sdd L40 aetheris-plan-stage-1.001.md
@@ -884,7 +913,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private String holdCardId;
     private int holdCardY;
     private int holdViewY;
-    private ThinkSpinner thinkSpinner;
+    /** One spinner per user and canvas. The seat shows the open canvas only. */
+    private final HashMap<String, ReasonSpinner> canvasSpins = new HashMap<String, ReasonSpinner>();
+    /** The control bar holds this seat on the canvas tab. */
+    private final JPanel canvasSpinSeat = new JPanel(new BorderLayout());
     private Incrementor incrementor;
     private JComboBox<String> userCombo;
     /** BB1. Removes the armed card, or the whole group when that card carries a group id. */
@@ -986,7 +1018,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private Timer moodDraftTimer;
     private MoodSwitch moodSwitch;
     /** Dialog footer spinner. Its clock is this send, not the canvas run. */
-    private ThinkSpinner moodSpin;
+    private ReasonSpinner moodSpin;
     private static final String MOOD_SHAPE_SYSTEM =
             "You fill a mood token string. The app stores that string."
                     + " The app does not store the rest of the reply as the mood."
@@ -1097,6 +1129,21 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private static final String CONSOLE_CELL = "00000000-0000-0000-0000-000000000000";
     /** Console modal. The cell fields stay null. */
     private boolean dialogConsole;
+    /** Model Config opened from the graph MODEL control. A chosen row is the graph walk engine. */
+    private boolean dialogGraph;
+    private String graphEngineChoice = "";
+    /** Defined graph model for each casserole user. The key is {@link #openUsername()}. */
+    private final LinkedHashMap<String, GraphModelSeat> graphModels = new LinkedHashMap<String, GraphModelSeat>();
+    /** Seats the graph thinking band when a reasoning chunk arrives. */
+    private Runnable graphSeat;
+    /** The model lane keeps the reasoning text. The event thread paints a coarse update. */
+    private final GraphThoughtDrain graphThoughts = new GraphThoughtDrain(new Runnable() {
+        @Override
+        public void run() {
+            paintGraphThought();
+        }
+    });
+    private static final String GRAPH_CELL = "11111111-1111-4111-8111-111111111111";
     /** Set in {@code windowClosing} so a dispose event and a late result stay quiet. */
     private boolean consoleDialogDismissed;
     /** True after OK on Transfer Conversation from the console, until that export reply. */
@@ -1240,19 +1287,24 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         installErrorSlide();
         /**
          * The listener runs when the selected canvas tab changes.
-         * The only call is {@link AetherisNotebookPanel#refreshDeleteButton()}.
+         * The call refreshes the delete button, seats that canvas spinner, and seats the graph on that canvas.
          */
         canvasTabs.addChangeListener(new ChangeListener() {
             // @aa-sdd PK-1187 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-10
             // @aa-sdd PK-1198 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-9
             /**
-             * The method calls {@link AetherisNotebookPanel#refreshDeleteButton()} after the tab selection changes.
+             * The method refreshes the delete button, seats that canvas spinner, and seats the graph after the tab selection changes.
              *
              * @param e the change event Swing sent for the tab pane
              */
             @Override
             public void stateChanged(ChangeEvent e) {
                 refreshDeleteButton();
+                syncOpenCanvas();
+                CanvasRecord canvas = currentCanvas();
+                if (canvas != null && canvas.id != null && canvas.id.length() > 0) {
+                    host.graphCanvas(canvas.id);
+                }
             }
         });
         refreshDeleteButton();
@@ -2861,6 +2913,465 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
+     * The method returns a connection from the open vault.
+     * A vault that is not open returns null.
+     *
+     * @return the open connection, or null when the vault is closed
+     * @throws SQLException when the pool cannot lend a connection
+     */
+    public Connection borrowVault() throws SQLException {
+        VaultStore store = vault;
+        if (store == null) {
+            return null;
+        }
+        return store.borrow();
+    }
+
+    /**
+     * The method returns the id of the focused canvas.
+     * A missing canvas returns an empty string.
+     *
+     * @return the canvas id the vault already stores, or an empty string
+     */
+    public String focusedCanvasId() {
+        CanvasRecord canvas = currentCanvas();
+        if (canvas == null || canvas.id == null) {
+            return "";
+        }
+        return canvas.id;
+    }
+
+    /**
+     * The method reads the focused canvas as protocol turns.
+     * An ephemeral card is skipped. A card with no words is skipped.
+     * The oldest card is first. The label is turn-1, then turn-2.
+     *
+     * @return the turns the empty graph can read
+     */
+    public List<GraphTurn> graphTurns() {
+        List<GraphTurn> turns = new ArrayList<GraphTurn>();
+        CanvasRecord canvas = currentCanvas();
+        if (canvas == null) {
+            return turns;
+        }
+        List<CellRecord> ordered = orderedCells(canvas);
+        for (int i = 0; i < ordered.size(); i++) {
+            CellRecord cell = ordered.get(i);
+            if (cell == null || cell.ephemeral) {
+                continue;
+            }
+            String words = graphWords(cell.userText, cell.assistantText);
+            if (words.length() == 0) {
+                continue;
+            }
+            String card = cell.id == null ? "" : cell.id;
+            turns.add(new GraphTurn(card, "turn-" + (turns.size() + 1), words));
+        }
+        return turns;
+    }
+
+    /**
+     * The method returns the model defined for this user on the graph.
+     * A defined model is the word stored from the MODEL button.
+     * No defined model returns {@code pool}.
+     *
+     * @return the engine word
+     */
+    public String graphEngine() {
+        GraphModelSeat seat = heldGraphSeat();
+        if (seat != null && seat.engine().length() > 0) {
+            return seat.engine();
+        }
+        return "pool";
+    }
+
+    /**
+     * The method returns the stored Grok options for the graph DSL call.
+     * A seat that has not kept options returns null.
+     * A family other than Grok returns null.
+     * Thinking on forces the stream on.
+     *
+     * @return The return value is the call options, or null.
+     */
+    // @aa-sdd L40 aetheris-plan-f-324.001.md FINESSE:f-324
+    public GrokCallOptions graphCallOptions() {
+        GraphModelSeat seat = heldGraphSeat();
+        if (seat == null) {
+            return null;
+        }
+        return seat.callOptions(graphThinking());
+    }
+
+    /**
+     * The method stores one defined graph model for the open user.
+     * An empty word is not a definition.
+     * An empty user is not stored.
+     * The think file keeps the map when it is not blocked.
+     *
+     * @param word the engine word
+     */
+    private void keepGraphModel(String word) {
+        if (word == null) {
+            return;
+        }
+        String kept = word.trim();
+        if (kept.length() == 0) {
+            return;
+        }
+        String user = openUsername();
+        if (user == null || user.length() == 0) {
+            return;
+        }
+        GraphModelSeat seat = graphModels.get(user);
+        if (seat == null) {
+            seat = new GraphModelSeat();
+            graphModels.put(user, seat);
+        }
+        seat.engine(kept);
+        graphEngineChoice = kept;
+        saveThinkStore();
+    }
+
+    /**
+     * The method returns the open user's graph seat.
+     * A missing user returns null.
+     * A user with no stored model returns null.
+     *
+     * @return The return value is the seat, or null.
+     */
+    private GraphModelSeat heldGraphSeat() {
+        String user = openUsername();
+        if (user == null || user.length() == 0) {
+            return null;
+        }
+        return graphModels.get(user);
+    }
+
+    /**
+     * The method returns the open user's graph seat, creating it when needed.
+     * A missing user returns null.
+     *
+     * @return The return value is the seat, or null.
+     */
+    private GraphModelSeat ensureGraphSeat() {
+        String user = openUsername();
+        if (user == null || user.length() == 0) {
+            return null;
+        }
+        GraphModelSeat seat = graphModels.get(user);
+        if (seat == null) {
+            seat = new GraphModelSeat();
+            graphModels.put(user, seat);
+        }
+        return seat;
+    }
+
+    /**
+     * The method stores the open graph modal's Grok options on the user seat.
+     * A missing user returns without writing.
+     * A bad temperature or a bad cap sets the status line and leaves the seat.
+     * A chosen model id becomes the engine word.
+     */
+    // @aa-sdd L40 aetheris-plan-f-324.001.md FINESSE:f-324
+    private void keepGraphGrok() {
+        GraphModelSeat seat = ensureGraphSeat();
+        if (seat == null) {
+            return;
+        }
+        String modelId = "";
+        if (dialogGrokModel != null && dialogGrokModel.getSelectedItem() != null) {
+            modelId = String.valueOf(dialogGrokModel.getSelectedItem()).trim();
+        }
+        if (modelId.length() == 0) {
+            modelId = AetherisStage2.modelAfterSlash(seat.engine());
+        }
+        String effort = seat.effort();
+        if (dialogGrokEffort != null && dialogGrokEffort.getSelectedItem() != null) {
+            effort = String.valueOf(dialogGrokEffort.getSelectedItem());
+        }
+        boolean send = dialogGrokSendEffort == null ? seat.sendEffort() : dialogGrokSendEffort.isSelected();
+        boolean stream = seat.stream();
+        if (dialogGrokStream != null && dialogGrokStream.getSelectedItem() != null) {
+            stream = "true".equals(String.valueOf(dialogGrokStream.getSelectedItem()));
+        }
+        boolean burner = dialogGrokBurner == null ? seat.burner() : dialogGrokBurner.isSelected();
+        double temp = seat.temperature();
+        if (dialogGrokTemperature != null) {
+            String text = dialogGrokTemperature.getText() == null ? "" : dialogGrokTemperature.getText().trim();
+            if (text.length() > 0) {
+                try {
+                    double parsed = Double.parseDouble(text);
+                    if (Double.isInfinite(parsed) || Double.isNaN(parsed)) {
+                        host.aetherisStatus(statusLine("settings"));
+                        return;
+                    }
+                    temp = parsed;
+                } catch (NumberFormatException ex) {
+                    host.aetherisStatus(statusLine("settings"));
+                    return;
+                }
+            }
+        }
+        int max = seat.maxTokens();
+        if (dialogGrokMaxTokens != null) {
+            String text = dialogGrokMaxTokens.getText() == null ? "" : dialogGrokMaxTokens.getText().trim();
+            if (text.length() > 0) {
+                try {
+                    int parsed = Integer.parseInt(text);
+                    if (parsed < 1) {
+                        host.aetherisStatus(statusLine("settings"));
+                        return;
+                    }
+                    max = parsed;
+                } catch (NumberFormatException ex) {
+                    host.aetherisStatus(statusLine("settings"));
+                    return;
+                }
+            }
+        }
+        boolean thinking = dialogGrokThink != null && dialogGrokThink.isSelected();
+        if (modelId.length() > 0) {
+            seat.engine("grok/" + modelId);
+            graphEngineChoice = seat.engine();
+        }
+        seat.keepGrok(modelId, effort, send, stream, burner, temp, max, thinking);
+        thinkOf(GRAPH_CELL).grokOn = thinking;
+        saveThinkStore();
+    }
+
+    /**
+     * The method builds the Grok row the graph modal shows.
+     * A seat that has not kept options returns null.
+     *
+     * @return The return value is the row, or null.
+     */
+    private GrokSettingsDocument.Entry graphGrokEntry() {
+        GraphModelSeat seat = heldGraphSeat();
+        if (seat == null || !seat.kept()) {
+            return null;
+        }
+        GrokSettingsDocument.Entry entry = new GrokSettingsDocument.Entry();
+        String id = "";
+        if ("grok".equals(AetherisStage2.providerId(seat.engine()))) {
+            id = AetherisStage2.modelAfterSlash(seat.engine());
+        }
+        entry.model = id;
+        entry.reasoningEffort = seat.effort();
+        entry.sendReasoningEffort = seat.sendEffort();
+        entry.stream = seat.stream();
+        entry.burnerCloud = seat.burner();
+        entry.temperature = seat.temperature();
+        entry.maxCompletionTokens = seat.maxTokens();
+        return entry;
+    }
+
+    /**
+     * The method keeps the seat that places the graph thinking band.
+     * A null seat leaves a chunk on the strip without moving the band.
+     *
+     * @param seat the seat runs on the event thread before a chunk is written
+     */
+    public void hearGraphSeat(Runnable seat) {
+        graphSeat = seat;
+    }
+
+    /**
+     * The method reports the Thinking checkbox for the graph model.
+     * The flag is the one stored on the graph cell.
+     *
+     * @return true when that checkbox is on
+     */
+    public boolean graphThinking() {
+        GraphModelSeat seat = heldGraphSeat();
+        if (seat != null && seat.kept()) {
+            String family = AetherisStage2.providerId(seat.engine());
+            if ("pool".equals(family)) {
+                return seat.poolOn();
+            }
+            if ("ollama".equals(family)) {
+                return seat.ollamaOn();
+            }
+            if ("grok".equals(family)) {
+                return seat.grokOn();
+            }
+            return false;
+        }
+        return thinkOf(GRAPH_CELL).grokOn;
+    }
+
+    /**
+     * The method returns the thinking pane for this user and the DSL model.
+     * A quiet checkbox returns null.
+     * An empty user returns null.
+     * An empty engine uses {@code pool}.
+     *
+     * @param user the sanitized user
+     * @return the pane, or null
+     */
+    public JComponent graphBand(String user) {
+        if (user == null || user.length() == 0 || !graphThinking()) {
+            return null;
+        }
+        final String name = user;
+        final String engine = graphEngineWord();
+        final String key = ThinkSeats.graphKey(name, engine);
+        return thinkPanes.acquire(key, new ThinkPaneManager.StripSource() {
+            @Override
+            public ThinkStrip create() {
+                return newGraphStrip(name, engine);
+            }
+        });
+    }
+
+    /**
+     * The method keeps one reasoning chunk on the model lane.
+     * An empty chunk returns without a post.
+     * A paint that is already waiting is not posted again.
+     * The event thread drains the text, seats the strip, and writes it once.
+     * A quiet checkbox drops that paint.
+     * An empty user drops that paint.
+     *
+     * @param chunk the reasoning text
+     */
+    public void graphThought(String chunk) {
+        // @aa-sdd L40 aetheris-plan-f-327.001.md FINESSE:f-327
+        graphThoughts.offer(chunk);
+    }
+
+    /**
+     * The method writes the drained reasoning text on the graph strip.
+     * A quiet checkbox returns without writing.
+     * An empty user returns without writing.
+     * The seat runs once so the pane is on the graph.
+     * The strip is inserted and pinned. The picture is not painted here.
+     * The log is not written here.
+     */
+    private void paintGraphThought() {
+        // @aa-sdd L40 aetheris-plan-f-327.001.md FINESSE:f-327
+        String chunk = graphThoughts.take();
+        if (chunk == null || chunk.length() == 0 || !graphThinking()) {
+            return;
+        }
+        String user = openUsername();
+        if (user == null || user.length() == 0) {
+            return;
+        }
+        if (graphSeat != null) {
+            graphSeat.run();
+        }
+        String engine = graphEngineWord();
+        ThinkStrip strip = graphStrip(user);
+        thinkPanes.stream().offerLive(strip, GRAPH_CELL, ThinkSeats.word(shortModelName(engine)), chunk);
+    }
+
+    /**
+     * The method returns the graph thinking pane for this user.
+     * A missing pane is created when thinking is on.
+     *
+     * @param user the sanitized user
+     * @return the pane, or null
+     */
+    private ThinkStrip graphStrip(String user) {
+        String engine = graphEngineWord();
+        ThinkStrip strip = thinkPanes.acquire(ThinkSeats.graphKey(user, engine), null);
+        if (strip == null) {
+            JComponent band = graphBand(user);
+            if (band instanceof ThinkStrip) {
+                strip = (ThinkStrip) band;
+            }
+        }
+        return strip;
+    }
+
+    /**
+     * The method closes the open block on the graph thinking pane.
+     * The pane stays open or folded as the user left it.
+     * A missing pane returns without a call.
+     * A call off the event thread posts itself and returns.
+     * Any text still waiting is written once before the block closes.
+     * The checkbox may already be off. The block still closes.
+     * The log is written once, off the event thread.
+     */
+    public void graphThoughtEnd() {
+        if (!EventQueue.isDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    graphThoughtEnd();
+                }
+            });
+            return;
+        }
+        // @aa-sdd L40 aetheris-plan-f-327.001.md FINESSE:f-327
+        String rest = graphThoughts.take();
+        String user = openUsername();
+        if (user == null || user.length() == 0) {
+            return;
+        }
+        String engine = graphEngineWord();
+        ThinkStrip strip = thinkPanes.acquire(ThinkSeats.graphKey(user, engine), null);
+        if (rest != null && rest.length() > 0 && graphThinking()) {
+            if (graphSeat != null) {
+                graphSeat.run();
+            }
+            if (strip == null) {
+                strip = graphStrip(user);
+            }
+            thinkPanes.stream().offerLive(strip, GRAPH_CELL, ThinkSeats.word(shortModelName(engine)), rest);
+        }
+        thinkPanes.stream().finish(strip);
+        if (strip == null) {
+            return;
+        }
+        final String text = strip.text();
+        final String name = user;
+        final String engineWord = engine;
+        worker.submit(new Runnable() {
+            @Override
+            public void run() {
+                storeGraphText(name, engineWord, text);
+            }
+        });
+    }
+
+    /**
+     * The method returns the engine word the graph thinking pane uses.
+     * An empty engine uses {@code pool}.
+     *
+     * @return the engine word
+     */
+    private String graphEngineWord() {
+        String engine = graphEngine();
+        if (engine == null || engine.trim().length() == 0) {
+            return "pool";
+        }
+        return engine.trim();
+    }
+
+    private static String graphWords(String userText, String assistantText) {
+        StringBuilder sb = new StringBuilder();
+        appendGraphWords(sb, userText);
+        appendGraphWords(sb, assistantText);
+        return sb.toString().trim();
+    }
+
+    private static void appendGraphWords(StringBuilder sb, String text) {
+        if (text == null) {
+            return;
+        }
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '\n' || c == '\r' || c == '\t') {
+                c = ' ';
+            }
+            if (c == ' ' && (sb.length() == 0 || sb.charAt(sb.length() - 1) == ' ')) {
+                continue;
+            }
+            sb.append(c);
+        }
+    }
+
+    /**
      * The method fills the user pull-down with the connected users.
      * A missing combo returns immediately.
      * {@code usersAdjusting} stays true until the combo is finished, including when the fill throws.
@@ -2901,23 +3412,217 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * The method hides the one thinking spinner.
+     * The method stops one canvas spinner.
      * A missing spinner is left alone.
-     * The user's run stays on that user's object.
+     * Another canvas keeps its own spinner.
+     *
+     * @param user the sanitized user
+     * @param canvasId the canvas id
      */
-    private void stopThinking() {
-        if (thinkSpinner != null) {
-            thinkSpinner.stopSpin();
+    private void quietCanvas(String user, String canvasId) {
+        if (user == null || user.length() == 0 || canvasId == null || canvasId.length() == 0) {
+            return;
+        }
+        ReasonSpinner spin = canvasSpins.get(ThinkSeats.canvasKey(user, canvasId));
+        if (spin != null) {
+            spin.stopSpin();
         }
     }
 
     /**
-     * The method drives the one spinner from the vault on screen.
+     * The method stops every canvas spinner for one user.
+     * Another user keeps its own spinners.
+     *
+     * @param user the sanitized user
+     */
+    private void quietUser(String user) {
+        if (user == null || user.length() == 0) {
+            return;
+        }
+        String prefix = user + ThinkSeats.SEP;
+        Iterator<HashMap.Entry<String, ReasonSpinner>> it = canvasSpins.entrySet().iterator();
+        while (it.hasNext()) {
+            HashMap.Entry<String, ReasonSpinner> entry = it.next();
+            String key = entry.getKey();
+            if (key != null && key.startsWith(prefix)) {
+                entry.getValue().stopSpin();
+            }
+        }
+    }
+
+    /**
+     * The method copies the running cell ids for one user.
+     *
+     * @param user the sanitized user
+     * @return the ids, and the list is empty when none are running
+     */
+    private ArrayList<String> runningIds(String user) {
+        ArrayList<String> ids = new ArrayList<String>();
+        synchronized (runLock) {
+            UserRun run = user == null ? null : userRuns.get(user);
+            if (run == null) {
+                return ids;
+            }
+            Iterator<CellRun> it = run.runs.values().iterator();
+            while (it.hasNext()) {
+                CellRun one = it.next();
+                if (one != null && "RUNNING".equals(one.phase) && one.cellId != null) {
+                    ids.add(one.cellId);
+                }
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * The method reports whether one canvas still has a running cell.
+     *
+     * @param user the sanitized user
+     * @param canvasId the canvas id
+     * @return true when a cell on that canvas is phase RUNNING
+     */
+    private boolean canvasHasRun(String user, String canvasId) {
+        if (user == null || canvasId == null || canvasId.length() == 0) {
+            return false;
+        }
+        ArrayList<String> ids = runningIds(user);
+        for (int i = 0; i < ids.size(); i++) {
+            if (canvasId.equals(canvasIdFor(user, ids.get(i)))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The method returns the latest start on one canvas.
+     * A canvas with no running cell returns 0.
+     *
+     * @param user the sanitized user
+     * @param canvasId the canvas id
+     * @return the latest start millisecond, or 0
+     */
+    private long canvasStart(String user, String canvasId) {
+        ArrayList<String> ids = new ArrayList<String>();
+        ArrayList<Long> starts = new ArrayList<Long>();
+        synchronized (runLock) {
+            UserRun run = user == null ? null : userRuns.get(user);
+            if (run == null) {
+                return 0L;
+            }
+            Iterator<CellRun> it = run.runs.values().iterator();
+            while (it.hasNext()) {
+                CellRun one = it.next();
+                if (one == null || !"RUNNING".equals(one.phase) || one.cellId == null) {
+                    continue;
+                }
+                ids.add(one.cellId);
+                starts.add(Long.valueOf(one.startedAtMs));
+            }
+        }
+        long at = 0L;
+        if (canvasId == null) {
+            return at;
+        }
+        for (int i = 0; i < ids.size(); i++) {
+            if (!canvasId.equals(canvasIdFor(user, ids.get(i)))) {
+                continue;
+            }
+            long one = starts.get(i).longValue();
+            if (one >= at) {
+                at = one;
+            }
+        }
+        return at;
+    }
+
+    /**
+     * The method returns the spinner for one user and one canvas.
+     * The first call builds that spinner.
+     * A later call returns the same spinner.
+     *
+     * @param user the sanitized user
+     * @param canvasId the canvas id
+     * @return the spinner, or null when the user or the canvas is empty
+     */
+    private ReasonSpinner spinFor(String user, String canvasId) {
+        if (user == null || user.length() == 0 || canvasId == null || canvasId.length() == 0) {
+            return null;
+        }
+        String key = ThinkSeats.canvasKey(user, canvasId);
+        ReasonSpinner spin = canvasSpins.get(key);
+        if (spin != null) {
+            return spin;
+        }
+        spin = new ReasonSpinner("thinking");
+        theme.applyLabel(spin.glyphLabel());
+        theme.applyLabel(spin.wordsLabel());
+        theme.applyPanel(spin);
+        spin.setOpaque(false);
+        canvasSpins.put(key, spin);
+        return spin;
+    }
+
+    /**
+     * The method puts the open canvas spinner in the seat.
+     * Another canvas spinner leaves the seat.
+     * The seat is what the control bar holds for the canvas tab.
+     */
+    private void seatVisibleCanvas() {
+        String user = openUsername();
+        String canvasId = focusedCanvasId();
+        ReasonSpinner live = null;
+        if (user != null && user.length() > 0 && canvasId != null && canvasId.length() > 0) {
+            live = canvasSpins.get(ThinkSeats.canvasKey(user, canvasId));
+        }
+        ReasonSpinner shown = null;
+        if (canvasSpinSeat.getComponentCount() == 1
+                && canvasSpinSeat.getComponent(0) instanceof ReasonSpinner) {
+            shown = (ReasonSpinner) canvasSpinSeat.getComponent(0);
+        }
+        if (shown == live) {
+            return;
+        }
+        Font face = shown == null ? null : shown.wordsLabel().getFont();
+        canvasSpinSeat.removeAll();
+        if (live != null) {
+            if (face != null) {
+                live.setFont(face);
+            }
+            canvasSpinSeat.add(live, BorderLayout.CENTER);
+        }
+        canvasSpinSeat.revalidate();
+        canvasSpinSeat.repaint();
+    }
+
+    /**
+     * The method matches the open canvas spinner to that canvas's runs.
+     * A canvas that is not showing keeps the spinner it already has.
+     */
+    private void syncOpenCanvas() {
+        String user = openUsername();
+        String canvasId = focusedCanvasId();
+        seatVisibleCanvas();
+        if (user == null || user.length() == 0 || canvasId == null || canvasId.length() == 0) {
+            return;
+        }
+        if (canvasHasRun(user, canvasId)) {
+            ReasonSpinner spin = spinFor(user, canvasId);
+            if (spin != null && !spin.isVisible()) {
+                spin.startAt(canvasStart(user, canvasId));
+            }
+            seatVisibleCanvas();
+            return;
+        }
+        quietCanvas(user, canvasId);
+    }
+
+    /**
+     * The method drives the open canvas spinner from the vault on screen.
      * A call off the event thread posts itself and returns.
-     * Under the run lock, the spinner runs when that user's {@link UserRun} exists and {@link UserRun} reports a running cell.
-     * A missing spinner returns after that check.
-     * A running user starts the spinner.
-     * A user who is not running stops the spinner.
+     * A user who is not the open vault returns without a change.
+     * The spinner runs when that canvas has a running cell.
+     * Another canvas keeps its own spinner off this seat.
      *
      * @param username the sanitized vault user now on screen
      */
@@ -2938,19 +3643,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             });
             return;
         }
-        boolean spin = false;
-        synchronized (runLock) {
-            UserRun run = userRuns.get(username);
-            spin = run != null && run.anyRunning();
-        }
-        if (thinkSpinner == null) {
+        if (username == null || !username.equals(openUsername())) {
             return;
         }
-        if (spin) {
-            thinkSpinner.startSpin();
-        } else {
-            thinkSpinner.stopSpin();
-        }
+        syncOpenCanvas();
     }
 
     /**
@@ -4026,7 +4722,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (cellId == null || cellId.length() == 0) {
             return;
         }
-        boolean stop = false;
+        String owner = "";
         synchronized (runLock) {
             Iterator<Map.Entry<String, UserRun>> it = userRuns.entrySet().iterator();
             while (it.hasNext()) {
@@ -4037,12 +4733,18 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     continue;
                 }
                 run.runs.remove(cellId);
-                stop = entry.getKey().equals(openUsername()) && !run.anyRunning();
+                owner = entry.getKey();
                 break;
             }
         }
-        if (stop) {
-            stopThinking();
+        if (owner.length() > 0) {
+            String canvasId = canvasIdFor(owner, cellId);
+            if (!canvasHasRun(owner, canvasId)) {
+                quietCanvas(owner, canvasId);
+            }
+            if (owner.equals(openUsername())) {
+                seatVisibleCanvas();
+            }
         }
     }
 
@@ -4052,13 +4754,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The connector and the focused cell id are replaced on that user.
      * A second run for the same cell id replaces that cell.
      * The new {@link CellRun} is phase {@code RUNNING} and records the current time as the start.
-     * A present thinking spinner starts.
+     * That cell's canvas spinner starts.
+     * Another canvas keeps its own spinner.
      *
      * @param username the sanitized user
      * @param cellId the cell that is thinking
      * @param connector the connector the execute is written on
      */
     private void armRun(String username, String cellId, SshTtyConnector connector) {
+        long started = 0L;
         synchronized (runLock) {
             UserRun run = userRuns.get(username);
             if (run == null) {
@@ -4072,9 +4776,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             one.phase = "RUNNING";
             one.startedAtMs = System.currentTimeMillis();
             run.runs.put(cellId, one);
+            started = one.startedAtMs;
         }
-        if (thinkSpinner != null) {
-            thinkSpinner.startSpin();
+        String canvasId = canvasIdFor(username, cellId);
+        ReasonSpinner spin = spinFor(username, canvasId);
+        if (spin != null) {
+            spin.startAt(started);
+        }
+        if (username != null && username.equals(openUsername())) {
+            seatVisibleCanvas();
         }
     }
 
@@ -4148,10 +4858,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 userRuns.remove(username);
             }
         }
+        quietUser(username);
         if (!showing) {
             return;
         }
-        stopThinking();
+        seatVisibleCanvas();
         if (reason == null || reason.length() == 0) {
             host.aetherisStatus("Session closed.");
         } else {
@@ -4188,10 +4899,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             connector = run.connector;
             cellId = one.cellId;
             one.phase = "STOPPED";
-            if (!run.anyRunning()) {
-                stopThinking();
-            }
         }
+        String canvasId = canvasIdFor(username, cellId);
+        if (!canvasHasRun(username, canvasId)) {
+            quietCanvas(username, canvasId);
+        }
+        seatVisibleCanvas();
         host.aetherisStatus("Stopped.");
         /**
          * The worker task writes the cancel and reports a failure on the event thread.
@@ -4252,28 +4965,6 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             }
             CellRun one = run.runs.get(cellId);
             return one != null && "STOPPED".equals(one.phase);
-        }
-    }
-
-    /**
-     * The method returns the elapsed label for the vault on screen.
-     * The label comes from {@link ThinkingClock#format(long)}.
-     * A missing run, a missing focused id, or a missing cell uses {@code 0}.
-     * Any other call uses the focused cell's start time.
-     *
-     * @return the elapsed label for the vault on screen
-     */
-    private String thinkingTime() {
-        synchronized (runLock) {
-            UserRun run = userRuns.get(openUsername());
-            if (run == null || run.focusedId == null) {
-                return ThinkingClock.format(0L);
-            }
-            CellRun one = run.runs.get(run.focusedId);
-            if (one == null) {
-                return ThinkingClock.format(0L);
-            }
-            return ThinkingClock.format(one.startedAtMs);
         }
     }
 
@@ -4877,8 +5568,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         theme.applyPanel(stack);
         stack.add(left, BorderLayout.NORTH);
         stack.add(tools, BorderLayout.SOUTH);
-        thinkSpinner = new ThinkSpinner();
-        theme.applyPanel(thinkSpinner);
+        canvasSpinSeat.setOpaque(false);
+        canvasSpinSeat.setName("canvas-spin-seat");
         userCombo = new JComboBox<String>();
         userCombo.setToolTipText(userTip(""));
         theme.applyComboBox(userCombo);
@@ -5053,17 +5744,18 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
-     * The method returns the thinking cluster.
-     * The cluster is the spinner and its clock.
-     * The control bar seats it.
-     * A quiet deck hides it.
+     * The method returns the canvas spinner seat.
+     * The seat holds the open canvas spinner.
+     * The control bar shows that seat on the canvas tab only.
+     * Another canvas keeps its own spinner off this seat.
+     * A quiet canvas hides its spinner.
      * BB1 keeps the user combo.
      * // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md FINESSE:f-180
      *
-     * @return the spinner and its clock
+     * @return the seat for the open canvas spinner
      */
     public JPanel thinkCluster() {
-        return thinkSpinner;
+        return canvasSpinSeat;
     }
 
     /**
@@ -5295,6 +5987,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     java.util.ArrayList<String> order = new java.util.ArrayList<String>();
                     order.add(cell.id);
                     vault.saveOrder(canvas.id, order);
+                    Connection lent = null;
+                    try {
+                        lent = vault.borrow();
+                    } catch (SQLException ignored) {
+                        lent = null;
+                    }
+                    final Connection fallback = lent;
                     /**
                      * The runnable seats the one remaining cell and forgets the wiped ids.
                      */
@@ -5337,6 +6036,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                             host.aetherisStatus("cleared turns on " + name);
                             refreshDeleteButton();
                             refreshInspector();
+                            // @aa-sdd L40 aetheris-plan-f-310.001.md FINESSE:f-310
+                            host.graphZero(canvas.id, fallback);
                         }
                     });
                 } catch (SQLException ex) {
@@ -8443,7 +9144,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * Each id is removed from that run's answers and from that run's runs.
      * A run whose phase is {@code RUNNING} is set to {@code STOPPED} and remembered for the cancel frame.
      * A focused id that is leaving is cleared.
-     * {@link #stopThinking()} runs when the user run has nothing left in {@code RUNNING}.
+     * Each leaving canvas is quieted when that canvas has nothing left in {@code RUNNING}.
+     * The open seat is seated again.
      * A missing connector returns before any frame is written.
      * An empty running list returns before any frame is written.
      * Each remaining id is sent on the worker as {@code TYPE_CANCEL} with an empty scope-A body.
@@ -8458,7 +9160,6 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         final String username = openUsername();
         final SshTtyConnector connector;
         final ArrayList<String> running = new ArrayList<String>();
-        boolean stop = false;
         synchronized (runLock) {
             UserRun run = username == null ? null : userRuns.get(username);
             connector = run == null ? null : run.connector;
@@ -8476,12 +9177,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 if (run.focusedId != null && ids.contains(run.focusedId)) {
                     run.focusedId = null;
                 }
-                stop = !run.anyRunning();
             }
         }
-        if (stop) {
-            stopThinking();
+        for (int i = 0; i < ids.size(); i++) {
+            String canvasId = canvasIdFor(username, ids.get(i));
+            if (!canvasHasRun(username, canvasId)) {
+                quietCanvas(username, canvasId);
+            }
         }
+        seatVisibleCanvas();
         if (connector == null || running.size() == 0) {
             return;
         }
@@ -11229,6 +11933,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             rebuildTabs();
             refreshInspector();
         }
+        // @aa-sdd L40 aetheris-plan-f-310.001.md FINESSE:f-310
+        host.graphSealed();
     }
 
     /**
@@ -11303,6 +12009,33 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 }
             }
         });
+    }
+
+    /**
+     * The graph speaks one card and one mark.
+     * {@code excluded} seats E. {@code included} seats I.
+     * A missing cell returns. Any other word returns.
+     * This method does not call the graph.
+     *
+     * @param card the card reference the evidence already stores
+     * @param mark excluded or included
+     */
+    @Override
+    public void notice(String card, String mark) {
+        if (card == null || mark == null) {
+            return;
+        }
+        CellRecord cell = findCell(card);
+        if (cell == null) {
+            return;
+        }
+        if ("excluded".equals(mark)) {
+            seatMark(cell, CellState.EXCLUDED);
+            return;
+        }
+        if ("included".equals(mark)) {
+            seatMark(cell, CellState.INCLUDED);
+        }
     }
 
     /**
@@ -13959,6 +14692,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     // @aa-sdd PK-1077 docs/specs/common/formal-plan.spec.md FINESSE:f-206
     // @aa-sdd PK-1167 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-211
     // @aa-sdd PK-1072 docs/specs/common/formal-plan.spec.md FINESSE:f-22
+    // @aa-sdd GK-0524 aetheris-stage-2-finessing.001.md FINESSE:f-222
     // @aa-sdd PK-1194 docs/specs/java/org/aetheris/swing/swing.spec.md FINESSE:f-3
     // @aa-sdd PK-1061 docs/specs/common/formal-plan.spec.md FINESSE:f-31
     // @aa-sdd PK-1058 docs/specs/common/formal-plan.spec.md FINESSE:f-34
@@ -15385,6 +16119,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
              * The listener presses the head lock.
              */
             b.addMouseListener(new MouseAdapter() {
+                // @aa-sdd GK-0573 aetheris-stage-2-finessing.001.md FINESSE:f-222
                 // @aa-sdd PK-1024 docs/specs/common/formal-plan.spec.md FINESSE:f-71
                 /**
                  * The method returns when the press is not the left button.
@@ -19397,7 +20132,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * The checkbox labeled {@code SSH Mood Active} starts from {@link #sshMoodOn} for {@link #openUsername}.
      * The checkbox is enabled only when that username is non-empty.
      * A change calls {@link #setSshMoodUser}.
-     * {@link ThinkSpinner} is the footer clock.
+     * {@link ReasonSpinner} is the footer clock. The word is thinking.
      * A resize calls {@link #syncMoodDraft}.
      *
      * The terminal widget fills the center.
@@ -19690,7 +20425,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         buttons.add(clear);
         buttons.add(approve);
         buttons.add(cancel);
-        ThinkSpinner spin = new ThinkSpinner();
+        ReasonSpinner spin = new ReasonSpinner("thinking");
+        theme.applyLabel(spin.glyphLabel());
+        theme.applyLabel(spin.wordsLabel());
         theme.applyPanel(spin);
         spin.setToolTipText(buttonTip(
                 "The spinner runs while a mood reply is in flight."
@@ -20471,7 +21208,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (moodSpin == null) {
             return;
         }
-        moodSpin.startOwnSpin(System.currentTimeMillis());
+        moodSpin.startAt(System.currentTimeMillis());
     }
 
     /**
@@ -22352,6 +23089,81 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     }
 
     /**
+     * The method builds the thinking pane for the DSL model.
+     * The host writes that engine's log and leaves the canvas pane alone.
+     * The strip starts open. An empty log stays hidden until a chunk arrives.
+     * A closed pane opens when a chunk arrives.
+     * Laying the strip out does not ask for the band again.
+     *
+     * @param user the sanitized user
+     * @param engine the DSL engine word
+     * @return the new strip
+     */
+    private ThinkStrip newGraphStrip(final String user, final String engine) {
+        final AetherisNotebookPanel panel = this;
+        final ThinkStrip[] born = new ThinkStrip[1];
+        born[0] = new ThinkStrip(theme, monoFont(), uiFontSize, true, thinkUserHeight, false,
+                false, new ThinkStrip.Host() {
+                    @Override
+                    public int maxHeight() {
+                        int natural = born[0] == null ? 48 : born[0].naturalHeight();
+                        if (panel.getHeight() < 1) {
+                            return 480;
+                        }
+                        int room = panel.getHeight() - 160;
+                        if (room < natural) {
+                            return natural;
+                        }
+                        return room;
+                    }
+
+                    @Override
+                    public void relayout() {
+                        // The strip is not in the manager until create returns.
+                        if (born[0] != null && born[0].getParent() != null) {
+                            born[0].getParent().revalidate();
+                            born[0].getParent().repaint();
+                        }
+                    }
+
+                    @Override
+                    public void saveLog(String text) {
+                        panel.storeGraphText(user, engine, text);
+                    }
+
+                    @Override
+                    public String loadLog() {
+                        return panel.storedGraphText(user, engine);
+                    }
+
+                    @Override
+                    public void noteChrome(boolean closed, int height) {
+                        if (height > 0) {
+                            thinkUserHeight = height;
+                        }
+                    }
+
+                    @Override
+                    public void saveChrome() {
+                        panel.saveThinkStore();
+                    }
+
+                    @Override
+                    public void cleared() {
+                        panel.storeGraphText(user, engine, "");
+                        thinkPanes.stream().finish(born[0]);
+                    }
+
+                    @Override
+                    public void noteSeat(boolean shut, boolean folded) {
+                        // This strip keeps the shut flag and the fold.
+                    }
+                });
+        born[0].loadStoredLog();
+        return born[0];
+    }
+
+    /**
      * The method puts {@code strip} in the slot.
      * The same pane returns without a swap.
      * A null strip clears the slot.
@@ -22403,25 +23215,30 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private void seatArmedThink(String username) {
         if (username == null || username.length() == 0 || focusedCellId == null) {
             seatThinkStrip(null, "", "");
+            seatVisibleCanvas();
             return;
         }
         if (!username.equals(openUsername())) {
             seatThinkStrip(null, "", "");
+            seatVisibleCanvas();
             return;
         }
         CellRecord armed = findCell(focusedCellId);
         if (armed == null) {
             seatThinkStrip(null, "", username);
+            seatVisibleCanvas();
             return;
         }
         String canvasId = canvasIdOnOpen(armed.id);
         if (canvasId.length() == 0) {
             seatThinkStrip(null, "", username);
+            seatVisibleCanvas();
             return;
         }
         String key = ThinkSeats.canvasKey(username, canvasId);
         ThinkStrip strip = canvasPane(username, canvasId, armed.id);
         seatThinkStrip(strip, key, username);
+        seatVisibleCanvas();
     }
 
     /**
@@ -22692,6 +23509,45 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return "";
         }
         ThinkSeats.ThinkPane row = thinkSeats.canvasLog(user, canvasId);
+        return row.text == null ? "" : row.text;
+    }
+
+    /**
+     * The method stores the graph thinking log for one engine.
+     * An empty string drops that scope from the user's file.
+     * Another user's file is not opened.
+     *
+     * @param user the sanitized user
+     * @param engine the DSL engine word
+     * @param text the strip text
+     */
+    private void storeGraphText(String user, String engine, String text) {
+        if (user == null || user.length() == 0) {
+            return;
+        }
+        ThinkSeats.ThinkPane row = thinkSeats.graphLog(user, engine);
+        if (text == null || text.length() == 0) {
+            row.clear();
+        } else {
+            row.text = text;
+            row.cell = GRAPH_CELL;
+        }
+        thinkSeats.saveUser(user);
+    }
+
+    /**
+     * The method returns the graph thinking log for one engine.
+     * A missing row returns an empty string.
+     *
+     * @param user the sanitized user
+     * @param engine the DSL engine word
+     * @return the stored text
+     */
+    private String storedGraphText(String user, String engine) {
+        if (user == null || user.length() == 0) {
+            return "";
+        }
+        ThinkSeats.ThinkPane row = thinkSeats.graphLog(user, engine);
         return row.text == null ? "" : row.text;
     }
 
@@ -23139,6 +23995,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return;
         }
         dialogConsole = false;
+        dialogGraph = false;
         dialogConsoleThink = "";
         dialogCell = cell;
         dialogCardField = field;
@@ -23175,6 +24032,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return;
         }
         dialogConsole = true;
+        dialogGraph = false;
         dialogConsoleThink = think == null ? "" : think.trim();
         dialogCell = null;
         dialogCardField = null;
@@ -23186,6 +24044,47 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             provider = "ollama";
         }
         mountModelDialog(provider, seedId, null);
+    }
+
+    /**
+     * The same Model Config modal for the graph walk.
+     * A chosen Grok row is stored for {@link #graphEngine()}.
+     * The choice does not write a notebook card.
+     */
+    public void openGraphModel() {
+        if (grokDialogOpen) {
+            return;
+        }
+        dialogGraph = true;
+        dialogConsole = false;
+        dialogConsoleThink = "";
+        dialogCell = null;
+        dialogCardField = null;
+        dialogCellId = GRAPH_CELL;
+        dialogShowId = "";
+        String held = graphEngine();
+        String provider = AetherisStage2.providerId(held);
+        if (provider == null || provider.length() == 0) {
+            provider = "pool";
+        }
+        CellThink seed = new CellThink();
+        GraphModelSeat seat = heldGraphSeat();
+        if (seat != null && seat.kept()) {
+            seed.ollamaOn = seat.ollamaOn();
+            seed.ollamaLevel = seat.ollamaLevel();
+            seed.poolOn = seat.poolOn();
+            seed.grokOn = seat.grokOn();
+            seed.llamaTemperaturePresent = seat.llamaTemperaturePresent();
+            seed.llamaTemperature = seat.llamaTemperature();
+            seed.llamaMaxPresent = seat.llamaMaxPresent();
+            seed.llamaMaxTokens = seat.llamaMaxTokens();
+            CellThink box = thinkOf(GRAPH_CELL);
+            box.ollamaOn = seed.ollamaOn;
+            box.ollamaLevel = seed.ollamaLevel;
+            box.poolOn = seed.poolOn;
+            box.grokOn = seed.grokOn;
+        }
+        mountModelDialog(provider, AetherisStage2.modelAfterSlash(held), seed);
     }
 
     /**
@@ -23659,7 +24558,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                 applySendEffortChrome();
                 dialogAdjusting = false;
                 if (dialogCell == null) {
-                    if (dialogConsole) {
+                    if (dialogGraph) {
+                        if (modelId.trim().length() > 0) {
+                            keepGraphModel("grok/" + modelId.trim());
+                        }
+                        keepGraphGrok();
+                    } else if (dialogConsole) {
                         sendConsoleSet();
                     }
                     return;
@@ -23739,6 +24643,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
          * {@code dialogAdjusting} is true while that combo changes.
          * If {@code dialogConsole} is true, the listener calls {@link #sendConsoleSet}.
          * The listener then returns.
+         * When {@code dialogGraph} is true, the listener stores the checkbox on the graph cell and returns.
          * If {@code dialogCell} is null, the listener returns.
          * {@link #thinkOf} for the cell id stores the checkbox in {@code grokOn}.
          * The listener calls {@link #saveThinkStore}.
@@ -23750,6 +24655,11 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (dialogAdjusting) {
+                    return;
+                }
+                if (dialogGraph) {
+                    thinkOf(GRAPH_CELL).grokOn = dialogGrokThink.isSelected();
+                    keepGraphGrok();
                     return;
                 }
                 boolean armStream = dialogGrokThink.isSelected()
@@ -23799,6 +24709,15 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     return;
                 }
                 if (dialogCell == null) {
+                    if (dialogGraph) {
+                        boolean on = dialogPoolThink.isSelected();
+                        thinkOf(GRAPH_CELL).poolOn = on;
+                        GraphModelSeat seat = ensureGraphSeat();
+                        if (seat != null) {
+                            seat.keepPool(on);
+                            saveThinkStore();
+                        }
+                    }
                     return;
                 }
                 thinkOf(dialogCell.id).poolOn = dialogPoolThink.isSelected();
@@ -23963,6 +24882,20 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     return;
                 }
                 if (dialogCell == null) {
+                    if (dialogGraph) {
+                        boolean on = dialogOllamaThink.isSelected();
+                        String level = "";
+                        if (dialogOllamaEffort != null && dialogOllamaEffort.getSelectedItem() != null) {
+                            level = String.valueOf(dialogOllamaEffort.getSelectedItem());
+                        }
+                        thinkOf(GRAPH_CELL).ollamaOn = on;
+                        GraphModelSeat seat = ensureGraphSeat();
+                        if (seat != null) {
+                            seat.keepOllama(on, level);
+                            saveThinkStore();
+                        }
+                        refreshOllamaEffortRow();
+                    }
                     return;
                 }
                 CellThink box = thinkOf(dialogCell.id);
@@ -24014,6 +24947,16 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     return;
                 }
                 if (dialogCell == null) {
+                    if (dialogGraph) {
+                        String level = String.valueOf(dialogOllamaEffort.getSelectedItem());
+                        boolean on = dialogOllamaThink != null && dialogOllamaThink.isSelected();
+                        thinkOf(GRAPH_CELL).ollamaLevel = level;
+                        GraphModelSeat seat = ensureGraphSeat();
+                        if (seat != null) {
+                            seat.keepOllama(on, level);
+                            saveThinkStore();
+                        }
+                    }
                     return;
                 }
                 thinkOf(dialogCell.id).ollamaLevel = String.valueOf(dialogOllamaEffort.getSelectedItem());
@@ -24309,6 +25252,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         dialogCell = null;
         dialogCardField = null;
         dialogConsole = false;
+        dialogGraph = false;
         dialogConsoleThink = "";
         dialogFamily = null;
         dialogOllamaId = null;
@@ -24336,6 +25280,21 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      */
     private void applyOllamaFamily() {
         if (dialogCell == null) {
+            if (dialogGraph) {
+                GraphModelSeat seat = heldGraphSeat();
+                String id = "";
+                if (seat != null && "ollama".equals(AetherisStage2.providerId(seat.engine()))) {
+                    id = AetherisStage2.modelAfterSlash(seat.engine());
+                }
+                if (id.length() > 0) {
+                    if (dialogOllamaId != null) {
+                        dialogAdjusting = true;
+                        setDialogOllamaModelId(id);
+                        dialogAdjusting = false;
+                    }
+                    keepGraphModel("ollama/" + id);
+                }
+            }
             return;
         }
         CellThink held = thinkOf(dialogCell.id);
@@ -24354,6 +25313,17 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * Selecting Pool stores the bare word {@code pool}. No Grok settings row. {@code poolOn} stays as it is.
      */
     private void applyPoolFamily() {
+        if (dialogGraph && dialogCell == null) {
+            keepGraphModel("pool");
+            GraphModelSeat seat = ensureGraphSeat();
+            if (seat != null && dialogPoolThink != null) {
+                boolean on = dialogPoolThink.isSelected();
+                seat.keepPool(on);
+                thinkOf(GRAPH_CELL).poolOn = on;
+                saveThinkStore();
+            }
+            return;
+        }
         if (dialogCell == null) {
             return;
         }
@@ -24377,6 +25347,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      */
     private void applyGrokFamily() {
         if (dialogCell == null) {
+            if (dialogGraph) {
+                String id = persistedDialogGrokModel();
+                if (id.length() > 0) {
+                    keepGraphModel("grok/" + id);
+                }
+            }
             return;
         }
         if (dialogOllamaId != null && "ollama".equals(AetherisStage2.providerId(dialogCell.executionTarget))) {
@@ -24486,6 +25462,8 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         GrokSettingsDocument.Entry entry;
         if (dialogConsole) {
             entry = consoleGrok;
+        } else if (dialogGraph) {
+            entry = graphGrokEntry();
         } else {
             entry = dialogCell == null ? null : grokDoc.entry(dialogCell.id);
         }
@@ -24517,6 +25495,9 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         if (dialogGrokThink != null) {
             if (dialogConsole) {
                 dialogGrokThink.setSelected("true".equals(consoleGrokThink));
+            } else if (dialogGraph) {
+                CellThink held = ollamaThink.get(GRAPH_CELL);
+                dialogGrokThink.setSelected(held != null && held.grokOn);
             } else if (dialogCell != null) {
                 CellThink held = ollamaThink.get(dialogCell.id);
                 dialogGrokThink.setSelected(held != null && held.grokOn);
@@ -24539,6 +25520,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return;
         }
         if (dialogCell == null) {
+            if (dialogGraph) {
+                keepGraphGrok();
+                return;
+            }
             if (dialogConsole) {
                 sendConsoleSet();
             }
@@ -24577,6 +25562,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return;
         }
         if (dialogCell == null) {
+            if (dialogGraph) {
+                keepGraphGrok();
+                return;
+            }
             if (dialogConsole) {
                 sendConsoleSet();
             }
@@ -24611,6 +25600,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return;
         }
         if (dialogCell == null) {
+            if (dialogGraph) {
+                keepGraphGrok();
+                return;
+            }
             if (dialogConsole) {
                 sendConsoleSet();
             }
@@ -24794,6 +25787,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     /**
      * Write the Ollama id onto the cell. {@code askShow} sends {@code show:} for that id.
      * An empty id hides effort and does not ask.
+     * A graph modal stores a non-empty id for the open user and does not ask the host.
      * The cell path stays idle once the family item is Grok or Pool.
      *
      * @param askShow whether to ask the host about this id
@@ -24801,6 +25795,29 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
     private void commitOllamaModel(boolean askShow) {
         if (dialogConsole) {
             commitConsoleModel(askShow);
+            return;
+        }
+        if (dialogGraph && dialogCell == null) {
+            if (dialogAdjusting || dialogOllamaId == null) {
+                return;
+            }
+            String graphId = dialogOllamaModelId();
+            if (graphId.length() == 0) {
+                return;
+            }
+            keepGraphModel("ollama/" + graphId);
+            GraphModelSeat seat = ensureGraphSeat();
+            if (seat != null) {
+                boolean on = dialogOllamaThink != null && dialogOllamaThink.isSelected();
+                String level = "";
+                if (dialogOllamaEffort != null && dialogOllamaEffort.getSelectedItem() != null) {
+                    level = String.valueOf(dialogOllamaEffort.getSelectedItem()).trim();
+                }
+                seat.keepOllama(on, level);
+                thinkOf(GRAPH_CELL).ollamaOn = on;
+                thinkOf(GRAPH_CELL).ollamaLevel = level;
+                saveThinkStore();
+            }
             return;
         }
         if (dialogAdjusting || dialogCell == null || dialogOllamaId == null) {
@@ -25380,6 +26397,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
 
     /**
      * The method stores the llama model on the cell or on the console.
+     * A graph modal stores a non-empty id for the open user.
      * The cell target becomes {@code llama-openapi/} plus the id.
      */
     private void commitLlamaModel() {
@@ -25390,6 +26408,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return;
         }
         if (dialogCell == null) {
+            if (dialogGraph && id.length() > 0) {
+                keepGraphModel("llama-openapi/" + id);
+                storeLlamaFields();
+            }
             return;
         }
         thinkOf(dialogCell.id).llamaId = id;
@@ -25450,6 +26472,13 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             return;
         }
         if (dialogCell == null) {
+            if (dialogGraph) {
+                GraphModelSeat seat = ensureGraphSeat();
+                if (seat != null) {
+                    seat.keepLlama(tempPresent, temp, maxPresent, max);
+                    saveThinkStore();
+                }
+            }
             return;
         }
         CellThink held = thinkOf(dialogCell.id);
@@ -25481,6 +26510,17 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             temp = consoleLlamaTemperature;
             maxPresent = consoleLlamaMaxPresent;
             max = consoleLlamaMaxTokens;
+        } else if (dialogGraph) {
+            GraphModelSeat seat = heldGraphSeat();
+            if (seat != null) {
+                if ("llama-openapi".equals(AetherisStage2.providerId(seat.engine()))) {
+                    id = AetherisStage2.modelAfterSlash(seat.engine());
+                }
+                tempPresent = seat.llamaTemperaturePresent();
+                temp = seat.llamaTemperature();
+                maxPresent = seat.llamaMaxPresent();
+                max = seat.llamaMaxTokens();
+            }
         } else if (dialogCell != null) {
             CellThink held = ollamaThink.get(dialogCell.id);
             if (held != null) {
@@ -25506,6 +26546,12 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      */
     private void applyLlamaFamily() {
         if (dialogCell == null) {
+            if (dialogGraph) {
+                String id = dialogLlamaModelId();
+                if (id.length() > 0) {
+                    keepGraphModel("llama-openapi/" + id);
+                }
+            }
             return;
         }
         if (dialogOllamaId != null && "ollama".equals(AetherisStage2.providerId(dialogCell.executionTarget))) {
@@ -25893,6 +26939,10 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
      * @return The return value is the trimmed stored id, or an empty string.
      */
     private String persistedDialogGrokModel() {
+        if (dialogGraph) {
+            String id = AetherisStage2.modelAfterSlash(graphEngine());
+            return id == null ? "" : id.trim();
+        }
         GrokSettingsDocument.Entry entry;
         if (dialogConsole) {
             entry = consoleGrok;
@@ -26229,150 +27279,7 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
         refreshInspector();
     }
 
-    // @aa-sdd PK-1044 docs/specs/common/formal-plan.spec.md FINESSE:f-48
-    // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md FINESSE:f-49
-    /**
-     * The class {@code ThinkSpinner} is the small panel that shows a thinking clock.
-     * The panel holds a glyph label and a words label in a left flow.
-     * The glyph cycles {@code |}, {@code /}, {@code -}, and {@code \} every {@code 120} milliseconds.
-     * The words label shows {@code thinking} and a clock.
-     * {@link #startSpin()} uses the canvas clock from {@link AetherisNotebookPanel#thinkingTime()}.
-     * {@link #startOwnSpin(long)} uses a clock that starts at the given millisecond.
-     * {@link #stopSpin()} hides the panel and clears both labels.
-     * The panel is hidden until a start method shows it.
-     */
-    // @aa-sdd PK-35 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-36 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-47 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-49 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-717 docs/specs/common/server.spec.md
-    // @aa-sdd PK-110 docs/specs/java/org/aetheris/swing/swing.spec.md
-    // @aa-sdd PK-676 docs/specs/common/formal-plan.spec.md
-    // @aa-sdd PK-91 docs/specs/java/org/aetheris/swing/swing.spec.md
-    private final class ThinkSpinner extends JPanel {
-        private final JLabel glyph;
-        private final JLabel words;
-        private final Timer timer;
-        private int frame;
-        private long ownStartedAtMs;
-        private final String[] frames = new String[] { "|", "/", "-", "\\" };
-
-        /**
-         * The constructor builds the glyph, the words, and the 120-millisecond timer.
-         * Both labels start as a single space and take the theme label color.
-         * The glyph is centered.
-         * The glyph box is the wider of {@code M} and the four frame characters, plus {@code 2} pixels.
-         * The glyph height is the font height.
-         * Preferred, minimum, and maximum sizes of the glyph are that box.
-         * The panel starts hidden.
-         * The timer does not start until a start method runs.
-         */
-        private ThinkSpinner() {
-            super(new FlowLayout(FlowLayout.LEFT, 8, 4));
-            glyph = new JLabel(" ");
-            words = new JLabel(" ");
-            theme.applyLabel(glyph);
-            theme.applyLabel(words);
-            glyph.setHorizontalAlignment(SwingConstants.CENTER);
-            FontMetrics metrics = glyph.getFontMetrics(glyph.getFont());
-            int box = metrics.charWidth('M');
-            for (int i = 0; i < frames.length; i++) {
-                int wide = metrics.stringWidth(frames[i]);
-                if (wide > box) {
-                    box = wide;
-                }
-            }
-            Dimension fixed = new Dimension(box + 2, metrics.getHeight());
-            glyph.setPreferredSize(fixed);
-            glyph.setMinimumSize(fixed);
-            glyph.setMaximumSize(fixed);
-            add(glyph);
-            add(words);
-            setVisible(false);
-            /**
-             * The listener advances the spinner glyph and the thinking clock.
-             */
-            timer = new Timer(120, new ActionListener() {
-                // @aa-sdd PK-1044 docs/specs/common/formal-plan.spec.md FINESSE:f-48
-                // @aa-sdd PK-1043 docs/specs/common/formal-plan.spec.md FINESSE:f-49
-                // @aa-sdd PK-1221 docs/specs/java/org/aetheris/swing/swing.spec.md
-                // @aa-sdd PK-1221 docs/specs/java/org/aetheris/swing/swing.spec.md
-                /**
-                 * The method paints the next frame and the current clock.
-                 * A positive {@code ownStartedAtMs} formats that instant.
-                 * A zero {@code ownStartedAtMs} uses {@link AetherisNotebookPanel#thinkingTime()}.
-                 * The glyph is green {@code #00FF66}.
-                 * The words are cyan {@code #00D7FF} and begin with {@code thinking}.
-                 * {@code frame} advances after the paint.
-                 *
-                 * @param e the timer event
-                 */
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String clock = ownStartedAtMs > 0L
-                            ? ThinkingClock.format(ownStartedAtMs) : thinkingTime();
-                    glyph.setText("<html><font color=\"#00FF66\">"
-                            + frames[frame % frames.length] + "</font></html>");
-                    words.setText("<html><font color=\"#00D7FF\">thinking " + clock + "</font></html>");
-                    frame++;
-                }
-            });
-        }
-
-        /**
-         * The method {@code startSpin} shows the spinner on the canvas clock.
-         * A timer that is already running returns without a reset.
-         * {@code frame} is set to {@code 0}.
-         * The panel is shown, the timer is started, and the panel is revalidated.
-         * {@code ownStartedAtMs} is left as it was, so a later tick uses {@link AetherisNotebookPanel#thinkingTime()} only when that field is still {@code 0}.
-         */
-        private void startSpin() {
-            if (timer.isRunning()) {
-                return;
-            }
-            frame = 0;
-            setVisible(true);
-            timer.start();
-            revalidate();
-        }
-
-        /**
-         * The method {@code startOwnSpin} shows the spinner on a clock for this send.
-         * {@code ownStartedAtMs} becomes {@code startedAtMs}.
-         * {@code frame} is set to {@code 0}.
-         * The panel is shown.
-         * A timer that is already running is left running.
-         * A timer that is stopped is started.
-         * The panel is revalidated.
-         *
-         * @param startedAtMs the {@link System#currentTimeMillis()} value for this send
-         */
-        private void startOwnSpin(long startedAtMs) {
-            ownStartedAtMs = startedAtMs;
-            frame = 0;
-            setVisible(true);
-            if (!timer.isRunning()) {
-                timer.start();
-            }
-            revalidate();
-        }
-
-        /**
-         * The method {@code stopSpin} hides the spinner and clears its clock.
-         * {@code ownStartedAtMs} is set to {@code 0}.
-         * The timer is stopped.
-         * The glyph text and the words text are cleared.
-         * The panel is hidden and revalidated.
-         */
-        private void stopSpin() {
-            ownStartedAtMs = 0L;
-            timer.stop();
-            glyph.setText("");
-            words.setText("");
-            setVisible(false);
-            revalidate();
-        }
-    }
+    // The thinking spinner is ReasonSpinner. The word is thinking.
 
     /**
      * @return {@code ~/.casserole}
@@ -26427,6 +27334,24 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
                     ollamaThink.put(String.valueOf(one.getKey()), held);
                 }
             }
+            Object rawModels = root.get("graph_models");
+            if (rawModels instanceof Map) {
+                Map<?, ?> models = (Map<?, ?>) rawModels;
+                for (Map.Entry<?, ?> one : models.entrySet()) {
+                    if (one.getKey() == null || one.getValue() == null) {
+                        continue;
+                    }
+                    String name = String.valueOf(one.getKey()).trim();
+                    if (name.length() == 0) {
+                        continue;
+                    }
+                    GraphModelSeat seat = GraphModelSeat.parse(one.getValue());
+                    if (seat == null || seat.engine().length() == 0) {
+                        continue;
+                    }
+                    graphModels.put(name, seat);
+                }
+            }
         } catch (Exception ex) {
             thinkStoreBlocked = true;
         } finally {
@@ -26472,6 +27397,23 @@ public class AetherisNotebookPanel extends JPanel implements AmwpClientListener 
             cells.put(one.getKey(), row);
         }
         root.put("cells", cells);
+        if (!graphModels.isEmpty()) {
+            LinkedHashMap<String, Object> models = new LinkedHashMap<String, Object>();
+            for (Map.Entry<String, GraphModelSeat> one : graphModels.entrySet()) {
+                if (one.getKey() == null || one.getValue() == null) {
+                    continue;
+                }
+                String name = one.getKey().trim();
+                Object node = one.getValue().yamlValue();
+                if (name.length() == 0 || node == null) {
+                    continue;
+                }
+                models.put(name, node);
+            }
+            if (!models.isEmpty()) {
+                root.put("graph_models", models);
+            }
+        }
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         options.setPrettyFlow(true);

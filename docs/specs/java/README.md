@@ -19,6 +19,7 @@ java/
 └── <a href="org/README.md">org</a>
     ├── <a href="org/aetheris/aetheris.spec.md">org.aetheris</a>
     │   ├── <a href="org/aetheris/config/config.spec.md">org.aetheris.config</a>
+    │   ├── <a href="org/aetheris/lcarsgraph/lcarsgraph.spec.md">org.aetheris.lcarsgraph</a>
     │   ├── <a href="org/aetheris/ssh/ssh.spec.md">org.aetheris.ssh</a>
     │   ├── <a href="org/aetheris/swing/swing.spec.md">org.aetheris.swing</a>
     │   ├── <a href="org/aetheris/vault/vault.spec.md">org.aetheris.vault</a>

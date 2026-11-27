@@ -43,11 +43,11 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-// @aa-sdd PK-1145 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1134 PK-1145 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1130 PK-1134 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-1106 PK-1130 docs/specs/common/formal-plan.spec.md
-// @aa-sdd PK-776 PK-1106 docs/specs/common/stages.spec.md docs/specs/common/formal-plan.spec.md
+// @aa-sdd PK-1145 docs/specs/common/formal-plan.spec.md FINESSE:f-112
+// @aa-sdd PK-1134 docs/specs/common/formal-plan.spec.md FINESSE:f-125
+// @aa-sdd PK-1130 docs/specs/common/formal-plan.spec.md FINESSE:f-131
+// @aa-sdd PK-1106 docs/specs/common/formal-plan.spec.md FINESSE:f-173
+// @aa-sdd PK-776 docs/specs/common/stages.spec.md FINESSE:f-229
 /**
  * The {@code SshConnectionPanel} is the connection bar.
  * The bar holds the host, the port, the user, the password, and the session mode.
@@ -55,6 +55,7 @@ import javax.swing.event.DocumentListener;
  * The frame owns the panel.
  * The bottom pad is 4 pixels, which keeps the buttons clear of the joint.
  *
+ * // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
  *
  * @author clayl (2026-08-24)
  */
@@ -75,8 +76,9 @@ import javax.swing.event.DocumentListener;
 // @aa-sdd PK-213 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
 // @aa-sdd PK-776 docs/specs/common/stages.spec.md
 // @aa-sdd PK-776 docs/specs/common/stages.spec.md
-public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs/specs/common/formal-plan.spec.md
+public class SshConnectionPanel extends JPanel {
 
+    // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
     /**
      * The {@code Listener} receives the actions raised by the connection bar.
      * The owning frame implements this type.
@@ -175,10 +177,20 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
      */
     private FlowRow buttonRow;
     /**
-     * The field is the spinner and clock cluster.
-     * The folded menu row may be holding it.
+     * The field is the focused SSH pane spinner.
+     * The SSH tab is the only tab that shows it.
+     */
+    private JComponent sshCluster;
+    /**
+     * The field is the open canvas spinner seat.
+     * The Aetheris tab is the only tab that shows it.
      */
     private JComponent thinkCluster;
+    /**
+     * The field is the rendering spinner for the seated graph.
+     * The graph tab is the only tab that shows it.
+     */
+    private JComponent renderCluster;
 
     private boolean ignoreModeEvent;
     private boolean ignoreUserEvent;
@@ -238,7 +250,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The timer listener applies a typed font size when the wait ends.
          */
         fontTimer = new Timer(800, new ActionListener() {
-            // @aa-sdd PK-776 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-776 docs/specs/common/stages.spec.md FINESSE:f-229
             @Override
             public void actionPerformed(ActionEvent e) {
                 applyTypedFont();
@@ -300,6 +312,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
      * An empty value means the link is down.
      * A null value is stored as empty.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-132
      *
      * @param user The user is the live username, or empty.
      */
@@ -551,8 +564,14 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
         }
         Font font = new Font(Font.SANS_SERIF, Font.PLAIN, size);
         seatBarFont(this, font);
+        if (sshCluster != null) {
+            seatBarFont(sshCluster, font);
+        }
         if (thinkCluster != null) {
             seatBarFont(thinkCluster, font);
+        }
+        if (renderCluster != null) {
+            seatBarFont(renderCluster, font);
         }
         seatBarTips();
         seatSendFileWidth();
@@ -642,7 +661,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
 
     /**
      * The text is the tool tip for New Term.
-     */ // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+     */
     private static final String NEW_TERM_TIP = "New Term splits the focused pane. Horizontal or vertical.";
 
     /**
@@ -654,6 +673,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
      * The method sets a tool tip on every control on the connection bar.
      * The font incrementor buttons and the size field each receive a tip.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-157
      */
     private void seatBarTips() {
         modeCombo.setToolTipText(MODE_TIP);
@@ -681,6 +701,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
      * The height follows the font and the insets.
      * A missing measurement becomes {@code 1}.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-157
      */
     private void seatSendFileWidth() {
         sendFileButton.setPreferredSize(null);
@@ -788,34 +809,63 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
     }
 
     /**
-     * The method remembers the thinking cluster.
+     * The method remembers the focused SSH pane spinner.
+     * The SSH tab is the only tab that shows it.
+     *
+     * @param cluster The spinner for the focused pane, or null.
+     */
+    void holdSsh(JComponent cluster) {
+        sshCluster = cluster;
+    }
+
+    /**
+     * The method remembers the canvas spinner seat.
      * The folded row may become its parent.
      *
-     // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md
+     * // @aa-sdd PK-1099 docs/specs/common/formal-plan.spec.md FINESSE:f-180
      *
-     * @param cluster The cluster is the spinner and clock, or null.
+     * @param cluster The seat is the open canvas spinner, or null.
      */
     void holdThink(JComponent cluster) {
         thinkCluster = cluster;
     }
 
     /**
+     * The method remembers the rendering spinner.
+     * A null cluster clears that spinner.
+     *
+     * @param cluster The cluster is the rendering spinner, or null.
+     */
+    void holdRender(JComponent cluster) {
+        renderCluster = cluster;
+    }
+
+    /**
      * The method places the thinking cluster to the right of the font control.
+     */
+    void parkThink() {
+        parkOnBar(thinkCluster);
+    }
+
+    /**
+     * The method places one spinner on the lower button row.
      * A missing cluster or a missing button row returns.
      * A cluster that is already on the button row returns.
      * The cluster font is clamped from {@code 8} to {@code 36}.
+     *
+     * @param cluster The cluster is the spinner to show, or null.
      */
-    void parkThink() {
-        if (thinkCluster == null || buttonRow == null) {
+    void parkOnBar(JComponent cluster) {
+        if (cluster == null || buttonRow == null) {
             return;
         }
-        if (thinkCluster.getParent() == buttonRow) {
+        if (cluster.getParent() == buttonRow) {
             return;
         }
-        if (thinkCluster.getParent() != null) {
-            thinkCluster.getParent().remove(thinkCluster);
+        if (cluster.getParent() != null) {
+            cluster.getParent().remove(cluster);
         }
-        buttonRow.add(thinkCluster);
+        buttonRow.add(cluster);
         int size = getFontSize();
         if (size < 8) {
             size = 8;
@@ -823,7 +873,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
         if (size > 36) {
             size = 36;
         }
-        seatBarFont(thinkCluster, new Font(Font.SANS_SERIF, Font.PLAIN, size));
+        seatBarFont(cluster, new Font(Font.SANS_SERIF, Font.PLAIN, size));
         buttonRow.revalidate();
         buttonRow.repaint();
     }
@@ -834,6 +884,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
      * The rule is 2 pixels wide and 22 pixels tall.
      * The color is red {@code 138}, green {@code 138}, and blue {@code 138}.
      *
+     * // @aa-sdd L40 aa-sdd-source-prose.md FINESSE:f-172
      *
      * @return The return value is that rule.
      */
@@ -864,7 +915,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
      * The method wires the buttons, the focus-lost save, the mode confirm, and the font incrementor.
      * Connect and Reconnect save the fields before they call the listener.
      * Disconnect, Clear Terminal, Load File, New Term, and Close Pane call the listener without an extra save.
-     * Close Pane starts disabled. // @aa-sdd PK-1145 docs/specs/common/formal-plan.spec.md
+     * Close Pane starts disabled.
      * Leaving the host, the port, or the username editor saves the fields.
      * Pressing Enter in the host or the port saves the fields.
      * Choosing a remembered username fills its password and selects Remember password when a password is stored.
@@ -877,6 +928,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener saves the connection fields and calls {@link Listener#connectRequested}.
          */
         connectButton.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 persistConnectionFields();
@@ -887,6 +939,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener calls {@link Listener#disconnectRequested}.
          */
         disconnectButton.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 listener.disconnectRequested();
@@ -896,6 +949,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener saves the connection fields and calls {@link Listener#reconnectRequested}.
          */
         reconnectButton.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 persistConnectionFields();
@@ -906,6 +960,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener calls {@link Listener#clearTerminalRequested}.
          */
         clearButton.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 listener.clearTerminalRequested();
@@ -915,6 +970,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener calls {@link Listener#sendFileRequested}.
          */
         sendFileButton.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 listener.sendFileRequested();
@@ -924,6 +980,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener calls {@link Listener#newTermRequested}.
          */
         newTermButton.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 listener.newTermRequested();
@@ -933,6 +990,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener calls {@link Listener#closePaneRequested}.
          */
         closePaneButton.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 listener.closePaneRequested();
@@ -944,6 +1002,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener saves the connection fields when focus leaves the host, the port, or the username editor.
          */
         FocusAdapter persistOnFocusLost = new FocusAdapter() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void focusLost(FocusEvent e) {
                 persistConnectionFields();
@@ -956,6 +1015,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener saves the connection fields when Enter is pressed in the host field.
          */
         hostField.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 persistConnectionFields();
@@ -965,6 +1025,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener saves the connection fields when Enter is pressed in the port field.
          */
         portField.addActionListener(new ActionListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 persistConnectionFields();
@@ -977,6 +1038,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * A name that is not the live user calls {@link Listener#usernameChosen}.
          */
         usernameCombo.addItemListener(new ItemListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (ignoreUserEvent || e.getStateChange() != ItemEvent.SELECTED) {
@@ -1001,6 +1063,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The listener saves the connection fields when Remember password changes.
          */
         rememberPasswordCheck.addItemListener(new ItemListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void itemStateChanged(ItemEvent e) {
                 persistConnectionFields();
@@ -1015,6 +1078,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * A programmatic change is ignored.
          */
         modeCombo.addItemListener(new ItemListener() {
+            // @aa-sdd L40 aa-sdd-source-prose.md#SshConnectionPanel
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (ignoreModeEvent) {
@@ -1031,7 +1095,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The minus listener subtracts one from the font size at once.
          */
         fontMinus.addActionListener(new ActionListener() {
-            // @aa-sdd PK-776 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-776 docs/specs/common/stages.spec.md FINESSE:f-229
             @Override
             public void actionPerformed(ActionEvent e) {
                 applyFontNow(fontSize - 1);
@@ -1041,7 +1105,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The plus listener adds one to the font size at once.
          */
         fontPlus.addActionListener(new ActionListener() {
-            // @aa-sdd PK-776 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-776 docs/specs/common/stages.spec.md FINESSE:f-229
             @Override
             public void actionPerformed(ActionEvent e) {
                 applyFontNow(fontSize + 1);
@@ -1051,7 +1115,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
          * The document listener restarts the 800 millisecond wait after each edit.
          */
         fontField.getDocument().addDocumentListener(new DocumentListener() {
-            // @aa-sdd PK-776 docs/specs/common/stages.spec.md
+            // @aa-sdd PK-776 docs/specs/common/stages.spec.md FINESSE:f-229
             @Override
             public void insertUpdate(DocumentEvent e) {
                 scheduleFont();
@@ -1176,7 +1240,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
         listener.modeChangeRequested(selected);
     }
 
-    // @aa-sdd PK-1145 docs/specs/common/formal-plan.spec.md
+    // @aa-sdd PK-1145 docs/specs/common/formal-plan.spec.md FINESSE:f-112
     /**
      * The {@code FlowRow} is one wrapping row.
      * The height follows the width the bar actually has.
@@ -1184,7 +1248,7 @@ public class SshConnectionPanel extends JPanel { // @aa-sdd PK-1095 PK-1130 docs
     // @aa-sdd PK-243 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
     // @aa-sdd PK-1145 docs/specs/common/formal-plan.spec.md
     // @aa-sdd PK-200 docs/specs/java/org/casserole/app/ui/ssh/ssh.spec.md
-    private static final class FlowRow extends JPanel { // @aa-sdd PK-1145 docs/specs/common/formal-plan.spec.md
+    private static final class FlowRow extends JPanel {
 
         private int laidWidth;
 

@@ -30,11 +30,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import org.aetheris.swing.ThinkStream;
 import org.aetheris.swing.ThinkStrip;
+import org.casserole.chat.ReasonSpinner;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -76,6 +78,8 @@ public class SshTerminalPanel extends JPanel {
     private final DarkJediTermSettings settings;
     private final SshClientTheme theme;
     private final ThinkStrip thinkStrip;
+    /** One thinking spinner for this pane. The bar shows it only on the SSH tab while this pane is focused. */
+    private final ReasonSpinner thinkSpin = new ReasonSpinner("thinking");
     /** Stable id for this pane. The manager binds one thinking pane to this id. */
     private final String surfaceId = UUID.randomUUID().toString();
     /** The stream that writes {@link #thinkStrip}. Set when a chunk is offered. */
@@ -139,6 +143,10 @@ public class SshTerminalPanel extends JPanel {
         super(new BorderLayout());
         this.settings = settings;
         this.theme = theme;
+        theme.applyLabel(thinkSpin.glyphLabel());
+        theme.applyLabel(thinkSpin.wordsLabel());
+        theme.applyPanel(thinkSpin);
+        thinkSpin.setOpaque(false);
         setOpaque(true);
         final SshTerminalPanel panel = this;
         Font body = settings.getTerminalFont();
@@ -299,6 +307,25 @@ public class SshTerminalPanel extends JPanel {
     }
 
     /**
+     * The method returns this pane's thinking spinner.
+     * The control bar shows it only while this pane is focused and the SSH tab is in front.
+     * Another pane keeps its own spinner.
+     *
+     * @return the spinner
+     */
+    JComponent thinkCluster() {
+        return thinkSpin;
+    }
+
+    /**
+     * The method stops this pane's thinking spinner.
+     * Another pane keeps its own spinner.
+     */
+    void quietThought() {
+        thinkSpin.stopSpin();
+    }
+
+    /**
      * The method offers a pool thought on this session.
      * The tag passed to the stream is {@code pool}.
      * The terminal bytes stay the reply.
@@ -319,6 +346,8 @@ public class SshTerminalPanel extends JPanel {
      * A null stream returns without writing.
      * A missing strip, a null chunk, or an empty chunk returns without a change.
      * A null or blank tag is sent as {@code ollama}.
+     * The first chunk of a thought starts this pane's spinner.
+     * A later chunk leaves that clock alone.
      * The terminal bytes stay the reply.
      *
      * @param stream The stream writes this pane.
@@ -334,6 +363,9 @@ public class SshTerminalPanel extends JPanel {
         if (word.length() == 0) {
             word = "ollama";
         }
+        if (!thinkSpin.isVisible()) {
+            thinkSpin.startAt(System.currentTimeMillis());
+        }
         stream.offer(thinkStrip, surfaceId, word, text);
     }
 
@@ -343,6 +375,7 @@ public class SshTerminalPanel extends JPanel {
      * A fold stays folded.
      * A closed strip stays closed until a later thought opens it.
      * A null stream returns without a call.
+     * This pane's spinner stops.
      * Another pane is not written.
      *
      * @param stream The stream that owns this pane's block.
@@ -352,6 +385,7 @@ public class SshTerminalPanel extends JPanel {
             return;
         }
         thoughtStream = stream;
+        quietThought();
         stream.finish(thinkStrip);
     }
 

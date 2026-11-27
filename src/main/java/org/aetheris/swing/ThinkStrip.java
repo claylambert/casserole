@@ -491,10 +491,49 @@ public final class ThinkStrip extends JPanel {
      * @param text The text is the first chunk.
      */
     public void begin(String tag, String text) {
-        if (pane == null) {
+        if (!insertBegin(tag, text, true)) {
             return;
         }
-        pinTail();
+        showTail();
+    }
+
+    /**
+     * The method opens a block and leaves the log alone.
+     * A null pane returns without writing.
+     * The tail is pinned once.
+     * The strip is repainted.
+     * The host is not asked to store the log.
+     * The host is not asked to lay the picture out.
+     *
+     * @param tag The tag is the model word.
+     * @param text The text is the first chunk.
+     */
+    void beginLive(String tag, String text) {
+        // @aa-sdd L40 aetheris-plan-f-327.001.md FINESSE:f-327
+        if (!insertBegin(tag, text, false)) {
+            return;
+        }
+        showLive();
+    }
+
+    /**
+     * The method writes the banner and the first chunk.
+     * A null pane returns false.
+     * A pin before the insert follows {@code pinFirst}.
+     * A {@link BadLocationException} returns false.
+     *
+     * @param tag The tag is the model word.
+     * @param text The text is the first chunk.
+     * @param pinFirst The flag is true when the tail is pinned before the insert.
+     * @return true when the banner is in the pane
+     */
+    private boolean insertBegin(String tag, String text, boolean pinFirst) {
+        if (pane == null) {
+            return false;
+        }
+        if (pinFirst) {
+            pinTail();
+        }
         String word = tagWord(tag);
         String line = "\u2500\u2500 " + word + " \u2500\u2500\n";
         try {
@@ -508,9 +547,9 @@ public final class ThinkStrip extends JPanel {
                 doc.insertString(doc.getLength(), text, bodyAttrs());
             }
         } catch (BadLocationException ex) {
-            return;
+            return false;
         }
-        showTail();
+        return true;
     }
 
     /**
@@ -524,17 +563,56 @@ public final class ThinkStrip extends JPanel {
      * @param text The text is the chunk.
      */
     public void append(String text) {
-        if (pane == null || text == null || text.length() == 0) {
+        if (!insertChunk(text, true)) {
             return;
         }
-        pinTail();
+        showTail();
+    }
+
+    /**
+     * The method writes a later chunk and leaves the log alone.
+     * A null pane returns without writing.
+     * A null or empty chunk returns without writing.
+     * The tail is pinned once.
+     * The strip is repainted.
+     * The host is not asked to store the log.
+     * The host is not asked to lay the picture out.
+     *
+     * @param text The text is the chunk.
+     */
+    void appendLive(String text) {
+        // @aa-sdd L40 aetheris-plan-f-327.001.md FINESSE:f-327
+        if (!insertChunk(text, false)) {
+            return;
+        }
+        showLive();
+    }
+
+    /**
+     * The method writes a later chunk.
+     * A null pane returns false.
+     * A null or empty chunk returns false.
+     * A pin before the insert follows {@code pinFirst}.
+     * A {@link BadLocationException} returns false.
+     *
+     * @param text The text is the chunk.
+     * @param pinFirst The flag is true when the tail is pinned before the insert.
+     * @return true when the chunk is in the pane
+     */
+    private boolean insertChunk(String text, boolean pinFirst) {
+        if (pane == null || text == null || text.length() == 0) {
+            return false;
+        }
+        if (pinFirst) {
+            pinTail();
+        }
         try {
             StyledDocument doc = pane.getStyledDocument();
             doc.insertString(doc.getLength(), text, bodyAttrs());
         } catch (BadLocationException ex) {
-            return;
+            return false;
         }
-        showTail();
+        return true;
     }
 
     /**
@@ -871,6 +949,41 @@ public final class ThinkStrip extends JPanel {
     }
 
     /**
+     * The method shows the tail and leaves the picture alone.
+     * {@link #pinTail} runs once.
+     * {@link #persistLog} does not run.
+     * {@link Host#relayout} does not run.
+     * A hidden strip becomes visible once.
+     * A closed strip opens once.
+     * The strip repaints itself.
+     */
+    private void showLive() {
+        // @aa-sdd L40 aetheris-plan-f-327.001.md FINESSE:f-327
+        sessionOpen = true;
+        cancelHide();
+        if (closed) {
+            closed = false;
+            note();
+            if (host != null) {
+                host.saveChrome();
+            }
+        }
+        boolean hidden = !isVisible();
+        if (hidden) {
+            setVisible(true);
+            if (scroll != null) {
+                scroll.setVisible(!minimized);
+            }
+            if (minimized && host != null) {
+                host.noteSeat(false, true);
+            }
+            revalidate();
+        }
+        pinTail();
+        repaint();
+    }
+
+    /**
      * The {@code fold} method toggles the folded row.
      * A running slide timer is stopped.
      * The slide height is cleared.
@@ -1203,7 +1316,7 @@ public final class ThinkStrip extends JPanel {
      * The slide target is 0.
      * A later thought opens this same pane.
      */
-    private void hideStrip() { // @aa-sdd PK-1455 docs/specs/java/org/aetheris/swing/swing.spec.md
+    private void hideStrip() {
         sessionOpen = false;
         closed = true;
         note();

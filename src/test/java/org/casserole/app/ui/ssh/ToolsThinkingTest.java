@@ -17,15 +17,19 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import javax.swing.JPanel;
+
 import org.junit.jupiter.api.Test;
 
 /**
  * The class checks the Tools menu and the Show Thinking state in {@link ToolsThinking}.
  * The test does not open a window.
  * The test does not build a pane.
+ * // @aa-sdd L40 aa-sdd-source-prose.md#ToolsThinkingTest
  *
  * @author clayl (2026-10-31)
  */
+// @aa-sdd GK-1188 aetheris-audit-slice-d.draft.001.md
 class ToolsThinkingTest {
 
     /**
@@ -163,5 +167,26 @@ class ToolsThinkingTest {
         assertEquals(ToolsThinking.Plate.SSH, ToolsThinking.front(0));
         assertEquals(ToolsThinking.Plate.AETHERIS, ToolsThinking.front(1));
         assertEquals(ToolsThinking.Plate.SSH, ToolsThinking.front(-1));
+    }
+
+    /**
+     * The method arranges three panels.
+     * The method calls {@link FoldingPanel#liveSeat}.
+     * Tab {@code 0} returns the ssh panel.
+     * Tab {@code -1} returns the ssh panel.
+     * Tab {@code 1} returns the canvas panel.
+     * Tab {@code 2} returns the graph panel.
+     *
+     * @return The method returns nothing.
+     */
+    @Test
+    void theSpinnerSeatFollowsTheTab() {
+        JPanel ssh = new JPanel();
+        JPanel canvas = new JPanel();
+        JPanel graph = new JPanel();
+        assertSame(ssh, FoldingPanel.liveSeat(0, ssh, canvas, graph));
+        assertSame(ssh, FoldingPanel.liveSeat(-1, ssh, canvas, graph));
+        assertSame(canvas, FoldingPanel.liveSeat(1, ssh, canvas, graph));
+        assertSame(graph, FoldingPanel.liveSeat(2, ssh, canvas, graph));
     }
 }
